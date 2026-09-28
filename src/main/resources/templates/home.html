@@ -1,16 +1,105 @@
 <!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Atlas · Phase 1</title><link rel="stylesheet" th:href="@{/app.css}"></head>
-<body><div class="shell"><aside class="sidebar"><div class="brand"><span class="mark">A</span><div><strong>atlas<span>.</span></strong><small>FINANCE ASSISTANT</small></div></div><nav><a href="#overview">◫ &nbsp; Overview</a><a href="#transactions">⇄ &nbsp; Transactions</a></nav><div class="side-foot">PHASE 1 OF 5<br><strong>Transaction foundation</strong></div></aside>
-<main><header><span>Workspace <b>/</b> Overview</span><span class="tag">● SYNTHETIC DATA</span></header><div class="content">
-<div th:if="${message}" class="notice" role="status" th:text="${message}"></div>
-<section id="overview" class="intro"><div><div class="eyebrow">PERSONAL FINANCE · PHASE 1</div><h1>Good morning, <span th:text="${profile.display_name}">Minh Nguyen</span> <em>✳</em></h1><p>See how a simulated bank event becomes a clean, typed transaction.</p></div><form method="post" th:action="@{/reset}" onsubmit="return confirm('Reset all Phase 1 synthetic data?')"><button class="secondary">↺ Reset demo data</button></form></section>
-<div class="stats"><article><span class="icon blue">◫</span><small>Demo profile</small><strong th:text="${profile.display_name}"></strong><p th:text="${profile.source_country + ' → ' + profile.study_country}"></p></article><article><span class="icon green">◈</span><small>Source currency</small><strong th:text="${profile.source_currency}"></strong><p>All Phase 1 events use VND</p></article><article><span class="icon orange">⇄</span><small>Normalized events</small><strong th:text="${eventCount}"></strong><p>Seed and simulated events</p></article></div>
-<section class="card"><div class="section-title"><div><div class="eyebrow">SIMULATED BANK EVENT</div><h2>Try the event pipeline</h2><p>Select a case, then inspect the normalized result below.</p></div></div><div class="event-grid">
-<form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="expense"><button><span>↗</span><strong>Expense</strong><small>Highlands · 85,000 VND</small></button></form>
-<form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="income"><button><span>↙</span><strong>Income</strong><small>Demo salary · 900,000 VND</small></button></form>
-<form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="transfer"><button><span>⇄</span><strong>Internal Transfer</strong><small>Checking → savings · 200,000 VND</small></button></form>
-<form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="refund"><button><span>↶</span><strong>Refund</strong><small>Highlands · 85,000 VND</small></button></form></div><p class="fine">No real bank connection. Each button emits a synthetic event with an account, direction, amount and timestamp.</p></section>
-<section class="card"><div class="section-title"><div><div class="eyebrow">SHARED DEMO PROFILE</div><h2>Demo accounts</h2></div></div><div class="account-grid"><div th:each="account : ${accounts}" class="account"><div><strong th:text="${account.account_name}"></strong><small th:text="${account.id + ' · ' + account.currency}"></small></div><b th:text="${#numbers.formatDecimal(account.balance,1,'COMMA',0,'POINT') + ' VND'}"></b></div></div></section>
-<section class="card" id="transactions"><div class="section-title"><div><div class="eyebrow">NORMALIZED LEDGER</div><h2>Recent transactions</h2><p>Expense, Income, Internal Transfer and Refund have distinct types.</p></div><span class="pill" th:text="${#lists.size(transactions) + ' records'}"></span></div><div class="table-scroll"><table><thead><tr><th>Merchant</th><th>Occurred</th><th>Type</th><th>Direction</th><th>Source</th><th class="right">Amount</th></tr></thead><tbody><tr th:each="tx : ${transactions}"><td><strong th:text="${tx.merchant}"></strong><small th:text="${tx.description}"></small></td><td th:text="${#dates.format(tx.occurred_at,'dd MMM yyyy HH:mm')}"></td><td><span class="type" th:text="${tx.type}"></span></td><td th:text="${tx.direction}"></td><td th:text="${tx.source_label}"></td><td class="right amount" th:text="${(tx.direction == 'IN' ? '+' : '−') + #numbers.formatDecimal(tx.amount,1,'COMMA',0,'POINT') + ' VND'}"></td></tr></tbody></table></div></section>
-<footer>SYNTHETIC DATA · SIMULATED BANK EVENT · PHASE 1 ONLY</footer></div></main></div></body></html>
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Atlas · Phase 2</title><link rel="stylesheet" th:href="@{/app.css}">
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand"><span class="mark">A</span><div><strong>atlas<span>.</span></strong><small>FINANCE ASSISTANT</small></div></div>
+    <nav><a href="#overview">◫ &nbsp; Overview</a><a href="#feed">✦ &nbsp; Proactive Feed</a><a href="#budget">◒ &nbsp; Budget</a><a href="#transactions">⇄ &nbsp; Transactions</a></nav>
+    <div class="side-foot">PHASE 2 OF 5<br><strong>Smart categorization</strong></div>
+  </aside>
+  <main>
+    <header><span>Workspace <b>/</b> Finance dashboard</span><span class="tag">● SYNTHETIC DATA</span></header>
+    <div class="content">
+      <div th:if="${message}" class="notice" role="status" th:text="${message}"></div>
+
+      <section id="overview" class="intro">
+        <div><div class="eyebrow">PERSONAL FINANCE · PHASE 2</div><h1>Good morning, <span th:text="${profile.display_name}">Minh Nguyen</span> <em>✳</em></h1><p>Your deterministic finance dashboard updates after every simulated event.</p></div>
+        <form method="post" th:action="@{/reset}" onsubmit="return confirm('Reset all Phase 2 synthetic data?')"><button class="secondary">↺ Reset demo data</button></form>
+      </section>
+
+      <section class="stats">
+        <article><span class="icon blue">◫</span><small>Checking balance</small><strong th:text="${#numbers.formatDecimal(dashboard.balance,1,'COMMA',0,'POINT')}"></strong><p>VND · synthetic account</p></article>
+        <article><span class="icon green">↙</span><small>Income in dataset</small><strong th:text="${#numbers.formatDecimal(dashboard.income,1,'COMMA',0,'POINT')}"></strong><p>Internal transfers excluded</p></article>
+        <article><span class="icon orange">↗</span><small>Expenses in dataset</small><strong th:text="${#numbers.formatDecimal(dashboard.expenses,1,'COMMA',0,'POINT')}"></strong><p>Refunds tracked separately</p></article>
+        <article><span class="icon violet">?</span><small>Needs review</small><strong th:text="${dashboard.pendingReview}"></strong><p>Medium or low confidence</p></article>
+      </section>
+
+      <section class="card">
+        <div class="section-title"><div><div class="eyebrow">SIMULATED BANK EVENT</div><h2>Test each confidence path</h2><p>Deterministic merchant rules run immediately after Phase 1 normalization.</p></div></div>
+        <div class="event-grid phase-two-events">
+          <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="high"><button><span>97%</span><strong>High confidence</strong><small>Highlands · auto category</small></button></form>
+          <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="medium"><button><span>72%</span><strong>Medium confidence</strong><small>Campus Store · confirm popup</small></button></form>
+          <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="low"><button><span>35%</span><strong>Low confidence</strong><small>Unknown QR · ask purpose</small></button></form>
+          <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="income"><button><span>↙</span><strong>Income</strong><small>Demo salary · 99%</small></button></form>
+          <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="transfer"><button><span>⇄</span><strong>Internal Transfer</strong><small>Checking → savings · 99%</small></button></form>
+          <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="refund"><button><span>↶</span><strong>Refund</strong><small>Matched description · 95%</small></button></form>
+        </div>
+        <p class="fine">Rules: ≥90% auto-categorize · 60–89% confirm suggestion · below 60% ask transaction purpose. No LLM is used for balances or categorization in this phase.</p>
+      </section>
+
+      <div class="dashboard-grid">
+        <section class="card" id="feed">
+          <div class="section-title"><div><div class="eyebrow">PROACTIVE FEED</div><h2>Worth your attention</h2><p>Every insight shows the deterministic evidence behind it.</p></div><span class="pill" th:text="${#lists.size(insights) + ' insights'}"></span></div>
+          <div class="insight" th:each="insight : ${insights}">
+            <span class="priority" th:classappend="${#strings.toLowerCase(insight.priority)}" th:text="${insight.priority}"></span>
+            <div><strong th:text="${insight.title}"></strong><p th:text="${insight.message}"></p><small th:text="${'Evidence: ' + insight.evidence}"></small></div>
+          </div>
+        </section>
+
+        <section class="card" id="budget">
+          <div class="section-title"><div><div class="eyebrow">BUDGET SUMMARY</div><h2>Monthly category limits</h2><p>Only confirmed and auto-categorized expenses are allocated.</p></div></div>
+          <div class="budget-row" th:each="budget : ${budgets}">
+            <div class="budget-head"><strong th:text="${budget.category}"></strong><span th:text="${#numbers.formatDecimal(budget.spent,1,'COMMA',0,'POINT') + ' / ' + #numbers.formatDecimal(budget.monthly_limit,1,'COMMA',0,'POINT') + ' VND'}"></span></div>
+            <div class="progress"><span th:style="|width: ${budget.percent}%|"></span></div>
+            <small th:text="${#numbers.formatDecimal(budget.remaining,1,'COMMA',0,'POINT') + ' VND remaining'}"></small>
+          </div>
+        </section>
+      </div>
+
+      <section class="card">
+        <div class="section-title"><div><div class="eyebrow">SHARED DEMO PROFILE</div><h2>Demo accounts</h2></div><span class="pill" th:text="${profile.source_country + ' → ' + profile.study_country}"></span></div>
+        <div class="account-grid"><div th:each="account : ${accounts}" class="account"><div><strong th:text="${account.account_name}"></strong><small th:text="${account.id + ' · ' + account.currency}"></small></div><b th:text="${#numbers.formatDecimal(account.balance,1,'COMMA',0,'POINT') + ' VND'}"></b></div></div>
+      </section>
+
+      <section class="card" id="transactions">
+        <div class="section-title"><div><div class="eyebrow">TRANSACTION DASHBOARD</div><h2>Normalized and categorized ledger</h2><p>Category, confidence, evidence and review state remain visible.</p></div><span class="pill" th:text="${#lists.size(transactions) + ' records'}"></span></div>
+        <div class="table-scroll"><table>
+          <thead><tr><th>Merchant / evidence</th><th>Type</th><th>Category</th><th>Confidence</th><th>Status</th><th class="right">Amount</th><th>Action</th></tr></thead>
+          <tbody><tr th:each="tx : ${transactions}">
+            <td><strong th:text="${tx.merchant}"></strong><small th:text="${tx.source_label + ' · ' + tx.categorization_evidence}"></small></td>
+            <td><span class="type" th:text="${tx.type}"></span></td>
+            <td th:text="${tx.category ?: 'Purpose required'}"></td>
+            <td><span class="confidence" th:classappend="${tx.confidence >= 90 ? ' high' : (tx.confidence >= 60 ? ' medium' : ' low')}" th:text="${tx.confidence + '%'}"></span></td>
+            <td th:text="${#strings.replace(tx.review_status,'_',' ')}"></td>
+            <td class="right amount" th:text="${(tx.direction == 'IN' ? '+' : '−') + #numbers.formatDecimal(tx.amount,1,'COMMA',0,'POINT') + ' VND'}"></td>
+            <td>
+              <a th:if="${tx.review_status == 'CONFIRMATION_REQUIRED' or tx.review_status == 'PURPOSE_REQUIRED'}" class="text-action" th:href="@{/(review=${tx.id})} + '#transactions'">Review</a>
+              <form th:if="${tx.review_status == 'AUTO' or tx.review_status == 'CONFIRMED'}" th:action="@{'/transactions/' + ${tx.id} + '/undo'}" method="post"><button class="text-action" type="submit">Undo</button></form>
+            </td>
+          </tr></tbody>
+        </table></div>
+      </section>
+
+      <footer>SYNTHETIC DATA · SIMULATED BANK EVENT · DETERMINISTIC RULES · PHASE 2 ONLY</footer>
+    </div>
+  </main>
+</div>
+
+<dialog th:if="${reviewTransaction != null}" id="reviewDialog" data-auto-open="true">
+  <form th:action="@{'/transactions/' + ${reviewTransaction.id} + '/category'}" method="post">
+    <div class="eyebrow" th:text="${reviewTransaction.review_status == 'PURPOSE_REQUIRED' ? 'LOW CONFIDENCE · PURPOSE NEEDED' : 'MEDIUM CONFIDENCE · CONFIRM CATEGORY'}"></div>
+    <h2 th:text="${reviewTransaction.merchant}"></h2>
+    <p th:if="${reviewTransaction.review_status == 'CONFIRMATION_REQUIRED'}">The rule suggests <strong th:text="${reviewTransaction.category}"></strong> at <strong th:text="${reviewTransaction.confidence + '%'}"></strong>. Confirm it or enter another category.</p>
+    <p th:if="${reviewTransaction.review_status == 'PURPOSE_REQUIRED'}">Confidence is only <strong th:text="${reviewTransaction.confidence + '%'}"></strong>. What was this transaction for?</p>
+    <small class="dialog-evidence" th:text="${reviewTransaction.categorization_evidence}"></small>
+    <label>Category or purpose<input name="category" maxlength="80" required th:value="${reviewTransaction.review_status == 'CONFIRMATION_REQUIRED' ? reviewTransaction.category : ''}" placeholder="e.g. Groceries"></label>
+    <div class="dialog-actions"><a class="secondary link-button" href="/#transactions">Cancel</a><button class="primary-button" type="submit">Confirm</button></div>
+  </form>
+</dialog>
+<script th:src="@{/app.js}"></script>
+</body>
+</html>

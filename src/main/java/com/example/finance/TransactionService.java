@@ -1,12 +1,15 @@
 package com.example.finance;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.HexFormat;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -16,8 +19,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class TransactionService {
+    private static final BigDecimal SAFETY_BUFFER = new BigDecimal("3000000.00");
     private final JdbcTemplate db;
-    public TransactionService(JdbcTemplate db) { this.db = db; }
+    private final CategorizationService categorization;
+
+    public TransactionService(JdbcTemplate db, CategorizationService categorization) {
+        this.db = db;
+        this.categorization = categorization;
+    }
 
     public record BankEvent(String reference, LocalDateTime occurredAt, String merchant,
                             String description, BigDecimal amount, String direction,
@@ -47,14 +56,23 @@ public class TransactionService {
     public void reset() {
         db.update("DELETE FROM transactions");
         db.update("DELETE FROM bank_events");
+        db.update("DELETE FROM budgets");
         db.update("DELETE FROM financial_accounts");
         db.update("DELETE FROM demo_profile");
         db.update("INSERT INTO demo_profile VALUES (1,'Minh Nguyen','Vietnam','China','VND','CNY')");
         db.update("INSERT INTO financial_accounts VALUES ('CHECKING',1,'Demo Checking','VND',100000000.00)");
         db.update("INSERT INTO financial_accounts VALUES ('SAVINGS',1,'Emergency Fund','VND',1000000.00)");
+        seedBudgets();
+
         LocalDate today = LocalDate.now();
         for (int i = 0; i < 20; i++) {
-            String merchant = switch(i % 5) { case 0 -> "Highlands Coffee"; case 1 -> "Grab"; case 2 -> "Electricity Provider"; case 3 -> "Campus Store"; default -> "Demo Employer"; };
+            String merchant = switch(i % 5) {
+                case 0 -> "Highlands Coffee";
+                case 1 -> "Grab";
+                case 2 -> "Electricity Provider";
+                case 3 -> "Campus Store";
+                default -> "Demo Employer";
+            };
             String direction = i % 5 == 4 ? "IN" : "OUT";
             BigDecimal amount = i % 5 == 4 ? new BigDecimal("5000000") : new BigDecimal(70000 + (i % 4) * 20000);
             ingest(new BankEvent("SEED-" + i, today.minusDays(20 - i).atTime(12,i), merchant,
@@ -66,7 +84,37 @@ public class TransactionService {
 
     @Transactional
     public void seedIfEmpty() {
-        if (db.queryForObject("SELECT COUNT(*) FROM demo_profile", Integer.class) == 0) reset();
+        if (db.queryForObject("SELECT COUNT(*) FROM demo_profile", Integer.class) == 0) {
+            reset();
+            return;
+        }
+        seedBudgets();
+        for (Map<String,Object> row : db.queryForList("SELECT id,merchant,description,amount,currency,direction,type,occurred_at FROM transactions WHERE confidence=0")) {
+            Normalized normalized = new Normalized(
+                    (String) row.get("merchant"),
+                    (String) row.get("description"),
+                    (BigDecimal) row.get("amount"),
+                    (String) row.get("currency"),
+                    (String) row.get("direction"),
+                    (String) row.get("type"),
+                    ((java.sql.Timestamp) row.get("occurred_at")).toLocalDateTime());
+            CategorizationService.Suggestion suggestion = categorization.categorize(normalized);
+            db.update("UPDATE transactions SET category=?,confidence=?,review_status=?,categorization_evidence=? WHERE id=?",
+                    suggestion.category(), suggestion.confidence(), suggestion.reviewStatus(), suggestion.evidence(), row.get("id"));
+        }
+    }
+
+    private void seedBudgets() {
+        insertBudget("Food & Drinks", "2000000");
+        insertBudget("Transport", "1500000");
+        insertBudget("Utilities", "1800000");
+        insertBudget("Shopping", "1000000");
+    }
+
+    private void insertBudget(String category, String limit) {
+        BigDecimal amount = new BigDecimal(limit);
+        int updated = db.update("UPDATE budgets SET monthly_limit=? WHERE category=?", amount, category);
+        if (updated == 0) db.update("INSERT INTO budgets (category,monthly_limit) VALUES (?,?)", category, amount);
     }
 
     @Transactional
@@ -75,17 +123,33 @@ public class TransactionService {
         if (event.reference() == null || event.reference().isBlank()) throw new IllegalArgumentException("Event reference is required");
         List<String> byReference = db.query("SELECT id FROM bank_events WHERE raw_reference=?", (rs,n) -> rs.getString(1), event.reference());
         if (!byReference.isEmpty()) return db.queryForObject("SELECT id FROM transactions WHERE event_id=?", String.class, byReference.getFirst());
+
         String fingerprint = sha256("CHECKING|" + tx.direction() + "|" + tx.amount() + "|" + tx.merchant().toLowerCase() + "|" + tx.occurredAt().truncatedTo(ChronoUnit.MINUTES));
         List<String> duplicate = db.query("SELECT id FROM transactions WHERE fingerprint=?", (rs,n) -> rs.getString(1), fingerprint);
         if (!duplicate.isEmpty()) return duplicate.getFirst();
-        String eventId = UUID.randomUUID().toString(); String transactionId = UUID.randomUUID().toString();
+
+        CategorizationService.Suggestion suggestion = categorization.categorize(tx);
+        String eventId = UUID.randomUUID().toString();
+        String transactionId = UUID.randomUUID().toString();
         String source = event.sourceLabel() == null || event.sourceLabel().isBlank() ? "Simulated Bank Event" : event.sourceLabel();
-        db.update("INSERT INTO bank_events VALUES (?,?,?,?,?)", eventId, source, event.reference(), LocalDateTime.now(), "NORMALIZED");
-        db.update("INSERT INTO transactions VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", transactionId, eventId, fingerprint, "CHECKING", tx.occurredAt(), tx.merchant(), tx.description(), tx.amount(), tx.currency(), tx.direction(), tx.type(), source);
+
+        db.update("INSERT INTO bank_events VALUES (?,?,?,?,?)", eventId, source, event.reference(), LocalDateTime.now(), "CATEGORIZED");
+        db.update("""
+                INSERT INTO transactions
+                (id,event_id,fingerprint,account_id,occurred_at,merchant,description,amount,currency,direction,type,source_label,
+                 category,previous_category,confidence,review_status,categorization_evidence)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,NULL,?,?,?)
+                """,
+                transactionId, eventId, fingerprint, "CHECKING", tx.occurredAt(), tx.merchant(), tx.description(),
+                tx.amount(), tx.currency(), tx.direction(), tx.type(), source, suggestion.category(),
+                suggestion.confidence(), suggestion.reviewStatus(), suggestion.evidence());
+
         if ("Simulated Bank Event".equals(source)) {
             BigDecimal delta = tx.direction().equals("IN") ? tx.amount() : tx.amount().negate();
             db.update("UPDATE financial_accounts SET balance=balance+? WHERE id='CHECKING'", delta);
-            if (tx.type().equals("Internal Transfer")) db.update("UPDATE financial_accounts SET balance=balance+? WHERE id='SAVINGS'", tx.amount());
+            if (tx.type().equals("Internal Transfer")) {
+                db.update("UPDATE financial_accounts SET balance=balance+? WHERE id='SAVINGS'", tx.amount());
+            }
         }
         return transactionId;
     }
@@ -95,6 +159,8 @@ public class TransactionService {
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
         String reference = "SIM-" + UUID.randomUUID();
         BankEvent event = switch(scenario) {
+            case "medium" -> new BankEvent(reference,now,"Campus Store","Card purchase",new BigDecimal("120000"),"OUT","CHECKING",null,"Simulated Bank Event");
+            case "low" -> new BankEvent(reference,now,"Unknown QR Merchant","QR payment",new BigDecimal("64000"),"OUT","CHECKING",null,"Simulated Bank Event");
             case "income" -> new BankEvent(reference,now,"Demo Employer","Part-time salary",new BigDecimal("900000"),"IN","CHECKING",null,"Simulated Bank Event");
             case "transfer" -> new BankEvent(reference,now,"Own Account","Transfer to emergency fund",new BigDecimal("200000"),"OUT","CHECKING","SAVINGS","Simulated Bank Event");
             case "refund" -> new BankEvent(reference,now,"Highlands Coffee","Refund for purchase",new BigDecimal("85000"),"IN","CHECKING",null,"Simulated Bank Event");
@@ -103,10 +169,123 @@ public class TransactionService {
         return ingest(event);
     }
 
+    @Transactional
+    public void confirmCategory(String id, String category) {
+        if (category == null || category.isBlank()) throw new IllegalArgumentException("Category or transaction purpose is required");
+        String cleaned = category.trim();
+        if (cleaned.length() > 80) throw new IllegalArgumentException("Category must be 80 characters or fewer");
+        db.update("""
+                UPDATE transactions
+                SET previous_category=category, category=?, review_status='CONFIRMED',
+                    categorization_evidence='User confirmed category or purpose'
+                WHERE id=?
+                """, cleaned, id);
+    }
+
+    @Transactional
+    public void undoCategory(String id) {
+        Map<String,Object> transaction = transaction(id);
+        String current = (String) transaction.get("category");
+        if (current == null) throw new IllegalArgumentException("There is no category to undo");
+        String previous = (String) transaction.get("previous_category");
+        String status = previous == null ? "PURPOSE_REQUIRED" : "CONFIRMATION_REQUIRED";
+        db.update("""
+                UPDATE transactions
+                SET category=?, previous_category=NULL, review_status=?,
+                    categorization_evidence='Category change undone by user'
+                WHERE id=?
+                """, previous, status, id);
+    }
+
+    public Map<String,Object> transaction(String id) {
+        return db.queryForMap("SELECT * FROM transactions WHERE id=?", id);
+    }
+
     public Map<String,Object> profile() { return db.queryForMap("SELECT * FROM demo_profile WHERE id=1"); }
     public List<Map<String,Object>> accounts() { return db.queryForList("SELECT * FROM financial_accounts ORDER BY id"); }
     public List<Map<String,Object>> transactions() { return db.queryForList("SELECT * FROM transactions ORDER BY occurred_at DESC"); }
     public int eventCount() { return db.queryForObject("SELECT COUNT(*) FROM bank_events", Integer.class); }
+
+    public Map<String,Object> dashboard() {
+        Map<String,Object> result = new LinkedHashMap<>();
+        BigDecimal balance = db.queryForObject("SELECT balance FROM financial_accounts WHERE id='CHECKING'", BigDecimal.class);
+        BigDecimal income = totalForType("Income");
+        BigDecimal expenses = totalForType("Expense");
+        BigDecimal refunds = totalForType("Refund");
+        result.put("balance", balance);
+        result.put("income", income);
+        result.put("expenses", expenses);
+        result.put("refunds", refunds);
+        result.put("netCashFlow", income.add(refunds).subtract(expenses));
+        result.put("pendingReview", db.queryForObject("SELECT COUNT(*) FROM transactions WHERE review_status IN ('CONFIRMATION_REQUIRED','PURPOSE_REQUIRED')", Integer.class));
+        result.put("safetyBuffer", SAFETY_BUFFER);
+        result.put("surplus", balance.subtract(SAFETY_BUFFER).max(BigDecimal.ZERO));
+        return result;
+    }
+
+    private BigDecimal totalForType(String type) {
+        BigDecimal total = db.queryForObject("SELECT COALESCE(SUM(amount),0) FROM transactions WHERE type=?", BigDecimal.class, type);
+        return total == null ? BigDecimal.ZERO : total;
+    }
+
+    public List<Map<String,Object>> budgetSummary() {
+        LocalDate monthStart = LocalDate.now().withDayOfMonth(1);
+        LocalDate nextMonth = monthStart.plusMonths(1);
+        List<Map<String,Object>> rows = db.queryForList("""
+                SELECT b.category, b.monthly_limit,
+                       COALESCE(SUM(CASE WHEN t.type='Expense' AND t.review_status IN ('AUTO','CONFIRMED') THEN t.amount ELSE 0 END),0) AS spent
+                FROM budgets b
+                LEFT JOIN transactions t ON t.category=b.category
+                  AND t.occurred_at>=? AND t.occurred_at<?
+                GROUP BY b.category,b.monthly_limit
+                ORDER BY b.category
+                """, monthStart.atStartOfDay(), nextMonth.atStartOfDay());
+        List<Map<String,Object>> result = new ArrayList<>();
+        for (Map<String,Object> row : rows) {
+            BigDecimal limit = (BigDecimal) row.get("monthly_limit");
+            BigDecimal spent = (BigDecimal) row.get("spent");
+            Map<String,Object> item = new LinkedHashMap<>(row);
+            item.put("remaining", limit.subtract(spent).max(BigDecimal.ZERO));
+            item.put("percent", spent.multiply(new BigDecimal("100")).divide(limit, 0, RoundingMode.HALF_UP).min(new BigDecimal("100")));
+            result.add(item);
+        }
+        return result;
+    }
+
+    public List<Map<String,Object>> proactiveFeed() {
+        List<Map<String,Object>> insights = new ArrayList<>();
+        Map<String,Object> dashboard = dashboard();
+        int pending = (Integer) dashboard.get("pendingReview");
+        if (pending > 0) {
+            insights.add(insight("HIGH", "Transactions need your input",
+                    pending + " transaction(s) need category confirmation or a purpose.",
+                    "Confidence rules: medium and low confidence"));
+        }
+
+        Map<String,Object> highest = budgetSummary().stream()
+                .max((a,b) -> ((BigDecimal)a.get("percent")).compareTo((BigDecimal)b.get("percent")))
+                .orElse(null);
+        if (highest != null) {
+            insights.add(insight("MEDIUM", "Budget progress",
+                    highest.get("category") + " has used " + highest.get("percent") + "% of its synthetic monthly budget.",
+                    "Confirmed and auto-categorized expenses"));
+        }
+
+        BigDecimal surplus = (BigDecimal) dashboard.get("surplus");
+        insights.add(insight("OPPORTUNITY", "Safety buffer protected",
+                surplus.setScale(0, RoundingMode.HALF_UP) + " VND remains above the 3,000,000 VND safety buffer.",
+                "Demo checking balance minus configured buffer"));
+        return insights;
+    }
+
+    private static Map<String,Object> insight(String priority, String title, String message, String evidence) {
+        Map<String,Object> item = new LinkedHashMap<>();
+        item.put("priority", priority);
+        item.put("title", title);
+        item.put("message", message);
+        item.put("evidence", evidence);
+        return item;
+    }
 
     private static String sha256(String value) {
         try { return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8))); }
