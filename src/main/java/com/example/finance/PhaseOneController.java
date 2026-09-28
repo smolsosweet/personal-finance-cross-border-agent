@@ -1,5 +1,6 @@
 package com.example.finance;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
@@ -16,11 +17,14 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class PhaseOneController {
     private final TransactionService transactions;
     private final CrossBorderService crossBorder;
+    private final PhaseFourService phaseFour;
     private final DemoDataService demoData;
 
-    public PhaseOneController(TransactionService transactions, CrossBorderService crossBorder, DemoDataService demoData) {
+    public PhaseOneController(TransactionService transactions, CrossBorderService crossBorder,
+                              PhaseFourService phaseFour, DemoDataService demoData) {
         this.transactions = transactions;
         this.crossBorder = crossBorder;
+        this.phaseFour = phaseFour;
         this.demoData = demoData;
     }
 
@@ -42,6 +46,12 @@ public class PhaseOneController {
         model.addAttribute("tuitionBill", crossBorder.bill());
         model.addAttribute("recipientVerification", crossBorder.verifyRecipient());
         model.addAttribute("channelQuotes", crossBorder.rankedQuotes());
+        model.addAttribute("agentPolicy", phaseFour.policy());
+        model.addAttribute("conversation", phaseFour.messages());
+        model.addAttribute("latestAction", phaseFour.latestAction());
+        model.addAttribute("latestReceipt", phaseFour.latestReceipt());
+        model.addAttribute("sandboxAccounts", phaseFour.sandboxAccounts());
+        model.addAttribute("auditEvents", phaseFour.auditEvents());
         if (review != null && !review.isBlank()) model.addAttribute("reviewTransaction", transactions.transaction(review));
         return "home";
     }
@@ -87,10 +97,71 @@ public class PhaseOneController {
         return "redirect:/#student-finance";
     }
 
+    @PostMapping("/agent/message")
+    public String message(@RequestParam String message, RedirectAttributes flash) {
+        phaseFour.sendMessage(message);
+        flash.addFlashAttribute("message", "Conversation updated from deterministic demo data.");
+        return "redirect:/#agent-workspace";
+    }
+
+    @PostMapping("/agent/mode")
+    public String mode(@RequestParam String mode, RedirectAttributes flash) {
+        phaseFour.setMode(mode);
+        flash.addFlashAttribute("message", "Agent mode changed to " + mode + ".");
+        return "redirect:/#agent-workspace";
+    }
+
+    @PostMapping("/agent/plans/tuition")
+    public String tuitionPlan(@RequestParam String channel, RedirectAttributes flash) {
+        PhaseFourService.ActionPlan plan = phaseFour.createTuitionPlan(channel);
+        flash.addFlashAttribute("message", "Tuition plan " + plan.status() + ". Approval is always required.");
+        return "redirect:/#agent-workspace";
+    }
+
+    @PostMapping("/agent/plans/low-risk")
+    public String lowRiskPlan(@RequestParam(defaultValue="250000") BigDecimal amount, RedirectAttributes flash) {
+        PhaseFourService.ActionPlan plan = phaseFour.createLowRiskPlan(amount);
+        flash.addFlashAttribute("message", "Low-risk plan status: " + plan.status() + ".");
+        return "redirect:/#agent-workspace";
+    }
+
+    @PostMapping("/agent/actions/{id}/approve")
+    public String approve(@PathVariable String id, RedirectAttributes flash) {
+        PhaseFourService.Receipt receipt = phaseFour.approveAndExecute(id);
+        PhaseFourService.ActionPlan plan = phaseFour.action(id);
+        flash.addFlashAttribute("message", receipt == null
+                ? "Action blocked: " + plan.status()
+                : "Payment Sandbox completed: " + receipt.transactionId());
+        return "redirect:/#agent-workspace";
+    }
+
+    @PostMapping("/agent/actions/{id}/retry")
+    public String retry(@PathVariable String id, RedirectAttributes flash) {
+        PhaseFourService.Receipt receipt = phaseFour.execute(id);
+        flash.addFlashAttribute("message", receipt == null
+                ? "Retry blocked by Policy Guard."
+                : "Idempotent receipt: " + receipt.transactionId());
+        return "redirect:/#agent-workspace";
+    }
+
+    @PostMapping("/agent/emergency-stop")
+    public String emergencyStop(RedirectAttributes flash) {
+        phaseFour.emergencyStop();
+        flash.addFlashAttribute("message", "Emergency Stop active. New actions receive AGENT PAUSED.");
+        return "redirect:/#agent-workspace";
+    }
+
+    @PostMapping("/agent/resume")
+    public String resume(RedirectAttributes flash) {
+        phaseFour.resumeAgent();
+        flash.addFlashAttribute("message", "Agent resumed.");
+        return "redirect:/#agent-workspace";
+    }
+
     @PostMapping("/reset")
     public String reset(RedirectAttributes flash) {
         demoData.resetAll();
-        flash.addFlashAttribute("message", "Synthetic Phase 3 data reset.");
+        flash.addFlashAttribute("message", "Synthetic Phase 4 data reset.");
         return "redirect:/";
     }
 

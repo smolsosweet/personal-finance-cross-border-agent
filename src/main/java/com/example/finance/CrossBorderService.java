@@ -117,8 +117,9 @@ public class CrossBorderService {
             reset();
             return;
         }
-        Integer quoteCount = db.queryForObject("SELECT COUNT(*) FROM fx_quotes", Integer.class);
-        if (quoteCount == null || quoteCount == 0) refreshQuotes();
+        Integer activeQuoteCount = db.queryForObject("SELECT COUNT(*) FROM fx_quotes WHERE expires_at>?",
+                Integer.class, LocalDateTime.now());
+        if (activeQuoteCount == null || activeQuoteCount == 0) refreshQuotes();
     }
 
     private void insertChannel(String id, String name, boolean eligible, String reason,

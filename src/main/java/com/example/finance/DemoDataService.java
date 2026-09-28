@@ -7,21 +7,26 @@ import org.springframework.transaction.annotation.Transactional;
 public class DemoDataService {
     private final TransactionService transactions;
     private final CrossBorderService crossBorder;
+    private final PhaseFourService phaseFour;
 
-    public DemoDataService(TransactionService transactions, CrossBorderService crossBorder) {
+    public DemoDataService(TransactionService transactions, CrossBorderService crossBorder,
+                           PhaseFourService phaseFour) {
         this.transactions = transactions;
         this.crossBorder = crossBorder;
+        this.phaseFour = phaseFour;
     }
 
     @Transactional
     public void initialize() {
         transactions.seedIfEmpty();
         crossBorder.seedIfEmpty();
+        phaseFour.seedIfEmpty();
     }
 
     @Transactional
     public void resetAll() {
-        transactions.reset();
+        phaseFour.reset();
         crossBorder.reset();
+        transactions.reset();
     }
 }
