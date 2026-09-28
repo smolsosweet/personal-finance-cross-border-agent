@@ -15,14 +15,18 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 public class PhaseOneController {
     private final TransactionService transactions;
+    private final CrossBorderService crossBorder;
+    private final DemoDataService demoData;
 
-    public PhaseOneController(TransactionService transactions) {
+    public PhaseOneController(TransactionService transactions, CrossBorderService crossBorder, DemoDataService demoData) {
         this.transactions = transactions;
+        this.crossBorder = crossBorder;
+        this.demoData = demoData;
     }
 
     @Bean
-    ApplicationRunner seedDemo(TransactionService transactions) {
-        return args -> transactions.seedIfEmpty();
+    ApplicationRunner seedDemo(DemoDataService demoData) {
+        return args -> demoData.initialize();
     }
 
     @GetMapping("/")
@@ -34,6 +38,10 @@ public class PhaseOneController {
         model.addAttribute("dashboard", transactions.dashboard());
         model.addAttribute("budgets", transactions.budgetSummary());
         model.addAttribute("insights", transactions.proactiveFeed());
+        model.addAttribute("studentProfile", crossBorder.profile());
+        model.addAttribute("tuitionBill", crossBorder.bill());
+        model.addAttribute("recipientVerification", crossBorder.verifyRecipient());
+        model.addAttribute("channelQuotes", crossBorder.rankedQuotes());
         if (review != null && !review.isBlank()) model.addAttribute("reviewTransaction", transactions.transaction(review));
         return "home";
     }
@@ -65,10 +73,24 @@ public class PhaseOneController {
         return "redirect:/?review=" + id + "#transactions";
     }
 
+    @PostMapping("/student/preference")
+    public String setPreference(@RequestParam String preference, RedirectAttributes flash) {
+        crossBorder.setPreference(preference);
+        flash.addFlashAttribute("message", "Channel ranking updated to " + preference.toLowerCase() + ".");
+        return "redirect:/#student-finance";
+    }
+
+    @PostMapping("/student/quotes/refresh")
+    public String refreshQuotes(RedirectAttributes flash) {
+        crossBorder.refreshQuotes();
+        flash.addFlashAttribute("message", "Synthetic FX quotes refreshed for five minutes.");
+        return "redirect:/#student-finance";
+    }
+
     @PostMapping("/reset")
     public String reset(RedirectAttributes flash) {
-        transactions.reset();
-        flash.addFlashAttribute("message", "Synthetic Phase 2 data reset to 22 transactions.");
+        demoData.resetAll();
+        flash.addFlashAttribute("message", "Synthetic Phase 3 data reset.");
         return "redirect:/";
     }
 

@@ -8,8 +8,8 @@
 <div class="shell">
   <aside class="sidebar">
     <div class="brand"><span class="mark">A</span><div><strong>atlas<span>.</span></strong><small>FINANCE ASSISTANT</small></div></div>
-    <nav><a href="#overview">◫ &nbsp; Overview</a><a href="#feed">✦ &nbsp; Proactive Feed</a><a href="#budget">◒ &nbsp; Budget</a><a href="#transactions">⇄ &nbsp; Transactions</a></nav>
-    <div class="side-foot">PHASE 2 OF 5<br><strong>Smart categorization</strong></div>
+    <nav><a href="#overview">◫ &nbsp; Overview</a><a href="#feed">✦ &nbsp; Proactive Feed</a><a href="#budget">◒ &nbsp; Budget</a><a href="#student-finance">◎ &nbsp; Student finance</a><a href="#transactions">⇄ &nbsp; Transactions</a></nav>
+    <div class="side-foot">PHASE 3 OF 5<br><strong>Cross border planning</strong></div>
   </aside>
   <main>
     <header><span>Workspace <b>/</b> Finance dashboard</span><span class="tag">● SYNTHETIC DATA</span></header>
@@ -17,8 +17,8 @@
       <div th:if="${message}" class="notice" role="status" th:text="${message}"></div>
 
       <section id="overview" class="intro">
-        <div><div class="eyebrow">PERSONAL FINANCE · PHASE 2</div><h1>Good morning, <span th:text="${profile.display_name}">Minh Nguyen</span> <em>✳</em></h1><p>Your deterministic finance dashboard updates after every simulated event.</p></div>
-        <form method="post" th:action="@{/reset}" onsubmit="return confirm('Reset all Phase 2 synthetic data?')"><button class="secondary">↺ Reset demo data</button></form>
+        <div><div class="eyebrow">PERSONAL FINANCE · PHASE 3</div><h1>Good morning, <span th:text="${profile.display_name}">Minh Nguyen</span> <em>✳</em></h1><p>Your deterministic finance dashboard updates after every simulated event.</p></div>
+        <form method="post" th:action="@{/reset}" onsubmit="return confirm('Reset all Phase 3 synthetic data?')"><button class="secondary">↺ Reset demo data</button></form>
       </section>
 
       <section class="stats">
@@ -65,6 +65,63 @@
         <div class="account-grid"><div th:each="account : ${accounts}" class="account"><div><strong th:text="${account.account_name}"></strong><small th:text="${account.id + ' · ' + account.currency}"></small></div><b th:text="${#numbers.formatDecimal(account.balance,1,'COMMA',0,'POINT') + ' VND'}"></b></div></div>
       </section>
 
+      <section class="card student-section" id="student-finance">
+        <div class="section-title">
+          <div><div class="eyebrow">CROSS BORDER STUDENT FINANCE · SYNTHETIC DATA</div><h2>Tuition planning</h2><p>One fixed corridor and one verified bill. No provider API or real payment is connected.</p></div>
+          <form th:action="@{/student/preference}" method="post" class="preference-form">
+            <label>Rank eligible channels by
+              <select name="preference" onchange="this.form.submit()">
+                <option value="CHEAPER" th:selected="${studentProfile.preference == 'CHEAPER'}">Cheaper</option>
+                <option value="FASTER" th:selected="${studentProfile.preference == 'FASTER'}">Faster</option>
+                <option value="SAFER" th:selected="${studentProfile.preference == 'SAFER'}">Safer</option>
+              </select>
+            </label>
+          </form>
+        </div>
+
+        <div class="corridor-strip">
+          <div><small>Student</small><strong th:text="${studentProfile.name}"></strong></div>
+          <div><small>Corridor</small><strong th:text="${studentProfile.sourceCountry + ' → ' + studentProfile.destinationCountry}"></strong></div>
+          <div><small>Currencies</small><strong th:text="${studentProfile.sourceCurrency + ' → ' + studentProfile.destinationCurrency}"></strong></div>
+          <div><small>Preference</small><strong th:text="${studentProfile.preference}"></strong></div>
+        </div>
+
+        <div class="tuition-grid">
+          <article class="tuition-bill">
+            <div class="bill-heading"><span class="school-mark">S</span><div><small>TUITION BILL</small><h3 th:text="${tuitionBill.institution}"></h3></div></div>
+            <div class="tuition-amount"><strong th:text="${#numbers.formatDecimal(tuitionBill.amount,1,'COMMA',0,'POINT')}"></strong><span th:text="${tuitionBill.currency}"></span></div>
+            <dl><div><dt>Due date</dt><dd th:text="${tuitionBill.dueDate}"></dd></div><div><dt>Reference</dt><dd th:text="${tuitionBill.paymentReference}"></dd></div><div><dt>Recipient</dt><dd th:text="${tuitionBill.recipientAccount}"></dd></div><div><dt>Evidence</dt><dd th:text="${tuitionBill.evidenceLabel}"></dd></div></dl>
+          </article>
+
+          <article class="verification-card" th:classappend="${recipientVerification.verified ? ' verified' : ' mismatch'}">
+            <div class="verification-icon" th:text="${recipientVerification.verified ? '✓' : '!'}"></div>
+            <div><small>SCHOOL REGISTRY</small><h3 th:text="${recipientVerification.verified ? 'Recipient verified' : 'Recipient mismatch'}"></h3><p th:text="${recipientVerification.reason}"></p><strong th:text="${recipientVerification.registryAccount ?: 'No matching account'}"></strong></div>
+          </article>
+        </div>
+
+        <div class="channel-heading"><div><h3>Eligible channel comparison</h3><p>Eligibility is applied before preference and price. Bank B remains reference-only even when its synthetic rate is lower.</p></div><form th:action="@{/student/quotes/refresh}" method="post"><button class="secondary" type="submit">↻ Refresh synthetic quotes</button></form></div>
+        <div class="channel-grid">
+          <article class="channel-card" th:each="quote : ${channelQuotes}" th:classappend="${quote.eligible ? '' : ' unavailable'}">
+            <div class="channel-top"><span class="rank" th:text="${quote.rank != null ? '#' + quote.rank : 'REF'}"></span><span class="eligibility" th:classappend="${quote.eligible ? ' eligible' : ' unavailable-tag'}" th:text="${quote.eligible ? 'Eligible' : 'Unavailable'}"></span></div>
+            <h3 th:text="${quote.displayName}"></h3><p class="eligibility-reason" th:text="${quote.eligibilityReason}"></p>
+            <div class="landed-cost"><small>Landed cost</small><strong th:text="${#numbers.formatDecimal(quote.landedCost,1,'COMMA',0,'POINT') + ' VND'}"></strong></div>
+            <dl class="fee-breakdown">
+              <div><dt>Rate</dt><dd th:text="${#numbers.formatDecimal(quote.rateVndPerCny,1,'COMMA',0,'POINT') + ' VND/CNY'}"></dd></div>
+              <div><dt>Source amount</dt><dd th:text="${#numbers.formatDecimal(quote.sourceAmount,1,'COMMA',0,'POINT') + ' VND'}"></dd></div>
+              <div><dt>Transfer fee</dt><dd th:text="${#numbers.formatDecimal(quote.transferFee,1,'COMMA',0,'POINT') + ' VND'}"></dd></div>
+              <div><dt>FX markup</dt><dd th:text="${#numbers.formatDecimal(quote.fxMarkup,1,'COMMA',0,'POINT') + ' VND'}"></dd></div>
+              <div><dt>Expected received</dt><dd th:text="${#numbers.formatDecimal(quote.expectedReceived,1,'COMMA',0,'POINT') + ' CNY'}"></dd></div>
+              <div><dt>Settlement</dt><dd th:text="${quote.settlementMinDays + '–' + quote.settlementMaxDays + ' day(s)'}"></dd></div>
+              <div><dt>Latest safe date</dt><dd th:text="${quote.latestSafeDate}"></dd></div>
+              <div><dt>Safety score</dt><dd th:text="${quote.safetyScore + '/100 synthetic'}"></dd></div>
+            </dl>
+            <div class="quote-meta"><span th:text="${quote.quoteSource}"></span><br><span th:text="${'Quoted ' + #temporals.format(quote.quotedAt,'dd MMM yyyy HH:mm:ss')}"></span><br><span th:text="${'Expires ' + #temporals.format(quote.expiresAt,'dd MMM yyyy HH:mm:ss')}"></span></div>
+            <div th:if="${quote.expired}" class="quote-expired">Quote expired · refresh required</div>
+            <div th:if="${quote.eligible}" class="planning-only">Eligible for planning · execution is outside Phase 3</div>
+            <div th:unless="${quote.eligible}" class="channel-disabled">No select or execute action</div>
+          </article>
+        </div>
+      </section>
       <section class="card" id="transactions">
         <div class="section-title"><div><div class="eyebrow">TRANSACTION DASHBOARD</div><h2>Normalized and categorized ledger</h2><p>Category, confidence, evidence and review state remain visible.</p></div><span class="pill" th:text="${#lists.size(transactions) + ' records'}"></span></div>
         <div class="table-scroll"><table>
@@ -84,7 +141,7 @@
         </table></div>
       </section>
 
-      <footer>SYNTHETIC DATA · SIMULATED BANK EVENT · DETERMINISTIC RULES · PHASE 2 ONLY</footer>
+      <footer>SYNTHETIC DATA · SIMULATED BANK EVENT · SYNTHETIC FX QUOTES · PHASE 3 ONLY</footer>
     </div>
   </main>
 </div>
