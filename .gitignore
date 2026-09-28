@@ -1,0 +1,6 @@
+/target/
+/finance-demo*.db
+/.idea/
+/.vscode/
+*.log
+/finance-phase1*.db
