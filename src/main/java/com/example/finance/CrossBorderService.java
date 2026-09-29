@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -166,6 +167,20 @@ public class CrossBorderService {
                 WHERE c.id=1
                 """, (rs,n) -> new StudentProfile(rs.getString(1), rs.getString(2), rs.getString(3),
                 rs.getString(4), rs.getString(5), rs.getString(6)));
+    }
+
+    public Map<String,Object> tuitionInsight() {
+        TuitionBill tuition = bill();
+        RecipientVerification verification = verifyRecipient();
+        ChannelQuote option = rankedQuotes("CHEAPER").stream()
+                .filter(ChannelQuote::eligible).findFirst().orElse(null);
+        String title = "Tuition payment needs a controlled plan";
+        String message = verification.verified()
+                ? tuition.institution() + " bill for " + tuition.amount().toPlainString() + " CNY is verified and due " + tuition.dueDate() + "."
+                : "Tuition recipient verification needs attention before any plan can proceed.";
+        String evidence = option == null ? "School Registry verification" :
+                "Verified School Registry · " + option.displayName() + " · landed cost " + option.landedCost().toPlainString() + " VND";
+        return Map.of("title", title, "message", message, "evidence", evidence);
     }
 
     public TuitionBill bill() {

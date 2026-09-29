@@ -34,7 +34,7 @@ public class PhaseFourService {
         this.transactions = transactions;
     }
 
-    public record Policy(String mode, String state, BigDecimal perTxLimit,
+    public record Policy(String mode, String state, String runtimeMode, BigDecimal perTxLimit,
                          BigDecimal dailyLimit, int frequencyLimit, BigDecimal safetyBuffer) {}
     public record ActionPlan(String id, String actionType, String purpose,
             BigDecimal debitAmount, BigDecimal conversionAmount, BigDecimal transferFee,
@@ -68,8 +68,8 @@ public class PhaseFourService {
         db.update("DELETE FROM sandbox_accounts");
         db.update("""
                 INSERT INTO agent_policy
-                (id,mode,agent_state,per_transaction_limit,daily_limit,frequency_limit,safety_buffer)
-                VALUES (1,'APPROVAL','ACTIVE',?,?,?,?)
+                (id,mode,agent_state,runtime_mode,per_transaction_limit,daily_limit,frequency_limit,safety_buffer)
+                VALUES (1,'APPROVAL','ACTIVE','OFFLINE',?,?,?,?)
                 """, PER_TX_LIMIT, DAILY_LIMIT, FREQUENCY_LIMIT, SAFETY_BUFFER);
         db.update("INSERT INTO recipient_allowlist VALUES (?,?,?)",
                 CrossBorderService.SCHOOL_RECIPIENT, "Shenzhen Demo University", "TUITION");
@@ -91,10 +91,10 @@ public class PhaseFourService {
 
     public Policy policy() {
         return db.queryForObject("""
-                SELECT mode,agent_state,per_transaction_limit,daily_limit,frequency_limit,safety_buffer
+                SELECT mode,agent_state,runtime_mode,per_transaction_limit,daily_limit,frequency_limit,safety_buffer
                 FROM agent_policy WHERE id=1
-                """, (rs,n) -> new Policy(rs.getString(1),rs.getString(2),rs.getBigDecimal(3),
-                rs.getBigDecimal(4),rs.getInt(5),rs.getBigDecimal(6)));
+                """, (rs,n) -> new Policy(rs.getString(1),rs.getString(2),rs.getString(3),rs.getBigDecimal(4),
+                rs.getBigDecimal(5),rs.getInt(6),rs.getBigDecimal(7)));
     }
 
     @Transactional
@@ -116,6 +116,13 @@ public class PhaseFourService {
     public void resumeAgent() {
         db.update("UPDATE agent_policy SET agent_state='ACTIVE' WHERE id=1");
         audit("USER","AGENT_RESUMED","POLICY-1","COMPLETED",null,"Agent resumed by demo user");
+    }
+
+    @Transactional
+    public void enableOfflineFallback() {
+        db.update("UPDATE agent_policy SET runtime_mode='OFFLINE' WHERE id=1");
+        audit("SYSTEM","OFFLINE_FALLBACK_ENABLED","POLICY-1","COMPLETED",null,
+                "Deterministic local responses are active; no LLM or network dependency is required");
     }
 
     @Transactional
@@ -223,10 +230,13 @@ public class PhaseFourService {
         PolicyDecision d=evaluate(plan,false);
         String status=switch(d.decision()) {
             case "BLOCKED"->"BLOCKED";
-            case "APPROVAL_REQUIRED"->"AWAITING_APPROVAL";
+            case "APPROVAL_REQUIRED", "DEADLINE_RISK"->"AWAITING_APPROVAL";
             default->"POLICY_ALLOWED";
         };
         db.update("UPDATE action_plans SET status=? WHERE id=?",status,plan.id());
+        if ("DEADLINE RISK".equals(d.reasonCode())) {
+            db.update("UPDATE action_plans SET risk='DEADLINE RISK: ' || risk WHERE id=?", plan.id());
+        }
         audit("POLICY_GUARD","POLICY_CHECKED",plan.id(),d.decision(),d.reasonCode(),d.explanation());
         return action(plan.id());
     }
@@ -251,6 +261,13 @@ public class PhaseFourService {
                     ||quote.fxMarkup().compareTo(plan.fxMarkup())!=0
                     ||quote.expectedReceived().compareTo(plan.destinationAmount())!=0)
                 return blocked("APPROVAL EXPIRED");
+            boolean deadlineRisk = LocalDate.now()
+                    .plusDays(quote.settlementMaxDays() + CrossBorderService.SETTLEMENT_SAFETY_MARGIN_DAYS)
+                    .isAfter(crossBorder.bill().dueDate());
+            if (deadlineRisk) {
+                if (!execution) return decision("DEADLINE_RISK","DEADLINE RISK");
+                return validApproval(plan) ? decision("ALLOWED",null) : blocked("APPROVAL EXPIRED");
+            }
             if(!execution) return decision("APPROVAL_REQUIRED","APPROVAL REQUIRED");
             return validApproval(plan)?decision("ALLOWED",null):blocked("APPROVAL EXPIRED");
         }
@@ -483,6 +500,7 @@ public class PhaseFourService {
             case "CHANNEL NOT AVAILABLE"->"The selected payment channel is unavailable to the user.";
             case "FX QUOTE EXPIRED"->"The stored FX quote is expired or no longer matches the action.";
             case "RECIPIENT MISMATCH"->"The recipient does not match the tuition bill and School Registry.";
+            case "DEADLINE RISK"->"Settlement time plus the one-day safety margin may miss the tuition due date.";
             default->code;
         };
     }

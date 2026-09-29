@@ -103,11 +103,13 @@ CREATE TABLE IF NOT EXISTS agent_policy (
   id INTEGER PRIMARY KEY,
   mode VARCHAR(20) NOT NULL,
   agent_state VARCHAR(20) NOT NULL,
+  runtime_mode VARCHAR(20) NOT NULL DEFAULT 'OFFLINE',
   per_transaction_limit DECIMAL(20,2) NOT NULL,
   daily_limit DECIMAL(20,2) NOT NULL,
   frequency_limit INTEGER NOT NULL,
   safety_buffer DECIMAL(20,2) NOT NULL
 );
+ALTER TABLE agent_policy ADD COLUMN IF NOT EXISTS runtime_mode VARCHAR(20) NOT NULL DEFAULT 'OFFLINE';
 CREATE TABLE IF NOT EXISTS recipient_allowlist (
   recipient_id VARCHAR(120) NOT NULL,
   display_name VARCHAR(120) NOT NULL,

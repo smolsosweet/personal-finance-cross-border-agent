@@ -42,6 +42,7 @@ public class PhaseOneController {
         model.addAttribute("dashboard", transactions.dashboard());
         model.addAttribute("budgets", transactions.budgetSummary());
         model.addAttribute("insights", transactions.proactiveFeed());
+        model.addAttribute("tuitionInsight", crossBorder.tuitionInsight());
         model.addAttribute("studentProfile", crossBorder.profile());
         model.addAttribute("tuitionBill", crossBorder.bill());
         model.addAttribute("recipientVerification", crossBorder.verifyRecipient());
@@ -141,6 +142,13 @@ public class PhaseOneController {
         flash.addFlashAttribute("message", receipt == null
                 ? "Retry blocked by Policy Guard."
                 : "Idempotent receipt: " + receipt.transactionId());
+        return "redirect:/#agent-workspace";
+    }
+
+    @PostMapping("/agent/offline")
+    public String offlineFallback(RedirectAttributes flash) {
+        phaseFour.enableOfflineFallback();
+        flash.addFlashAttribute("message", "Offline fallback active: deterministic local responses are available without the LLM.");
         return "redirect:/#agent-workspace";
     }
 

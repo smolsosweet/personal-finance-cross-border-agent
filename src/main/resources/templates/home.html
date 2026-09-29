@@ -2,14 +2,14 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Atlas · Phase 4</title><link rel="stylesheet" th:href="@{/app.css}">
+  <title>Atlas · Phase 5</title><link rel="stylesheet" th:href="@{/app.css}">
 </head>
 <body>
 <div class="shell">
   <aside class="sidebar">
     <div class="brand"><span class="mark">A</span><div><strong>atlas<span>.</span></strong><small>FINANCE ASSISTANT</small></div></div>
     <nav><a href="#overview">◫ &nbsp; Overview</a><a href="#feed">✦ &nbsp; Proactive Feed</a><a href="#budget">◒ &nbsp; Budget</a><a href="#student-finance">◎ &nbsp; Student finance</a><a href="#agent-workspace">◇ &nbsp; Agent & Sandbox</a><a href="#transactions">⇄ &nbsp; Transactions</a></nav>
-    <div class="side-foot">PHASE 4 OF 5<br><strong>Controlled execution</strong></div>
+    <div class="side-foot">PHASE 5 OF 5<br><strong>Controlled execution</strong></div>
   </aside>
   <main>
     <header><span>Workspace <b>/</b> Finance dashboard</span><span class="tag">● SYNTHETIC DATA</span></header>
@@ -17,7 +17,7 @@
       <div th:if="${message}" class="notice" role="status" th:text="${message}"></div>
 
       <section id="overview" class="intro">
-        <div><div class="eyebrow">PERSONAL FINANCE · PHASE 4</div><h1>Good morning, <span th:text="${profile.display_name}">Minh Nguyen</span> <em>✳</em></h1><p>Your deterministic finance dashboard updates after every simulated event.</p></div>
+        <div><div class="eyebrow">PERSONAL FINANCE · PHASE 5</div><h1>Good morning, <span th:text="${profile.display_name}">Minh Nguyen</span> <em>✳</em></h1><p>Your deterministic finance dashboard updates after every simulated event.</p></div>
         <form method="post" th:action="@{/reset}" onsubmit="return confirm('Reset all Phase 4 synthetic data?')"><button class="secondary">↺ Reset demo data</button></form>
       </section>
 
@@ -129,6 +129,11 @@
           <div class="agent-state"><span th:classappend="${agentPolicy.state == 'ACTIVE' ? ' active' : ' paused'}" th:text="${agentPolicy.state}"></span><strong th:text="${agentPolicy.mode + ' MODE'}"></strong></div>
         </div>
 
+        <div class="tuition-insight">
+          <span class="tuition-insight-icon">!</span>
+          <div><small>TUITION INSIGHT</small><strong th:text="${tuitionInsight.title}"></strong><p th:text="${tuitionInsight.message}"></p><em th:text="${'Evidence: ' + tuitionInsight.evidence}"></em></div>
+        </div>
+
         <div class="policy-bar">
           <form th:action="@{/agent/mode}" method="post">
             <span>Permission mode</span>
@@ -137,6 +142,7 @@
           </form>
           <div><small>Delegated limit</small><strong th:text="${#numbers.formatDecimal(agentPolicy.perTxLimit,1,'COMMA',0,'POINT') + ' VND'}"></strong></div>
           <div><small>Safety buffer</small><strong th:text="${#numbers.formatDecimal(agentPolicy.safetyBuffer,1,'COMMA',0,'POINT') + ' VND'}"></strong></div>
+          <div class="offline-status"><small>Runtime</small><strong th:text="${agentPolicy.runtimeMode + ' FALLBACK'}"></strong><form th:action="@{/agent/offline}" method="post"><button class="offline-button">Enable offline fallback</button></form></div>
           <form th:if="${agentPolicy.state == 'ACTIVE'}" th:action="@{/agent/emergency-stop}" method="post"><button class="stop-button">■ Emergency Stop</button></form>
           <form th:if="${agentPolicy.state == 'PAUSED'}" th:action="@{/agent/resume}" method="post"><button class="resume-button">Resume Agent</button></form>
         </div>
@@ -174,6 +180,7 @@
               </dl>
               <p><b>Impact:</b> <span th:text="${latestAction.impact}"></span></p>
               <p><b>Risk:</b> <span th:text="${latestAction.risk}"></span></p>
+              <div th:if="${#strings.contains(latestAction.risk,'DEADLINE RISK')}" class="deadline-warning">DEADLINE RISK · settlement time plus the one-day safety margin may miss the bill due date.</div>
               <form th:if="${latestAction.status == 'AWAITING_APPROVAL'}" th:action="@{'/agent/actions/' + ${latestAction.id} + '/approve'}" method="post" onsubmit="return confirm('Approve this exact action and run it in the Payment Sandbox?')"><button class="primary-button">Approve exact plan &amp; execute</button></form>
               <form th:if="${latestAction.status == 'COMPLETED'}" th:action="@{'/agent/actions/' + ${latestAction.id} + '/retry'}" method="post"><button class="secondary">Retry with same idempotency key</button></form>
             </div>
@@ -231,7 +238,7 @@
         </table></div>
       </section>
 
-      <footer>SYNTHETIC DATA · DETERMINISTIC POLICY GUARD · PAYMENT SANDBOX · PHASE 4 ONLY</footer>
+      <footer>SYNTHETIC DATA · DETERMINISTIC POLICY GUARD · PAYMENT SANDBOX · PHASE 5 ONLY</footer>
     </div>
   </main>
 </div>
