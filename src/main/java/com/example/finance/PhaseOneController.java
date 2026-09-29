@@ -1,6 +1,7 @@
 package com.example.finance;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Map;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
@@ -41,8 +42,11 @@ public class PhaseOneController {
         model.addAttribute("eventCount", transactions.eventCount());
         model.addAttribute("dashboard", transactions.dashboard());
         model.addAttribute("budgets", transactions.budgetSummary());
-        model.addAttribute("insights", transactions.proactiveFeed());
-        model.addAttribute("tuitionInsight", crossBorder.tuitionInsight());
+        Map<String,Object> tuitionInsight = crossBorder.tuitionInsight();
+        var insights = new ArrayList<>(transactions.proactiveFeed());
+        insights.add(tuitionInsight);
+        model.addAttribute("insights", insights);
+        model.addAttribute("tuitionInsight", tuitionInsight);
         model.addAttribute("studentProfile", crossBorder.profile());
         model.addAttribute("tuitionBill", crossBorder.bill());
         model.addAttribute("recipientVerification", crossBorder.verifyRecipient());

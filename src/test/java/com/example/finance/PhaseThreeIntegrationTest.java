@@ -8,13 +8,19 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(properties="spring.datasource.url=jdbc:h2:mem:phase3_test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1")
+@AutoConfigureMockMvc
 class PhaseThreeIntegrationTest {
     @Autowired CrossBorderService crossBorder;
     @Autowired DemoDataService demoData;
     @Autowired JdbcTemplate db;
+    @Autowired MockMvc mvc;
 
     @BeforeEach void reset() { demoData.resetAll(); }
 
@@ -112,6 +118,30 @@ class PhaseThreeIntegrationTest {
         demoData.resetAll();
         assertEquals("CHEAPER", crossBorder.profile().preference());
         assertEquals(3, crossBorder.rankedQuotes().size());
+    }
+
+    @Test void resetSurfacesTuitionInsightInMainFeedConsistentWithWorkspace() throws Exception {
+        var insight = crossBorder.tuitionInsight();
+        var bill = crossBorder.bill();
+        var preferred = crossBorder.rankedQuotes("CHEAPER").stream()
+                .filter(CrossBorderService.ChannelQuote::eligible).findFirst().orElseThrow();
+
+        String html = mvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        int feedStart = html.indexOf("id=\"feed\"");
+        int feedEnd = html.indexOf("id=\"budget\"", feedStart);
+        assertTrue(feedStart >= 0 && feedEnd > feedStart);
+        String feed = html.substring(feedStart, feedEnd);
+
+        assertTrue(feed.contains((String) insight.get("title")));
+        assertTrue(feed.contains((String) insight.get("message")));
+        assertTrue(feed.contains((String) insight.get("evidence")));
+        assertTrue(feed.contains(bill.paymentReference()));
+        assertTrue(feed.contains(bill.dueDate().toString()));
+        assertTrue(feed.contains(preferred.latestSafeDate().toString()));
+        assertTrue(feed.contains("Approval Mode is still required before payment"));
+        assertFalse(feed.contains("payment has been executed"));
     }
 
     private static CrossBorderService.ChannelQuote quote(String id, List<CrossBorderService.ChannelQuote> quotes) {

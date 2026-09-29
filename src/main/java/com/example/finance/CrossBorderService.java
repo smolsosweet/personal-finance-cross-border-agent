@@ -176,11 +176,15 @@ public class CrossBorderService {
                 .filter(ChannelQuote::eligible).findFirst().orElse(null);
         String title = "Tuition payment needs a controlled plan";
         String message = verification.verified()
-                ? tuition.institution() + " bill for " + tuition.amount().toPlainString() + " CNY is verified and due " + tuition.dueDate() + "."
-                : "Tuition recipient verification needs attention before any plan can proceed.";
+                ? "Bill " + tuition.paymentReference() + " for " + tuition.amount().toPlainString()
+                        + " CNY is verified, due " + tuition.dueDate() + ", with latest safe date "
+                        + option.latestSafeDate() + ". Approval Mode is still required before payment."
+                : "Bill " + tuition.paymentReference()
+                        + " has a recipient mismatch and is blocked until verification succeeds.";
         String evidence = option == null ? "School Registry verification" :
                 "Verified School Registry · " + option.displayName() + " · landed cost " + option.landedCost().toPlainString() + " VND";
-        return Map.of("title", title, "message", message, "evidence", evidence);
+        return Map.of("priority", verification.verified() ? "HIGH" : "BLOCKED",
+                "title", title, "message", message, "evidence", evidence);
     }
 
     public TuitionBill bill() {
