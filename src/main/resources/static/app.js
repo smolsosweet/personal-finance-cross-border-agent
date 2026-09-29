@@ -1,10 +1,12 @@
 const translationsVi = new Map(Object.entries({
   'FINANCE ASSISTANT': 'TRỢ LÝ TÀI CHÍNH',
   'Overview': 'Tổng quan',
+  'Dashboard': 'Tổng quan',
   'Proactive Feed': 'Thông tin chủ động',
   'Budget': 'Ngân sách',
   'Student finance': 'Tài chính du học',
   'Agent & Sandbox': 'Tác vụ & Sandbox',
+  'Agent & Payments': 'Tác vụ & Thanh toán',
   'Transactions': 'Giao dịch',
   'PHASE 5 OF 5': 'GIAI ĐOẠN 5/5',
   'Controlled execution': 'Thực thi có kiểm soát',
@@ -188,6 +190,55 @@ const originalText = new WeakMap();
 const originalPlaceholder = new WeakMap();
 const translationFragments = [...translationsVi.entries()]
   .sort(([left], [right]) => right.length - left.length);
+const tabLabels = {
+  dashboard: { en: 'Dashboard', vi: 'Tổng quan' },
+  transactions: { en: 'Transactions', vi: 'Giao dịch' },
+  student: { en: 'Student finance', vi: 'Tài chính du học' },
+  agent: { en: 'Agent & Payments', vi: 'Tác vụ & Thanh toán' }
+};
+const tabAnchors = {
+  dashboard: '#overview',
+  transactions: '#transaction-tools',
+  student: '#student-finance',
+  agent: '#agent-workspace'
+};
+let activeTab = 'dashboard';
+
+function selectedLanguage() {
+  return localStorage.getItem('finbridge-language') === 'vi' ? 'vi' : 'en';
+}
+
+function updateActiveTabLabel(language = selectedLanguage()) {
+  const label = document.querySelector('[data-active-tab-label]');
+  if (label) label.textContent = tabLabels[activeTab][language];
+}
+
+function activateTab(tab, updateLocation = true) {
+  activeTab = tabLabels[tab] ? tab : 'dashboard';
+  document.querySelectorAll('[data-tab-panel]').forEach((panel) => {
+    panel.hidden = panel.dataset.tabPanel !== activeTab;
+  });
+  document.querySelectorAll('[data-tab]').forEach((button) => {
+    button.setAttribute('aria-selected', String(button.dataset.tab === activeTab));
+  });
+  updateActiveTabLabel();
+  localStorage.setItem('finbridge-active-tab', activeTab);
+  if (updateLocation) {
+    history.replaceState(null, '', tabAnchors[activeTab]);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+function initialTab() {
+  const hashTabs = {
+    '#overview': 'dashboard', '#feed': 'dashboard', '#budget': 'dashboard',
+    '#transaction-tools': 'transactions', '#transactions': 'transactions',
+    '#student-finance': 'student', '#agent-workspace': 'agent'
+  };
+  return hashTabs[window.location.hash]
+    || localStorage.getItem('finbridge-active-tab')
+    || 'dashboard';
+}
 
 function translateDynamic(text) {
   const rules = [
@@ -264,14 +315,21 @@ function applyLanguage(language) {
       element.placeholder = original;
     }
   });
+  updateActiveTabLabel(selected);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   const dialog = document.querySelector('dialog[data-auto-open="true"]');
   if (dialog && typeof dialog.showModal === 'function') dialog.showModal();
 
+  activateTab(initialTab(), false);
+  requestAnimationFrame(() => window.scrollTo({ top: 0 }));
   const savedLanguage = localStorage.getItem('finbridge-language') || 'en';
   applyLanguage(savedLanguage);
+
+  document.querySelectorAll('[data-tab]').forEach((button) => {
+    button.addEventListener('click', () => activateTab(button.dataset.tab));
+  });
 
   document.querySelectorAll('[data-language]').forEach((button) => {
     button.addEventListener('click', () => {

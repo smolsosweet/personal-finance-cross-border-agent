@@ -8,12 +8,17 @@
 <div class="shell">
   <aside class="sidebar">
     <div class="brand"><span class="mark">A</span><div><strong>atlas<span>.</span></strong><small>FINANCE ASSISTANT</small></div></div>
-    <nav><a href="#overview">◫ &nbsp; Overview</a><a href="#feed">✦ &nbsp; Proactive Feed</a><a href="#budget">◒ &nbsp; Budget</a><a href="#student-finance">◎ &nbsp; Student finance</a><a href="#agent-workspace">◇ &nbsp; Agent & Sandbox</a><a href="#transactions">⇄ &nbsp; Transactions</a></nav>
+    <nav class="sidebar-tabs" aria-label="Main sections">
+      <button type="button" data-tab="dashboard" data-testid="tab-dashboard" aria-selected="true"><span>◫</span> Dashboard</button>
+      <button type="button" data-tab="transactions" data-testid="tab-transactions" aria-selected="false"><span>⇄</span> Transactions</button>
+      <button type="button" data-tab="student" data-testid="tab-student" aria-selected="false"><span>◎</span> Student finance</button>
+      <button type="button" data-tab="agent" data-testid="tab-agent" aria-selected="false"><span>◇</span> Agent & Payments</button>
+    </nav>
     <div class="side-foot">PHASE 5 OF 5<br><strong>Controlled execution</strong></div>
   </aside>
   <main>
     <header>
-      <span>Workspace <b>/</b> Finance dashboard</span>
+      <span>Workspace <b>/</b> <strong data-active-tab-label>Dashboard</strong></span>
       <div class="header-actions">
         <span class="tag">● SYNTHETIC DATA</span>
         <div class="language-switcher" role="group" aria-label="Language">
@@ -22,22 +27,28 @@
         </div>
       </div>
     </header>
+    <nav class="mobile-tabs" aria-label="Main sections">
+      <button type="button" data-tab="dashboard" aria-selected="true">Dashboard</button>
+      <button type="button" data-tab="transactions" aria-selected="false">Transactions</button>
+      <button type="button" data-tab="student" aria-selected="false">Student finance</button>
+      <button type="button" data-tab="agent" aria-selected="false">Agent &amp; Payments</button>
+    </nav>
     <div class="content">
       <div th:if="${message}" class="notice" role="status" th:text="${message}"></div>
 
-      <section id="overview" class="intro">
+      <section id="overview" class="intro" data-tab-panel="dashboard">
         <div><div class="eyebrow">PERSONAL FINANCE · PHASE 5</div><h1>Good morning, <span th:text="${profile.display_name}">Minh Nguyen</span> <em>✳</em></h1><p>Your deterministic finance dashboard updates after every simulated event.</p></div>
         <form method="post" th:action="@{/reset}" data-confirm-en="Reset all Phase 4 synthetic data?" data-confirm-vi="Đặt lại toàn bộ dữ liệu mô phỏng Giai đoạn 4?"><button class="secondary" data-testid="reset-demo">↺ Reset demo data</button></form>
       </section>
 
-      <section class="stats">
+      <section class="stats" data-tab-panel="dashboard">
         <article><span class="icon blue">◫</span><small>Checking balance</small><strong th:text="${#numbers.formatDecimal(dashboard.balance,1,'COMMA',0,'POINT')}"></strong><p>VND · synthetic account</p></article>
         <article data-testid="stat-income"><span class="icon green">↙</span><small>Income in dataset</small><strong th:text="${#numbers.formatDecimal(dashboard.income,1,'COMMA',0,'POINT')}"></strong><p>Internal transfers excluded</p></article>
         <article data-testid="stat-expenses"><span class="icon orange">↗</span><small>Expenses in dataset</small><strong th:text="${#numbers.formatDecimal(dashboard.expenses,1,'COMMA',0,'POINT')}"></strong><p>Refunds tracked separately</p></article>
         <article><span class="icon violet">?</span><small>Needs review</small><strong th:text="${dashboard.pendingReview}"></strong><p>Medium or low confidence</p></article>
       </section>
 
-      <section class="card">
+      <section class="card" id="transaction-tools" data-tab-panel="transactions" hidden>
         <div class="section-title"><div><div class="eyebrow">SIMULATED BANK EVENT</div><h2>Test each confidence path</h2><p>Deterministic merchant rules run immediately after Phase 1 normalization.</p></div></div>
         <div class="event-grid phase-two-events">
           <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="high"><button data-testid="simulate-high"><span>97%</span><strong>High confidence</strong><small>Highlands · auto category</small></button></form>
@@ -50,7 +61,7 @@
         <p class="fine">Rules: ≥90% auto-categorize · 60–89% confirm suggestion · below 60% ask transaction purpose. No LLM is used for balances or categorization in this phase.</p>
       </section>
 
-      <div class="dashboard-grid">
+      <div class="dashboard-grid" data-tab-panel="dashboard">
         <section class="card" id="feed" data-testid="proactive-feed">
           <div class="section-title"><div><div class="eyebrow">PROACTIVE FEED</div><h2>Worth your attention</h2><p>Every insight shows the deterministic evidence behind it.</p></div><span class="pill" th:text="${#lists.size(insights) + ' insights'}"></span></div>
           <div class="insight" th:each="insight : ${insights}">
@@ -69,12 +80,12 @@
         </section>
       </div>
 
-      <section class="card">
+      <section class="card" data-tab-panel="dashboard">
         <div class="section-title"><div><div class="eyebrow">SHARED DEMO PROFILE</div><h2>Demo accounts</h2></div><span class="pill" th:text="${profile.source_country + ' → ' + profile.study_country}"></span></div>
         <div class="account-grid"><div th:each="account : ${accounts}" class="account"><div><strong th:text="${account.account_name}"></strong><small th:text="${account.id + ' · ' + account.currency}"></small></div><b th:text="${#numbers.formatDecimal(account.balance,1,'COMMA',0,'POINT') + ' VND'}"></b></div></div>
       </section>
 
-      <section class="card student-section" id="student-finance">
+      <section class="card student-section" id="student-finance" data-tab-panel="student" hidden>
         <div class="section-title">
           <div><div class="eyebrow">CROSS BORDER STUDENT FINANCE · SYNTHETIC DATA</div><h2>Tuition planning</h2><p>One fixed corridor and one verified bill. No provider API or real payment is connected.</p></div>
           <form th:action="@{/student/preference}" method="post" class="preference-form">
@@ -132,7 +143,7 @@
         </div>
       </section>
 
-      <section class="card agent-workspace" id="agent-workspace">
+      <section class="card agent-workspace" id="agent-workspace" data-tab-panel="agent" hidden>
         <div class="section-title">
           <div><div class="eyebrow">CONTROLLED EXECUTION · PAYMENT SANDBOX</div><h2>Conversation, policy and action plan</h2><p>The conversation creates plans only. Policy Guard is deterministic and the backend alone can execute sandbox actions.</p></div>
           <div class="agent-state" data-testid="agent-state"><span th:classappend="${agentPolicy.state == 'ACTIVE' ? ' active' : ' paused'}" th:text="${agentPolicy.state}"></span><strong th:text="${agentPolicy.mode + ' MODE'}"></strong></div>
@@ -228,7 +239,7 @@
         </div>
       </section>
 
-      <section class="card" id="transactions">
+      <section class="card" id="transactions" data-tab-panel="transactions" hidden>
         <div class="section-title"><div><div class="eyebrow">TRANSACTION DASHBOARD</div><h2>Normalized and categorized ledger</h2><p>Category, confidence, evidence and review state remain visible.</p></div><span class="pill" th:text="${#lists.size(transactions) + ' records'}"></span></div>
         <div class="table-scroll"><table>
           <thead><tr><th>Merchant / evidence</th><th>Type</th><th>Category</th><th>Confidence</th><th>Status</th><th class="right">Amount</th><th>Action</th></tr></thead>
