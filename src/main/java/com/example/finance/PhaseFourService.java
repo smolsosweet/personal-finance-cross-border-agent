@@ -248,6 +248,16 @@ public class PhaseFourService {
         if(accountBalance(PAYER).subtract(plan.debitAmount()).compareTo(p.safetyBuffer())<0)
             return blocked("INSUFFICIENT SAFE BALANCE");
         if("TUITION".equals(plan.actionType())) {
+            var profile=crossBorder.profile();
+            if(!"Vietnam".equals(profile.sourceCountry())
+                    ||!"China".equals(profile.destinationCountry()))
+                return blocked("CORRIDOR NOT ALLOWED");
+            if(!"VND".equals(profile.sourceCurrency())
+                    ||!"CNY".equals(profile.destinationCurrency())
+                    ||!"VND".equals(plan.sourceCurrency())
+                    ||!"CNY".equals(plan.destinationCurrency())
+                    ||!"CNY".equals(crossBorder.bill().currency()))
+                return blocked("CURRENCY NOT ALLOWED");
             var verified=crossBorder.verifyRecipient();
             if(!verified.verified()||!crossBorder.bill().recipientAccount().equals(plan.recipient()))
                 return blocked("RECIPIENT MISMATCH");
@@ -500,6 +510,8 @@ public class PhaseFourService {
             case "CHANNEL NOT AVAILABLE"->"The selected payment channel is unavailable to the user.";
             case "FX QUOTE EXPIRED"->"The stored FX quote is expired or no longer matches the action.";
             case "RECIPIENT MISMATCH"->"The recipient does not match the tuition bill and School Registry.";
+            case "CORRIDOR NOT ALLOWED"->"The tuition payment corridor must remain Vietnam to China.";
+            case "CURRENCY NOT ALLOWED"->"The tuition payment currencies must remain VND to CNY.";
             case "DEADLINE RISK"->"Settlement time plus the one-day safety margin may miss the tuition due date.";
             default->code;
         };

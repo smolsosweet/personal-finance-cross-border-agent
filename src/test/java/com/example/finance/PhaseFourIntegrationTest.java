@@ -149,6 +149,32 @@ class PhaseFourIntegrationTest {
     }
 
     @Test
+    void approvalBlocksPostCreationCurrencyTamperingWithoutSandboxArtifacts() {
+        var plan = phaseFour.createTuitionPlan("BANK_A");
+        db.update("UPDATE action_plans SET source_currency='USD', destination_currency='USD' WHERE id=?",
+                plan.id());
+
+        var blocked = phaseFour.approve(plan.id());
+
+        assertEquals("BLOCKED", blocked.status());
+        assertAuditReason("CURRENCY NOT ALLOWED");
+        assertNoSandboxArtifacts();
+    }
+
+    @Test
+    void executionBlocksPostApprovalCorridorTamperingWithoutSandboxArtifacts() {
+        var plan = phaseFour.createTuitionPlan("BANK_A");
+        assertEquals("APPROVED", phaseFour.approve(plan.id()).status());
+        db.update("UPDATE student_corridor_profile SET source_country='Thailand', destination_country='Japan' WHERE id=1");
+
+        assertNull(phaseFour.execute(plan.id()));
+
+        assertEquals("BLOCKED", phaseFour.action(plan.id()).status());
+        assertAuditReason("CORRIDOR NOT ALLOWED");
+        assertNoSandboxArtifacts();
+    }
+
+    @Test
     void emergencyStopBlocksNewActionsInBothModes() {
         phaseFour.setMode("DELEGATED");
         phaseFour.emergencyStop();
@@ -199,6 +225,13 @@ class PhaseFourIntegrationTest {
                 "SELECT COUNT(*) FROM audit_log WHERE reason_code=?",
                 Integer.class, reason);
         assertTrue(count != null && count > 0, "Missing audit reason " + reason);
+    }
+
+    private void assertNoSandboxArtifacts() {
+        assertEquals(0, phaseFour.sandboxTransactionCount());
+        assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM sandbox_ledger_entries", Integer.class));
+        assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM sandbox_transactions", Integer.class));
+        assertMoney("0.00", balance(PhaseFourService.SCHOOL));
     }
 
     private static void assertMoney(String expected, BigDecimal actual) {
