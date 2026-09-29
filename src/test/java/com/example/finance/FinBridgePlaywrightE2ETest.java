@@ -190,8 +190,13 @@ class FinBridgePlaywrightE2ETest {
         assertThat(page.getByTestId("tuition-bill")).containsText("20,000");
         assertThat(page.getByTestId("tuition-bill")).containsText("CNY");
         assertThat(page.getByTestId("recipient-verification")).containsText("Recipient verified");
+        assertThat(page.getByTestId("payment-balance")).containsText("100,000,000 VND");
         assertThat(page.getByTestId("channel-ALIPAY")).containsText("Eligible");
         assertThat(page.getByTestId("channel-BANK_A")).containsText("Eligible");
+        assertThat(page.getByTestId("remaining-ALIPAY")).containsText("28,967,900 VND");
+        assertThat(page.getByTestId("remaining-BANK_A")).containsText("29,239,200 VND");
+        assertThat(page.getByTestId("remaining-BANK_B")).containsText("30,230,400 VND");
+        assertThat(page.getByTestId("remaining-BANK_A")).containsText("Safety buffer preserved");
         assertThat(page.getByTestId("plan-ALIPAY")).isVisible();
         assertThat(page.getByTestId("plan-BANK_A")).isVisible();
     }

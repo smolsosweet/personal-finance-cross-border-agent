@@ -157,6 +157,8 @@ public class TransactionService {
     @Transactional
     public String simulate(String scenario) {
         LocalDateTime now = LocalDateTime.now();
+        LocalDateTime latest = db.queryForObject("SELECT MAX(occurred_at) FROM transactions", LocalDateTime.class);
+        if (latest != null && !now.isAfter(latest)) now = latest.plusNanos(1_000);
         String reference = "SIM-" + UUID.randomUUID();
         BankEvent event = switch(scenario) {
             case "medium" -> new BankEvent(reference,now,"Campus Store","Card purchase",new BigDecimal("120000"),"OUT","CHECKING",null,"Simulated Bank Event");

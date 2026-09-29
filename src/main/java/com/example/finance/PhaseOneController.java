@@ -57,6 +57,7 @@ public class PhaseOneController {
         model.addAttribute("recipientVerification", crossBorder.verifyRecipient());
         model.addAttribute("channelQuotes", crossBorder.rankedQuotes());
         model.addAttribute("agentPolicy", phaseFour.policy());
+        model.addAttribute("paymentBalance", phaseFour.payerBalance());
         model.addAttribute("conversation", phaseFour.messages());
         model.addAttribute("latestAction", phaseFour.latestAction());
         model.addAttribute("latestReceipt", phaseFour.latestReceipt());

@@ -516,6 +516,10 @@ public class PhaseFourService {
         return db.queryForList("SELECT * FROM sandbox_accounts ORDER BY id");
     }
 
+    public BigDecimal payerBalance() {
+        return accountBalance(PAYER);
+    }
+
     public int sandboxTransactionCount() {
         return db.queryForObject("SELECT COUNT(*) FROM sandbox_transactions",Integer.class);
     }

@@ -18,6 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class PhaseThreeIntegrationTest {
     @Autowired CrossBorderService crossBorder;
+    @Autowired PhaseFourService phaseFour;
     @Autowired DemoDataService demoData;
     @Autowired JdbcTemplate db;
     @Autowired MockMvc mvc;
@@ -78,6 +79,30 @@ class PhaseThreeIntegrationTest {
         assertMoney("120000.00", alipay.transferFee());
         assertMoney("212100.00", alipay.fxMarkup());
         assertMoney("71032100.00", alipay.landedCost());
+    }
+
+    @Test void paymentBalanceSupportsExactRemainingBalanceForEveryQuote() {
+        BigDecimal balance = phaseFour.payerBalance();
+        assertMoney("100000000.00", balance);
+
+        var bankA = quote("BANK_A", crossBorder.rankedQuotes("CHEAPER"));
+        var alipay = quote("ALIPAY", crossBorder.rankedQuotes("CHEAPER"));
+        var bankB = quote("BANK_B", crossBorder.rankedQuotes("CHEAPER"));
+        assertMoney("29239200.00", balance.subtract(bankA.landedCost()));
+        assertMoney("28967900.00", balance.subtract(alipay.landedCost()));
+        assertMoney("30230400.00", balance.subtract(bankB.landedCost()));
+    }
+
+    @Test void comparisonExplainsWhenThePaymentBalanceIsInsufficient() throws Exception {
+        db.update("UPDATE sandbox_accounts SET balance=29239200.00 WHERE id='PAYER_VND'");
+
+        String html = mvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertTrue(html.contains("29,239,200 VND"));
+        assertTrue(html.contains("-41,521,600 VND"));
+        assertTrue(html.contains("Insufficient balance"));
     }
 
     @Test void quotesHaveSourceTimestampExpiryAndDeadline() {

@@ -137,12 +137,24 @@
           </article>
         </div>
 
-        <div class="channel-heading"><div><h3>Eligible channel comparison</h3><p>Eligibility is applied before preference and price. Bank B remains reference-only even when its synthetic rate is lower.</p></div><form th:action="@{/student/quotes/refresh}" method="post"><button class="secondary" type="submit">↻ Refresh synthetic quotes</button></form></div>
+        <div class="channel-heading">
+          <div><h3>Eligible channel comparison</h3><p>Eligibility is applied before preference and price. Bank B remains reference-only even when its synthetic rate is lower.</p></div>
+          <div class="channel-heading-tools">
+            <div class="available-balance" data-testid="payment-balance"><small>Available payment balance</small><strong th:text="${#numbers.formatDecimal(paymentBalance,1,'COMMA',0,'POINT') + ' VND'}"></strong><span>Payment Sandbox · checked again before approval</span></div>
+            <form th:action="@{/student/quotes/refresh}" method="post"><button class="secondary" type="submit">↻ Refresh synthetic quotes</button></form>
+          </div>
+        </div>
         <div class="channel-grid">
           <article class="channel-card" th:each="quote : ${channelQuotes}" th:classappend="${quote.eligible ? '' : ' unavailable'}" th:attr="data-testid=${'channel-' + quote.channelId}">
             <div class="channel-top"><span class="rank" th:text="${quote.rank != null ? '#' + quote.rank : 'REF'}"></span><span class="eligibility" th:classappend="${quote.eligible ? ' eligible' : ' unavailable-tag'}" th:text="${quote.eligible ? 'Eligible' : 'Unavailable'}"></span></div>
             <h3 th:text="${quote.displayName}"></h3><p class="eligibility-reason" th:text="${quote.eligibilityReason}"></p>
-            <div class="landed-cost"><small>Landed cost</small><strong th:text="${#numbers.formatDecimal(quote.landedCost,1,'COMMA',0,'POINT') + ' VND'}"></strong></div>
+            <div class="cost-summary">
+              <div class="landed-cost"><small>Landed cost</small><strong th:text="${#numbers.formatDecimal(quote.landedCost,1,'COMMA',0,'POINT') + ' VND'}"></strong></div>
+              <div class="remaining-balance" th:classappend="${paymentBalance.compareTo(quote.landedCost) < 0 ? ' insufficient' : (paymentBalance.subtract(quote.landedCost).compareTo(agentPolicy.safetyBuffer) < 0 ? ' warning' : ' safe')}" th:attr="data-testid=${'remaining-' + quote.channelId}">
+                <small>Remaining after payment</small><strong th:text="${#numbers.formatDecimal(paymentBalance.subtract(quote.landedCost),1,'COMMA',0,'POINT') + ' VND'}"></strong>
+                <span th:if="${paymentBalance.compareTo(quote.landedCost) < 0}">Insufficient balance</span><span th:if="${paymentBalance.compareTo(quote.landedCost) >= 0 and paymentBalance.subtract(quote.landedCost).compareTo(agentPolicy.safetyBuffer) < 0}">Below safety buffer</span><span th:if="${paymentBalance.subtract(quote.landedCost).compareTo(agentPolicy.safetyBuffer) >= 0}">Safety buffer preserved</span>
+              </div>
+            </div>
             <dl class="fee-breakdown">
               <div><dt>Rate</dt><dd th:text="${#numbers.formatDecimal(quote.rateVndPerCny,1,'COMMA',0,'POINT') + ' VND/CNY'}"></dd></div>
               <div><dt>Source amount</dt><dd th:text="${#numbers.formatDecimal(quote.sourceAmount,1,'COMMA',0,'POINT') + ' VND'}"></dd></div>
