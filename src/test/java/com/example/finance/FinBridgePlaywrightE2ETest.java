@@ -102,6 +102,29 @@ class FinBridgePlaywrightE2ETest {
     }
 
     @Test
+    void languageSwitcherTranslatesAndPersistsAcrossNavigation() {
+        page.getByTestId("language-vi").click();
+
+        assertEquals("vi", page.locator("html").getAttribute("lang"));
+        assertThat(page.getByTestId("language-vi")).hasAttribute("aria-pressed", "true");
+        assertThat(page.locator("nav")).containsText("Tổng quan");
+        assertThat(page.locator("#student-finance")).containsText("Lập kế hoạch học phí");
+        assertThat(page.locator("#transactions")).containsText("BẢNG ĐIỀU KHIỂN GIAO DỊCH");
+
+        page.getByTestId("simulate-high").click();
+        assertEquals("vi", page.locator("html").getAttribute("lang"));
+        assertThat(page.getByTestId("language-vi")).hasAttribute("aria-pressed", "true");
+        assertThat(page.locator("[role='status']")).containsText("Sự kiện ngân hàng mô phỏng");
+        assertThat(page.getByTestId("transaction-row").first()).containsText("Ăn uống");
+
+        page.getByTestId("language-en").click();
+        assertEquals("en", page.locator("html").getAttribute("lang"));
+        assertThat(page.getByTestId("language-en")).hasAttribute("aria-pressed", "true");
+        assertThat(page.locator("nav")).containsText("Overview");
+        assertThat(page.getByTestId("transaction-row").first()).containsText("Food & Drinks");
+    }
+
+    @Test
     void internalTransferDoesNotChangeIncomeOrExpenseTotals() {
         String incomeBefore = page.getByTestId("stat-income").locator("strong").textContent();
         String expensesBefore = page.getByTestId("stat-expenses").locator("strong").textContent();

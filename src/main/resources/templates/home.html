@@ -12,13 +12,22 @@
     <div class="side-foot">PHASE 5 OF 5<br><strong>Controlled execution</strong></div>
   </aside>
   <main>
-    <header><span>Workspace <b>/</b> Finance dashboard</span><span class="tag">● SYNTHETIC DATA</span></header>
+    <header>
+      <span>Workspace <b>/</b> Finance dashboard</span>
+      <div class="header-actions">
+        <span class="tag">● SYNTHETIC DATA</span>
+        <div class="language-switcher" role="group" aria-label="Language">
+          <button type="button" data-language="vi" data-testid="language-vi" aria-pressed="false">VI</button>
+          <button type="button" data-language="en" data-testid="language-en" aria-pressed="true">EN</button>
+        </div>
+      </div>
+    </header>
     <div class="content">
       <div th:if="${message}" class="notice" role="status" th:text="${message}"></div>
 
       <section id="overview" class="intro">
         <div><div class="eyebrow">PERSONAL FINANCE · PHASE 5</div><h1>Good morning, <span th:text="${profile.display_name}">Minh Nguyen</span> <em>✳</em></h1><p>Your deterministic finance dashboard updates after every simulated event.</p></div>
-        <form method="post" th:action="@{/reset}" onsubmit="return confirm('Reset all Phase 4 synthetic data?')"><button class="secondary" data-testid="reset-demo">↺ Reset demo data</button></form>
+        <form method="post" th:action="@{/reset}" data-confirm-en="Reset all Phase 4 synthetic data?" data-confirm-vi="Đặt lại toàn bộ dữ liệu mô phỏng Giai đoạn 4?"><button class="secondary" data-testid="reset-demo">↺ Reset demo data</button></form>
       </section>
 
       <section class="stats">
@@ -181,7 +190,7 @@
               <p><b>Impact:</b> <span th:text="${latestAction.impact}"></span></p>
               <p><b>Risk:</b> <span th:text="${latestAction.risk}"></span></p>
               <div th:if="${#strings.contains(latestAction.risk,'DEADLINE RISK')}" class="deadline-warning">DEADLINE RISK · settlement time plus the one-day safety margin may miss the bill due date.</div>
-              <form th:if="${latestAction.status == 'AWAITING_APPROVAL'}" th:action="@{'/agent/actions/' + ${latestAction.id} + '/approve'}" method="post" onsubmit="return confirm('Approve this exact action and run it in the Payment Sandbox?')"><button class="primary-button" data-testid="approve-action">Approve exact plan &amp; execute</button></form>
+              <form th:if="${latestAction.status == 'AWAITING_APPROVAL'}" th:action="@{'/agent/actions/' + ${latestAction.id} + '/approve'}" method="post" data-confirm-en="Approve this exact action and run it in the Payment Sandbox?" data-confirm-vi="Phê duyệt chính xác kế hoạch này và chạy trong Payment Sandbox?"><button class="primary-button" data-testid="approve-action">Approve exact plan &amp; execute</button></form>
               <form th:if="${latestAction.status == 'COMPLETED'}" th:action="@{'/agent/actions/' + ${latestAction.id} + '/retry'}" method="post"><button class="secondary">Retry with same idempotency key</button></form>
             </div>
           </article>
