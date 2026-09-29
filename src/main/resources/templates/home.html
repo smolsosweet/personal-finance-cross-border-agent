@@ -213,8 +213,8 @@
 
         <div class="audit-panel">
           <div class="panel-heading"><div><small>IMMUTABLE DEMO EVIDENCE</small><h3>Audit Log</h3></div><span th:text="${#lists.size(auditEvents) + ' recent events'}"></span></div>
-          <div class="table-scroll"><table><thead><tr><th>Time / actor</th><th>Event</th><th>Status</th><th>Reason</th><th>Evidence</th></tr></thead>
-            <tbody><tr th:each="event : ${auditEvents}"><td><strong th:text="${#temporals.format(event.occurredAt,'HH:mm:ss')}"></strong><small th:text="${event.actor}"></small></td><td th:text="${#strings.replace(event.eventType,'_',' ')}"></td><td th:text="${event.status}"></td><td><span class="reason-code" th:text="${event.reasonCode ?: '—'}"></span></td><td th:text="${event.details}"></td></tr></tbody>
+          <div class="table-scroll"><table><thead><tr><th>Time / actor</th><th>Event</th><th>Correlation</th><th>Status</th><th>Reason</th><th>Evidence</th></tr></thead>
+            <tbody><tr th:each="event : ${auditEvents}"><td><strong th:text="${#temporals.format(event.occurredAt,'HH:mm:ss')}"></strong><small th:text="${event.actor}"></small></td><td th:text="${#strings.replace(event.eventType,'_',' ')}"></td><td><small th:text="${event.referenceId ?: '—'}"></small></td><td th:text="${event.status}"></td><td><span class="reason-code" th:text="${event.reasonCode ?: '—'}"></span></td><td th:text="${event.details}"></td></tr></tbody>
           </table></div>
         </div>
       </section>

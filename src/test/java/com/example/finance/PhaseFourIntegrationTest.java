@@ -2,6 +2,7 @@ package com.example.finance;
 
 import static org.junit.jupiter.api.Assertions.*;
 import java.math.BigDecimal;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,6 +77,50 @@ class PhaseFourIntegrationTest {
                 "SELECT COUNT(*) FROM sandbox_ledger_entries WHERE transaction_id=?",
                 Integer.class, receipt.transactionId());
         assertEquals(4, entries);
+    }
+
+    @Test
+    void successfulTuitionJourneyHasCompleteCorrelatedAuditTrail() {
+        var plan = phaseFour.createTuitionPlan("BANK_A");
+        var receipt = phaseFour.approveAndExecute(plan.id());
+
+        assertNotNull(receipt);
+        List<String> eventTypes = auditTypes(plan.id());
+        assertTrue(eventTypes.containsAll(List.of(
+                "ACTION_PLANNED",
+                "TUITION_BILL_SELECTED",
+                "RECIPIENT_VERIFICATION",
+                "CHANNEL_COMPARISON",
+                "FX_QUOTE_SELECTED",
+                "POLICY_CHECKED",
+                "ACTION_APPROVED",
+                "EXECUTION_POLICY_CHECKED",
+                "SANDBOX_EXECUTED",
+                "PAYMENT_RECEIPT_CREATED")));
+        assertAuditDetails(plan.id(), "FX_QUOTE_SELECTED", plan.quoteId());
+        assertAuditDetails(plan.id(), "FX_QUOTE_SELECTED", "landed cost 70760800.00 VND");
+        assertAuditDetails(plan.id(), "PAYMENT_RECEIPT_CREATED", receipt.transactionId());
+    }
+
+    @Test
+    void blockedTuitionJourneyKeepsCorrelatedEvidenceAndReason() {
+        var plan = phaseFour.createTuitionPlan("BANK_B");
+
+        assertEquals("BLOCKED", plan.status());
+        List<String> eventTypes = auditTypes(plan.id());
+        assertTrue(eventTypes.containsAll(List.of(
+                "TUITION_BILL_SELECTED",
+                "RECIPIENT_VERIFICATION",
+                "CHANNEL_COMPARISON",
+                "FX_QUOTE_SELECTED",
+                "POLICY_CHECKED")));
+        assertFalse(eventTypes.contains("PAYMENT_RECEIPT_CREATED"));
+        assertAuditDetails(plan.id(), "FX_QUOTE_SELECTED", "Bank B promotional quote");
+        assertEquals(1, db.queryForObject("""
+                SELECT COUNT(*) FROM audit_log
+                WHERE reference_id=? AND event_type='POLICY_CHECKED'
+                  AND status='BLOCKED' AND reason_code='CHANNEL NOT AVAILABLE'
+                """, Integer.class, plan.id()));
     }
 
     @Test
@@ -225,6 +270,20 @@ class PhaseFourIntegrationTest {
                 "SELECT COUNT(*) FROM audit_log WHERE reason_code=?",
                 Integer.class, reason);
         assertTrue(count != null && count > 0, "Missing audit reason " + reason);
+    }
+
+    private List<String> auditTypes(String actionId) {
+        return db.queryForList(
+                "SELECT event_type FROM audit_log WHERE reference_id=? ORDER BY occurred_at",
+                String.class, actionId);
+    }
+
+    private void assertAuditDetails(String actionId, String eventType, String expectedText) {
+        String details = db.queryForObject("""
+                SELECT details FROM audit_log WHERE reference_id=? AND event_type=?
+                """, String.class, actionId, eventType);
+        assertNotNull(details);
+        assertTrue(details.contains(expectedText), details);
     }
 
     private void assertNoSandboxArtifacts() {

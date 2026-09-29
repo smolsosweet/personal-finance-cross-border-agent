@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -184,7 +185,40 @@ public class PhaseFourService {
                 quote.landedCost(),quote.sourceAmount(),quote.transferFee(),quote.fxMarkup(),"VND",
                 quote.expectedReceived(),"CNY",bill.recipientAccount(),quote.channelId(),quote.quoteId(),
                 "APPROVAL",impact,"Quote, recipient and approval are rechecked before execution");
+        auditTuitionEvidence(plan, bill, quote);
         return applyInitialPolicy(plan);
+    }
+
+    private void auditTuitionEvidence(ActionPlan plan, CrossBorderService.TuitionBill bill,
+            CrossBorderService.ChannelQuote selectedQuote) {
+        audit("CROSS_BORDER_SERVICE","TUITION_BILL_SELECTED",plan.id(),"SELECTED",null,
+                "Bill "+bill.id()+"; reference "+bill.paymentReference()+"; institution "
+                        +bill.institution()+"; amount "+bill.amount().toPlainString()+" "
+                        +bill.currency()+"; recipient "+bill.recipientAccount()+"; due "+bill.dueDate());
+
+        var verification=crossBorder.verifyRecipient();
+        audit("SCHOOL_REGISTRY","RECIPIENT_VERIFICATION",plan.id(),
+                verification.verified()?"VERIFIED":"BLOCKED",
+                verification.verified()?null:"RECIPIENT MISMATCH",
+                verification.reason()+"; registry institution "+value(verification.registryInstitution())
+                        +"; registry account "+value(verification.registryAccount()));
+
+        String comparison=crossBorder.rankedQuotes().stream()
+                .map(option->option.channelId()+"="+(option.eligible()?"ELIGIBLE":"UNAVAILABLE")
+                        +", landed cost "+option.landedCost().toPlainString()+" VND")
+                .collect(Collectors.joining("; "));
+        audit("CROSS_BORDER_SERVICE","CHANNEL_COMPARISON",plan.id(),"COMPLETED",null,comparison);
+
+        audit("FX_QUOTE_SERVICE","FX_QUOTE_SELECTED",plan.id(),
+                selectedQuote.eligible()?"ELIGIBLE":"BLOCKED",
+                selectedQuote.eligible()?null:"CHANNEL NOT AVAILABLE",
+                "Quote "+selectedQuote.quoteId()+" from "+selectedQuote.quoteSource()
+                        +"; quoted at "+selectedQuote.quotedAt()+"; expires at "+selectedQuote.expiresAt()
+                        +"; rate "+selectedQuote.rateVndPerCny().toPlainString()+" VND/CNY"
+                        +"; transfer fee "+selectedQuote.transferFee().toPlainString()+" VND"
+                        +"; FX markup "+selectedQuote.fxMarkup().toPlainString()+" VND"
+                        +"; landed cost "+selectedQuote.landedCost().toPlainString()+" VND"
+                        +"; expected received "+selectedQuote.expectedReceived().toPlainString()+" CNY");
     }
 
     @Transactional
@@ -333,6 +367,8 @@ public class PhaseFourService {
             return prior.getFirst();
         }
         PolicyDecision check=evaluate(plan,true);
+        audit("POLICY_GUARD","EXECUTION_POLICY_CHECKED",plan.id(),check.decision(),
+                check.reasonCode(),check.explanation());
         if("BLOCKED".equals(check.decision())) { block(plan,check); return null; }
 
         BigDecimal payerBefore=accountBalance(PAYER);
@@ -363,6 +399,9 @@ public class PhaseFourService {
         db.update("UPDATE approvals SET status='USED' WHERE action_id=? AND status='VALID'",plan.id());
         audit("PAYMENT_SANDBOX","SANDBOX_EXECUTED",plan.id(),"COMPLETED",null,
                 "Created transaction "+txId+" with VND debit and "+plan.destinationCurrency()+" credit");
+        audit("PAYMENT_SANDBOX","PAYMENT_RECEIPT_CREATED",plan.id(),"COMPLETED",null,
+                "Receipt transaction ID "+txId+"; idempotency key "+plan.idempotencyKey()
+                        +"; channel "+value(plan.channelId())+"; quote "+value(plan.quoteId()));
         return receipt(txId);
     }
 
