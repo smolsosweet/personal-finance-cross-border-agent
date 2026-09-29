@@ -74,12 +74,18 @@ class FinBridgePlaywrightE2ETest {
         page.getByTestId("tab-" + tab).click();
     }
 
+    private void openDemoTransactions() {
+        openTab("transactions");
+        page.getByTestId("transaction-view-demo").click();
+    }
+
     @Test
     void highConfidenceTransactionCanBeUndone() {
-        openTab("transactions");
+        openDemoTransactions();
         page.getByTestId("simulate-high").click();
 
         Locator row = page.getByTestId("transaction-row").first();
+        assertThat(row).hasAttribute("data-new-transaction", "true");
         assertThat(row).containsText("Highlands Coffee");
         assertThat(row).containsText("Food & Drinks");
         assertThat(row).hasAttribute("data-review-status", "AUTO");
@@ -92,7 +98,7 @@ class FinBridgePlaywrightE2ETest {
 
     @Test
     void mediumAndLowConfidenceOpenTheCorrectReviewDialogs() {
-        openTab("transactions");
+        openDemoTransactions();
         page.getByTestId("simulate-medium").click();
         assertThat(page.getByTestId("review-dialog")).isVisible();
         assertThat(page.getByTestId("review-dialog")).containsText("MEDIUM CONFIDENCE · CONFIRM CATEGORY");
@@ -100,6 +106,7 @@ class FinBridgePlaywrightE2ETest {
 
         demoData.resetAll();
         page.navigate(BASE_URL);
+        openDemoTransactions();
         page.getByTestId("simulate-low").click();
         assertThat(page.getByTestId("review-dialog")).isVisible();
         assertThat(page.getByTestId("review-dialog")).containsText("LOW CONFIDENCE · PURPOSE NEEDED");
@@ -123,11 +130,14 @@ class FinBridgePlaywrightE2ETest {
         assertThat(page.locator("#student-finance")).containsText("Lập kế hoạch học phí");
 
         openTab("transactions");
-        assertThat(page.locator("#transaction-tools")).isVisible();
+        assertThat(page.locator("#transactions")).isVisible();
+        assertThat(page.locator("#transaction-tools")).isHidden();
         assertThat(page.locator("#transactions")).containsText("LỊCH SỬ GIAO DỊCH");
 
+        page.getByTestId("transaction-view-demo").click();
+        assertThat(page.locator("#transaction-tools")).isVisible();
         page.getByTestId("simulate-high").click();
-        assertEquals("vi", page.locator("html").getAttribute("lang"));
+        assertThat(page.locator("html")).hasAttribute("lang", "vi");
         assertThat(page.getByTestId("language-vi")).hasAttribute("aria-pressed", "true");
         assertThat(page.locator("[role='status']")).containsText("Sự kiện ngân hàng mô phỏng");
         assertThat(page.getByTestId("transaction-row").first()).containsText("Ăn uống");
@@ -141,7 +151,7 @@ class FinBridgePlaywrightE2ETest {
 
     @Test
     void internalTransferDoesNotChangeIncomeOrExpenseTotals() {
-        openTab("transactions");
+        openDemoTransactions();
         String incomeBefore = page.getByTestId("stat-income").locator("strong").textContent();
         String expensesBefore = page.getByTestId("stat-expenses").locator("strong").textContent();
 
@@ -276,7 +286,7 @@ class FinBridgePlaywrightE2ETest {
         assertThat(page.getByTestId("latest-action")).hasCount(0);
         assertThat(page.getByTestId("latest-receipt")).hasCount(0);
 
-        openTab("transactions");
+        openDemoTransactions();
         page.getByTestId("simulate-high").click();
         assertThat(page.getByTestId("transaction-row").first())
                 .hasAttribute("data-review-status", "AUTO");

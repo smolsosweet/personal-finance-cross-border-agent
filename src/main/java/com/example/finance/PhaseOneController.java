@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Map;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,13 +21,16 @@ public class PhaseOneController {
     private final CrossBorderService crossBorder;
     private final PhaseFourService phaseFour;
     private final DemoDataService demoData;
+    private final boolean demoToolsEnabled;
 
     public PhaseOneController(TransactionService transactions, CrossBorderService crossBorder,
-                              PhaseFourService phaseFour, DemoDataService demoData) {
+                              PhaseFourService phaseFour, DemoDataService demoData,
+                              @Value("${app.demo-tools-enabled:true}") boolean demoToolsEnabled) {
         this.transactions = transactions;
         this.crossBorder = crossBorder;
         this.phaseFour = phaseFour;
         this.demoData = demoData;
+        this.demoToolsEnabled = demoToolsEnabled;
     }
 
     @Bean
@@ -35,7 +39,8 @@ public class PhaseOneController {
     }
 
     @GetMapping("/")
-    public String home(@RequestParam(required=false) String review, Model model) {
+    public String home(@RequestParam(required=false) String review,
+                       @RequestParam(required=false) String newTransaction, Model model) {
         model.addAttribute("profile", transactions.profile());
         model.addAttribute("accounts", transactions.accounts());
         model.addAttribute("transactions", transactions.transactions());
@@ -57,6 +62,8 @@ public class PhaseOneController {
         model.addAttribute("latestReceipt", phaseFour.latestReceipt());
         model.addAttribute("sandboxAccounts", phaseFour.sandboxAccounts());
         model.addAttribute("auditEvents", phaseFour.auditEvents());
+        model.addAttribute("demoToolsEnabled", demoToolsEnabled);
+        model.addAttribute("newTransaction", newTransaction);
         if (review != null && !review.isBlank()) model.addAttribute("reviewTransaction", transactions.transaction(review));
         return "home";
     }
@@ -69,9 +76,9 @@ public class PhaseOneController {
                 " · confidence " + transaction.get("confidence") + "% · " + transaction.get("review_status"));
         String status = (String) transaction.get("review_status");
         if ("CONFIRMATION_REQUIRED".equals(status) || "PURPOSE_REQUIRED".equals(status)) {
-            return "redirect:/?review=" + id + "#transactions";
+            return "redirect:/?review=" + id + "&newTransaction=" + id + "#transactions";
         }
-        return "redirect:/#transactions";
+        return "redirect:/?newTransaction=" + id + "#transactions";
     }
 
     @PostMapping("/transactions/{id}/category")

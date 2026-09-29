@@ -62,4 +62,12 @@ class TransactionServiceTest {
             assertEquals(0,new BigDecimal("100000000").compareTo(db.queryForObject("SELECT balance FROM financial_accounts WHERE id='CHECKING'",BigDecimal.class)));
         }
     }
+
+    @Test void mostRecentlySimulatedTransactionAppearsFirst() {
+        String first = service.simulate("high");
+        String second = service.simulate("income");
+
+        assertNotEquals(first, second);
+        assertEquals(second, service.transactions().getFirst().get("id"));
+    }
 }

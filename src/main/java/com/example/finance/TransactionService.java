@@ -156,7 +156,7 @@ public class TransactionService {
 
     @Transactional
     public String simulate(String scenario) {
-        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+        LocalDateTime now = LocalDateTime.now();
         String reference = "SIM-" + UUID.randomUUID();
         BankEvent event = switch(scenario) {
             case "medium" -> new BankEvent(reference,now,"Campus Store","Card purchase",new BigDecimal("120000"),"OUT","CHECKING",null,"Simulated Bank Event");
@@ -203,7 +203,14 @@ public class TransactionService {
 
     public Map<String,Object> profile() { return db.queryForMap("SELECT * FROM demo_profile WHERE id=1"); }
     public List<Map<String,Object>> accounts() { return db.queryForList("SELECT * FROM financial_accounts ORDER BY id"); }
-    public List<Map<String,Object>> transactions() { return db.queryForList("SELECT * FROM transactions ORDER BY occurred_at DESC"); }
+    public List<Map<String,Object>> transactions() {
+        return db.queryForList("""
+                SELECT t.*
+                FROM transactions t
+                JOIN bank_events e ON e.id=t.event_id
+                ORDER BY t.occurred_at DESC, e.received_at DESC
+                """);
+    }
     public int eventCount() { return db.queryForObject("SELECT COUNT(*) FROM bank_events", Integer.class); }
 
     public Map<String,Object> dashboard() {

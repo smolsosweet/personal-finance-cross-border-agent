@@ -8,6 +8,9 @@ const translationsVi = new Map(Object.entries({
   'Agent & Sandbox': 'Tác vụ & Sandbox',
   'Agent & Payments': 'Tác vụ & Thanh toán',
   'Transactions': 'Giao dịch',
+  'Transaction history': 'Lịch sử giao dịch',
+  'Create demo transaction': 'Tạo giao dịch demo',
+  'Just created': 'Vừa tạo',
   'PHASE 5 OF 5': 'GIAI ĐOẠN 5/5',
   'Controlled execution': 'Thực thi có kiểm soát',
   'Workspace': 'Không gian làm việc',
@@ -241,7 +244,7 @@ const tabLabels = {
 };
 const tabAnchors = {
   dashboard: '#overview',
-  transactions: '#transaction-tools',
+  transactions: '#transactions',
   student: '#student-finance',
   agent: '#agent-workspace'
 };
@@ -265,10 +268,32 @@ function activateTab(tab, updateLocation = true) {
   document.querySelectorAll('[data-tab]').forEach((button) => {
     button.setAttribute('aria-selected', String(button.dataset.tab === activeTab));
   });
+  if (activeTab === 'transactions') {
+    activateTransactionView(updateLocation ? 'history' : initialTransactionView(), false);
+  }
   updateActiveTabLabel();
   localStorage.setItem('finbridge-active-tab', activeTab);
   if (updateLocation) {
     history.replaceState(null, '', tabAnchors[activeTab]);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+function initialTransactionView() {
+  return window.location.hash === '#transaction-tools' ? 'demo' : 'history';
+}
+
+function activateTransactionView(view, updateLocation = true) {
+  const requested = view === 'demo' && document.querySelector('[data-transaction-view="demo"]')
+    ? 'demo' : 'history';
+  document.querySelectorAll('[data-transaction-view-panel]').forEach((panel) => {
+    panel.hidden = panel.dataset.transactionViewPanel !== requested;
+  });
+  document.querySelectorAll('[data-transaction-view]').forEach((button) => {
+    button.setAttribute('aria-selected', String(button.dataset.transactionView === requested));
+  });
+  if (updateLocation) {
+    history.replaceState(null, '', requested === 'demo' ? '#transaction-tools' : '#transactions');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
@@ -456,6 +481,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.querySelectorAll('[data-tab]').forEach((button) => {
     button.addEventListener('click', () => activateTab(button.dataset.tab));
+  });
+
+  document.querySelectorAll('[data-transaction-view]').forEach((button) => {
+    button.addEventListener('click', () => activateTransactionView(button.dataset.transactionView));
   });
 
   document.querySelectorAll('[data-language]').forEach((button) => {

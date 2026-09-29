@@ -48,7 +48,12 @@
         <article><span class="icon violet">?</span><small>Needs review</small><strong th:text="${dashboard.pendingReview}"></strong><p>Medium or low confidence</p></article>
       </section>
 
-      <section class="card" id="transaction-tools" data-tab-panel="transactions" hidden>
+      <nav class="transaction-view-tabs" data-tab-panel="transactions" aria-label="Transaction views" hidden>
+        <button type="button" data-transaction-view="history" data-testid="transaction-view-history" aria-selected="true">Transaction history</button>
+        <button th:if="${demoToolsEnabled}" type="button" data-transaction-view="demo" data-testid="transaction-view-demo" aria-selected="false">Create demo transaction <span>DEMO</span></button>
+      </nav>
+
+      <section th:if="${demoToolsEnabled}" class="card" id="transaction-tools" data-tab-panel="transactions" data-transaction-view-panel="demo" hidden>
         <div class="section-title"><div><div class="eyebrow">DEMO TRANSACTION LAB</div><h2>Create a test transaction</h2><p>Each button creates one new synthetic bank event and places it at the top of Transaction history. The merchants below are fixed examples for testing, not your latest transactions.</p></div></div>
         <div class="transaction-demo-note"><span>i</span><p><strong>What happens when I click?</strong> A new demo event is normalized, classified using deterministic rules, then added to the transaction list. Use these scenarios to see each safety and review path.</p></div>
 
@@ -252,7 +257,7 @@
         </div>
       </section>
 
-      <section class="card" id="transactions" data-tab-panel="transactions" hidden>
+      <section class="card" id="transactions" data-tab-panel="transactions" data-transaction-view-panel="history" hidden>
         <div class="section-title"><div><div class="eyebrow">TRANSACTION HISTORY</div><h2>Recent transactions</h2><p>Newest transactions appear first. Search or filter the list to focus on what you want to review.</p></div><span class="pill" th:text="${#lists.size(transactions) + ' records'}"></span></div>
         <div class="transaction-toolbar" data-testid="transaction-filters">
           <label class="transaction-search"><span>Search</span><input type="search" data-testid="transaction-search" placeholder="Search merchant or evidence"></label>
@@ -265,8 +270,8 @@
         <div class="transaction-list-meta"><span data-testid="transaction-result-count" aria-live="polite"></span><span>Showing 5 transactions per page</span></div>
         <div class="table-scroll"><table>
           <thead><tr><th>Merchant / evidence</th><th>Type</th><th>Category</th><th>Confidence</th><th>Status</th><th class="right">Amount</th><th>Action</th></tr></thead>
-          <tbody data-testid="transaction-table-body"><tr th:each="tx : ${transactions}" data-testid="transaction-row" th:attr="data-transaction-id=${tx.id},data-review-status=${tx.review_status},data-type=${tx.type},data-category=${tx.category ?: ''},data-search=${tx.merchant + ' ' + tx.categorization_evidence},data-amount=${tx.amount}">
-            <td><strong th:text="${tx.merchant}"></strong><small th:text="${tx.source_label + ' · ' + tx.categorization_evidence}"></small></td>
+          <tbody data-testid="transaction-table-body"><tr th:each="tx : ${transactions}" data-testid="transaction-row" th:classappend="${newTransaction == tx.id ? ' newly-created' : ''}" th:attr="data-transaction-id=${tx.id},data-review-status=${tx.review_status},data-type=${tx.type},data-category=${tx.category ?: ''},data-search=${tx.merchant + ' ' + tx.categorization_evidence},data-amount=${tx.amount},data-new-transaction=${newTransaction == tx.id}">
+            <td><strong th:text="${tx.merchant}"></strong><span th:if="${newTransaction == tx.id}" class="new-transaction-badge">Just created</span><small th:text="${#dates.format(tx.occurred_at,'dd/MM/yyyy HH:mm:ss') + ' · ' + tx.source_label}"></small><small th:text="${tx.categorization_evidence}"></small></td>
             <td><span class="type" th:text="${tx.type}"></span></td>
             <td th:text="${tx.category ?: 'Purpose required'}"></td>
             <td><span class="confidence" th:classappend="${tx.confidence >= 90 ? ' high' : (tx.confidence >= 60 ? ' medium' : ' low')}" th:text="${tx.confidence + '%'}"></span></td>
