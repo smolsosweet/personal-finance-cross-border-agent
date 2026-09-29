@@ -49,14 +49,27 @@
       </section>
 
       <section class="card" id="transaction-tools" data-tab-panel="transactions" hidden>
-        <div class="section-title"><div><div class="eyebrow">SIMULATED BANK EVENT</div><h2>Test each confidence path</h2><p>Deterministic merchant rules run immediately after Phase 1 normalization.</p></div></div>
-        <div class="event-grid phase-two-events">
-          <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="high"><button data-testid="simulate-high"><span>97%</span><strong>High confidence</strong><small>Highlands · auto category</small></button></form>
-          <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="medium"><button data-testid="simulate-medium"><span>72%</span><strong>Medium confidence</strong><small>Campus Store · confirm popup</small></button></form>
-          <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="low"><button data-testid="simulate-low"><span>35%</span><strong>Low confidence</strong><small>Unknown QR · ask purpose</small></button></form>
-          <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="income"><button><span>↙</span><strong>Income</strong><small>Demo salary · 99%</small></button></form>
-          <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="transfer"><button data-testid="simulate-transfer"><span>⇄</span><strong>Internal Transfer</strong><small>Checking → savings · 99%</small></button></form>
-          <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="refund"><button><span>↶</span><strong>Refund</strong><small>Matched description · 95%</small></button></form>
+        <div class="section-title"><div><div class="eyebrow">DEMO TRANSACTION LAB</div><h2>Create a test transaction</h2><p>Each button creates one new synthetic bank event and places it at the top of Transaction history. The merchants below are fixed examples for testing, not your latest transactions.</p></div></div>
+        <div class="transaction-demo-note"><span>i</span><p><strong>What happens when I click?</strong> A new demo event is normalized, classified using deterministic rules, then added to the transaction list. Use these scenarios to see each safety and review path.</p></div>
+
+        <div class="event-groups">
+          <section class="event-group">
+            <div class="event-group-heading"><span>1</span><div><h3>Test categorization confidence</h3><p>Try how the app handles a clear, uncertain, or unknown merchant.</p></div></div>
+            <div class="event-grid phase-two-events">
+              <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="high"><button data-testid="simulate-high"><span>97% confidence</span><strong>Create coffee purchase</strong><small>Example: Highlands Coffee → automatically categorizes as Food &amp; Drinks</small></button></form>
+              <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="medium"><button data-testid="simulate-medium"><span>72% confidence</span><strong>Create campus purchase</strong><small>Example: Campus Store → asks you to confirm the suggested category</small></button></form>
+              <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="low"><button data-testid="simulate-low"><span>35% confidence</span><strong>Create unknown QR payment</strong><small>Example: Unknown QR → asks for the transaction purpose</small></button></form>
+            </div>
+          </section>
+
+          <section class="event-group">
+            <div class="event-group-heading"><span>2</span><div><h3>Test money movement</h3><p>Try how totals change for income, your own transfer, and a refund.</p></div></div>
+            <div class="event-grid phase-two-events">
+              <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="income"><button data-testid="simulate-income"><span>99% confidence</span><strong>Create demo salary</strong><small>Adds 900,000 VND to income and checking balance</small></button></form>
+              <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="transfer"><button data-testid="simulate-transfer"><span>99% confidence</span><strong>Move money to savings</strong><small>Moves 200,000 VND between your accounts; income and expenses stay unchanged</small></button></form>
+              <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="refund"><button data-testid="simulate-refund"><span>95% confidence</span><strong>Create purchase refund</strong><small>Records an 85,000 VND refund separately from income</small></button></form>
+            </div>
+          </section>
         </div>
         <p class="fine">Rules: ≥90% auto-categorize · 60–89% confirm suggestion · below 60% ask transaction purpose. No LLM is used for balances or categorization in this phase.</p>
       </section>
@@ -240,10 +253,19 @@
       </section>
 
       <section class="card" id="transactions" data-tab-panel="transactions" hidden>
-        <div class="section-title"><div><div class="eyebrow">TRANSACTION DASHBOARD</div><h2>Normalized and categorized ledger</h2><p>Category, confidence, evidence and review state remain visible.</p></div><span class="pill" th:text="${#lists.size(transactions) + ' records'}"></span></div>
+        <div class="section-title"><div><div class="eyebrow">TRANSACTION HISTORY</div><h2>Recent transactions</h2><p>Newest transactions appear first. Search or filter the list to focus on what you want to review.</p></div><span class="pill" th:text="${#lists.size(transactions) + ' records'}"></span></div>
+        <div class="transaction-toolbar" data-testid="transaction-filters">
+          <label class="transaction-search"><span>Search</span><input type="search" data-testid="transaction-search" placeholder="Search merchant or evidence"></label>
+          <label><span>Type</span><select data-testid="transaction-type-filter"><option value="">All transaction types</option><option value="Expense">Expense</option><option value="Income">Income</option><option value="Internal Transfer">Internal Transfer</option><option value="Refund">Refund</option></select></label>
+          <label><span>Review status</span><select data-testid="transaction-status-filter"><option value="">All processing states</option><option value="AUTO">Automatically categorized</option><option value="CONFIRMED">Confirmed by you</option><option value="CONFIRMATION_REQUIRED">Needs confirmation</option><option value="PURPOSE_REQUIRED">Needs purpose</option></select></label>
+          <label><span>Category</span><select data-testid="transaction-category-filter"><option value="">All categories</option></select></label>
+          <label><span>Sort</span><select data-testid="transaction-sort"><option value="newest">Newest first</option><option value="largest">Largest amount</option><option value="smallest">Smallest amount</option></select></label>
+          <button type="button" class="secondary clear-filters" data-testid="transaction-clear-filters">Clear filters</button>
+        </div>
+        <div class="transaction-list-meta"><span data-testid="transaction-result-count" aria-live="polite"></span><span>Showing 5 transactions per page</span></div>
         <div class="table-scroll"><table>
           <thead><tr><th>Merchant / evidence</th><th>Type</th><th>Category</th><th>Confidence</th><th>Status</th><th class="right">Amount</th><th>Action</th></tr></thead>
-          <tbody><tr th:each="tx : ${transactions}" data-testid="transaction-row" th:attr="data-transaction-id=${tx.id},data-review-status=${tx.review_status}">
+          <tbody data-testid="transaction-table-body"><tr th:each="tx : ${transactions}" data-testid="transaction-row" th:attr="data-transaction-id=${tx.id},data-review-status=${tx.review_status},data-type=${tx.type},data-category=${tx.category ?: ''},data-search=${tx.merchant + ' ' + tx.categorization_evidence},data-amount=${tx.amount}">
             <td><strong th:text="${tx.merchant}"></strong><small th:text="${tx.source_label + ' · ' + tx.categorization_evidence}"></small></td>
             <td><span class="type" th:text="${tx.type}"></span></td>
             <td th:text="${tx.category ?: 'Purpose required'}"></td>
@@ -256,6 +278,8 @@
             </td>
           </tr></tbody>
         </table></div>
+        <div class="transaction-empty" data-testid="transaction-empty" hidden>No transactions match these filters.</div>
+        <nav class="transaction-pagination" aria-label="Transaction pages"><button type="button" class="secondary" data-testid="transaction-prev">Previous</button><span data-testid="transaction-page" aria-live="polite"></span><button type="button" class="secondary" data-testid="transaction-next">Next</button></nav>
       </section>
 
       <footer>SYNTHETIC DATA · DETERMINISTIC POLICY GUARD · PAYMENT SANDBOX · PHASE 5 ONLY</footer>

@@ -26,6 +26,27 @@ const translationsVi = new Map(Object.entries({
   'Needs review': 'Cần xem xét',
   'Medium or low confidence': 'Độ tin cậy trung bình hoặc thấp',
   'SIMULATED BANK EVENT': 'SỰ KIỆN NGÂN HÀNG MÔ PHỎNG',
+  'DEMO TRANSACTION LAB': 'PHÒNG THÍ NGHIỆM GIAO DỊCH DEMO',
+  'Create a test transaction': 'Tạo giao dịch để kiểm thử',
+  'Each button creates one new synthetic bank event and places it at the top of Transaction history. The merchants below are fixed examples for testing, not your latest transactions.': 'Mỗi nút tạo một sự kiện ngân hàng mô phỏng mới và đặt nó ở đầu Lịch sử giao dịch. Các đơn vị bán hàng bên dưới là ví dụ cố định để kiểm thử, không phải giao dịch mới nhất của bạn.',
+  'What happens when I click?': 'Điều gì xảy ra khi tôi bấm?',
+  'A new demo event is normalized, classified using deterministic rules, then added to the transaction list. Use these scenarios to see each safety and review path.': 'Một sự kiện demo mới được chuẩn hóa, phân loại bằng quy tắc xác định, rồi thêm vào danh sách giao dịch. Dùng các kịch bản này để xem từng luồng an toàn và xem xét.',
+  'Test categorization confidence': 'Kiểm tra độ tin cậy phân loại',
+  'Try how the app handles a clear, uncertain, or unknown merchant.': 'Thử cách ứng dụng xử lý đơn vị bán hàng rõ ràng, chưa chắc chắn hoặc không xác định.',
+  'Create coffee purchase': 'Tạo giao dịch mua cà phê',
+  'Example: Highlands Coffee → automatically categorizes as Food & Drinks': 'Ví dụ: Highlands Coffee → tự động phân loại là Ăn uống',
+  'Create campus purchase': 'Tạo giao dịch mua tại trường',
+  'Example: Campus Store → asks you to confirm the suggested category': 'Ví dụ: Campus Store → yêu cầu bạn xác nhận danh mục đề xuất',
+  'Create unknown QR payment': 'Tạo thanh toán QR không xác định',
+  'Example: Unknown QR → asks for the transaction purpose': 'Ví dụ: QR không xác định → hỏi mục đích giao dịch',
+  'Test money movement': 'Kiểm tra dòng tiền',
+  'Try how totals change for income, your own transfer, and a refund.': 'Thử cách các tổng số thay đổi với thu nhập, chuyển tiền của chính bạn và hoàn tiền.',
+  'Create demo salary': 'Tạo lương demo',
+  'Adds 900,000 VND to income and checking balance': 'Thêm 900.000 VND vào thu nhập và tài khoản thanh toán',
+  'Move money to savings': 'Chuyển tiền vào tiết kiệm',
+  'Moves 200,000 VND between your accounts; income and expenses stay unchanged': 'Chuyển 200.000 VND giữa các tài khoản của bạn; thu nhập và chi tiêu không đổi',
+  'Create purchase refund': 'Tạo hoàn tiền mua hàng',
+  'Records an 85,000 VND refund separately from income': 'Ghi nhận hoàn tiền 85.000 VND riêng với thu nhập',
   'Test each confidence path': 'Kiểm tra từng mức độ tin cậy',
   'Deterministic merchant rules run immediately after Phase 1 normalization.': 'Quy tắc nhận diện đơn vị bán hàng chạy ngay sau bước chuẩn hóa của Giai đoạn 1.',
   'High confidence': 'Độ tin cậy cao',
@@ -148,6 +169,28 @@ const translationsVi = new Map(Object.entries({
   'Status': 'Trạng thái',
   'Reason': 'Lý do',
   'TRANSACTION DASHBOARD': 'BẢNG ĐIỀU KHIỂN GIAO DỊCH',
+  'TRANSACTION HISTORY': 'LỊCH SỬ GIAO DỊCH',
+  'Recent transactions': 'Giao dịch gần đây',
+  'Newest transactions appear first. Search or filter the list to focus on what you want to review.': 'Giao dịch mới nhất xuất hiện trước. Tìm kiếm hoặc lọc danh sách để tập trung vào nội dung bạn muốn xem xét.',
+  'Search': 'Tìm kiếm',
+  'Search merchant or evidence': 'Tìm đơn vị bán hàng hoặc bằng chứng',
+  'All transaction types': 'Tất cả loại giao dịch',
+  'Review status': 'Trạng thái xử lý',
+  'All processing states': 'Tất cả trạng thái xử lý',
+  'Automatically categorized': 'Đã tự động phân loại',
+  'Confirmed by you': 'Bạn đã xác nhận',
+  'Needs confirmation': 'Cần xác nhận',
+  'Needs purpose': 'Cần nhập mục đích',
+  'All categories': 'Tất cả danh mục',
+  'Sort': 'Sắp xếp',
+  'Newest first': 'Mới nhất trước',
+  'Largest amount': 'Số tiền lớn nhất',
+  'Smallest amount': 'Số tiền nhỏ nhất',
+  'Clear filters': 'Xóa bộ lọc',
+  'Showing 5 transactions per page': 'Hiển thị 5 giao dịch mỗi trang',
+  'No transactions match these filters.': 'Không có giao dịch nào khớp các bộ lọc này.',
+  'Previous': 'Trang trước',
+  'Next': 'Trang sau',
   'Normalized and categorized ledger': 'Sổ giao dịch đã chuẩn hóa và phân loại',
   'Category, confidence, evidence and review state remain visible.': 'Danh mục, độ tin cậy, bằng chứng và trạng thái xem xét luôn hiển thị.',
   'Merchant / evidence': 'Đơn vị bán hàng / bằng chứng',
@@ -203,6 +246,7 @@ const tabAnchors = {
   agent: '#agent-workspace'
 };
 let activeTab = 'dashboard';
+let renderTransactionList = () => {};
 
 function selectedLanguage() {
   return localStorage.getItem('finbridge-language') === 'vi' ? 'vi' : 'en';
@@ -238,6 +282,87 @@ function initialTab() {
   return hashTabs[window.location.hash]
     || localStorage.getItem('finbridge-active-tab')
     || 'dashboard';
+}
+
+function initializeTransactionList() {
+  const rows = Array.from(document.querySelectorAll('[data-testid="transaction-row"]'));
+  if (!rows.length) return;
+
+  const search = document.querySelector('[data-testid="transaction-search"]');
+  const type = document.querySelector('[data-testid="transaction-type-filter"]');
+  const status = document.querySelector('[data-testid="transaction-status-filter"]');
+  const category = document.querySelector('[data-testid="transaction-category-filter"]');
+  const sort = document.querySelector('[data-testid="transaction-sort"]');
+  const clear = document.querySelector('[data-testid="transaction-clear-filters"]');
+  const previous = document.querySelector('[data-testid="transaction-prev"]');
+  const next = document.querySelector('[data-testid="transaction-next"]');
+  const count = document.querySelector('[data-testid="transaction-result-count"]');
+  const pageLabel = document.querySelector('[data-testid="transaction-page"]');
+  const empty = document.querySelector('[data-testid="transaction-empty"]');
+  const pageSize = 5;
+  let page = 1;
+
+  [...new Set(rows.map((row) => row.dataset.category).filter(Boolean))]
+    .sort()
+    .forEach((value) => {
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = value;
+      category.append(option);
+    });
+
+  const render = () => {
+    const query = search.value.trim().toLowerCase();
+    let matches = rows.filter((row) =>
+      (!query || row.dataset.search.toLowerCase().includes(query))
+      && (!type.value || row.dataset.type === type.value)
+      && (!status.value || row.dataset.reviewStatus === status.value)
+      && (!category.value || row.dataset.category === category.value));
+
+    if (sort.value === 'largest') {
+      matches = matches.sort((left, right) => Number(right.dataset.amount) - Number(left.dataset.amount));
+    } else if (sort.value === 'smallest') {
+      matches = matches.sort((left, right) => Number(left.dataset.amount) - Number(right.dataset.amount));
+    }
+
+    const pages = Math.max(1, Math.ceil(matches.length / pageSize));
+    page = Math.min(page, pages);
+    const start = (page - 1) * pageSize;
+    const visibleRows = new Set(matches.slice(start, start + pageSize));
+    rows.forEach((row) => { row.hidden = !visibleRows.has(row); });
+
+    const language = selectedLanguage();
+    count.textContent = language === 'vi'
+      ? `${matches.length} giao dịch phù hợp`
+      : `${matches.length} matching transactions`;
+    pageLabel.textContent = language === 'vi'
+      ? `Trang ${page} / ${pages}`
+      : `Page ${page} of ${pages}`;
+    empty.hidden = matches.length !== 0;
+    previous.disabled = page === 1;
+    next.disabled = page === pages;
+  };
+
+  [search, type, status, category, sort].forEach((control) => {
+    control.addEventListener(control === search ? 'input' : 'change', () => {
+      page = 1;
+      render();
+    });
+  });
+  clear.addEventListener('click', () => {
+    search.value = '';
+    type.value = '';
+    status.value = '';
+    category.value = '';
+    sort.value = 'newest';
+    page = 1;
+    render();
+  });
+  previous.addEventListener('click', () => { page -= 1; render(); });
+  next.addEventListener('click', () => { page += 1; render(); });
+
+  renderTransactionList = render;
+  render();
 }
 
 function translateDynamic(text) {
@@ -316,6 +441,7 @@ function applyLanguage(language) {
     }
   });
   updateActiveTabLabel(selected);
+  renderTransactionList();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -324,6 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   activateTab(initialTab(), false);
   requestAnimationFrame(() => window.scrollTo({ top: 0 }));
+  initializeTransactionList();
   const savedLanguage = localStorage.getItem('finbridge-language') || 'en';
   applyLanguage(savedLanguage);
 

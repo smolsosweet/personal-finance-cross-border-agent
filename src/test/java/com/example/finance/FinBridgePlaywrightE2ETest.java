@@ -124,7 +124,7 @@ class FinBridgePlaywrightE2ETest {
 
         openTab("transactions");
         assertThat(page.locator("#transaction-tools")).isVisible();
-        assertThat(page.locator("#transactions")).containsText("BẢNG ĐIỀU KHIỂN GIAO DỊCH");
+        assertThat(page.locator("#transactions")).containsText("LỊCH SỬ GIAO DỊCH");
 
         page.getByTestId("simulate-high").click();
         assertEquals("vi", page.locator("html").getAttribute("lang"));
@@ -150,6 +150,26 @@ class FinBridgePlaywrightE2ETest {
         assertEquals(incomeBefore, page.getByTestId("stat-income").locator("strong").textContent());
         assertEquals(expensesBefore, page.getByTestId("stat-expenses").locator("strong").textContent());
         assertThat(page.getByTestId("transaction-row").first()).containsText("Internal Transfer");
+    }
+
+    @Test
+    void transactionHistoryCanSearchFilterAndPaginate() {
+        openTab("transactions");
+        assertThat(page.getByTestId("transaction-page")).containsText("Page 1 of");
+
+        page.getByTestId("transaction-next").click();
+        assertThat(page.getByTestId("transaction-page")).containsText("Page 2 of");
+        assertTrue(page.locator("[data-testid='transaction-row']:visible").count() > 0);
+
+        page.getByTestId("transaction-search").fill("Highlands");
+        assertThat(page.getByTestId("transaction-result-count")).containsText("matching transactions");
+        assertThat(page.getByTestId("transaction-page")).containsText("Page 1 of");
+
+        page.getByTestId("transaction-type-filter").selectOption("Refund");
+        assertThat(page.locator("[data-testid='transaction-row']:visible")).containsText("Refund");
+
+        page.getByTestId("transaction-clear-filters").click();
+        assertThat(page.getByTestId("transaction-page")).containsText("Page 1 of");
     }
 
     @Test
