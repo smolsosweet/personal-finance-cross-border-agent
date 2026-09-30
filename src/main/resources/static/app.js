@@ -745,6 +745,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  document.addEventListener('click', (event) => {
+    document.querySelectorAll('.category-row-actions details[open]').forEach((details) => {
+      if (!details.contains(event.target)) details.removeAttribute('open');
+    });
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      document.querySelectorAll('.category-row-actions details[open]').forEach((details) => {
+        details.removeAttribute('open');
+      });
+    }
+  });
+
   document.querySelectorAll('form[data-confirm-en]').forEach((form) => {
     form.addEventListener('submit', (event) => {
       const language = localStorage.getItem('finbridge-language') || 'en';
