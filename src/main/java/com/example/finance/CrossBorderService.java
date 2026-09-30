@@ -208,6 +208,30 @@ public class CrossBorderService {
                 "title", title, "message", message, "evidence", evidence);
     }
 
+    public Map<String,Object> tuitionInsightForPlan(String channelId, String quoteId, BigDecimal landedCost) {
+        TuitionBill tuition = bill();
+        RecipientVerification verification = verifyRecipient();
+        ChannelQuote option = rankedQuotes().stream()
+                .filter(quote -> quote.channelId().equals(channelId))
+                .findFirst().orElse(null);
+        if (option == null) return tuitionInsight();
+
+        String title = "Selected tuition plan is ready for review";
+        String message = verification.verified()
+                ? "Selected plan uses " + option.displayName() + " for bill " + tuition.paymentReference()
+                        + " of " + tuition.amount().toPlainString() + " CNY, due " + tuition.dueDate()
+                        + ", with latest safe date " + option.latestSafeDate()
+                        + ". Approval Mode is required before payment."
+                : "Bill " + tuition.paymentReference()
+                        + " has a recipient mismatch and is blocked until verification succeeds.";
+        String evidence = verification.verified()
+                ? "Selected plan · Verified School Registry · " + option.displayName()
+                        + " · quote " + quoteId + " · landed cost " + landedCost.toPlainString() + " VND"
+                : "Selected plan · School Registry verification failed";
+        return Map.of("priority", verification.verified() ? "HIGH" : "BLOCKED",
+                "title", title, "message", message, "evidence", evidence);
+    }
+
     public TuitionBill bill() {
         return db.queryForObject("""
                 SELECT id,institution,amount,currency,recipient_account,payment_reference,due_date,evidence_label

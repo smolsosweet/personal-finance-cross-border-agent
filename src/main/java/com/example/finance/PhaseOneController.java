@@ -48,11 +48,10 @@ public class PhaseOneController {
         model.addAttribute("eventCount", transactions.eventCount());
         model.addAttribute("dashboard", transactions.dashboard());
         model.addAttribute("budgets", transactions.budgetSummary());
-        Map<String,Object> tuitionInsight = crossBorder.tuitionInsight();
+        Map<String,Object> defaultTuitionInsight = crossBorder.tuitionInsight();
         var insights = new ArrayList<>(transactions.proactiveFeed());
-        insights.add(tuitionInsight);
+        insights.add(defaultTuitionInsight);
         model.addAttribute("insights", insights);
-        model.addAttribute("tuitionInsight", tuitionInsight);
         model.addAttribute("studentProfile", crossBorder.profile());
         model.addAttribute("tuitionBill", crossBorder.bill());
         model.addAttribute("recipientVerification", crossBorder.verifyRecipient());
@@ -73,7 +72,14 @@ public class PhaseOneController {
         model.addAttribute("channelBySourceAccountId", eligibleQuotes.stream().collect(Collectors.toMap(
                 CrossBorderService.ChannelQuote::sourceAccountId, quote -> quote)));
         model.addAttribute("conversation", phaseFour.messages());
-        model.addAttribute("latestAction", phaseFour.latestAction());
+        var latestAction = phaseFour.latestAction();
+        model.addAttribute("latestAction", latestAction);
+        Map<String,Object> agentTuitionInsight = latestAction != null
+                && "TUITION".equals(latestAction.actionType())
+                ? crossBorder.tuitionInsightForPlan(latestAction.channelId(), latestAction.quoteId(),
+                        latestAction.debitAmount())
+                : defaultTuitionInsight;
+        model.addAttribute("tuitionInsight", agentTuitionInsight);
         model.addAttribute("latestReceipt", phaseFour.latestReceipt());
         model.addAttribute("sandboxAccounts", phaseFour.sandboxAccounts());
         model.addAttribute("auditEvents", phaseFour.auditEvents());
