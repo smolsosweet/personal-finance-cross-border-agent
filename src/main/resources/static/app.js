@@ -235,7 +235,36 @@ const translationsVi = new Map(Object.entries({
   'Synthetic FX quotes refreshed for five minutes.': 'Đã làm mới báo giá FX mô phỏng trong năm phút.',
   'Emergency Stop active. New actions receive AGENT PAUSED.': 'Dừng khẩn cấp đang bật. Các tác vụ mới sẽ nhận trạng thái TÁC VỤ ĐÃ TẠM DỪNG.',
   'Agent resumed.': 'Tác vụ đã hoạt động trở lại.',
-  'Synthetic Phase 4 data reset.': 'Đã đặt lại dữ liệu mô phỏng Giai đoạn 4.'
+  'Synthetic Phase 4 data reset.': 'Đã đặt lại dữ liệu mô phỏng Giai đoạn 4.',
+  'YOUR CONNECTED PAYMENT SOURCES': 'NGUỒN THANH TOÁN ĐÃ KẾT NỐI',
+  'Personal accounts': 'Tài khoản cá nhân',
+  'Every connected demo account is shown. Choose the account whose balance should be used for comparison and payment.': 'Hiển thị đầy đủ các tài khoản demo đã kết nối. Chọn tài khoản có số dư sẽ được dùng để so sánh và thanh toán.',
+  'All accounts': 'Tất cả tài khoản',
+  'Ready for this corridor': 'Sẵn sàng cho hành lang này',
+  'Needs attention': 'Cần xử lý',
+  'Recommended': 'Đề xuất',
+  'Highest balance': 'Số dư cao nhất',
+  'Lowest balance': 'Số dư thấp nhất',
+  'Name A–Z': 'Tên A–Z',
+  'Ready': 'Sẵn sàng',
+  'Ready for eligible cross-border channels': 'Sẵn sàng cho các kênh xuyên biên giới hợp lệ',
+  'This corridor is not supported by the wallet': 'Ví này chưa hỗ trợ hành lang thanh toán này',
+  'Savings account excluded from cross-border payments': 'Tài khoản tiết kiệm không dùng cho thanh toán xuyên biên giới',
+  '✓ Selected for comparison': '✓ Đang dùng để so sánh',
+  'Use this account': 'Dùng tài khoản này',
+  'Not available for this corridor': 'Không khả dụng cho hành lang này',
+  'No accounts match this filter.': 'Không có tài khoản phù hợp bộ lọc.',
+  'Selected payment balance': 'Số dư thanh toán đã chọn',
+  'MARKET SUGGESTIONS · REFERENCE ONLY': 'GỢI Ý THỊ TRƯỜNG · CHỈ THAM KHẢO',
+  'Potentially better alternatives': 'Các lựa chọn có thể có lợi hơn',
+  'These channels may be cheaper or otherwise attractive, but they are not linked to your personal accounts. Connect and verify an account before they can become executable.': 'Các kênh này có thể rẻ hơn hoặc có lợi thế khác, nhưng chưa liên kết với tài khoản cá nhân. Cần kết nối và xác minh tài khoản trước khi có thể thực thi.',
+  'Not connected': 'Chưa kết nối',
+  'than the cheapest currently eligible option': 'so với lựa chọn hợp lệ rẻ nhất hiện tại',
+  'Reference only · no payment action': 'Chỉ tham khảo · không có thao tác thanh toán',
+  'Source account': 'Tài khoản nguồn',
+  'Everyday account': 'Tài khoản thanh toán',
+  'Savings account': 'Tài khoản tiết kiệm',
+  'E-wallet': 'Ví điện tử'
 }));
 
 const originalText = new WeakMap();
@@ -256,6 +285,7 @@ const tabAnchors = {
 };
 let activeTab = 'dashboard';
 let renderTransactionList = () => {};
+let renderPaymentAccounts = () => {};
 
 function selectedLanguage() {
   return localStorage.getItem('finbridge-language') === 'vi' ? 'vi' : 'en';
@@ -396,12 +426,45 @@ function initializeTransactionList() {
   render();
 }
 
+function initializePaymentAccounts() {
+  const grid = document.querySelector('[data-testid="payment-account-list"]');
+  if (!grid) return;
+  const cards = Array.from(grid.querySelectorAll('.payment-account'));
+  const filter = document.querySelector('[data-testid="payment-account-filter"]');
+  const sort = document.querySelector('[data-testid="payment-account-sort"]');
+  const empty = document.querySelector('[data-testid="payment-account-empty"]');
+  const originalOrder = new Map(cards.map((card, index) => [card, index]));
+
+  const render = () => {
+    const visible = cards.filter((card) => filter.value === 'all'
+      || (filter.value === 'ready' && card.dataset.ready === 'true')
+      || (filter.value === 'attention' && card.dataset.ready === 'false'));
+    const ordered = [...cards].sort((left, right) => {
+      if (sort.value === 'balance-desc') return Number(right.dataset.balance) - Number(left.dataset.balance);
+      if (sort.value === 'balance-asc') return Number(left.dataset.balance) - Number(right.dataset.balance);
+      if (sort.value === 'name') return left.dataset.name.localeCompare(right.dataset.name);
+      const selectedDifference = Number(right.dataset.selected === 'true') - Number(left.dataset.selected === 'true');
+      const readyDifference = Number(right.dataset.ready === 'true') - Number(left.dataset.ready === 'true');
+      return selectedDifference || readyDifference || originalOrder.get(left) - originalOrder.get(right);
+    });
+    ordered.forEach((card) => {
+      grid.append(card);
+      card.hidden = !visible.includes(card);
+    });
+    empty.hidden = visible.length !== 0;
+  };
+  [filter, sort].forEach((control) => control.addEventListener('change', render));
+  renderPaymentAccounts = render;
+  render();
+}
+
 function translateDynamic(text) {
   const rules = [
     [/^(\d+) insights$/, '$1 thông tin'],
     [/^(\d+) records$/, '$1 bản ghi'],
     [/^(\d+) recent events$/, '$1 sự kiện gần đây'],
     [/^(.+) VND remaining$/, 'Còn lại $1 VND'],
+    [/^(.+) VND less$/, 'Ít hơn $1 VND'],
     [/^Quoted (.+)$/, 'Báo giá lúc $1'],
     [/^Expires (.+)$/, 'Hết hạn lúc $1'],
     [/^(.+) day\(s\)$/, '$1 ngày'],
@@ -411,6 +474,7 @@ function translateDynamic(text) {
     [/^Recipient: (.+)$/, 'Người nhận: $1'],
     [/^Simulated Bank Event: (.+)$/, 'Sự kiện ngân hàng mô phỏng: $1'],
     [/^Channel ranking updated to (.+)\.$/, 'Đã cập nhật xếp hạng kênh theo $1.'],
+    [/^Payment source changed to (.+)\.$/, 'Đã đổi nguồn thanh toán sang $1.'],
     [/^Tuition plan (.+)\. Approval is always required\.$/, 'Kế hoạch học phí $1. Luôn yêu cầu phê duyệt.'],
     [/^Low-risk plan status: (.+)\.$/, 'Trạng thái kế hoạch rủi ro thấp: $1.'],
     [/^Payment Sandbox completed: (.+)$/, 'Payment Sandbox đã hoàn tất: $1'],
@@ -473,6 +537,7 @@ function applyLanguage(language) {
   });
   updateActiveTabLabel(selected);
   renderTransactionList();
+  renderPaymentAccounts();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -482,6 +547,7 @@ document.addEventListener('DOMContentLoaded', () => {
   activateTab(initialTab(), false);
   requestAnimationFrame(() => window.scrollTo({ top: 0 }));
   initializeTransactionList();
+  initializePaymentAccounts();
   const savedLanguage = localStorage.getItem('finbridge-language') || 'en';
   applyLanguage(savedLanguage);
 

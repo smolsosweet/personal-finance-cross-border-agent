@@ -195,7 +195,7 @@ class FinBridgePlaywrightE2ETest {
         assertThat(page.getByTestId("channel-BANK_A")).containsText("Eligible");
         assertThat(page.getByTestId("remaining-ALIPAY")).containsText("28,967,900 VND");
         assertThat(page.getByTestId("remaining-BANK_A")).containsText("29,239,200 VND");
-        assertThat(page.getByTestId("remaining-BANK_B")).containsText("30,230,400 VND");
+        assertThat(page.getByTestId("channel-BANK_B")).containsText("991,200 VND less");
         assertThat(page.getByTestId("remaining-BANK_A")).containsText("Safety buffer preserved");
         assertThat(page.getByTestId("plan-ALIPAY")).isVisible();
         assertThat(page.getByTestId("plan-BANK_A")).isVisible();
@@ -209,8 +209,8 @@ class FinBridgePlaywrightE2ETest {
 
         assertThat(bankA).containsText("3,520 VND/CNY");
         assertThat(bankB).containsText("3,480 VND/CNY");
-        assertThat(bankB).containsText("Unavailable");
-        assertThat(bankB).containsText("No select or execute action");
+        assertThat(bankB).containsText("Not connected");
+        assertThat(bankB).containsText("Reference only");
         assertThat(bankB.locator("button")).hasCount(0);
     }
 

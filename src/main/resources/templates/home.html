@@ -137,15 +137,39 @@
           </article>
         </div>
 
+        <div class="payment-accounts-section">
+          <div class="payment-accounts-heading">
+            <div><div class="eyebrow">YOUR CONNECTED PAYMENT SOURCES</div><h3>Personal accounts</h3><p>Every connected demo account is shown. Choose the account whose balance should be used for comparison and payment.</p></div>
+            <div class="payment-account-tools" data-testid="payment-account-filters">
+              <label>Status<select data-testid="payment-account-filter"><option value="all">All accounts</option><option value="ready">Ready for this corridor</option><option value="attention">Needs attention</option></select></label>
+              <label>Sort<select data-testid="payment-account-sort"><option value="recommended">Recommended</option><option value="balance-desc">Highest balance</option><option value="balance-asc">Lowest balance</option><option value="name">Name A–Z</option></select></label>
+            </div>
+          </div>
+          <div class="payment-account-grid" data-testid="payment-account-list">
+            <article class="payment-account" th:each="account : ${paymentAccounts}"
+                     th:classappend="${account.selected ? ' selected' : (!account.ready ? ' unavailable' : '')}"
+                     th:attr="data-testid=${'payment-account-' + account.accountId},data-ready=${account.ready},data-selected=${account.selected},data-balance=${account.balance},data-name=${account.displayName}">
+              <div class="payment-account-top"><span class="bank-mark" th:text="${#strings.substring(account.institution,0,1)}"></span><span class="eligibility" th:classappend="${account.ready ? ' eligible' : ' unavailable-tag'}" th:text="${account.ready ? 'Ready' : 'Needs attention'}"></span></div>
+              <h4 th:text="${account.displayName}"></h4><p th:text="${account.institution + ' · ' + account.accountType + ' · ' + account.maskedNumber}"></p>
+              <strong class="account-balance" th:text="${#numbers.formatDecimal(account.balance,1,'COMMA',0,'POINT') + ' ' + account.currency}"></strong>
+              <small class="account-reason" th:text="${account.eligibilityReason}"></small>
+              <div th:if="${account.selected}" class="selected-account-label">✓ Selected for comparison</div>
+              <form th:if="${!account.selected and account.ready}" th:action="@{/student/source-account}" method="post"><input type="hidden" name="account" th:value="${account.accountId}"><button type="submit" class="select-account" th:attr="data-testid=${'select-account-' + account.accountId}">Use this account</button></form>
+              <div th:if="${!account.ready}" class="account-disabled">Not available for this corridor</div>
+            </article>
+          </div>
+          <div class="payment-account-empty" data-testid="payment-account-empty" hidden>No accounts match this filter.</div>
+        </div>
+
         <div class="channel-heading">
           <div><h3>Eligible channel comparison</h3><p>Eligibility is applied before preference and price. Bank B remains reference-only even when its synthetic rate is lower.</p></div>
           <div class="channel-heading-tools">
-            <div class="available-balance" data-testid="payment-balance"><small>Available payment balance</small><strong th:text="${#numbers.formatDecimal(paymentBalance,1,'COMMA',0,'POINT') + ' VND'}"></strong><span>Payment Sandbox · checked again before approval</span></div>
+            <div class="available-balance" data-testid="payment-balance"><small>Selected payment balance</small><strong th:text="${#numbers.formatDecimal(paymentBalance,1,'COMMA',0,'POINT') + ' VND'}"></strong><span th:text="${selectedPaymentAccount.displayName + ' · ' + selectedPaymentAccount.maskedNumber}"></span></div>
             <form th:action="@{/student/quotes/refresh}" method="post"><button class="secondary" type="submit">↻ Refresh synthetic quotes</button></form>
           </div>
         </div>
         <div class="channel-grid">
-          <article class="channel-card" th:each="quote : ${channelQuotes}" th:classappend="${quote.eligible ? '' : ' unavailable'}" th:attr="data-testid=${'channel-' + quote.channelId}">
+          <article class="channel-card" th:each="quote : ${eligibleChannelQuotes}" th:attr="data-testid=${'channel-' + quote.channelId}">
             <div class="channel-top"><span class="rank" th:text="${quote.rank != null ? '#' + quote.rank : 'REF'}"></span><span class="eligibility" th:classappend="${quote.eligible ? ' eligible' : ' unavailable-tag'}" th:text="${quote.eligible ? 'Eligible' : 'Unavailable'}"></span></div>
             <h3 th:text="${quote.displayName}"></h3><p class="eligibility-reason" th:text="${quote.eligibilityReason}"></p>
             <div class="cost-summary">
@@ -167,8 +191,18 @@
             </dl>
             <div class="quote-meta"><span th:text="${quote.quoteSource}"></span><br><span th:text="${'Quoted ' + #temporals.format(quote.quotedAt,'dd MMM yyyy HH:mm:ss')}"></span><br><span th:text="${'Expires ' + #temporals.format(quote.expiresAt,'dd MMM yyyy HH:mm:ss')}"></span></div>
             <div th:if="${quote.expired}" class="quote-expired">Quote expired · refresh required</div>
-            <form th:if="${quote.eligible}" th:action="@{/agent/plans/tuition}" method="post" class="planning-form"><input type="hidden" name="channel" th:value="${quote.channelId}"><button class="planning-only" type="submit" th:attr="data-testid=${'plan-' + quote.channelId}">Create Approval Mode plan</button></form>
-            <div th:unless="${quote.eligible}" class="channel-disabled">No select or execute action</div>
+            <form th:action="@{/agent/plans/tuition}" method="post" class="planning-form"><input type="hidden" name="channel" th:value="${quote.channelId}"><input type="hidden" name="sourceAccount" th:value="${selectedPaymentAccount.accountId}"><button class="planning-only" type="submit" th:attr="data-testid=${'plan-' + quote.channelId}">Create Approval Mode plan</button></form>
+          </article>
+        </div>
+
+        <div class="suggestion-heading"><div><div class="eyebrow">MARKET SUGGESTIONS · REFERENCE ONLY</div><h3>Potentially better alternatives</h3><p>These channels may be cheaper or otherwise attractive, but they are not linked to your personal accounts. Connect and verify an account before they can become executable.</p></div></div>
+        <div class="suggestion-grid" data-testid="suggested-channels">
+          <article class="channel-card suggestion-card unavailable" th:each="quote : ${suggestedChannelQuotes}" th:attr="data-testid=${'channel-' + quote.channelId}">
+            <div class="channel-top"><span class="rank">TIP</span><span class="eligibility unavailable-tag">Not connected</span></div>
+            <h3 th:text="${quote.displayName}"></h3><p class="eligibility-reason" th:text="${quote.eligibilityReason}"></p>
+            <div class="suggestion-benefit" th:if="${quote.landedCost.compareTo(cheapestEligibleCost) < 0}"><strong th:text="${#numbers.formatDecimal(cheapestEligibleCost.subtract(quote.landedCost),1,'COMMA',0,'POINT') + ' VND less'}"></strong><span>than the cheapest currently eligible option</span></div>
+            <dl class="fee-breakdown"><div><dt>Landed cost</dt><dd th:text="${#numbers.formatDecimal(quote.landedCost,1,'COMMA',0,'POINT') + ' VND'}"></dd></div><div><dt>Rate</dt><dd th:text="${#numbers.formatDecimal(quote.rateVndPerCny,1,'COMMA',0,'POINT') + ' VND/CNY'}"></dd></div><div><dt>Settlement</dt><dd th:text="${quote.settlementMinDays + '–' + quote.settlementMaxDays + ' day(s)'}"></dd></div><div><dt>Safety score</dt><dd th:text="${quote.safetyScore + '/100 synthetic'}"></dd></div></dl>
+            <div class="channel-disabled">Reference only · no payment action</div>
           </article>
         </div>
       </section>
@@ -222,6 +256,7 @@
               <strong th:text="${latestAction.purpose}"></strong><small th:text="${latestAction.id}"></small>
               <dl class="plan-details">
                 <div><dt>Debit</dt><dd th:text="${#numbers.formatDecimal(latestAction.debitAmount,1,'COMMA',2,'POINT') + ' ' + latestAction.sourceCurrency}"></dd></div>
+                <div><dt>Source account</dt><dd th:text="${latestAction.sourceAccountId}"></dd></div>
                 <div><dt>Recipient</dt><dd th:text="${latestAction.recipient}"></dd></div>
                 <div><dt>Destination</dt><dd th:text="${#numbers.formatDecimal(latestAction.destinationAmount,1,'COMMA',2,'POINT') + ' ' + latestAction.destinationCurrency}"></dd></div>
                 <div><dt>Channel / quote</dt><dd th:text="${(latestAction.channelId ?: 'Internal sandbox') + ' · ' + (latestAction.quoteId ?: 'No FX quote')}"></dd></div>
@@ -243,6 +278,7 @@
             <div th:if="${latestReceipt == null}" class="empty-state">No sandbox payment has executed.</div>
             <div th:if="${latestReceipt != null}" class="receipt" data-testid="latest-receipt" th:attr="data-transaction-id=${latestReceipt.transactionId}">
               <div class="receipt-id"><small>TRANSACTION ID</small><strong th:text="${latestReceipt.transactionId}"></strong></div>
+              <div class="receipt-source"><small>Source account</small><strong th:text="${latestReceipt.sourceAccountId}"></strong></div>
               <ol>
                 <li data-testid="receipt-vnd-debit"><span>VND debit</span><strong th:text="${'−' + #numbers.formatDecimal(latestReceipt.vndDebit,1,'COMMA',2,'POINT') + ' VND'}"></strong></li>
                 <li data-testid="receipt-conversion"><span>Converted at stored quote</span><strong th:text="${#numbers.formatDecimal(latestReceipt.conversionVnd,1,'COMMA',2,'POINT') + ' VND'}"></strong></li>

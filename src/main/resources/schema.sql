@@ -138,6 +138,7 @@ CREATE TABLE IF NOT EXISTS action_plans (
   idempotency_key VARCHAR(80) NOT NULL UNIQUE,
   created_at TIMESTAMP NOT NULL
 );
+ALTER TABLE action_plans ADD COLUMN IF NOT EXISTS source_account_id VARCHAR(40);
 CREATE TABLE IF NOT EXISTS approvals (
   action_id VARCHAR(40) PRIMARY KEY,
   approved_hash VARCHAR(64) NOT NULL,
@@ -151,6 +152,17 @@ CREATE TABLE IF NOT EXISTS sandbox_accounts (
   display_name VARCHAR(120) NOT NULL,
   currency VARCHAR(3) NOT NULL,
   balance DECIMAL(20,2) NOT NULL
+);
+CREATE TABLE IF NOT EXISTS payment_source_accounts (
+  account_id VARCHAR(40) PRIMARY KEY,
+  institution VARCHAR(120) NOT NULL,
+  account_type VARCHAR(40) NOT NULL,
+  masked_number VARCHAR(20) NOT NULL,
+  connection_status VARCHAR(20) NOT NULL,
+  verification_status VARCHAR(20) NOT NULL,
+  cross_border_enabled BOOLEAN NOT NULL,
+  selected BOOLEAN NOT NULL DEFAULT FALSE,
+  display_order INTEGER NOT NULL
 );
 CREATE TABLE IF NOT EXISTS sandbox_transactions (
   id VARCHAR(40) PRIMARY KEY,
@@ -171,6 +183,7 @@ CREATE TABLE IF NOT EXISTS sandbox_transactions (
   status VARCHAR(20) NOT NULL,
   created_at TIMESTAMP NOT NULL
 );
+ALTER TABLE sandbox_transactions ADD COLUMN IF NOT EXISTS source_account_id VARCHAR(40);
 CREATE TABLE IF NOT EXISTS sandbox_ledger_entries (
   id VARCHAR(40) PRIMARY KEY,
   transaction_id VARCHAR(40) NOT NULL,

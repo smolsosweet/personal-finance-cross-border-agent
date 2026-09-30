@@ -55,9 +55,19 @@ public class PhaseOneController {
         model.addAttribute("studentProfile", crossBorder.profile());
         model.addAttribute("tuitionBill", crossBorder.bill());
         model.addAttribute("recipientVerification", crossBorder.verifyRecipient());
-        model.addAttribute("channelQuotes", crossBorder.rankedQuotes());
+        var channelQuotes = crossBorder.rankedQuotes();
+        var eligibleQuotes = channelQuotes.stream().filter(CrossBorderService.ChannelQuote::eligible).toList();
+        var suggestedQuotes = channelQuotes.stream().filter(quote -> !quote.eligible()).toList();
+        BigDecimal cheapestEligibleCost = eligibleQuotes.stream()
+                .map(CrossBorderService.ChannelQuote::landedCost).min(BigDecimal::compareTo).orElse(BigDecimal.ZERO);
+        model.addAttribute("channelQuotes", channelQuotes);
+        model.addAttribute("eligibleChannelQuotes", eligibleQuotes);
+        model.addAttribute("suggestedChannelQuotes", suggestedQuotes);
+        model.addAttribute("cheapestEligibleCost", cheapestEligibleCost);
         model.addAttribute("agentPolicy", phaseFour.policy());
-        model.addAttribute("paymentBalance", phaseFour.payerBalance());
+        model.addAttribute("paymentAccounts", phaseFour.paymentSourceAccounts());
+        model.addAttribute("selectedPaymentAccount", phaseFour.selectedPaymentSource());
+        model.addAttribute("paymentBalance", phaseFour.selectedPaymentSource().balance());
         model.addAttribute("conversation", phaseFour.messages());
         model.addAttribute("latestAction", phaseFour.latestAction());
         model.addAttribute("latestReceipt", phaseFour.latestReceipt());
@@ -110,6 +120,13 @@ public class PhaseOneController {
         return "redirect:/#student-finance";
     }
 
+    @PostMapping("/student/source-account")
+    public String selectSourceAccount(@RequestParam String account, RedirectAttributes flash) {
+        PhaseFourService.PaymentSourceAccount selected = phaseFour.selectPaymentSource(account);
+        flash.addFlashAttribute("message", "Payment source changed to " + selected.displayName() + ".");
+        return "redirect:/#student-finance";
+    }
+
     @PostMapping("/agent/message")
     public String message(@RequestParam String message, RedirectAttributes flash) {
         phaseFour.sendMessage(message);
@@ -125,8 +142,9 @@ public class PhaseOneController {
     }
 
     @PostMapping("/agent/plans/tuition")
-    public String tuitionPlan(@RequestParam String channel, RedirectAttributes flash) {
-        PhaseFourService.ActionPlan plan = phaseFour.createTuitionPlan(channel);
+    public String tuitionPlan(@RequestParam String channel, @RequestParam String sourceAccount,
+                              RedirectAttributes flash) {
+        PhaseFourService.ActionPlan plan = phaseFour.createTuitionPlan(channel, sourceAccount);
         flash.addFlashAttribute("message", "Tuition plan " + plan.status() + ". Approval is always required.");
         return "redirect:/#agent-workspace";
     }
