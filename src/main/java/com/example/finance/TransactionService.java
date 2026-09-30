@@ -259,6 +259,26 @@ public class TransactionService {
         db.update("UPDATE transaction_categories SET active=TRUE WHERE name=?", category.get("name"));
     }
 
+    @Transactional
+    public void renameCustomCategory(String name, String newName) {
+        Map<String,Object> category = findCategory(name);
+        if (!"CUSTOM".equals(category.get("category_type")))
+            throw new IllegalArgumentException("System categories cannot be renamed");
+
+        String currentName = (String) category.get("name");
+        String cleanedNewName = cleanCategory(newName);
+        List<Map<String,Object>> matching = db.queryForList(
+                "SELECT name FROM transaction_categories WHERE LOWER(name)=LOWER(?)", cleanedNewName);
+        if (!matching.isEmpty() && !currentName.equals(matching.getFirst().get("name")))
+            throw new IllegalArgumentException("Another category already uses this name");
+
+        db.update("UPDATE transactions SET category=? WHERE LOWER(category)=LOWER(?)", cleanedNewName, currentName);
+        db.update("UPDATE transactions SET previous_category=? WHERE LOWER(previous_category)=LOWER(?)",
+                cleanedNewName, currentName);
+        db.update("UPDATE budgets SET category=? WHERE LOWER(category)=LOWER(?)", cleanedNewName, currentName);
+        db.update("UPDATE transaction_categories SET name=? WHERE name=?", cleanedNewName, currentName);
+    }
+
     private Map<String,Object> findCategory(String name) {
         String cleaned = cleanCategory(name);
         List<Map<String,Object>> categories = db.queryForList(

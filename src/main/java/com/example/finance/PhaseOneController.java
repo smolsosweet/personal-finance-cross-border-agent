@@ -143,6 +143,13 @@ public class PhaseOneController {
         return "redirect:/#transaction-categories";
     }
 
+    @PostMapping("/transactions/categories/rename")
+    public String renameCategory(@RequestParam String name, @RequestParam String newName, RedirectAttributes flash) {
+        transactions.renameCustomCategory(name, newName);
+        flash.addFlashAttribute("message", "Category renamed across transactions and reports.");
+        return "redirect:/#transaction-categories";
+    }
+
     @PostMapping("/transactions/{id}/undo")
     public String undoCategory(@PathVariable String id, RedirectAttributes flash) {
         transactions.undoCategory(id);

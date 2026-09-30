@@ -108,6 +108,20 @@ class PhaseTwoIntegrationTest {
                         && Boolean.TRUE.equals(category.get("active"))));
     }
 
+    @Test void customCategoryCanBeRenamedWithoutDuplicatingOrChangingTotals() {
+        String id = service.simulate("low");
+        service.reviewTransaction(id, null, "đổ xăng", "Filled the motorbike tank");
+
+        service.renameCustomCategory("ĐỔ XĂNG", "Đổ xăng");
+
+        assertEquals("Đổ xăng", service.transaction(id).get("category"));
+        assertEquals(1, service.categories().stream()
+                .filter(category -> "đổ xăng".equalsIgnoreCase((String) category.get("name")))
+                .count());
+        assertThrows(IllegalArgumentException.class,
+                () -> service.renameCustomCategory("Đổ xăng", "Shopping"));
+    }
+
     @Test void automaticCategoryCanBeUndone() {
         String id = service.simulate("high");
         service.undoCategory(id);
