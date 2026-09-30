@@ -91,27 +91,38 @@ class FinBridgePlaywrightE2ETest {
         assertThat(row).hasAttribute("data-review-status", "AUTO");
         row.getByRole(AriaRole.BUTTON, new Locator.GetByRoleOptions().setName("Undo")).click();
 
-        assertThat(page.getByTestId("review-dialog")).isVisible();
-        assertThat(page.getByTestId("review-dialog")).containsText("LOW CONFIDENCE · PURPOSE NEEDED");
-        assertThat(page.getByTestId("review-dialog")).containsText("Category change undone by user");
+        assertThat(page.locator("#transaction-review")).isVisible();
+        Locator review = page.locator(".transaction-review-card").first();
+        assertThat(review).containsText("PURPOSE NEEDED");
+        assertThat(review).containsText("Category change undone by user");
     }
 
     @Test
-    void mediumAndLowConfidenceOpenTheCorrectReviewDialogs() {
+    void mediumAndLowConfidenceUseTheProductionReviewInbox() {
         openDemoTransactions();
         page.getByTestId("simulate-medium").click();
-        assertThat(page.getByTestId("review-dialog")).isVisible();
-        assertThat(page.getByTestId("review-dialog")).containsText("MEDIUM CONFIDENCE · CONFIRM CATEGORY");
-        assertThat(page.getByTestId("review-dialog")).containsText("72%");
+        assertThat(page.locator("#transaction-review")).isVisible();
+        Locator medium = page.locator(".transaction-review-card").first();
+        assertThat(medium).containsText("CONFIRM SUGGESTION");
+        assertThat(medium).containsText("72%");
+        assertEquals("Shopping", medium.locator("select[name='category']").inputValue());
+        medium.getByRole(AriaRole.BUTTON, new Locator.GetByRoleOptions().setName("Save categorization")).click();
 
         demoData.resetAll();
         page.navigate(BASE_URL);
         openDemoTransactions();
         page.getByTestId("simulate-low").click();
-        assertThat(page.getByTestId("review-dialog")).isVisible();
-        assertThat(page.getByTestId("review-dialog")).containsText("LOW CONFIDENCE · PURPOSE NEEDED");
-        assertThat(page.getByTestId("review-dialog")).containsText("What was this transaction for?");
-        assertEquals("", page.getByTestId("review-dialog").locator("input[name='category']").inputValue());
+        assertThat(page.locator("#transaction-review")).isVisible();
+        Locator low = page.locator(".transaction-review-card").first();
+        assertThat(low).containsText("PURPOSE NEEDED");
+        low.locator("input[name='purpose']").fill("Bought cat food");
+        low.locator("select[name='category']").selectOption("__custom__");
+        assertThat(low.locator(".custom-category-field")).isVisible();
+        low.locator("input[name='customCategory']").fill("Pet care");
+        low.getByRole(AriaRole.BUTTON, new Locator.GetByRoleOptions().setName("Save categorization")).click();
+
+        page.getByTestId("transaction-view-categories").click();
+        assertThat(page.locator("#transaction-categories")).containsText("Pet care");
     }
 
     @Test
@@ -136,6 +147,7 @@ class FinBridgePlaywrightE2ETest {
 
         page.getByTestId("transaction-view-demo").click();
         assertThat(page.locator("#transaction-tools")).isVisible();
+        assertThat(page.locator("#transaction-tools")).containsText("NGUỒN SỰ KIỆN NGÂN HÀNG DEMO");
         page.getByTestId("simulate-high").click();
         assertThat(page.locator("html")).hasAttribute("lang", "vi");
         assertThat(page.getByTestId("language-vi")).hasAttribute("aria-pressed", "true");

@@ -24,9 +24,11 @@ class ProductionUiIntegrationTest {
     void productionModeShowsHistoryWithoutDemoTransactionTools() throws Exception {
         mvc.perform(get("/"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Transaction history")))
+                .andExpect(content().string(containsString("All transactions")))
+                .andExpect(content().string(containsString("Needs your review")))
+                .andExpect(content().string(containsString("Your transaction categories")))
                 .andExpect(content().string(containsString("Recent transactions")))
-                .andExpect(content().string(not(containsString("Create demo transaction"))))
+                .andExpect(content().string(not(containsString("Demo bank feed"))))
                 .andExpect(content().string(not(containsString("data-testid=\"simulate-high\""))));
     }
 }

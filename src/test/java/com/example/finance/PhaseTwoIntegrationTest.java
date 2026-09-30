@@ -52,6 +52,46 @@ class PhaseTwoIntegrationTest {
         assertEquals("CONFIRMED", service.transaction(id).get("review_status"));
     }
 
+    @Test void productionReviewRequiresPurposeAndStoresUserDecision() {
+        String id = service.simulate("low");
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service.reviewTransaction(id, "Shopping", null));
+
+        service.reviewTransaction(id, "Shopping", "Lunch with classmates");
+        Map<String,Object> reviewed = service.transaction(id);
+        assertEquals("Shopping", reviewed.get("category"));
+        assertEquals("Lunch with classmates", reviewed.get("purpose"));
+        assertEquals("USER", reviewed.get("category_source"));
+        assertEquals("CONFIRMED", reviewed.get("review_status"));
+        assertNotNull(reviewed.get("reviewed_at"));
+    }
+
+    @Test void customCategoryCanBeCreatedInlineAndArchivedWithoutChangingHistory() {
+        String id = service.simulate("low");
+        service.reviewTransaction(id, null, "Pet care", "Bought cat food");
+
+        assertEquals("Pet care", service.transaction(id).get("category"));
+        assertTrue(service.categories().stream().anyMatch(category ->
+                "Pet care".equals(category.get("name"))
+                        && "CUSTOM".equals(category.get("category_type"))
+                        && Boolean.TRUE.equals(category.get("active"))));
+
+        service.archiveCustomCategory("Pet care");
+        assertEquals("Pet care", service.transaction(id).get("category"));
+        assertTrue(service.categories().stream().anyMatch(category ->
+                "Pet care".equals(category.get("name")) && Boolean.FALSE.equals(category.get("active"))));
+
+        String next = service.simulate("low");
+        assertThrows(IllegalArgumentException.class,
+                () -> service.reviewTransaction(next, "Pet care", "Another purchase"));
+    }
+
+    @Test void systemCategoryCannotBeArchived() {
+        assertThrows(IllegalArgumentException.class,
+                () -> service.archiveCustomCategory("Shopping"));
+    }
+
     @Test void automaticCategoryCanBeUndone() {
         String id = service.simulate("high");
         service.undoCategory(id);

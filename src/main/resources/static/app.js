@@ -9,6 +9,10 @@ const translationsVi = new Map(Object.entries({
   'Agent & Payments': 'Tác vụ & Thanh toán',
   'Transactions': 'Giao dịch',
   'Transaction history': 'Lịch sử giao dịch',
+  'All transactions': 'Tất cả giao dịch',
+  'Categories': 'Danh mục',
+  'Demo bank feed': 'Nguồn ngân hàng demo',
+  'DEMO ONLY': 'CHỈ DÙNG DEMO',
   'Create demo transaction': 'Tạo giao dịch demo',
   'Just created': 'Vừa tạo',
   'PHASE 5 OF 5': 'GIAI ĐOẠN 5/5',
@@ -30,6 +34,18 @@ const translationsVi = new Map(Object.entries({
   'Medium or low confidence': 'Độ tin cậy trung bình hoặc thấp',
   'SIMULATED BANK EVENT': 'SỰ KIỆN NGÂN HÀNG MÔ PHỎNG',
   'DEMO TRANSACTION LAB': 'PHÒNG THÍ NGHIỆM GIAO DỊCH DEMO',
+  'DEMO BANK EVENT SOURCE': 'NGUỒN SỰ KIỆN NGÂN HÀNG DEMO',
+  'Simulate an incoming bank event': 'Mô phỏng sự kiện đến từ ngân hàng',
+  'This developer-only tool represents an event received after a transaction happened in the banking app. Production users do not create transactions here.': 'Công cụ dành cho demo này mô phỏng sự kiện được nhận sau khi giao dịch đã xảy ra trong ứng dụng ngân hàng. Người dùng production không tạo giao dịch tại đây.',
+  'FinBridge receives synthetic bank data, rejects duplicates, normalizes it and applies deterministic categorization rules. The transaction then appears in History or Needs review.': 'FinBridge nhận dữ liệu ngân hàng mô phỏng, loại bỏ bản trùng, chuẩn hóa và áp dụng quy tắc phân loại. Giao dịch sau đó xuất hiện trong Lịch sử hoặc Cần xử lý.',
+  'Receive coffee purchase': 'Nhận giao dịch mua cà phê',
+  'Highlands Coffee is categorized automatically as Food & Drinks': 'Highlands Coffee được tự động phân loại vào Ăn uống',
+  'Receive campus purchase': 'Nhận giao dịch mua tại trường',
+  'Campus Store enters Needs review with a suggested category': 'Campus Store được đưa vào Cần xử lý cùng danh mục đề xuất',
+  'Receive unknown QR payment': 'Nhận thanh toán QR không xác định',
+  'The payment already happened; FinBridge asks its purpose for bookkeeping': 'Thanh toán đã xảy ra; FinBridge hỏi mục đích để hoàn thiện sổ thu chi',
+  'Receive salary event': 'Nhận sự kiện trả lương',
+  'Receive refund event': 'Nhận sự kiện hoàn tiền',
   'Create a test transaction': 'Tạo giao dịch để kiểm thử',
   'Each button creates one new synthetic bank event and places it at the top of Transaction history. The merchants below are fixed examples for testing, not your latest transactions.': 'Mỗi nút tạo một sự kiện ngân hàng mô phỏng mới và đặt nó ở đầu Lịch sử giao dịch. Các đơn vị bán hàng bên dưới là ví dụ cố định để kiểm thử, không phải giao dịch mới nhất của bạn.',
   'What happens when I click?': 'Điều gì xảy ra khi tôi bấm?',
@@ -65,6 +81,35 @@ const translationsVi = new Map(Object.entries({
   'Refund': 'Hoàn tiền',
   'Matched description · 95%': 'Mô tả khớp · 95%',
   'Rules: ≥90% auto-categorize · 60–89% confirm suggestion · below 60% ask transaction purpose. No LLM is used for balances or categorization in this phase.': 'Quy tắc: ≥90% tự động phân loại · 60–89% xác nhận đề xuất · dưới 60% hỏi mục đích giao dịch. Không dùng LLM để tính số dư hoặc phân loại.',
+  'TRANSACTION INBOX': 'HỘP GIAO DỊCH CẦN XỬ LÝ',
+  'Needs your review': 'Cần bạn xem xét',
+  'These transactions already happened at the bank. Your answer only completes their purpose and category for budgets and reports.': 'Các giao dịch này đã xảy ra tại ngân hàng. Câu trả lời của bạn chỉ hoàn thiện mục đích và danh mục cho ngân sách và báo cáo.',
+  'How decisions work': 'Cách hệ thống ra quyết định',
+  '90% or higher is categorized automatically · 60–89% asks you to confirm · below 60% asks for purpose and category.': 'Từ 90% tự động phân loại · 60–89% yêu cầu xác nhận · dưới 60% hỏi mục đích và danh mục.',
+  'You are all caught up. New uncertain bank transactions will appear here.': 'Bạn đã xử lý xong. Giao dịch ngân hàng chưa chắc chắn mới sẽ xuất hiện tại đây.',
+  'PURPOSE NEEDED': 'CẦN MỤC ĐÍCH',
+  'CONFIRM SUGGESTION': 'XÁC NHẬN ĐỀ XUẤT',
+  'What was this payment for?': 'Khoản thanh toán này dùng cho việc gì?',
+  'Suggested category': 'Danh mục đề xuất',
+  'You can accept it or choose another category.': 'Bạn có thể chấp nhận hoặc chọn danh mục khác.',
+  'Choose a category': 'Chọn danh mục',
+  'Create a new category…': 'Tạo danh mục mới…',
+  'New category name': 'Tên danh mục mới',
+  'Save categorization': 'Lưu phân loại',
+  'CATEGORY MANAGEMENT': 'QUẢN LÝ DANH MỤC',
+  'Your transaction categories': 'Danh mục giao dịch của bạn',
+  'System categories keep reports consistent. Add personal categories when the built-in list does not describe your spending.': 'Danh mục hệ thống giúp báo cáo nhất quán. Hãy thêm danh mục cá nhân khi danh sách có sẵn chưa mô tả đúng khoản chi.',
+  'New personal category': 'Danh mục cá nhân mới',
+  'Add category': 'Thêm danh mục',
+  'System categories': 'Danh mục hệ thống',
+  'Always available and cannot be archived.': 'Luôn khả dụng và không thể lưu trữ.',
+  'Personal categories': 'Danh mục cá nhân',
+  'Archiving removes a category from future selection while preserving transaction history.': 'Lưu trữ sẽ loại danh mục khỏi lựa chọn mới nhưng vẫn giữ nguyên lịch sử giao dịch.',
+  'No personal categories yet.': 'Chưa có danh mục cá nhân.',
+  'Archive': 'Lưu trữ',
+  'Restore': 'Khôi phục',
+  'Example: Lunch with classmates': 'Ví dụ: Ăn trưa cùng bạn học',
+  'Example: Pet care': 'Ví dụ: Chăm sóc thú cưng',
   'PROACTIVE FEED': 'THÔNG TIN CHỦ ĐỘNG',
   'Worth your attention': 'Nội dung cần bạn chú ý',
   'Every insight shows the deterministic evidence behind it.': 'Mỗi thông tin đều hiển thị bằng chứng theo quy tắc.',
@@ -353,12 +398,17 @@ function activateTab(tab, updateLocation = true) {
 }
 
 function initialTransactionView() {
-  return window.location.hash === '#transaction-tools' ? 'demo' : 'history';
+  const viewByHash = {
+    '#transaction-review': 'review',
+    '#transactions': 'history',
+    '#transaction-categories': 'categories',
+    '#transaction-tools': 'demo'
+  };
+  return viewByHash[window.location.hash] || 'history';
 }
 
 function activateTransactionView(view, updateLocation = true) {
-  const requested = view === 'demo' && document.querySelector('[data-transaction-view="demo"]')
-    ? 'demo' : 'history';
+  const requested = document.querySelector('[data-transaction-view="' + view + '"]') ? view : 'history';
   document.querySelectorAll('[data-transaction-view-panel]').forEach((panel) => {
     panel.hidden = panel.dataset.transactionViewPanel !== requested;
   });
@@ -366,7 +416,9 @@ function activateTransactionView(view, updateLocation = true) {
     button.setAttribute('aria-selected', String(button.dataset.transactionView === requested));
   });
   if (updateLocation) {
-    history.replaceState(null, '', requested === 'demo' ? '#transaction-tools' : '#transactions');
+    const hashes = { review: '#transaction-review', history: '#transactions',
+      categories: '#transaction-categories', demo: '#transaction-tools' };
+    history.replaceState(null, '', hashes[requested]);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
@@ -375,6 +427,7 @@ function initialTab() {
   const hashTabs = {
     '#overview': 'dashboard', '#feed': 'dashboard', '#budget': 'dashboard',
     '#transaction-tools': 'transactions', '#transactions': 'transactions',
+    '#transaction-review': 'transactions', '#transaction-categories': 'transactions',
     '#student-finance': 'student', '#agent-workspace': 'agent'
   };
   return hashTabs[window.location.hash]
@@ -461,6 +514,23 @@ function initializeTransactionList() {
 
   renderTransactionList = render;
   render();
+}
+
+function initializeCategoryReviewForms() {
+  document.querySelectorAll('[data-category-review]').forEach((form) => {
+    const select = form.querySelector('[data-category-select]');
+    const field = form.querySelector('.custom-category-field');
+    const input = form.querySelector('[data-custom-category]');
+    if (!select || !field || !input) return;
+    const render = () => {
+      const custom = select.value === '__custom__';
+      field.hidden = !custom;
+      input.required = custom;
+      if (!custom) input.value = '';
+    };
+    select.addEventListener('change', render);
+    render();
+  });
 }
 
 function initializePaymentAccounts() {
@@ -551,6 +621,10 @@ function translateDynamic(text) {
     [/^(\d+) insights$/, '$1 thông tin'],
     [/^(\d+) records$/, '$1 bản ghi'],
     [/^(\d+) recent events$/, '$1 sự kiện gần đây'],
+    [/^(\d+) pending$/, '$1 mục cần xử lý'],
+    [/^(\d+) transaction\(s\) · Active$/, '$1 giao dịch · Đang dùng'],
+    [/^(\d+) transaction\(s\) · Archived$/, '$1 giao dịch · Đã lưu trữ'],
+    [/^Purpose: (.+)$/, 'Mục đích: $1'],
     [/^(.+) VND remaining$/, 'Còn lại $1 VND'],
     [/^(.+) VND less$/, 'Ít hơn $1 VND'],
     [/^Needs (.+) VND more to pay safely\.$/, 'Cần thêm $1 VND để thanh toán an toàn.'],
@@ -623,7 +697,9 @@ function applyLanguage(language) {
   document.querySelectorAll('[placeholder]').forEach((element) => {
     if (!originalPlaceholder.has(element)) originalPlaceholder.set(element, element.placeholder);
     const original = originalPlaceholder.get(element);
-    if (selected === 'vi' && original === 'Ask about tuition, surplus, or create a payment plan') {
+    if (selected === 'vi' && translationsVi.has(original)) {
+      element.placeholder = translationsVi.get(original);
+    } else if (selected === 'vi' && original === 'Ask about tuition, surplus, or create a payment plan') {
       element.placeholder = 'Hỏi về học phí, số dư khả dụng hoặc tạo kế hoạch thanh toán';
     } else if (selected === 'vi' && original === 'e.g. Groceries') {
       element.placeholder = 'ví dụ: Thực phẩm';
@@ -644,6 +720,7 @@ document.addEventListener('DOMContentLoaded', () => {
   activateTab(initialTab(), false);
   requestAnimationFrame(() => window.scrollTo({ top: 0 }));
   initializeTransactionList();
+  initializeCategoryReviewForms();
   initializePaymentAccounts();
   initializeQuoteExpiryStatuses();
   const savedLanguage = localStorage.getItem('finbridge-language') || 'en';

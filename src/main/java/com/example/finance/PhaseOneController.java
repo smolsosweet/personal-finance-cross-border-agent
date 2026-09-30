@@ -45,6 +45,8 @@ public class PhaseOneController {
         model.addAttribute("profile", transactions.profile());
         model.addAttribute("accounts", transactions.accounts());
         model.addAttribute("transactions", transactions.transactions());
+        model.addAttribute("pendingTransactions", transactions.pendingTransactions());
+        model.addAttribute("transactionCategories", transactions.categories());
         model.addAttribute("eventCount", transactions.eventCount());
         model.addAttribute("dashboard", transactions.dashboard());
         model.addAttribute("budgets", transactions.budgetSummary());
@@ -85,7 +87,7 @@ public class PhaseOneController {
         model.addAttribute("auditEvents", phaseFour.auditEvents());
         model.addAttribute("demoToolsEnabled", demoToolsEnabled);
         model.addAttribute("newTransaction", newTransaction);
-        if (review != null && !review.isBlank()) model.addAttribute("reviewTransaction", transactions.transaction(review));
+        if (review != null && !review.isBlank()) model.addAttribute("reviewTransactionId", review);
         return "home";
     }
 
@@ -97,7 +99,7 @@ public class PhaseOneController {
                 " · confidence " + transaction.get("confidence") + "% · " + transaction.get("review_status"));
         String status = (String) transaction.get("review_status");
         if ("CONFIRMATION_REQUIRED".equals(status) || "PURPOSE_REQUIRED".equals(status)) {
-            return "redirect:/?review=" + id + "&newTransaction=" + id + "#transactions";
+            return "redirect:/?review=" + id + "&newTransaction=" + id + "#transaction-review";
         }
         return "redirect:/?newTransaction=" + id + "#transactions";
     }
@@ -109,11 +111,43 @@ public class PhaseOneController {
         return "redirect:/#transactions";
     }
 
+    @PostMapping("/transactions/{id}/review")
+    public String reviewTransaction(@PathVariable String id,
+                                    @RequestParam(required=false) String category,
+                                    @RequestParam(required=false) String customCategory,
+                                    @RequestParam(required=false) String purpose,
+                                    RedirectAttributes flash) {
+        transactions.reviewTransaction(id, category, customCategory, purpose);
+        flash.addFlashAttribute("message", "Transaction reviewed. Dashboard and budget are now updated.");
+        return "redirect:/#transaction-review";
+    }
+
+    @PostMapping("/transactions/categories")
+    public String addCategory(@RequestParam String name, RedirectAttributes flash) {
+        transactions.addCustomCategory(name);
+        flash.addFlashAttribute("message", "Custom category is ready to use.");
+        return "redirect:/#transaction-categories";
+    }
+
+    @PostMapping("/transactions/categories/archive")
+    public String archiveCategory(@RequestParam String name, RedirectAttributes flash) {
+        transactions.archiveCustomCategory(name);
+        flash.addFlashAttribute("message", "Custom category archived. Existing transactions keep their category.");
+        return "redirect:/#transaction-categories";
+    }
+
+    @PostMapping("/transactions/categories/restore")
+    public String restoreCategory(@RequestParam String name, RedirectAttributes flash) {
+        transactions.restoreCustomCategory(name);
+        flash.addFlashAttribute("message", "Custom category restored.");
+        return "redirect:/#transaction-categories";
+    }
+
     @PostMapping("/transactions/{id}/undo")
     public String undoCategory(@PathVariable String id, RedirectAttributes flash) {
         transactions.undoCategory(id);
         flash.addFlashAttribute("message", "Category change undone.");
-        return "redirect:/?review=" + id + "#transactions";
+        return "redirect:/?review=" + id + "#transaction-review";
     }
 
     @PostMapping("/student/preference")

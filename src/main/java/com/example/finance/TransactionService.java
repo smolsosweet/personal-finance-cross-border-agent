@@ -56,12 +56,14 @@ public class TransactionService {
     public void reset() {
         db.update("DELETE FROM transactions");
         db.update("DELETE FROM bank_events");
+        db.update("DELETE FROM transaction_categories");
         db.update("DELETE FROM budgets");
         db.update("DELETE FROM financial_accounts");
         db.update("DELETE FROM demo_profile");
         db.update("INSERT INTO demo_profile VALUES (1,'Minh Nguyen','Vietnam','China','VND','CNY')");
         db.update("INSERT INTO financial_accounts VALUES ('CHECKING',1,'Demo Checking','VND',100000000.00)");
         db.update("INSERT INTO financial_accounts VALUES ('SAVINGS',1,'Emergency Fund','VND',1000000.00)");
+        seedCategories();
         seedBudgets();
 
         LocalDate today = LocalDate.now();
@@ -88,6 +90,7 @@ public class TransactionService {
             reset();
             return;
         }
+        seedCategories();
         seedBudgets();
         for (Map<String,Object> row : db.queryForList("SELECT id,merchant,description,amount,currency,direction,type,occurred_at FROM transactions WHERE confidence=0")) {
             Normalized normalized = new Normalized(
@@ -109,6 +112,20 @@ public class TransactionService {
         insertBudget("Transport", "1500000");
         insertBudget("Utilities", "1800000");
         insertBudget("Shopping", "1000000");
+    }
+
+    private void seedCategories() {
+        for (String name : List.of("Food & Drinks", "Transport", "Utilities", "Shopping",
+                "Groceries", "Education", "Health", "Housing", "Entertainment",
+                "Income", "Transfer", "Refund")) {
+            Integer count = db.queryForObject(
+                    "SELECT COUNT(*) FROM transaction_categories WHERE LOWER(name)=LOWER(?)",
+                    Integer.class, name);
+            if (count == null || count == 0) {
+                db.update("INSERT INTO transaction_categories VALUES (?, 'SYSTEM', TRUE, ?)",
+                        name, LocalDateTime.now());
+            }
+        }
     }
 
     private void insertBudget(String category, String limit) {
@@ -173,15 +190,99 @@ public class TransactionService {
 
     @Transactional
     public void confirmCategory(String id, String category) {
-        if (category == null || category.isBlank()) throw new IllegalArgumentException("Category or transaction purpose is required");
-        String cleaned = category.trim();
-        if (cleaned.length() > 80) throw new IllegalArgumentException("Category must be 80 characters or fewer");
+        String status = (String) transaction(id).get("review_status");
+        if (!categoryAvailable(category)) addCustomCategory(category);
+        reviewTransaction(id, category, "PURPOSE_REQUIRED".equals(status) ? category : null);
+    }
+
+    @Transactional
+    public void reviewTransaction(String id, String category, String customCategory, String purpose) {
+        String selected = category;
+        if (customCategory != null && !customCategory.isBlank()) {
+            addCustomCategory(customCategory);
+            selected = customCategory;
+        }
+        reviewTransaction(id, selected, purpose);
+    }
+
+    @Transactional
+    public void reviewTransaction(String id, String category, String purpose) {
+        Map<String,Object> transaction = transaction(id);
+        String status = (String) transaction.get("review_status");
+        if (!List.of("CONFIRMATION_REQUIRED", "PURPOSE_REQUIRED").contains(status))
+            throw new IllegalArgumentException("Transaction does not need review");
+        String cleaned = cleanCategory(category);
+        if (!categoryAvailable(cleaned))
+            throw new IllegalArgumentException("Choose an active category");
+        String cleanedPurpose = purpose == null ? null : purpose.trim().replaceAll("\\s+", " ");
+        if ("PURPOSE_REQUIRED".equals(status) && (cleanedPurpose == null || cleanedPurpose.isBlank()))
+            throw new IllegalArgumentException("Transaction purpose is required");
+        if (cleanedPurpose != null && cleanedPurpose.length() > 160)
+            throw new IllegalArgumentException("Purpose must be 160 characters or fewer");
         db.update("""
                 UPDATE transactions
                 SET previous_category=category, category=?, review_status='CONFIRMED',
-                    categorization_evidence='User confirmed category or purpose'
+                    purpose=?, category_source='USER', reviewed_at=?,
+                    categorization_evidence='User reviewed bank transaction'
                 WHERE id=?
-                """, cleaned, id);
+                """, cleaned, cleanedPurpose, LocalDateTime.now(), id);
+    }
+
+    @Transactional
+    public void addCustomCategory(String name) {
+        String cleaned = cleanCategory(name);
+        List<Map<String,Object>> existing = db.queryForList(
+                "SELECT name,category_type,active FROM transaction_categories WHERE LOWER(name)=LOWER(?)",
+                cleaned);
+        if (!existing.isEmpty()) {
+            Map<String,Object> category = existing.getFirst();
+            if ("SYSTEM".equals(category.get("category_type")))
+                throw new IllegalArgumentException("A system category already uses this name");
+            db.update("UPDATE transaction_categories SET active=TRUE WHERE name=?", category.get("name"));
+            return;
+        }
+        db.update("INSERT INTO transaction_categories VALUES (?, 'CUSTOM', TRUE, ?)",
+                cleaned, LocalDateTime.now());
+    }
+
+    @Transactional
+    public void archiveCustomCategory(String name) {
+        Map<String,Object> category = findCategory(name);
+        if (!"CUSTOM".equals(category.get("category_type")))
+            throw new IllegalArgumentException("System categories cannot be archived");
+        db.update("UPDATE transaction_categories SET active=FALSE WHERE name=?", category.get("name"));
+    }
+
+    @Transactional
+    public void restoreCustomCategory(String name) {
+        Map<String,Object> category = findCategory(name);
+        if (!"CUSTOM".equals(category.get("category_type")))
+            throw new IllegalArgumentException("Only custom categories can be restored");
+        db.update("UPDATE transaction_categories SET active=TRUE WHERE name=?", category.get("name"));
+    }
+
+    private Map<String,Object> findCategory(String name) {
+        String cleaned = cleanCategory(name);
+        List<Map<String,Object>> categories = db.queryForList(
+                "SELECT * FROM transaction_categories WHERE LOWER(name)=LOWER(?)", cleaned);
+        if (categories.isEmpty()) throw new IllegalArgumentException("Category does not exist");
+        return categories.getFirst();
+    }
+
+    private boolean categoryAvailable(String name) {
+        Integer count = db.queryForObject(
+                "SELECT COUNT(*) FROM transaction_categories WHERE LOWER(name)=LOWER(?) AND active=TRUE",
+                Integer.class, name);
+        return count != null && count > 0;
+    }
+
+    private String cleanCategory(String category) {
+        if (category == null || category.isBlank())
+            throw new IllegalArgumentException("Category is required");
+        String cleaned = category.trim().replaceAll("\\s+", " ");
+        if (cleaned.length() < 2 || cleaned.length() > 80)
+            throw new IllegalArgumentException("Category must be between 2 and 80 characters");
+        return cleaned;
     }
 
     @Transactional
@@ -194,6 +295,7 @@ public class TransactionService {
         db.update("""
                 UPDATE transactions
                 SET category=?, previous_category=NULL, review_status=?,
+                    purpose=NULL, category_source='RULE', reviewed_at=NULL,
                     categorization_evidence='Category change undone by user'
                 WHERE id=?
                 """, previous, status, id);
@@ -211,6 +313,24 @@ public class TransactionService {
                 FROM transactions t
                 JOIN bank_events e ON e.id=t.event_id
                 ORDER BY t.occurred_at DESC, e.received_at DESC
+                """);
+    }
+    public List<Map<String,Object>> pendingTransactions() {
+        return db.queryForList("""
+                SELECT t.*
+                FROM transactions t
+                JOIN bank_events e ON e.id=t.event_id
+                WHERE t.review_status IN ('CONFIRMATION_REQUIRED','PURPOSE_REQUIRED')
+                ORDER BY t.occurred_at DESC, e.received_at DESC
+                """);
+    }
+    public List<Map<String,Object>> categories() {
+        return db.queryForList("""
+                SELECT c.name,c.category_type,c.active,c.created_at,COUNT(t.id) AS transaction_count
+                FROM transaction_categories c
+                LEFT JOIN transactions t ON LOWER(t.category)=LOWER(c.name)
+                GROUP BY c.name,c.category_type,c.active,c.created_at
+                ORDER BY CASE c.category_type WHEN 'SYSTEM' THEN 0 ELSE 1 END,c.active DESC,c.name
                 """);
     }
     public int eventCount() { return db.queryForObject("SELECT COUNT(*) FROM bank_events", Integer.class); }

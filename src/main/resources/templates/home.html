@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Atlas · Phase 5</title><link rel="stylesheet" th:href="@{/app.css(v='20260930-4')}">
+  <title>Atlas · Phase 5</title><link rel="stylesheet" th:href="@{/app.css(v='20260930-5')}">
 </head>
 <body>
 <div class="shell">
@@ -49,30 +49,32 @@
       </section>
 
       <nav class="transaction-view-tabs" data-tab-panel="transactions" aria-label="Transaction views" hidden>
-        <button type="button" data-transaction-view="history" data-testid="transaction-view-history" aria-selected="true">Transaction history</button>
-        <button th:if="${demoToolsEnabled}" type="button" data-transaction-view="demo" data-testid="transaction-view-demo" aria-selected="false">Create demo transaction <span>DEMO</span></button>
+        <button type="button" data-transaction-view="review" data-testid="transaction-view-review" aria-selected="false">Needs review <span th:if="${dashboard.pendingReview > 0}" th:text="${dashboard.pendingReview}"></span></button>
+        <button type="button" data-transaction-view="history" data-testid="transaction-view-history" aria-selected="true">All transactions</button>
+        <button type="button" data-transaction-view="categories" data-testid="transaction-view-categories" aria-selected="false">Categories</button>
+        <button th:if="${demoToolsEnabled}" type="button" data-transaction-view="demo" data-testid="transaction-view-demo" aria-selected="false">Demo bank feed <span>DEMO ONLY</span></button>
       </nav>
 
       <section th:if="${demoToolsEnabled}" class="card" id="transaction-tools" data-tab-panel="transactions" data-transaction-view-panel="demo" hidden>
-        <div class="section-title"><div><div class="eyebrow">DEMO TRANSACTION LAB</div><h2>Create a test transaction</h2><p>Each button creates one new synthetic bank event and places it at the top of Transaction history. The merchants below are fixed examples for testing, not your latest transactions.</p></div></div>
-        <div class="transaction-demo-note"><span>i</span><p><strong>What happens when I click?</strong> A new demo event is normalized, classified using deterministic rules, then added to the transaction list. Use these scenarios to see each safety and review path.</p></div>
+        <div class="section-title"><div><div class="eyebrow">DEMO BANK EVENT SOURCE</div><h2>Simulate an incoming bank event</h2><p>This developer-only tool represents an event received after a transaction happened in the banking app. Production users do not create transactions here.</p></div></div>
+        <div class="transaction-demo-note"><span>i</span><p><strong>What happens when I click?</strong> FinBridge receives synthetic bank data, rejects duplicates, normalizes it and applies deterministic categorization rules. The transaction then appears in History or Needs review.</p></div>
 
         <div class="event-groups">
           <section class="event-group">
             <div class="event-group-heading"><span>1</span><div><h3>Test categorization confidence</h3><p>Try how the app handles a clear, uncertain, or unknown merchant.</p></div></div>
             <div class="event-grid phase-two-events">
-              <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="high"><button data-testid="simulate-high"><span>97% confidence</span><strong>Create coffee purchase</strong><small>Example: Highlands Coffee → automatically categorizes as Food &amp; Drinks</small></button></form>
-              <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="medium"><button data-testid="simulate-medium"><span>72% confidence</span><strong>Create campus purchase</strong><small>Example: Campus Store → asks you to confirm the suggested category</small></button></form>
-              <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="low"><button data-testid="simulate-low"><span>35% confidence</span><strong>Create unknown QR payment</strong><small>Example: Unknown QR → asks for the transaction purpose</small></button></form>
+              <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="high"><button data-testid="simulate-high"><span>97% confidence</span><strong>Receive coffee purchase</strong><small>Highlands Coffee is categorized automatically as Food &amp; Drinks</small></button></form>
+              <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="medium"><button data-testid="simulate-medium"><span>72% confidence</span><strong>Receive campus purchase</strong><small>Campus Store enters Needs review with a suggested category</small></button></form>
+              <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="low"><button data-testid="simulate-low"><span>35% confidence</span><strong>Receive unknown QR payment</strong><small>The payment already happened; FinBridge asks its purpose for bookkeeping</small></button></form>
             </div>
           </section>
 
           <section class="event-group">
             <div class="event-group-heading"><span>2</span><div><h3>Test money movement</h3><p>Try how totals change for income, your own transfer, and a refund.</p></div></div>
             <div class="event-grid phase-two-events">
-              <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="income"><button data-testid="simulate-income"><span>99% confidence</span><strong>Create demo salary</strong><small>Adds 900,000 VND to income and checking balance</small></button></form>
+              <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="income"><button data-testid="simulate-income"><span>99% confidence</span><strong>Receive salary event</strong><small>Adds 900,000 VND to income and checking balance</small></button></form>
               <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="transfer"><button data-testid="simulate-transfer"><span>99% confidence</span><strong>Move money to savings</strong><small>Moves 200,000 VND between your accounts; income and expenses stay unchanged</small></button></form>
-              <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="refund"><button data-testid="simulate-refund"><span>95% confidence</span><strong>Create purchase refund</strong><small>Records an 85,000 VND refund separately from income</small></button></form>
+              <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="refund"><button data-testid="simulate-refund"><span>95% confidence</span><strong>Receive refund event</strong><small>Records an 85,000 VND refund separately from income</small></button></form>
             </div>
           </section>
         </div>
@@ -298,6 +300,37 @@
         </div>
       </section>
 
+      <section class="card transaction-review-section" id="transaction-review" data-tab-panel="transactions" data-transaction-view-panel="review" hidden>
+        <div class="section-title"><div><div class="eyebrow">TRANSACTION INBOX</div><h2>Needs your review</h2><p>These transactions already happened at the bank. Your answer only completes their purpose and category for budgets and reports.</p></div><span class="pill" th:text="${#lists.size(pendingTransactions) + ' pending'}"></span></div>
+        <div class="review-policy-note"><strong>How decisions work</strong><span>90% or higher is categorized automatically · 60–89% asks you to confirm · below 60% asks for purpose and category.</span></div>
+        <div th:if="${#lists.isEmpty(pendingTransactions)}" class="empty-state transaction-inbox-empty">You are all caught up. New uncertain bank transactions will appear here.</div>
+        <div class="transaction-review-list" data-testid="transaction-review-list">
+          <article th:each="tx : ${pendingTransactions}" class="transaction-review-card" th:classappend="${reviewTransactionId == tx.id ? ' focused-review' : ''}" th:attr="data-testid=${'review-' + tx.id}">
+            <div class="review-transaction-summary">
+              <div><span class="confidence" th:classappend="${tx.confidence >= 60 ? ' medium' : ' low'}" th:text="${tx.confidence + '%'}"></span><small th:text="${tx.review_status == 'PURPOSE_REQUIRED' ? 'PURPOSE NEEDED' : 'CONFIRM SUGGESTION'}"></small></div>
+              <div><h3 th:text="${tx.merchant}"></h3><p th:text="${#dates.format(tx.occurred_at,'dd/MM/yyyy HH:mm:ss') + ' · ' + tx.source_label}"></p><em th:text="${tx.categorization_evidence}"></em></div>
+              <strong class="review-amount" th:text="${(tx.direction == 'IN' ? '+' : '−') + #numbers.formatDecimal(tx.amount,1,'COMMA',0,'POINT') + ' ' + tx.currency}"></strong>
+            </div>
+            <form class="transaction-review-form" th:action="@{'/transactions/' + ${tx.id} + '/review'}" method="post" data-category-review>
+              <label th:if="${tx.review_status == 'PURPOSE_REQUIRED'}"><span>What was this payment for?</span><input name="purpose" maxlength="160" required placeholder="Example: Lunch with classmates"></label>
+              <div th:if="${tx.review_status == 'CONFIRMATION_REQUIRED'}" class="suggested-category"><small>Suggested category</small><strong th:text="${tx.category}"></strong><span>You can accept it or choose another category.</span></div>
+              <label><span>Category</span><select name="category" required data-category-select><option value="">Choose a category</option><option th:each="category : ${transactionCategories}" th:if="${category.active}" th:value="${category.name}" th:text="${category.name}" th:selected="${category.name == tx.category}"></option><option value="__custom__">Create a new category…</option></select></label>
+              <label class="custom-category-field" hidden><span>New category name</span><input name="customCategory" maxlength="80" placeholder="Example: Pet care" data-custom-category></label>
+              <button class="primary-button" type="submit">Save categorization</button>
+            </form>
+          </article>
+        </div>
+      </section>
+
+      <section class="card transaction-categories-section" id="transaction-categories" data-tab-panel="transactions" data-transaction-view-panel="categories" hidden>
+        <div class="section-title"><div><div class="eyebrow">CATEGORY MANAGEMENT</div><h2>Your transaction categories</h2><p>System categories keep reports consistent. Add personal categories when the built-in list does not describe your spending.</p></div></div>
+        <form class="add-category-form" th:action="@{/transactions/categories}" method="post"><label><span>New personal category</span><input name="name" minlength="2" maxlength="80" required placeholder="Example: Pet care"></label><button class="primary-button" type="submit">Add category</button></form>
+        <div class="category-management-grid">
+          <div><h3>System categories</h3><p>Always available and cannot be archived.</p><div class="category-chip-list"><span class="category-chip" th:each="category : ${transactionCategories}" th:if="${category.category_type == 'SYSTEM'}" th:text="${category.name}"></span></div></div>
+          <div><h3>Personal categories</h3><p>Archiving removes a category from future selection while preserving transaction history.</p><div th:if="${#lists.isEmpty(transactionCategories.?[category_type == 'CUSTOM'])}" class="category-empty">No personal categories yet.</div><div class="custom-category-list"><div class="custom-category-row" th:each="category : ${transactionCategories}" th:if="${category.category_type == 'CUSTOM'}" th:classappend="${!category.active ? ' archived' : ''}"><div><strong th:text="${category.name}"></strong><small th:text="${category.transaction_count + ' transaction(s) · ' + (category.active ? 'Active' : 'Archived')}"></small></div><form th:if="${category.active}" th:action="@{/transactions/categories/archive}" method="post"><input type="hidden" name="name" th:value="${category.name}"><button class="text-action" type="submit">Archive</button></form><form th:if="${!category.active}" th:action="@{/transactions/categories/restore}" method="post"><input type="hidden" name="name" th:value="${category.name}"><button class="text-action" type="submit">Restore</button></form></div></div></div>
+        </div>
+      </section>
+
       <section class="card" id="transactions" data-tab-panel="transactions" data-transaction-view-panel="history" hidden>
         <div class="section-title"><div><div class="eyebrow">TRANSACTION HISTORY</div><h2>Recent transactions</h2><p>Newest transactions appear first. Search or filter the list to focus on what you want to review.</p></div><span class="pill" th:text="${#lists.size(transactions) + ' records'}"></span></div>
         <div class="transaction-toolbar" data-testid="transaction-filters">
@@ -311,15 +344,15 @@
         <div class="transaction-list-meta"><span data-testid="transaction-result-count" aria-live="polite"></span><span>Showing 5 transactions per page</span></div>
         <div class="table-scroll"><table>
           <thead><tr><th>Merchant / evidence</th><th>Type</th><th>Category</th><th>Confidence</th><th>Status</th><th class="right">Amount</th><th>Action</th></tr></thead>
-          <tbody data-testid="transaction-table-body"><tr th:each="tx : ${transactions}" data-testid="transaction-row" th:classappend="${newTransaction == tx.id ? ' newly-created' : ''}" th:attr="data-transaction-id=${tx.id},data-review-status=${tx.review_status},data-type=${tx.type},data-category=${tx.category ?: ''},data-search=${tx.merchant + ' ' + tx.categorization_evidence},data-amount=${tx.amount},data-new-transaction=${newTransaction == tx.id}">
-            <td><strong th:text="${tx.merchant}"></strong><span th:if="${newTransaction == tx.id}" class="new-transaction-badge">Just created</span><small th:text="${#dates.format(tx.occurred_at,'dd/MM/yyyy HH:mm:ss') + ' · ' + tx.source_label}"></small><small th:text="${tx.categorization_evidence}"></small></td>
+          <tbody data-testid="transaction-table-body"><tr th:each="tx : ${transactions}" data-testid="transaction-row" th:classappend="${newTransaction == tx.id ? ' newly-created' : ''}" th:attr="data-transaction-id=${tx.id},data-review-status=${tx.review_status},data-type=${tx.type},data-category=${tx.category ?: ''},data-search=${tx.merchant + ' ' + tx.description + ' ' + (tx.purpose ?: '') + ' ' + tx.categorization_evidence},data-amount=${tx.amount},data-new-transaction=${newTransaction == tx.id}">
+            <td><strong th:text="${tx.merchant}"></strong><span th:if="${newTransaction == tx.id}" class="new-transaction-badge">Just created</span><small th:text="${#dates.format(tx.occurred_at,'dd/MM/yyyy HH:mm:ss') + ' · ' + tx.source_label}"></small><small th:if="${tx.purpose != null}" th:text="${'Purpose: ' + tx.purpose}"></small><small th:text="${tx.categorization_evidence}"></small></td>
             <td><span class="type" th:text="${tx.type}"></span></td>
             <td th:text="${tx.category ?: 'Purpose required'}"></td>
             <td><span class="confidence" th:classappend="${tx.confidence >= 90 ? ' high' : (tx.confidence >= 60 ? ' medium' : ' low')}" th:text="${tx.confidence + '%'}"></span></td>
             <td th:text="${#strings.replace(tx.review_status,'_',' ')}"></td>
             <td class="right amount" th:text="${(tx.direction == 'IN' ? '+' : '−') + #numbers.formatDecimal(tx.amount,1,'COMMA',0,'POINT') + ' VND'}"></td>
             <td>
-              <a th:if="${tx.review_status == 'CONFIRMATION_REQUIRED' or tx.review_status == 'PURPOSE_REQUIRED'}" class="text-action" th:href="@{/(review=${tx.id})} + '#transactions'">Review</a>
+              <a th:if="${tx.review_status == 'CONFIRMATION_REQUIRED' or tx.review_status == 'PURPOSE_REQUIRED'}" class="text-action" th:href="@{/(review=${tx.id})} + '#transaction-review'">Review</a>
               <form th:if="${tx.review_status == 'AUTO' or tx.review_status == 'CONFIRMED'}" th:action="@{'/transactions/' + ${tx.id} + '/undo'}" method="post"><button class="text-action" type="submit">Undo</button></form>
             </td>
           </tr></tbody>
@@ -333,17 +366,6 @@
   </main>
 </div>
 
-<dialog th:if="${reviewTransaction != null}" id="reviewDialog" data-testid="review-dialog" data-auto-open="true">
-  <form th:action="@{'/transactions/' + ${reviewTransaction.id} + '/category'}" method="post">
-    <div class="eyebrow" th:text="${reviewTransaction.review_status == 'PURPOSE_REQUIRED' ? 'LOW CONFIDENCE · PURPOSE NEEDED' : 'MEDIUM CONFIDENCE · CONFIRM CATEGORY'}"></div>
-    <h2 th:text="${reviewTransaction.merchant}"></h2>
-    <p th:if="${reviewTransaction.review_status == 'CONFIRMATION_REQUIRED'}">The rule suggests <strong th:text="${reviewTransaction.category}"></strong> at <strong th:text="${reviewTransaction.confidence + '%'}"></strong>. Confirm it or enter another category.</p>
-    <p th:if="${reviewTransaction.review_status == 'PURPOSE_REQUIRED'}">Confidence is only <strong th:text="${reviewTransaction.confidence + '%'}"></strong>. What was this transaction for?</p>
-    <small class="dialog-evidence" th:text="${reviewTransaction.categorization_evidence}"></small>
-    <label>Category or purpose<input name="category" maxlength="80" required th:value="${reviewTransaction.review_status == 'CONFIRMATION_REQUIRED' ? reviewTransaction.category : ''}" placeholder="e.g. Groceries"></label>
-    <div class="dialog-actions"><a class="secondary link-button" href="/#transactions">Cancel</a><button class="primary-button" type="submit">Confirm</button></div>
-  </form>
-</dialog>
-<script th:src="@{/app.js(v='20260930-4')}"></script>
+<script th:src="@{/app.js(v='20260930-5')}"></script>
 </body>
 </html>
