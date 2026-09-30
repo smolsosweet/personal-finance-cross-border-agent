@@ -145,13 +145,14 @@
 
         <div class="channel-comparison-section">
           <div class="payment-accounts-heading">
-            <div><div class="eyebrow">CONNECTED PAYMENT CHANNELS</div><h3>Compare the essentials</h3><p>Each row shows the information needed to decide. Open details for the complete fee and quote breakdown.</p></div>
+            <div><div class="eyebrow">CONNECTED PAYMENT CHANNELS</div><h3>Compare the essentials</h3><p>Each compact card shows the information needed to decide. Scroll horizontally, then open details for the complete fee and quote breakdown.</p></div>
             <div class="channel-heading-tools"><form th:action="@{/student/quotes/refresh}" method="post"><button class="secondary" type="submit">↻ Refresh synthetic quotes</button></form></div>
           </div>
           <div class="channel-controls">
             <form th:action="@{/student/preference}" method="post" class="preference-form"><label>Rank by<select name="preference" onchange="this.form.submit()"><option value="CHEAPER" th:selected="${studentProfile.preference == 'CHEAPER'}">Cheaper</option><option value="FASTER" th:selected="${studentProfile.preference == 'FASTER'}">Faster</option><option value="SAFER" th:selected="${studentProfile.preference == 'SAFER'}">Safer</option></select></label></form>
             <div class="payment-account-tools" data-testid="payment-account-filters"><label>Status<select data-testid="payment-account-filter"><option value="all">All connected channels</option><option value="payable">Ready to pay now</option><option value="insufficient">Insufficient balance</option><option value="expired">Quote expired</option></select></label><label>Sort<select data-testid="payment-account-sort"><option value="recommended">Recommended</option><option value="cost-asc">Lowest landed cost</option><option value="remaining-desc">Highest remaining balance</option><option value="fastest">Fastest settlement</option><option value="safest">Highest safety score</option><option value="name">Name A–Z</option></select></label></div>
           </div>
+          <div class="horizontal-scroll-hint">← Scroll horizontally to compare channels →</div>
           <div class="channel-list" data-testid="payment-account-list">
             <th:block th:each="quote : ${eligibleChannelQuotes}" th:with="sourceAccount=${paymentAccountById.get(quote.sourceAccountId)},canFund=${sourceAccount != null and sourceAccount.canFund(quote.landedCost,agentPolicy.safetyBuffer)}">
               <article class="connected-payment-card channel-list-row" th:classappend="${!canFund ? ' insufficient-account' : ''}" th:attr="data-testid=${'channel-' + quote.channelId},data-quote-expiry=${quote.expiresAtEpochMillis},data-state=${quote.expired ? 'expired' : (canFund ? 'payable' : 'insufficient')},data-balance=${sourceAccount.balance},data-remaining=${sourceAccount.balance.subtract(quote.landedCost)},data-cost=${quote.landedCost},data-settlement=${quote.settlementMaxDays},data-safety=${quote.safetyScore},data-name=${quote.displayName}">

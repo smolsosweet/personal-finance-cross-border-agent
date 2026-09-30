@@ -2,6 +2,7 @@ package com.example.finance;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserContext;
@@ -10,6 +11,7 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
 import com.microsoft.playwright.options.AriaRole;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -43,10 +45,16 @@ class StudentExpensePlaywrightE2ETest {
     @Test void expenseAndCompactChannelFlowWorksInBrowser() {
         try(BrowserContext context=browser.newContext(new Browser.NewContextOptions().setViewportSize(1440,1000))) {
             Page page=context.newPage();
+            var pageErrors=new ArrayList<String>();
+            page.onPageError(error -> pageErrors.add(error));
             page.navigate(BASE_URL);
             page.getByTestId("tab-student").click();
 
             assertEquals(5,page.locator(".channel-list-row").count());
+            var firstChannel=page.locator(".channel-list-row").nth(0).boundingBox();
+            var secondChannel=page.locator(".channel-list-row").nth(1).boundingBox();
+            assertTrue(secondChannel.x > firstChannel.x);
+            assertTrue(Math.abs(secondChannel.y - firstChannel.y) < 5);
             page.locator(".channel-list-row").first().getByRole(AriaRole.BUTTON,
                     new com.microsoft.playwright.Locator.GetByRoleOptions().setName("Details")).click();
             assertThat(page.locator("dialog[open]")).containsText("SIMULATED QUOTE DETAIL");
@@ -70,6 +78,7 @@ class StudentExpensePlaywrightE2ETest {
             assertThat(page.getByTestId("channel-BANK_A")).containsText("9,037,600 VND");
 
             page.getByTestId("language-vi").click();
+            assertEquals("vi",page.locator("html").getAttribute("lang"),String.join(" | ",pageErrors));
             assertThat(page.locator("#student-finance")).containsText("Lập kế hoạch chi phí du học");
             assertThat(page.locator("#student-finance")).containsText("So sánh thông tin cần thiết");
         }
