@@ -81,6 +81,7 @@ CREATE TABLE IF NOT EXISTS international_bills (
   institution VARCHAR(120) NOT NULL,
   amount DECIMAL(20,2) NOT NULL,
   currency VARCHAR(3) NOT NULL,
+  destination_country VARCHAR(40) NOT NULL DEFAULT 'China',
   recipient_account VARCHAR(120) NOT NULL,
   payment_reference VARCHAR(80) NOT NULL,
   due_date DATE NOT NULL,
@@ -93,6 +94,7 @@ CREATE TABLE IF NOT EXISTS international_bills (
 );
 ALTER TABLE international_bills ADD COLUMN IF NOT EXISTS expense_type VARCHAR(30) NOT NULL DEFAULT 'TUITION';
 ALTER TABLE international_bills ADD COLUMN IF NOT EXISTS title VARCHAR(120) NOT NULL DEFAULT 'Tuition fee';
+ALTER TABLE international_bills ADD COLUMN IF NOT EXISTS destination_country VARCHAR(40) NOT NULL DEFAULT 'China';
 ALTER TABLE international_bills ADD COLUMN IF NOT EXISTS document_name VARCHAR(255);
 ALTER TABLE international_bills ADD COLUMN IF NOT EXISTS document_content_type VARCHAR(100);
 ALTER TABLE international_bills ADD COLUMN IF NOT EXISTS document_size BIGINT;
@@ -119,6 +121,22 @@ CREATE TABLE IF NOT EXISTS payment_channels (
 );
 ALTER TABLE payment_channels ADD COLUMN IF NOT EXISTS source_account_id VARCHAR(40);
 
+CREATE TABLE IF NOT EXISTS payment_channel_corridors (
+  channel_id VARCHAR(30) NOT NULL,
+  destination_country VARCHAR(40) NOT NULL,
+  destination_currency VARCHAR(3) NOT NULL,
+  eligible BOOLEAN NOT NULL,
+  eligibility_reason VARCHAR(255) NOT NULL,
+  rate_vnd_per_unit DECIMAL(20,4) NOT NULL,
+  transfer_fee_vnd DECIMAL(20,2) NOT NULL,
+  fx_markup_rate DECIMAL(12,6) NOT NULL,
+  safety_score INTEGER NOT NULL,
+  settlement_min_days INTEGER NOT NULL,
+  settlement_max_days INTEGER NOT NULL,
+  quote_source VARCHAR(120) NOT NULL,
+  PRIMARY KEY (channel_id,destination_country,destination_currency)
+);
+
 CREATE TABLE IF NOT EXISTS fx_quotes (
   id VARCHAR(50) PRIMARY KEY,
   channel_id VARCHAR(30) NOT NULL,
@@ -128,6 +146,8 @@ CREATE TABLE IF NOT EXISTS fx_quotes (
   expires_at TIMESTAMP NOT NULL,
   quote_status VARCHAR(20) NOT NULL
 );
+ALTER TABLE fx_quotes ADD COLUMN IF NOT EXISTS destination_country VARCHAR(40) NOT NULL DEFAULT 'China';
+ALTER TABLE fx_quotes ADD COLUMN IF NOT EXISTS destination_currency VARCHAR(3) NOT NULL DEFAULT 'CNY';
 
 CREATE TABLE IF NOT EXISTS agent_policy (
   id INTEGER PRIMARY KEY,

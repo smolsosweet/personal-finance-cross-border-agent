@@ -19,6 +19,10 @@ public class CrossBorderService {
     public static final BigDecimal TUITION_AMOUNT = new BigDecimal("20000.00");
     public static final String SCHOOL_NAME = "Shenzhen Demo University";
     public static final String SCHOOL_RECIPIENT = "SZDU-TUITION-2026";
+    public static final String US_SCHOOL_NAME = "Pacific Demo College";
+    public static final String US_SCHOOL_RECIPIENT = "PDC-TUITION-USD";
+    public static final String AU_SCHOOL_NAME = "Sydney Demo Institute";
+    public static final String AU_SCHOOL_RECIPIENT = "SDI-TUITION-AUD";
     public static final int QUOTE_VALIDITY_MINUTES = 5;
     public static final int SETTLEMENT_SAFETY_MARGIN_DAYS = 1;
 
@@ -32,11 +36,13 @@ public class CrossBorderService {
                                  String sourceCurrency, String destinationCurrency, String preference) {}
 
     public record TuitionBill(int id, String institution, BigDecimal amount, String currency,
+                              String destinationCountry,
                               String recipientAccount, String paymentReference, LocalDate dueDate,
                               String evidenceLabel) {}
 
     public record StudentExpense(int id, String expenseType, String title, String institution,
-                                 BigDecimal amount, String currency, String recipientAccount,
+                                 BigDecimal amount, String currency, String destinationCountry,
+                                 String recipientAccount,
                                  String paymentReference, LocalDate dueDate, String evidenceLabel,
                                  String documentName, String documentContentType, Long documentSize,
                                  boolean selected, LocalDateTime createdAt) {}
@@ -82,6 +88,7 @@ public class CrossBorderService {
     @Transactional
     public void reset() {
         db.update("DELETE FROM fx_quotes");
+        db.update("DELETE FROM payment_channel_corridors");
         db.update("DELETE FROM payment_channels");
         db.update("DELETE FROM international_bills");
         db.update("DELETE FROM school_registry");
@@ -92,17 +99,15 @@ public class CrossBorderService {
                 (id,demo_profile_id,source_country,destination_country,source_currency,destination_currency,preference)
                 VALUES (1,1,'Vietnam','China','VND','CNY','CHEAPER')
                 """);
-        db.update("""
-                INSERT INTO school_registry
-                (id,institution,recipient_account,destination_country,destination_currency,verification_status)
-                VALUES (1,?,?, 'China','CNY','VERIFIED')
-                """, SCHOOL_NAME, SCHOOL_RECIPIENT);
+        insertSchool(1, SCHOOL_NAME, SCHOOL_RECIPIENT, "China", "CNY");
+        insertSchool(2, US_SCHOOL_NAME, US_SCHOOL_RECIPIENT, "United States", "USD");
+        insertSchool(3, AU_SCHOOL_NAME, AU_SCHOOL_RECIPIENT, "Australia", "AUD");
         db.update("""
                 INSERT INTO international_bills
-                (id,expense_type,title,institution,amount,currency,recipient_account,payment_reference,due_date,
+                (id,expense_type,title,institution,amount,currency,destination_country,recipient_account,payment_reference,due_date,
                  evidence_label,document_name,document_content_type,document_size,selected,created_at)
-                VALUES (1,'TUITION','Tuition fee',?,?,?,?,?,?,'Synthetic tuition bill',NULL,NULL,NULL,TRUE,?)
-                """, SCHOOL_NAME, TUITION_AMOUNT, "CNY", SCHOOL_RECIPIENT,
+                VALUES (1,'TUITION','Tuition fee',?,?,?,?,?,?,?,'Synthetic tuition bill',NULL,NULL,NULL,TRUE,?)
+                """, SCHOOL_NAME, TUITION_AMOUNT, "CNY", "China", SCHOOL_RECIPIENT,
                 "SZDU-2026-MINH", LocalDate.now().plusDays(14), LocalDateTime.now());
 
         insertChannel("ALIPAY", "Alipay Student Payment", "ALIPAY_VND", true,
@@ -130,7 +135,59 @@ public class CrossBorderService {
                 "3480.0000", "100000.00", "0.001000", 90, 1, 2,
                 "Synthetic Bank B promotional quote");
 
+        insertCorridor("ALIPAY", "China", "CNY", true,
+                "Eligible Alipay education account for Vietnam to China", "3535.0000", "120000.00", "0.003000", 85, 1, 1,
+                "Synthetic Alipay education quote feed");
+        insertCorridor("BANK_A", "China", "CNY", true,
+                "Bank A supports this Vietnam to China payment", "3520.0000", "220000.00", "0.002000", 95, 2, 3,
+                "Synthetic Bank A treasury quote");
+        insertCorridor("VCB", "China", "CNY", true,
+                "Vietcombank supports this Vietnam to China payment", "3527.0000", "180000.00", "0.001800", 93, 2, 3,
+                "Synthetic Vietcombank treasury quote");
+        insertCorridor("TCB", "China", "CNY", true,
+                "Techcombank supports this Vietnam to China payment", "3518.0000", "250000.00", "0.002200", 91, 2, 3,
+                "Synthetic Techcombank treasury quote");
+        insertCorridor("MOMO", "China", "CNY", true,
+                "MoMo supports this synthetic education corridor", "3542.0000", "90000.00", "0.003500", 82, 1, 2,
+                "Synthetic MoMo education quote feed");
+        insertCorridor("BANK_B", "China", "CNY", false,
+                "Reference only: no connected Bank B account", "3480.0000", "100000.00", "0.001000", 90, 1, 2,
+                "Synthetic Bank B promotional quote");
+
+        insertBankCorridor("United States", "USD", "26100.0000", "26080.0000", "26050.0000", "25950.0000");
+        insertBankCorridor("Australia", "AUD", "17200.0000", "17180.0000", "17150.0000", "17080.0000");
+
         refreshQuotes();
+    }
+
+    private void insertSchool(int id, String institution, String recipient, String country, String currency) {
+        db.update("""
+                INSERT INTO school_registry
+                (id,institution,recipient_account,destination_country,destination_currency,verification_status)
+                VALUES (?,?,?,?,?,'VERIFIED')
+                """, id, institution, recipient, country, currency);
+    }
+
+    private void insertBankCorridor(String country, String currency, String bankARate,
+                                    String vcbRate, String tcbRate, String bankBRate) {
+        insertCorridor("ALIPAY", country, currency, false,
+                "Alipay Education Wallet is not configured for this demo corridor", bankARate, "120000.00", "0.003000", 85, 1, 2,
+                "Synthetic Alipay reference quote");
+        insertCorridor("BANK_A", country, currency, true,
+                "Bank A supports this configured student-payment corridor", bankARate, "260000.00", "0.002000", 95, 2, 3,
+                "Synthetic Bank A treasury quote");
+        insertCorridor("VCB", country, currency, true,
+                "Vietcombank supports this configured student-payment corridor", vcbRate, "220000.00", "0.001800", 93, 2, 3,
+                "Synthetic Vietcombank treasury quote");
+        insertCorridor("TCB", country, currency, true,
+                "Techcombank supports this configured student-payment corridor", tcbRate, "280000.00", "0.002200", 91, 2, 3,
+                "Synthetic Techcombank treasury quote");
+        insertCorridor("MOMO", country, currency, false,
+                "MoMo Wallet is not configured for this demo corridor", bankARate, "90000.00", "0.003500", 82, 1, 2,
+                "Synthetic MoMo reference quote");
+        insertCorridor("BANK_B", country, currency, false,
+                "Reference only: no connected Bank B account", bankBRate, "150000.00", "0.001000", 90, 1, 2,
+                "Synthetic Bank B promotional quote");
     }
 
     @Transactional
@@ -144,7 +201,8 @@ public class CrossBorderService {
                 Integer.class, LocalDateTime.now());
         Integer linkedChannelCount = db.queryForObject(
                 "SELECT COUNT(*) FROM payment_channels WHERE source_account_id IS NOT NULL", Integer.class);
-        if (linkedChannelCount == null || linkedChannelCount != 5) {
+        Integer corridorCount = db.queryForObject("SELECT COUNT(*) FROM payment_channel_corridors", Integer.class);
+        if (linkedChannelCount == null || linkedChannelCount != 5 || corridorCount == null || corridorCount != 18) {
             reset();
         } else if (activeQuoteCount == null || activeQuoteCount == 0) {
             refreshQuotes();
@@ -163,20 +221,47 @@ public class CrossBorderService {
                 new BigDecimal(markup), safety, minDays, maxDays, source);
     }
 
+    private void insertCorridor(String channelId, String country, String currency, boolean eligible, String reason,
+                                String rate, String fee, String markup, int safety,
+                                int minDays, int maxDays, String source) {
+        db.update("""
+                INSERT INTO payment_channel_corridors
+                (channel_id,destination_country,destination_currency,eligible,eligibility_reason,rate_vnd_per_unit,
+                 transfer_fee_vnd,fx_markup_rate,safety_score,settlement_min_days,settlement_max_days,quote_source)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+                """, channelId, country, currency, eligible, reason, new BigDecimal(rate), new BigDecimal(fee),
+                new BigDecimal(markup), safety, minDays, maxDays, source);
+    }
+
     @Transactional
     public void refreshQuotes() {
         db.update("DELETE FROM fx_quotes");
+        StudentProfile profile = profile();
         LocalDateTime now = LocalDateTime.now().withNano(0);
-        for (var channel : db.queryForList("SELECT id,seed_rate_vnd_per_cny,quote_source FROM payment_channels")) {
-            String channelId = (String) channel.get("id");
+        for (var channel : db.queryForList("""
+                SELECT channel_id,rate_vnd_per_unit,quote_source
+                FROM payment_channel_corridors
+                WHERE destination_country=? AND destination_currency=?
+                """, profile.destinationCountry(), profile.destinationCurrency())) {
+            String channelId = (String) channel.get("channel_id");
             db.update("""
                     INSERT INTO fx_quotes
-                    (id,channel_id,rate_vnd_per_cny,source_label,quoted_at,expires_at,quote_status)
-                    VALUES (?,?,?,?,?,?,'ESTIMATED')
+                    (id,channel_id,rate_vnd_per_cny,source_label,quoted_at,expires_at,quote_status,
+                     destination_country,destination_currency)
+                    VALUES (?,?,?,?,?,?,'ESTIMATED',?,?)
                     """, "Q-" + channelId + "-" + UUID.randomUUID().toString().substring(0,8).toUpperCase(),
-                    channelId, channel.get("seed_rate_vnd_per_cny"), channel.get("quote_source"),
-                    now, now.plusMinutes(QUOTE_VALIDITY_MINUTES));
+                    channelId, channel.get("rate_vnd_per_unit"), channel.get("quote_source"),
+                    now, now.plusMinutes(QUOTE_VALIDITY_MINUTES), profile.destinationCountry(),
+                    profile.destinationCurrency());
         }
+    }
+
+    public boolean corridorSupported(String destinationCountry, String destinationCurrency) {
+        Integer count = db.queryForObject("""
+                SELECT COUNT(*) FROM payment_channel_corridors
+                WHERE destination_country=? AND destination_currency=?
+                """, Integer.class, destinationCountry, destinationCurrency);
+        return count != null && count > 0;
     }
 
     @Transactional
@@ -206,10 +291,13 @@ public class CrossBorderService {
         String title = "TUITION".equals(expense.expenseType())
                 ? "Tuition payment needs a controlled plan"
                 : expense.title() + " needs a controlled plan";
-        String message = verification.verified()
+        String message = verification.verified() && option != null
                 ? "Bill " + tuition.paymentReference() + " for " + tuition.amount().toPlainString()
-                        + " CNY is verified, due " + tuition.dueDate() + ", with latest safe date "
+                        + " " + tuition.currency() + " is verified, due " + tuition.dueDate() + ", with latest safe date "
                         + option.latestSafeDate() + ". Approval Mode is still required before payment."
+                : verification.verified()
+                ? "Bill " + tuition.paymentReference() + " is verified, but no simulated channel is configured for "
+                        + tuition.destinationCountry() + " and " + tuition.currency() + "."
                 : "Bill " + tuition.paymentReference()
                         + " has a recipient mismatch and is blocked until verification succeeds.";
         String evidence = option == null ? "School Registry verification" :
@@ -232,7 +320,7 @@ public class CrossBorderService {
                 : "Selected " + expense.title() + " plan is ready for review";
         String message = verification.verified()
                 ? "Selected plan uses " + option.displayName() + " for bill " + tuition.paymentReference()
-                        + " of " + tuition.amount().toPlainString() + " CNY, due " + tuition.dueDate()
+                        + " of " + tuition.amount().toPlainString() + " " + tuition.currency() + ", due " + tuition.dueDate()
                         + ", with latest safe date " + option.latestSafeDate()
                         + ". Approval Mode is required before payment."
                 : "Bill " + tuition.paymentReference()
@@ -247,23 +335,23 @@ public class CrossBorderService {
 
     public TuitionBill bill() {
         return db.queryForObject("""
-                SELECT id,institution,amount,currency,recipient_account,payment_reference,due_date,evidence_label
+                SELECT id,institution,amount,currency,destination_country,recipient_account,payment_reference,due_date,evidence_label
                 FROM international_bills WHERE selected=TRUE ORDER BY id LIMIT 1
                 """, (rs,n) -> new TuitionBill(rs.getInt(1), rs.getString(2), rs.getBigDecimal(3),
-                rs.getString(4), rs.getString(5), rs.getString(6), rs.getObject(7, LocalDate.class),
-                rs.getString(8)));
+                rs.getString(4), rs.getString(5), rs.getString(6), rs.getString(7),
+                rs.getObject(8, LocalDate.class), rs.getString(9)));
     }
 
     public List<StudentExpense> expenses() {
         return db.query("""
-                SELECT id,expense_type,title,institution,amount,currency,recipient_account,payment_reference,
+                SELECT id,expense_type,title,institution,amount,currency,destination_country,recipient_account,payment_reference,
                        due_date,evidence_label,document_name,document_content_type,document_size,selected,created_at
                 FROM international_bills
                 ORDER BY selected DESC,due_date,id
                 """, (rs,n) -> new StudentExpense(rs.getInt(1), rs.getString(2), rs.getString(3), rs.getString(4),
-                rs.getBigDecimal(5), rs.getString(6), rs.getString(7), rs.getString(8),
-                rs.getObject(9, LocalDate.class), rs.getString(10), rs.getString(11), rs.getString(12),
-                rs.getObject(13, Long.class), rs.getBoolean(14), rs.getTimestamp(15).toLocalDateTime()));
+                rs.getBigDecimal(5), rs.getString(6), rs.getString(7), rs.getString(8), rs.getString(9),
+                rs.getObject(10, LocalDate.class), rs.getString(11), rs.getString(12), rs.getString(13),
+                rs.getObject(14, Long.class), rs.getBoolean(15), rs.getTimestamp(16).toLocalDateTime()));
     }
 
     public StudentExpense selectedExpense() {
@@ -273,13 +361,18 @@ public class CrossBorderService {
 
     @Transactional
     public int addExpense(String expenseType, String title, String institution, BigDecimal amount,
-                          String recipientAccount, String paymentReference, LocalDate dueDate,
+                          String destinationCountry, String currency, String recipientAccount,
+                          String paymentReference, LocalDate dueDate,
                           String documentName, String documentContentType, Long documentSize) {
         String normalizedType = expenseType == null ? "" : expenseType.trim().toUpperCase();
         if (!List.of("TUITION", "DORMITORY", "INSURANCE", "VISA", "LIVING", "OTHER").contains(normalizedType))
             throw new IllegalArgumentException("Choose a supported student expense type");
         String cleanedTitle = requiredText(title, "Expense title", 120);
         String cleanedInstitution = requiredText(institution, "Institution", 120);
+        String cleanedCountry = requiredText(destinationCountry, "Destination country", 40);
+        String cleanedCurrency = requiredText(currency, "Destination currency", 3).toUpperCase();
+        if (!corridorSupported(cleanedCountry, cleanedCurrency))
+            throw new IllegalArgumentException("This demo has no configured quote data for the selected corridor");
         String cleanedRecipient = requiredText(recipientAccount, "Recipient", 120);
         String cleanedReference = requiredText(paymentReference, "Payment reference", 80);
         if (amount == null || amount.signum() <= 0 || amount.scale() > 2)
@@ -295,11 +388,13 @@ public class CrossBorderService {
         db.update("UPDATE international_bills SET selected=FALSE");
         db.update("""
                 INSERT INTO international_bills
-                (id,expense_type,title,institution,amount,currency,recipient_account,payment_reference,due_date,
+                (id,expense_type,title,institution,amount,currency,destination_country,recipient_account,payment_reference,due_date,
                  evidence_label,document_name,document_content_type,document_size,selected,created_at)
-                VALUES (?,?,?,?,?,'CNY',?,?,?,'User-provided expense',?,?,?,TRUE,?)
-                """, id, normalizedType, cleanedTitle, cleanedInstitution, amount.setScale(2), cleanedRecipient,
+                VALUES (?,?,?,?,?,?,?,?,?,?,'User-provided expense',?,?,?,TRUE,?)
+                """, id, normalizedType, cleanedTitle, cleanedInstitution, amount.setScale(2), cleanedCurrency,
+                cleanedCountry, cleanedRecipient,
                 cleanedReference, dueDate, documentName, documentContentType, documentSize, LocalDateTime.now());
+        applySelectedCorridor(cleanedCountry, cleanedCurrency);
         return id;
     }
 
@@ -309,6 +404,16 @@ public class CrossBorderService {
         if (count == null || count == 0) throw new IllegalArgumentException("Student expense does not exist");
         db.update("UPDATE international_bills SET selected=FALSE");
         db.update("UPDATE international_bills SET selected=TRUE WHERE id=?", id);
+        StudentExpense selected = selectedExpense();
+        applySelectedCorridor(selected.destinationCountry(), selected.currency());
+    }
+
+    private void applySelectedCorridor(String country, String currency) {
+        db.update("""
+                UPDATE student_corridor_profile
+                SET destination_country=?,destination_currency=? WHERE id=1
+                """, country, currency);
+        refreshQuotes();
     }
 
     private String requiredText(String value, String label, int maxLength) {
@@ -323,11 +428,12 @@ public class CrossBorderService {
         List<RecipientVerification> matches = db.query("""
                 SELECT institution,recipient_account,verification_status
                 FROM school_registry
-                WHERE institution=? AND recipient_account=? AND destination_country='China' AND destination_currency='CNY'
+                WHERE institution=? AND recipient_account=? AND destination_country=? AND destination_currency=?
                 """, (rs,n) -> new RecipientVerification(
                 "VERIFIED".equals(rs.getString(3)), rs.getString(3),
                 "Bill institution, recipient account, corridor and currency match the School Registry",
-                rs.getString(1), rs.getString(2)), bill.institution(), bill.recipientAccount());
+                rs.getString(1), rs.getString(2)), bill.institution(), bill.recipientAccount(),
+                bill.destinationCountry(), bill.currency());
         if (matches.isEmpty()) {
             return new RecipientVerification(false, "MISMATCH",
                     "Bill recipient does not match the School Registry",
@@ -345,10 +451,15 @@ public class CrossBorderService {
         TuitionBill bill = bill();
         LocalDateTime now = LocalDateTime.now();
         List<ChannelQuote> options = db.query("""
-                SELECT c.id,c.display_name,c.source_account_id,c.eligible,c.eligibility_reason,c.transfer_fee_vnd,c.fx_markup_rate,
-                       c.safety_score,c.settlement_min_days,c.settlement_max_days,
+                SELECT c.id,c.display_name,c.source_account_id,cc.eligible,cc.eligibility_reason,cc.transfer_fee_vnd,cc.fx_markup_rate,
+                       cc.safety_score,cc.settlement_min_days,cc.settlement_max_days,
                        q.id,q.rate_vnd_per_cny,q.source_label,q.quoted_at,q.expires_at
-                FROM payment_channels c JOIN fx_quotes q ON q.channel_id=c.id
+                FROM payment_channels c
+                JOIN payment_channel_corridors cc ON cc.channel_id=c.id
+                JOIN fx_quotes q ON q.channel_id=c.id
+                  AND q.destination_country=cc.destination_country
+                  AND q.destination_currency=cc.destination_currency
+                WHERE cc.destination_country=? AND cc.destination_currency=?
                 """, (rs,n) -> {
             BigDecimal rate = rs.getBigDecimal(12);
             BigDecimal sourceAmount = bill.amount().multiply(rate).setScale(2, RoundingMode.HALF_UP);
@@ -368,7 +479,7 @@ public class CrossBorderService {
                     rs.getInt(9), maxDays, LocalDate.now().plusDays(maxDays),
                     bill.dueDate().minusDays(maxDays + SETTLEMENT_SAFETY_MARGIN_DAYS),
                     rs.getInt(8));
-        });
+        }, bill.destinationCountry(), bill.currency());
 
         Comparator<ChannelQuote> preferenceComparator = switch(normalizedPreference) {
             case "FASTER" -> Comparator.comparingInt(ChannelQuote::settlementMaxDays)

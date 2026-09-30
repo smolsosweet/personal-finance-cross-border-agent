@@ -134,11 +134,14 @@ const translationsVi = new Map(Object.entries({
   'Compare this expense': 'So sánh khoản này',
   'SELECTED EXPENSE': 'KHOẢN PHÍ ĐANG CHỌN',
   'Institution': 'Đơn vị thu',
+  'Destination': 'Điểm đến',
+  'Destination country': 'Quốc gia đích',
   'CONNECTED PAYMENT CHANNELS': 'KÊNH THANH TOÁN ĐÃ KẾT NỐI',
   'Compare the essentials': 'So sánh thông tin cần thiết',
   'Each compact card shows the information needed to decide. Scroll horizontally, then open details for the complete fee and quote breakdown.': 'Mỗi thẻ gọn hiển thị thông tin cần để ra quyết định. Cuộn ngang rồi mở chi tiết để xem đầy đủ phí và báo giá.',
   '← Scroll horizontally to compare channels →': '← Cuộn ngang để so sánh các kênh →',
-  'Rank by': 'Xếp hạng theo',
+  'Priority and order': 'Ưu tiên và thứ tự',
+  'This choice determines both recommendation rank and display order.': 'Lựa chọn này quyết định cả thứ hạng đề xuất và thứ tự hiển thị.',
   'Remaining': 'Còn lại',
   'Details': 'Chi tiết',
   'Create plan': 'Tạo kế hoạch',
@@ -153,6 +156,9 @@ const translationsVi = new Map(Object.entries({
   'Expense name': 'Tên khoản phí',
   'Institution or provider': 'Trường hoặc đơn vị cung cấp',
   'Currency': 'Tiền tệ',
+  'China': 'Trung Quốc',
+  'United States': 'Hoa Kỳ',
+  'Australia': 'Úc',
   'Recipient account': 'Tài khoản người nhận',
   'Payment reference': 'Mã tham chiếu thanh toán',
   'Attachment (optional)': 'File đính kèm (không bắt buộc)',
@@ -191,6 +197,7 @@ const translationsVi = new Map(Object.entries({
   'Payment Sandbox · checked again before approval': 'Payment Sandbox · được kiểm tra lại trước khi phê duyệt',
   'Remaining after payment': 'Còn lại sau thanh toán',
   'Insufficient balance': 'Không đủ số dư',
+  'Unavailable for corridor': 'Không hỗ trợ hành lang này',
   'Below safety buffer': 'Dưới vùng số dư an toàn',
   'Safety buffer preserved': 'Vẫn giữ được vùng số dư an toàn',
   '↻ Refresh synthetic quotes': '↻ Làm mới báo giá mô phỏng',
@@ -582,27 +589,14 @@ function initializePaymentAccounts() {
   if (!grid) return;
   const cards = Array.from(grid.querySelectorAll('.connected-payment-card'));
   const filter = document.querySelector('[data-testid="payment-account-filter"]');
-  const sort = document.querySelector('[data-testid="payment-account-sort"]');
   const empty = document.querySelector('[data-testid="payment-account-empty"]');
-  const originalOrder = new Map(cards.map((card, index) => [card, index]));
 
   const render = () => {
     const visible = cards.filter((card) => filter.value === 'all' || card.dataset.state === filter.value);
-    const ordered = [...cards].sort((left, right) => {
-      if (sort.value === 'cost-asc') return Number(left.dataset.cost) - Number(right.dataset.cost);
-      if (sort.value === 'remaining-desc') return Number(right.dataset.remaining) - Number(left.dataset.remaining);
-      if (sort.value === 'fastest') return Number(left.dataset.settlement) - Number(right.dataset.settlement);
-      if (sort.value === 'safest') return Number(right.dataset.safety) - Number(left.dataset.safety);
-      if (sort.value === 'name') return left.dataset.name.localeCompare(right.dataset.name);
-      return originalOrder.get(left) - originalOrder.get(right);
-    });
-    ordered.forEach((card) => {
-      grid.append(card);
-      card.hidden = !visible.includes(card);
-    });
+    cards.forEach((card) => { card.hidden = !visible.includes(card); });
     empty.hidden = visible.length !== 0;
   };
-  [filter, sort].forEach((control) => control.addEventListener('change', render));
+  filter.addEventListener('change', render);
   document.querySelectorAll('[data-account-action="show-payable"]').forEach((button) => {
     button.addEventListener('click', () => {
       filter.value = 'payable';
@@ -611,6 +605,23 @@ function initializePaymentAccounts() {
     });
   });
   renderPaymentAccounts = render;
+  render();
+}
+
+function initializeStudentExpenseCorridor() {
+  const select = document.querySelector('[data-corridor-select]');
+  if (!select) return;
+  const currency = document.querySelector('[data-corridor-currency]');
+  const institution = document.querySelector('[data-corridor-institution]');
+  const recipient = document.querySelector('[data-corridor-recipient]');
+  const render = () => {
+    const option = select.selectedOptions[0];
+    if (!option) return;
+    currency.value = option.dataset.currency;
+    institution.value = option.dataset.institution;
+    recipient.value = option.dataset.recipient;
+  };
+  select.addEventListener('change', render);
   render();
 }
 
@@ -625,12 +636,13 @@ function initializeQuoteExpiryStatuses() {
       const expiryEpochMillis = Number(card.dataset.quoteExpiry);
       const remainingSeconds = Math.floor((expiryEpochMillis - Date.now()) / 1000);
       const expired = !Number.isFinite(expiryEpochMillis) || remainingSeconds <= 0;
+      const channelEligible = card.dataset.channelEligible !== 'false';
       const status = card.querySelector('[data-quote-live-status]');
       const planForm = card.querySelector('.planning-form');
       const eligibility = card.querySelector('.eligibility');
       card.classList.toggle('quote-is-expired', expired);
       if (planForm) planForm.hidden = expired;
-      if (expired && card.classList.contains('connected-payment-card')) {
+      if (expired && channelEligible && card.classList.contains('connected-payment-card')) {
         if (card.dataset.state !== 'expired') accountFilterChanged = true;
         card.dataset.state = 'expired';
         if (eligibility) {
@@ -683,6 +695,7 @@ function translateDynamic(text) {
     [/^Expires (.+)$/, 'Hết hạn lúc $1'],
     [/^(.+) day\(s\)$/, '$1 ngày'],
     [/^(.+)\/100 synthetic$/, '$1/100 mô phỏng'],
+    [/^([A-Z]{3}) credit$/, 'Ghi có $1'],
     [/^Evidence: Selected plan · (.+)$/, 'Bằng chứng: Kế hoạch đã chọn · $1'],
     [/^Evidence: (.+)$/, 'Bằng chứng: $1'],
     [/^Payer: (.+)$/, 'Người trả: $1'],
@@ -691,10 +704,10 @@ function translateDynamic(text) {
     [/^Channel ranking updated to (.+)\.$/, 'Đã cập nhật xếp hạng kênh theo $1.'],
     [/^Payment source changed to (.+)\.$/, 'Đã đổi nguồn thanh toán sang $1.'],
     [/^Tuition plan (.+)\. Approval is always required\.$/, 'Kế hoạch học phí $1. Luôn yêu cầu phê duyệt.'],
-    [/^Selected plan uses (.+) for bill (.+) of (.+) CNY, due (.+), with latest safe date (.+)\. Approval Mode is required before payment\.$/, 'Kế hoạch đã chọn sử dụng $1 cho hóa đơn $2 trị giá $3 CNY, hạn thanh toán $4, với ngày an toàn cuối cùng $5. Cần phê duyệt trước khi thanh toán.'],
+    [/^Selected plan uses (.+) for bill (.+) of (.+) ([A-Z]{3}), due (.+), with latest safe date (.+)\. Approval Mode is required before payment\.$/, 'Kế hoạch đã chọn sử dụng $1 cho hóa đơn $2 trị giá $3 $4, hạn thanh toán $5, với ngày an toàn cuối cùng $6. Cần phê duyệt trước khi thanh toán.'],
     [/^Selected (.+) plan is ready for review$/, 'Kế hoạch $1 đã chọn đang chờ xem xét'],
     [/^(.+) needs a controlled plan$/, '$1 cần một kế hoạch có kiểm soát'],
-    [/^Bill (.+) for (.+) CNY is verified, due (.+), with latest safe date (.+)\. Approval Mode is still required before payment\.$/, 'Hóa đơn $1 trị giá $2 CNY đã được xác minh, hạn thanh toán $3, với ngày an toàn cuối cùng $4. Vẫn cần phê duyệt trước khi thanh toán.'],
+    [/^Bill (.+) for (.+) ([A-Z]{3}) is verified, due (.+), with latest safe date (.+)\. Approval Mode is still required before payment\.$/, 'Hóa đơn $1 trị giá $2 $3 đã được xác minh, hạn thanh toán $4, với ngày an toàn cuối cùng $5. Vẫn cần phê duyệt trước khi thanh toán.'],
     [/^Low-risk plan status: (.+)\.$/, 'Trạng thái kế hoạch rủi ro thấp: $1.'],
     [/^Payment Sandbox completed: (.+)$/, 'Payment Sandbox đã hoàn tất: $1'],
     [/^Action blocked: (.+)$/, 'Tác vụ bị chặn: $1'],
@@ -771,6 +784,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeTransactionList();
   initializeCategoryReviewForms();
   initializePaymentAccounts();
+  initializeStudentExpenseCorridor();
   initializeQuoteExpiryStatuses();
   const savedLanguage = localStorage.getItem('finbridge-language') || 'en';
   applyLanguage(savedLanguage);

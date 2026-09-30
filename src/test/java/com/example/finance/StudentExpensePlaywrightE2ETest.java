@@ -51,6 +51,8 @@ class StudentExpensePlaywrightE2ETest {
             page.getByTestId("tab-student").click();
 
             assertEquals(5,page.locator(".channel-list-row").count());
+            assertEquals(0,page.getByTestId("payment-account-sort").count());
+            assertThat(page.locator(".preference-form")).containsText("Priority and order");
             var firstChannel=page.locator(".channel-list-row").nth(0).boundingBox();
             var secondChannel=page.locator(".channel-list-row").nth(1).boundingBox();
             assertTrue(secondChannel.x > firstChannel.x);
@@ -66,6 +68,10 @@ class StudentExpensePlaywrightE2ETest {
             var dialog=page.locator("#add-student-expense");
             dialog.getByLabel("Expense type").selectOption("DORMITORY");
             dialog.getByLabel("Expense name").fill("Dormitory deposit");
+            dialog.getByLabel("Destination country").selectOption("United States");
+            assertEquals("USD", dialog.getByLabel("Currency").inputValue());
+            assertEquals(CrossBorderService.US_SCHOOL_NAME,
+                    dialog.getByLabel("Institution or provider").inputValue());
             dialog.getByLabel("Amount").fill("2500.00");
             dialog.getByLabel("Payment reference").fill("DORM-2026-MINH");
             dialog.getByLabel("Due date").fill(LocalDate.now().plusDays(20).toString());
@@ -74,8 +80,14 @@ class StudentExpensePlaywrightE2ETest {
 
             assertThat(page.locator(".student-expense-card.selected")).containsText("Dormitory deposit");
             assertThat(page.getByTestId("tuition-bill")).containsText("2,500");
-            assertThat(page.getByTestId("tuition-bill")).containsText("CNY");
-            assertThat(page.getByTestId("channel-BANK_A")).containsText("9,037,600 VND");
+            assertThat(page.getByTestId("tuition-bill")).containsText("USD");
+            assertThat(page.getByTestId("student-corridor")).containsText("United States");
+            assertThat(page.getByTestId("student-currencies")).containsText("VND → USD");
+            assertThat(page.getByTestId("channel-BANK_A")).containsText("65,640,500 VND");
+            assertThat(page.getByTestId("channel-ALIPAY")).containsText("Unavailable for corridor");
+            page.getByTestId("plan-BANK_A").click();
+            assertThat(page.getByTestId("latest-action")).containsText("2,500.00 USD");
+            assertThat(page.getByTestId("latest-action")).containsText(CrossBorderService.US_SCHOOL_RECIPIENT);
 
             page.getByTestId("language-vi").click();
             assertEquals("vi",page.locator("html").getAttribute("lang"),String.join(" | ",pageErrors));

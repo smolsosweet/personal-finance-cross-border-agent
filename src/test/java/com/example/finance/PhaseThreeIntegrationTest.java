@@ -54,8 +54,9 @@ class PhaseThreeIntegrationTest {
 
     @Test void eligibilityIsAppliedBeforePrice() {
         List<CrossBorderService.ChannelQuote> quotes = crossBorder.rankedQuotes("CHEAPER");
-        assertEquals(List.of("BANK_A", "ALIPAY", "BANK_B"), quotes.stream().map(CrossBorderService.ChannelQuote::channelId).toList());
-        assertEquals(2, quotes.stream().filter(CrossBorderService.ChannelQuote::eligible).count());
+        assertEquals(List.of("BANK_A", "TCB", "VCB", "ALIPAY", "MOMO", "BANK_B"),
+                quotes.stream().map(CrossBorderService.ChannelQuote::channelId).toList());
+        assertEquals(5, quotes.stream().filter(CrossBorderService.ChannelQuote::eligible).count());
 
         var bankB = quote("BANK_B", quotes);
         var bankA = quote("BANK_A", quotes);
@@ -124,10 +125,9 @@ class PhaseThreeIntegrationTest {
 
         for (String preference : List.of("CHEAPER", "FASTER", "SAFER")) {
             List<CrossBorderService.ChannelQuote> quotes = crossBorder.rankedQuotes(preference);
-            assertTrue(quotes.get(0).eligible());
-            assertTrue(quotes.get(1).eligible());
-            assertEquals("BANK_B", quotes.get(2).channelId());
-            assertNull(quotes.get(2).rank());
+            assertTrue(quotes.subList(0, 5).stream().allMatch(CrossBorderService.ChannelQuote::eligible));
+            assertEquals("BANK_B", quotes.get(5).channelId());
+            assertNull(quotes.get(5).rank());
         }
     }
 
@@ -142,7 +142,7 @@ class PhaseThreeIntegrationTest {
 
         demoData.resetAll();
         assertEquals("CHEAPER", crossBorder.profile().preference());
-        assertEquals(3, crossBorder.rankedQuotes().size());
+        assertEquals(6, crossBorder.rankedQuotes().size());
     }
 
     @Test void resetSurfacesTuitionInsightInMainFeedConsistentWithWorkspace() throws Exception {

@@ -23,6 +23,8 @@ public class PhaseFourService {
     public static final int FREQUENCY_LIMIT = 3;
     public static final String PAYER = "PAYER_VND";
     public static final String SCHOOL = "SCHOOL_CNY";
+    public static final String SCHOOL_USD = "SCHOOL_USD";
+    public static final String SCHOOL_AUD = "SCHOOL_AUD";
     public static final String EMERGENCY = "EMERGENCY-FUND";
 
     private final JdbcTemplate db;
@@ -47,7 +49,8 @@ public class PhaseFourService {
     }
     public record PolicyDecision(String decision, String reasonCode, String explanation) {}
     public record Receipt(String transactionId, String actionId, String idempotencyKey,
-            String channelId, String quoteId, String recipient, String sourceAccountId, BigDecimal vndBalanceBefore,
+            String channelId, String quoteId, String recipient, String sourceAccountId, String destinationCurrency,
+            BigDecimal vndBalanceBefore,
             BigDecimal vndDebit, BigDecimal conversionVnd, BigDecimal feeDeductionVnd,
             BigDecimal vndBalanceAfter, BigDecimal cnyBalanceBefore, BigDecimal cnyCredit,
             BigDecimal cnyBalanceAfter, BigDecimal rateVndPerCny, String status,
@@ -88,6 +91,10 @@ public class PhaseFourService {
         db.update("INSERT INTO recipient_allowlist VALUES (?,?,?)",
                 CrossBorderService.SCHOOL_RECIPIENT, "Shenzhen Demo University", "TUITION");
         db.update("INSERT INTO recipient_allowlist VALUES (?,?,?)",
+                CrossBorderService.US_SCHOOL_RECIPIENT, CrossBorderService.US_SCHOOL_NAME, "TUITION");
+        db.update("INSERT INTO recipient_allowlist VALUES (?,?,?)",
+                CrossBorderService.AU_SCHOOL_RECIPIENT, CrossBorderService.AU_SCHOOL_NAME, "TUITION");
+        db.update("INSERT INTO recipient_allowlist VALUES (?,?,?)",
                 EMERGENCY, "Emergency Fund", "LOW_RISK");
         insertPaymentAccount(PAYER,"Bank A Everyday","Bank A","Everyday account","•••• 2048",
                 new BigDecimal("100000000.00"),"CONNECTED","VERIFIED",true,true,1);
@@ -100,6 +107,8 @@ public class PhaseFourService {
         insertPaymentAccount("ALIPAY_VND","Alipay Education Wallet","Alipay","Education wallet","•••• 8890",
                 new BigDecimal("75000000.00"),"CONNECTED","VERIFIED",true,false,5);
         db.update("INSERT INTO sandbox_accounts VALUES ('SCHOOL_CNY','Shenzhen Demo University','CNY',0.00)");
+        db.update("INSERT INTO sandbox_accounts VALUES ('SCHOOL_USD','Pacific Demo College','USD',0.00)");
+        db.update("INSERT INTO sandbox_accounts VALUES ('SCHOOL_AUD','Sydney Demo Institute','AUD',0.00)");
         db.update("INSERT INTO sandbox_accounts VALUES ('EMERGENCY_VND','Emergency Fund sandbox recipient','VND',0.00)");
         addMessage("ASSISTANT", "I can explain the tuition bill, create a structured payment plan, or prepare a low-risk Emergency Fund transfer. Every amount comes from deterministic demo data.");
         audit("SYSTEM", "DEMO_RESET", null, "COMPLETED", null,
@@ -117,7 +126,10 @@ public class PhaseFourService {
                 SELECT COUNT(*) FROM payment_source_accounts
                 WHERE account_id IN ('PAYER_VND','VCB_VND','TCB_VND','MOMO_VND','ALIPAY_VND')
                 """, Integer.class);
-        if (sources == null || sources != 5) {
+        Integer destinationAccounts = db.queryForObject("""
+                SELECT COUNT(*) FROM sandbox_accounts WHERE id IN ('SCHOOL_CNY','SCHOOL_USD','SCHOOL_AUD')
+                """, Integer.class);
+        if (sources == null || sources != 5 || destinationAccounts == null || destinationAccounts != 3) {
             reset();
         }
     }
@@ -187,7 +199,9 @@ public class PhaseFourService {
         String lower=message.toLowerCase(Locale.ROOT);
         if (lower.contains("tuition")||lower.contains("học phí")||lower.contains("payment plan")) {
             ActionPlan plan=createTuitionPlan("BANK_A");
-            String response="Created tuition plan "+plan.id()+" using Bank A. The 20,000 CNY payment remains in Approval Mode.";
+            var bill=crossBorder.bill();
+            String response="Created student-payment plan "+plan.id()+" using Bank A. The "
+                    +bill.amount().toPlainString()+" "+bill.currency()+" payment remains in Approval Mode.";
             addMessage("ASSISTANT",response);
             return response;
         }
@@ -234,10 +248,10 @@ public class PhaseFourService {
         String id=newId("ACT");
         String impact="Debit "+quote.landedCost().toPlainString()+" VND; convert "
                 +quote.sourceAmount().toPlainString()+" VND; credit "
-                +quote.expectedReceived().toPlainString()+" CNY";
+                +quote.expectedReceived().toPlainString()+" "+bill.currency();
         ActionPlan plan=insertPlan(id,"TUITION","Pay "+expense.title()+" · "+bill.paymentReference(),
                 quote.landedCost(),quote.sourceAmount(),quote.transferFee(),quote.fxMarkup(),"VND",source.accountId(),
-                quote.expectedReceived(),"CNY",bill.recipientAccount(),quote.channelId(),quote.quoteId(),
+                quote.expectedReceived(),bill.currency(),bill.recipientAccount(),quote.channelId(),quote.quoteId(),
                 "APPROVAL",impact,"Quote, recipient and approval are rechecked before execution");
         auditTuitionEvidence(plan, bill, quote);
         audit("PAYMENT_SOURCE","SOURCE_ACCOUNT_SELECTED",plan.id(),"SELECTED",null,
@@ -270,11 +284,11 @@ public class PhaseFourService {
                 selectedQuote.eligible()?null:"CHANNEL NOT AVAILABLE",
                 "Quote "+selectedQuote.quoteId()+" from "+selectedQuote.quoteSource()
                         +"; quoted at "+selectedQuote.quotedAt()+"; expires at "+selectedQuote.expiresAt()
-                        +"; rate "+selectedQuote.rateVndPerCny().toPlainString()+" VND/CNY"
+                        +"; rate "+selectedQuote.rateVndPerCny().toPlainString()+" VND/"+bill.currency()
                         +"; transfer fee "+selectedQuote.transferFee().toPlainString()+" VND"
                         +"; FX markup "+selectedQuote.fxMarkup().toPlainString()+" VND"
                         +"; landed cost "+selectedQuote.landedCost().toPlainString()+" VND"
-                        +"; expected received "+selectedQuote.expectedReceived().toPlainString()+" CNY");
+                        +"; expected received "+selectedQuote.expectedReceived().toPlainString()+" "+bill.currency());
     }
 
     @Transactional
@@ -341,13 +355,13 @@ public class PhaseFourService {
         if("TUITION".equals(plan.actionType())) {
             var profile=crossBorder.profile();
             if(!"Vietnam".equals(profile.sourceCountry())
-                    ||!"China".equals(profile.destinationCountry()))
+                    ||!crossBorder.corridorSupported(profile.destinationCountry(),profile.destinationCurrency()))
                 return blocked("CORRIDOR NOT ALLOWED");
             if(!"VND".equals(profile.sourceCurrency())
-                    ||!"CNY".equals(profile.destinationCurrency())
                     ||!"VND".equals(plan.sourceCurrency())
-                    ||!"CNY".equals(plan.destinationCurrency())
-                    ||!"CNY".equals(crossBorder.bill().currency()))
+                    ||!profile.destinationCurrency().equals(plan.destinationCurrency())
+                    ||!profile.destinationCurrency().equals(crossBorder.bill().currency())
+                    ||!profile.destinationCountry().equals(crossBorder.bill().destinationCountry()))
                 return blocked("CURRENCY NOT ALLOWED");
             var verified=crossBorder.verifyRecipient();
             if(!verified.verified()||!crossBorder.bill().recipientAccount().equals(plan.recipient()))
@@ -431,7 +445,8 @@ public class PhaseFourService {
         if("BLOCKED".equals(check.decision())) { block(plan,check); return null; }
 
         BigDecimal payerBefore=accountBalance(plan.sourceAccountId());
-        String target="TUITION".equals(plan.actionType())?SCHOOL:"EMERGENCY_VND";
+        String target="TUITION".equals(plan.actionType())
+                ?destinationSandboxAccount(plan.destinationCurrency()):"EMERGENCY_VND";
         BigDecimal targetBefore=accountBalance(target);
         BigDecimal payerAfter=payerBefore.subtract(plan.debitAmount());
         BigDecimal targetAfter=targetBefore.add(plan.destinationAmount());
@@ -453,7 +468,7 @@ public class PhaseFourService {
         ledger(txId,"VND_DEBIT",plan.sourceAccountId(),plan.debitAmount().negate(),"VND");
         ledger(txId,"CONVERSION",plan.sourceAccountId(),plan.conversionAmount(),plan.sourceCurrency());
         ledger(txId,"FEE_DEDUCTION",plan.sourceAccountId(),plan.feeTotal().negate(),"VND");
-        ledger(txId,"CNY_CREDIT",target,plan.destinationAmount(),plan.destinationCurrency());
+        ledger(txId,plan.destinationCurrency()+"_CREDIT",target,plan.destinationAmount(),plan.destinationCurrency());
         db.update("UPDATE action_plans SET status='COMPLETED' WHERE id=?",plan.id());
         db.update("UPDATE approvals SET status='USED' WHERE action_id=? AND status='VALID'",plan.id());
         audit("PAYMENT_SANDBOX","SANDBOX_EXECUTED",plan.id(),"COMPLETED",null,
@@ -467,6 +482,15 @@ public class PhaseFourService {
     private void ledger(String tx,String type,String account,BigDecimal amount,String currency) {
         db.update("INSERT INTO sandbox_ledger_entries VALUES (?,?,?,?,?,?,?)",
                 newId("LEDGER"),tx,type,account,amount,currency,LocalDateTime.now());
+    }
+
+    private String destinationSandboxAccount(String currency) {
+        return switch (currency) {
+            case "CNY" -> SCHOOL;
+            case "USD" -> SCHOOL_USD;
+            case "AUD" -> SCHOOL_AUD;
+            default -> throw new IllegalArgumentException("No sandbox recipient account for " + currency);
+        };
     }
 
     private ActionPlan block(ActionPlan plan,PolicyDecision d) {
@@ -520,6 +544,18 @@ public class PhaseFourService {
         return ids.isEmpty()?null:action(ids.getFirst());
     }
 
+    public boolean matchesCurrentStudentSelection(ActionPlan plan) {
+        if (plan == null || !"TUITION".equals(plan.actionType())) return true;
+        var bill = crossBorder.bill();
+        if (!bill.recipientAccount().equals(plan.recipient())
+                || !bill.currency().equals(plan.destinationCurrency())
+                || bill.amount().compareTo(plan.destinationAmount()) != 0) return false;
+        return crossBorder.rankedQuotes().stream().anyMatch(quote ->
+                quote.channelId().equals(plan.channelId())
+                        && quote.quoteId().equals(plan.quoteId())
+                        && quote.landedCost().compareTo(plan.debitAmount()) == 0);
+    }
+
     public Receipt latestReceipt() {
         List<String> ids=db.query("SELECT id FROM sandbox_transactions ORDER BY created_at DESC FETCH FIRST 1 ROWS ONLY",
                 (rs,n)->rs.getString(1));
@@ -528,28 +564,30 @@ public class PhaseFourService {
 
     public Receipt receipt(String id) {
         return db.queryForObject("""
-                SELECT id,action_id,idempotency_key,channel_id,quote_id,recipient,COALESCE(source_account_id,'PAYER_VND'),
-                       vnd_balance_before,vnd_debit,conversion_vnd,fee_deduction_vnd,vnd_balance_after,
-                       cny_balance_before,cny_credit,cny_balance_after,rate_vnd_per_cny,status,created_at
-                FROM sandbox_transactions WHERE id=?
+                SELECT s.id,s.action_id,s.idempotency_key,s.channel_id,s.quote_id,s.recipient,
+                       COALESCE(s.source_account_id,'PAYER_VND'),a.destination_currency,
+                       s.vnd_balance_before,s.vnd_debit,s.conversion_vnd,s.fee_deduction_vnd,s.vnd_balance_after,
+                       s.cny_balance_before,s.cny_credit,s.cny_balance_after,s.rate_vnd_per_cny,s.status,s.created_at
+                FROM sandbox_transactions s JOIN action_plans a ON a.id=s.action_id WHERE s.id=?
                 """,this::mapReceipt,id);
     }
 
     private List<Receipt> receiptsByIdempotency(String key) {
         return db.query("""
-                SELECT id,action_id,idempotency_key,channel_id,quote_id,recipient,COALESCE(source_account_id,'PAYER_VND'),
-                       vnd_balance_before,vnd_debit,conversion_vnd,fee_deduction_vnd,vnd_balance_after,
-                       cny_balance_before,cny_credit,cny_balance_after,rate_vnd_per_cny,status,created_at
-                FROM sandbox_transactions WHERE idempotency_key=?
+                SELECT s.id,s.action_id,s.idempotency_key,s.channel_id,s.quote_id,s.recipient,
+                       COALESCE(s.source_account_id,'PAYER_VND'),a.destination_currency,
+                       s.vnd_balance_before,s.vnd_debit,s.conversion_vnd,s.fee_deduction_vnd,s.vnd_balance_after,
+                       s.cny_balance_before,s.cny_credit,s.cny_balance_after,s.rate_vnd_per_cny,s.status,s.created_at
+                FROM sandbox_transactions s JOIN action_plans a ON a.id=s.action_id WHERE s.idempotency_key=?
                 """,this::mapReceipt,key);
     }
 
     private Receipt mapReceipt(java.sql.ResultSet rs,int n) throws java.sql.SQLException {
         return new Receipt(rs.getString(1),rs.getString(2),rs.getString(3),rs.getString(4),
-                rs.getString(5),rs.getString(6),rs.getString(7),rs.getBigDecimal(8),rs.getBigDecimal(9),
+                rs.getString(5),rs.getString(6),rs.getString(7),rs.getString(8),rs.getBigDecimal(9),
                 rs.getBigDecimal(10),rs.getBigDecimal(11),rs.getBigDecimal(12),rs.getBigDecimal(13),
-                rs.getBigDecimal(14),rs.getBigDecimal(15),rs.getBigDecimal(16),rs.getString(17),
-                rs.getTimestamp(18).toLocalDateTime());
+                rs.getBigDecimal(14),rs.getBigDecimal(15),rs.getBigDecimal(16),rs.getBigDecimal(17),
+                rs.getString(18),rs.getTimestamp(19).toLocalDateTime());
     }
 
     public List<ConversationMessage> messages() {
@@ -671,8 +709,8 @@ public class PhaseFourService {
             case "CHANNEL NOT AVAILABLE"->"The selected payment channel is unavailable to the user.";
             case "FX QUOTE EXPIRED"->"The stored FX quote is expired or no longer matches the action.";
             case "RECIPIENT MISMATCH"->"The recipient does not match the tuition bill and School Registry.";
-            case "CORRIDOR NOT ALLOWED"->"The tuition payment corridor must remain Vietnam to China.";
-            case "CURRENCY NOT ALLOWED"->"The tuition payment currencies must remain VND to CNY.";
+            case "CORRIDOR NOT ALLOWED"->"The selected student-payment corridor has no configured deterministic quote data.";
+            case "CURRENCY NOT ALLOWED"->"The plan currencies must match the selected expense and corridor.";
             case "SOURCE ACCOUNT NOT ELIGIBLE"->"The source account is not connected, verified, or enabled for this corridor.";
             case "SOURCE ACCOUNT CHANNEL MISMATCH"->"The selected source account does not belong to this payment channel.";
             case "DEADLINE RISK"->"Settlement time plus the one-day safety margin may miss the tuition due date.";

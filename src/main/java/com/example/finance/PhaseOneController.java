@@ -63,11 +63,13 @@ public class PhaseOneController {
         model.addAttribute("recipientVerification", crossBorder.verifyRecipient());
         var channelQuotes = crossBorder.rankedQuotes();
         var eligibleQuotes = channelQuotes.stream().filter(CrossBorderService.ChannelQuote::eligible).toList();
-        var suggestedQuotes = channelQuotes.stream().filter(quote -> !quote.eligible()).toList();
+        var connectedQuotes = channelQuotes.stream().filter(quote -> quote.sourceAccountId() != null).toList();
+        var suggestedQuotes = channelQuotes.stream().filter(quote -> quote.sourceAccountId() == null).toList();
         BigDecimal cheapestEligibleCost = eligibleQuotes.stream()
                 .map(CrossBorderService.ChannelQuote::landedCost).min(BigDecimal::compareTo).orElse(BigDecimal.ZERO);
         model.addAttribute("channelQuotes", channelQuotes);
         model.addAttribute("eligibleChannelQuotes", eligibleQuotes);
+        model.addAttribute("connectedChannelQuotes", connectedQuotes);
         model.addAttribute("suggestedChannelQuotes", suggestedQuotes);
         model.addAttribute("cheapestEligibleCost", cheapestEligibleCost);
         model.addAttribute("agentPolicy", phaseFour.policy());
@@ -79,6 +81,7 @@ public class PhaseOneController {
                 CrossBorderService.ChannelQuote::sourceAccountId, quote -> quote)));
         model.addAttribute("conversation", phaseFour.messages());
         var latestAction = phaseFour.latestAction();
+        if (!phaseFour.matchesCurrentStudentSelection(latestAction)) latestAction = null;
         model.addAttribute("latestAction", latestAction);
         Map<String,Object> agentTuitionInsight = latestAction != null
                 && "TUITION".equals(latestAction.actionType())
@@ -187,6 +190,8 @@ public class PhaseOneController {
                                     @RequestParam String title,
                                     @RequestParam String institution,
                                     @RequestParam BigDecimal amount,
+                                    @RequestParam String destinationCountry,
+                                    @RequestParam String currency,
                                     @RequestParam String recipientAccount,
                                     @RequestParam String paymentReference,
                                     @RequestParam LocalDate dueDate,
@@ -200,8 +205,8 @@ public class PhaseOneController {
             contentType = document.getContentType();
             size = document.getSize();
         }
-        int id = crossBorder.addExpense(expenseType, title, institution, amount, recipientAccount,
-                paymentReference, dueDate, fileName, contentType, size);
+        int id = crossBorder.addExpense(expenseType, title, institution, amount, destinationCountry,
+                currency, recipientAccount, paymentReference, dueDate, fileName, contentType, size);
         flash.addFlashAttribute("message", "Student expense added and selected for comparison: #" + id);
         return "redirect:/#student-finance";
     }

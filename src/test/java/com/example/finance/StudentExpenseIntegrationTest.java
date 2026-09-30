@@ -1,6 +1,7 @@
 package com.example.finance;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -33,7 +34,8 @@ class StudentExpenseIntegrationTest {
     @Test void manualExpenseBecomesSelectedAndRecalculatesQuotes() {
         int id = crossBorder.addExpense("DORMITORY", "Dormitory deposit",
                 CrossBorderService.SCHOOL_NAME, new BigDecimal("2500.00"),
-                CrossBorderService.SCHOOL_RECIPIENT, "DORM-2026-MINH", LocalDate.now().plusDays(20),
+                "China", "CNY", CrossBorderService.SCHOOL_RECIPIENT,
+                "DORM-2026-MINH", LocalDate.now().plusDays(20),
                 null, null, null);
 
         assertEquals(id, crossBorder.selectedExpense().id());
@@ -50,6 +52,7 @@ class StudentExpenseIntegrationTest {
         crossBorder.selectExpense(1);
         assertEquals(1, crossBorder.selectedExpense().id());
         assertEquals(0, CrossBorderService.TUITION_AMOUNT.compareTo(crossBorder.bill().amount()));
+        assertFalse(phaseFour.matchesCurrentStudentSelection(plan));
     }
 
     @Test void pdfUploadStoresSafeMetadataAndRendersProductionUi() throws Exception {
@@ -62,6 +65,8 @@ class StudentExpenseIntegrationTest {
                         .param("title", "Dormitory deposit")
                         .param("institution", CrossBorderService.SCHOOL_NAME)
                         .param("amount", "2500.00")
+                        .param("destinationCountry", "China")
+                        .param("currency", "CNY")
                         .param("recipientAccount", CrossBorderService.SCHOOL_RECIPIENT)
                         .param("paymentReference", "DORM-2026-MINH")
                         .param("dueDate", LocalDate.now().plusDays(20).toString()))
@@ -79,10 +84,35 @@ class StudentExpenseIntegrationTest {
     @Test void invalidExpenseAndUnsafeDocumentTypeAreRejected() {
         assertThrows(IllegalArgumentException.class, () -> crossBorder.addExpense(
                 "UNKNOWN", "Unknown fee", CrossBorderService.SCHOOL_NAME, BigDecimal.ONE,
-                CrossBorderService.SCHOOL_RECIPIENT, "REF", LocalDate.now().plusDays(1), null, null, null));
+                "China", "CNY", CrossBorderService.SCHOOL_RECIPIENT,
+                "REF", LocalDate.now().plusDays(1), null, null, null));
         assertThrows(IllegalArgumentException.class, () -> crossBorder.addExpense(
                 "OTHER", "Unknown fee", CrossBorderService.SCHOOL_NAME, BigDecimal.ONE,
-                CrossBorderService.SCHOOL_RECIPIENT, "REF", LocalDate.now().plusDays(1),
+                "China", "CNY", CrossBorderService.SCHOOL_RECIPIENT,
+                "REF", LocalDate.now().plusDays(1),
                 "unsafe.exe", "application/octet-stream", 10L));
+    }
+
+    @Test void selectedUsExpenseDrivesCorridorQuotesPlanAndSandboxCurrency() {
+        crossBorder.addExpense("TUITION", "Fall tuition", CrossBorderService.US_SCHOOL_NAME,
+                new BigDecimal("2500.00"), "United States", "USD",
+                CrossBorderService.US_SCHOOL_RECIPIENT, "PDC-2026-MINH", LocalDate.now().plusDays(20),
+                null, null, null);
+
+        assertEquals("United States", crossBorder.profile().destinationCountry());
+        assertEquals("USD", crossBorder.profile().destinationCurrency());
+        assertEquals("USD", crossBorder.bill().currency());
+        assertTrue(crossBorder.verifyRecipient().verified());
+        assertEquals(3, crossBorder.rankedQuotes().stream().filter(CrossBorderService.ChannelQuote::eligible).count());
+        assertTrue(crossBorder.rankedQuotes().stream()
+                .filter(quote -> quote.channelId().equals("ALIPAY") || quote.channelId().equals("MOMO"))
+                .noneMatch(CrossBorderService.ChannelQuote::eligible));
+
+        var plan = phaseFour.createTuitionPlan("BANK_A");
+        assertEquals("USD", plan.destinationCurrency());
+        assertEquals("APPROVAL", plan.requiredPermission());
+        var receipt = phaseFour.approveAndExecute(plan.id());
+        assertEquals("USD", receipt.destinationCurrency());
+        assertEquals(0, new BigDecimal("2500.00").compareTo(receipt.cnyCredit()));
     }
 }
