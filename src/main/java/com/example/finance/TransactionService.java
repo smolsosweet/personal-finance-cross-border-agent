@@ -191,7 +191,7 @@ public class TransactionService {
     @Transactional
     public void confirmCategory(String id, String category) {
         String status = (String) transaction(id).get("review_status");
-        if (!categoryAvailable(category)) addCustomCategory(category);
+        if (!categoryAvailable(category)) category = addCustomCategory(category);
         reviewTransaction(id, category, "PURPOSE_REQUIRED".equals(status) ? category : null);
     }
 
@@ -199,8 +199,7 @@ public class TransactionService {
     public void reviewTransaction(String id, String category, String customCategory, String purpose) {
         String selected = category;
         if (customCategory != null && !customCategory.isBlank()) {
-            addCustomCategory(customCategory);
-            selected = customCategory;
+            selected = addCustomCategory(customCategory);
         }
         reviewTransaction(id, selected, purpose);
     }
@@ -211,9 +210,7 @@ public class TransactionService {
         String status = (String) transaction.get("review_status");
         if (!List.of("CONFIRMATION_REQUIRED", "PURPOSE_REQUIRED").contains(status))
             throw new IllegalArgumentException("Transaction does not need review");
-        String cleaned = cleanCategory(category);
-        if (!categoryAvailable(cleaned))
-            throw new IllegalArgumentException("Choose an active category");
+        String cleaned = canonicalActiveCategory(category);
         String cleanedPurpose = purpose == null ? null : purpose.trim().replaceAll("\\s+", " ");
         if ("PURPOSE_REQUIRED".equals(status) && (cleanedPurpose == null || cleanedPurpose.isBlank()))
             throw new IllegalArgumentException("Transaction purpose is required");
@@ -229,7 +226,7 @@ public class TransactionService {
     }
 
     @Transactional
-    public void addCustomCategory(String name) {
+    public String addCustomCategory(String name) {
         String cleaned = cleanCategory(name);
         List<Map<String,Object>> existing = db.queryForList(
                 "SELECT name,category_type,active FROM transaction_categories WHERE LOWER(name)=LOWER(?)",
@@ -239,10 +236,11 @@ public class TransactionService {
             if ("SYSTEM".equals(category.get("category_type")))
                 throw new IllegalArgumentException("A system category already uses this name");
             db.update("UPDATE transaction_categories SET active=TRUE WHERE name=?", category.get("name"));
-            return;
+            return (String) category.get("name");
         }
         db.update("INSERT INTO transaction_categories VALUES (?, 'CUSTOM', TRUE, ?)",
                 cleaned, LocalDateTime.now());
+        return cleaned;
     }
 
     @Transactional
@@ -274,6 +272,15 @@ public class TransactionService {
                 "SELECT COUNT(*) FROM transaction_categories WHERE LOWER(name)=LOWER(?) AND active=TRUE",
                 Integer.class, name);
         return count != null && count > 0;
+    }
+
+    private String canonicalActiveCategory(String name) {
+        String cleaned = cleanCategory(name);
+        List<String> categories = db.query(
+                "SELECT name FROM transaction_categories WHERE LOWER(name)=LOWER(?) AND active=TRUE",
+                (rs,n) -> rs.getString(1), cleaned);
+        if (categories.isEmpty()) throw new IllegalArgumentException("Choose an active category");
+        return categories.getFirst();
     }
 
     private String cleanCategory(String category) {

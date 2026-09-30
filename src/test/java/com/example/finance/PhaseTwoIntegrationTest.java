@@ -92,6 +92,22 @@ class PhaseTwoIntegrationTest {
                 () -> service.archiveCustomCategory("Shopping"));
     }
 
+    @Test void archivedCustomCategoryIsReactivatedCaseInsensitivelyWithCanonicalName() {
+        service.addCustomCategory("Đổ xăng");
+        service.archiveCustomCategory("Đổ xăng");
+
+        String id = service.simulate("low");
+        service.reviewTransaction(id, null, "đỔ XĂNG", "Filled the motorbike tank");
+
+        assertEquals("Đổ xăng", service.transaction(id).get("category"));
+        assertEquals(1, service.categories().stream()
+                .filter(category -> "đổ xăng".equalsIgnoreCase((String) category.get("name")))
+                .count());
+        assertTrue(service.categories().stream().anyMatch(category ->
+                "Đổ xăng".equals(category.get("name"))
+                        && Boolean.TRUE.equals(category.get("active"))));
+    }
+
     @Test void automaticCategoryCanBeUndone() {
         String id = service.simulate("high");
         service.undoCategory(id);
