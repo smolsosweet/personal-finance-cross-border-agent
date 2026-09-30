@@ -296,6 +296,7 @@ const tabAnchors = {
 let activeTab = 'dashboard';
 let renderTransactionList = () => {};
 let renderPaymentAccounts = () => {};
+let renderQuoteExpiryStatuses = () => {};
 
 function selectedLanguage() {
   return localStorage.getItem('finbridge-language') === 'vi' ? 'vi' : 'en';
@@ -473,6 +474,40 @@ function initializePaymentAccounts() {
   render();
 }
 
+function initializeQuoteExpiryStatuses() {
+  const cards = Array.from(document.querySelectorAll('[data-quote-expiry]'));
+  if (!cards.length) return;
+
+  const render = () => {
+    const vietnamese = selectedLanguage() === 'vi';
+    cards.forEach((card) => {
+      const expiry = new Date(card.dataset.quoteExpiry);
+      const remainingSeconds = Math.floor((expiry.getTime() - Date.now()) / 1000);
+      const expired = !Number.isFinite(expiry.getTime()) || remainingSeconds <= 0;
+      const status = card.querySelector('[data-quote-live-status]');
+      const planForm = card.querySelector('.planning-form');
+      card.classList.toggle('quote-is-expired', expired);
+      if (planForm) planForm.hidden = expired;
+      if (!status) return;
+      status.classList.toggle('quote-expired', expired);
+      if (expired) {
+        status.textContent = vietnamese
+          ? 'Báo giá đã hết hạn · cần làm mới'
+          : 'Quote expired · refresh required';
+        return;
+      }
+      const minutes = Math.floor(remainingSeconds / 60);
+      const seconds = String(remainingSeconds % 60).padStart(2, '0');
+      status.textContent = vietnamese
+        ? `Báo giá còn hiệu lực · còn ${minutes} phút ${seconds} giây`
+        : `Quote valid · ${minutes}m ${seconds}s remaining`;
+    });
+  };
+  renderQuoteExpiryStatuses = render;
+  render();
+  window.setInterval(render, 1000);
+}
+
 function translateDynamic(text) {
   const rules = [
     [/^(\d+) insights$/, '$1 thông tin'],
@@ -555,6 +590,7 @@ function applyLanguage(language) {
   updateActiveTabLabel(selected);
   renderTransactionList();
   renderPaymentAccounts();
+  renderQuoteExpiryStatuses();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -565,6 +601,7 @@ document.addEventListener('DOMContentLoaded', () => {
   requestAnimationFrame(() => window.scrollTo({ top: 0 }));
   initializeTransactionList();
   initializePaymentAccounts();
+  initializeQuoteExpiryStatuses();
   const savedLanguage = localStorage.getItem('finbridge-language') || 'en';
   applyLanguage(savedLanguage);
 

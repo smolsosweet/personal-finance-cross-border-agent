@@ -173,7 +173,7 @@
           </div>
         </div>
         <div class="channel-grid">
-          <article class="channel-card" th:each="quote : ${eligibleChannelQuotes}" th:attr="data-testid=${'channel-' + quote.channelId}">
+          <article class="channel-card" th:each="quote : ${eligibleChannelQuotes}" th:attr="data-testid=${'channel-' + quote.channelId},data-quote-expiry=${#temporals.format(quote.expiresAt,'yyyy-MM-dd''T''HH:mm:ss')}">
             <div class="channel-top"><span class="rank" th:text="${quote.rank != null ? '#' + quote.rank : 'REF'}"></span><span class="eligibility" th:classappend="${quote.eligible ? ' eligible' : ' unavailable-tag'}" th:text="${quote.eligible ? 'Eligible' : 'Unavailable'}"></span></div>
             <h3 th:text="${quote.displayName}"></h3><p class="eligibility-reason" th:text="${quote.eligibilityReason}"></p>
             <div class="cost-summary">
@@ -194,7 +194,7 @@
               <div><dt>Safety score</dt><dd th:text="${quote.safetyScore + '/100 synthetic'}"></dd></div>
             </dl>
             <div class="quote-meta"><span th:text="${quote.quoteSource}"></span><br><span th:text="${'Quoted ' + #temporals.format(quote.quotedAt,'dd MMM yyyy HH:mm:ss')}"></span><br><span th:text="${'Expires ' + #temporals.format(quote.expiresAt,'dd MMM yyyy HH:mm:ss')}"></span></div>
-            <div th:if="${quote.expired}" class="quote-expired">Quote expired · refresh required</div>
+            <div class="quote-live-status" data-quote-live-status aria-live="polite"></div>
             <form th:if="${selectedPaymentCanFund}" th:action="@{/agent/plans/tuition}" method="post" class="planning-form"><input type="hidden" name="channel" th:value="${quote.channelId}"><input type="hidden" name="sourceAccount" th:value="${selectedPaymentAccount.accountId}"><button class="planning-only" type="submit" th:attr="data-testid=${'plan-' + quote.channelId}">Create Approval Mode plan</button></form>
             <button th:unless="${selectedPaymentCanFund}" type="button" class="source-account-warning" data-account-action="show-payable">Select an account ready to pay</button>
           </article>
