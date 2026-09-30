@@ -72,14 +72,25 @@ class StudentExpensePlaywrightE2ETest {
             dialog.getByLabel("Destination country").selectOption("United States");
             assertEquals("USD", dialog.getByLabel("Currency").inputValue());
             assertEquals(CrossBorderService.US_SCHOOL_NAME,
-                    dialog.getByLabel("Verified school or education provider").inputValue());
+                    dialog.getByLabel("School or education provider").inputValue());
+            assertEquals(CrossBorderService.US_SCHOOL_RECIPIENT_NAME,
+                    dialog.getByLabel("Beneficiary legal name").inputValue());
+            assertEquals(CrossBorderService.US_SCHOOL_RECIPIENT_BANK,
+                    dialog.getByLabel("Receiving bank or payment provider").inputValue());
+            assertEquals(CrossBorderService.US_SCHOOL_RECIPIENT_BANK_CODE,
+                    dialog.getByLabel("SWIFT/BIC or bank routing code").inputValue());
             dialog.getByLabel("Amount").fill("2500.00");
             dialog.getByLabel("Payment reference").fill("DORM-2026-MINH");
             dialog.getByLabel("Due date").fill(LocalDate.now().plusDays(20).toString());
             dialog.getByRole(AriaRole.BUTTON, new com.microsoft.playwright.Locator.GetByRoleOptions()
-                    .setName("Add and compare bill")).click();
+                    .setName("Add and verify bill")).click();
 
             assertThat(page.locator(".student-expense-card.selected")).containsText("Dormitory deposit");
+            assertThat(page.locator(".student-expense-card.selected")).containsText("VERIFIED BENEFICIARY");
+            page.getByTestId("student-bill-search").fill("Pacific Demo College");
+            assertEquals(1,page.locator("[data-bill-row]:visible").count());
+            page.getByTestId("student-bill-clear").click();
+            assertEquals(2,page.locator("[data-bill-row]:visible").count());
             assertThat(page.getByTestId("tuition-bill")).containsText("2,500");
             assertThat(page.getByTestId("tuition-bill")).containsText("USD");
             assertThat(page.getByTestId("student-corridor")).containsText("United States");
@@ -107,6 +118,10 @@ class StudentExpensePlaywrightE2ETest {
                     new com.microsoft.playwright.Locator.GetByRoleOptions().setName("Archive")).click();
             assertThat(page.getByTestId("expense-2")).containsText("ARCHIVED");
             assertThat(page.locator(".student-expense-card.selected")).containsText("Tuition fee");
+            page.getByTestId("student-bill-status-filter").selectOption("ARCHIVED");
+            assertEquals(1,page.locator("[data-bill-row]:visible").count());
+            assertThat(page.locator("[data-bill-row]:visible")).containsText("Updated dormitory deposit");
+            page.getByTestId("student-bill-clear").click();
             page.getByTestId("expense-2").getByRole(AriaRole.BUTTON,
                     new com.microsoft.playwright.Locator.GetByRoleOptions().setName("Restore")).click();
             page.waitForLoadState(LoadState.LOAD);

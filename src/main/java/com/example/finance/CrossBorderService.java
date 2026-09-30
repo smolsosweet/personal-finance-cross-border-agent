@@ -18,10 +18,19 @@ import org.springframework.transaction.annotation.Transactional;
 public class CrossBorderService {
     public static final BigDecimal TUITION_AMOUNT = new BigDecimal("20000.00");
     public static final String SCHOOL_NAME = "Shenzhen Demo University";
+    public static final String SCHOOL_RECIPIENT_NAME = "Shenzhen Demo University Tuition Office";
+    public static final String SCHOOL_RECIPIENT_BANK = "Shenzhen Demo Education Bank";
+    public static final String SCHOOL_RECIPIENT_BANK_CODE = "SZDUCNBSXXX";
     public static final String SCHOOL_RECIPIENT = "SZDU-TUITION-2026";
     public static final String US_SCHOOL_NAME = "Pacific Demo College";
+    public static final String US_SCHOOL_RECIPIENT_NAME = "Pacific Demo College Bursar";
+    public static final String US_SCHOOL_RECIPIENT_BANK = "Pacific Demo Bank";
+    public static final String US_SCHOOL_RECIPIENT_BANK_CODE = "PDCMUS33XXX";
     public static final String US_SCHOOL_RECIPIENT = "PDC-TUITION-USD";
     public static final String AU_SCHOOL_NAME = "Sydney Demo Institute";
+    public static final String AU_SCHOOL_RECIPIENT_NAME = "Sydney Demo Institute Fees Office";
+    public static final String AU_SCHOOL_RECIPIENT_BANK = "Sydney Demo Bank";
+    public static final String AU_SCHOOL_RECIPIENT_BANK_CODE = "SDIIAU2SXXX";
     public static final String AU_SCHOOL_RECIPIENT = "SDI-TUITION-AUD";
     public static final int QUOTE_VALIDITY_MINUTES = 5;
     public static final int SETTLEMENT_SAFETY_MARGIN_DAYS = 1;
@@ -36,13 +45,15 @@ public class CrossBorderService {
                                  String sourceCurrency, String destinationCurrency, String preference) {}
 
     public record TuitionBill(int id, String institution, BigDecimal amount, String currency,
-                              String destinationCountry,
+                              String destinationCountry, String recipientName,
+                              String recipientBankName, String recipientBankCode,
                               String recipientAccount, String paymentReference, LocalDate dueDate,
                               String evidenceLabel) {}
 
     public record StudentExpense(int id, String expenseType, String title, String institution,
                                  BigDecimal amount, String currency, String destinationCountry,
-                                 String recipientAccount,
+                                 String recipientName, String recipientBankName, String recipientBankCode,
+                                 String recipientAccount, String verificationStatus,
                                  String paymentReference, LocalDate dueDate, String evidenceLabel,
                                  String documentName, String documentContentType, Long documentSize,
                                  boolean selected, String lifecycleStatus, boolean executed,
@@ -52,7 +63,8 @@ public class CrossBorderService {
     }
 
     public record RecipientVerification(boolean verified, String status, String reason,
-                                        String registryInstitution, String registryAccount) {}
+                                        String registryInstitution, String registryAccount,
+                                        String registryBankName, String registryBankCode) {}
 
     public record ChannelQuote(
             String channelId,
@@ -103,15 +115,20 @@ public class CrossBorderService {
                 (id,demo_profile_id,source_country,destination_country,source_currency,destination_currency,preference)
                 VALUES (1,1,'Vietnam','China','VND','CNY','CHEAPER')
                 """);
-        insertSchool(1, SCHOOL_NAME, SCHOOL_RECIPIENT, "China", "CNY");
-        insertSchool(2, US_SCHOOL_NAME, US_SCHOOL_RECIPIENT, "United States", "USD");
-        insertSchool(3, AU_SCHOOL_NAME, AU_SCHOOL_RECIPIENT, "Australia", "AUD");
+        insertSchool(1, SCHOOL_NAME, SCHOOL_RECIPIENT_NAME, SCHOOL_RECIPIENT_BANK,
+                SCHOOL_RECIPIENT_BANK_CODE, SCHOOL_RECIPIENT, "China", "CNY");
+        insertSchool(2, US_SCHOOL_NAME, US_SCHOOL_RECIPIENT_NAME, US_SCHOOL_RECIPIENT_BANK,
+                US_SCHOOL_RECIPIENT_BANK_CODE, US_SCHOOL_RECIPIENT, "United States", "USD");
+        insertSchool(3, AU_SCHOOL_NAME, AU_SCHOOL_RECIPIENT_NAME, AU_SCHOOL_RECIPIENT_BANK,
+                AU_SCHOOL_RECIPIENT_BANK_CODE, AU_SCHOOL_RECIPIENT, "Australia", "AUD");
         db.update("""
                 INSERT INTO international_bills
-                (id,expense_type,title,institution,amount,currency,destination_country,recipient_account,payment_reference,due_date,
-                 evidence_label,document_name,document_content_type,document_size,selected,lifecycle_status,created_at,updated_at)
-                VALUES (1,'TUITION','Tuition fee',?,?,?,?,?,?,?,'Synthetic tuition bill',NULL,NULL,NULL,TRUE,'ACTIVE',?,?)
-                """, SCHOOL_NAME, TUITION_AMOUNT, "CNY", "China", SCHOOL_RECIPIENT,
+                (id,expense_type,title,institution,amount,currency,destination_country,recipient_name,recipient_bank_name,
+                 recipient_bank_code,recipient_account,payment_reference,due_date,evidence_label,document_name,
+                 document_content_type,document_size,selected,lifecycle_status,created_at,updated_at)
+                VALUES (1,'TUITION','Tuition fee',?,?,?,?,?,?,?,?,?,?,'Synthetic tuition bill',NULL,NULL,NULL,TRUE,'ACTIVE',?,?)
+                """, SCHOOL_NAME, TUITION_AMOUNT, "CNY", "China", SCHOOL_RECIPIENT_NAME,
+                SCHOOL_RECIPIENT_BANK, SCHOOL_RECIPIENT_BANK_CODE, SCHOOL_RECIPIENT,
                 "SZDU-2026-MINH", LocalDate.now().plusDays(14), LocalDateTime.now(), LocalDateTime.now());
 
         insertChannel("ALIPAY", "Alipay Student Payment", "ALIPAY_VND", true,
@@ -164,12 +181,14 @@ public class CrossBorderService {
         refreshQuotes();
     }
 
-    private void insertSchool(int id, String institution, String recipient, String country, String currency) {
+    private void insertSchool(int id, String institution, String recipientName, String bankName,
+                              String bankCode, String recipient, String country, String currency) {
         db.update("""
                 INSERT INTO school_registry
-                (id,institution,recipient_account,destination_country,destination_currency,verification_status)
-                VALUES (?,?,?,?,?,'VERIFIED')
-                """, id, institution, recipient, country, currency);
+                (id,institution,recipient_name,recipient_bank_name,recipient_bank_code,recipient_account,
+                 destination_country,destination_currency,verification_status)
+                VALUES (?,?,?,?,?,?,?,?,'VERIFIED')
+                """, id, institution, recipientName, bankName, bankCode, recipient, country, currency);
     }
 
     private void insertBankCorridor(String country, String currency, String bankARate,
@@ -339,17 +358,28 @@ public class CrossBorderService {
 
     public TuitionBill bill() {
         return db.queryForObject("""
-                SELECT id,institution,amount,currency,destination_country,recipient_account,payment_reference,due_date,evidence_label
+                SELECT id,institution,amount,currency,destination_country,recipient_name,recipient_bank_name,
+                       recipient_bank_code,recipient_account,payment_reference,due_date,evidence_label
                 FROM international_bills WHERE selected=TRUE AND lifecycle_status='ACTIVE' ORDER BY id LIMIT 1
                 """, (rs,n) -> new TuitionBill(rs.getInt(1), rs.getString(2), rs.getBigDecimal(3),
-                rs.getString(4), rs.getString(5), rs.getString(6), rs.getString(7),
-                rs.getObject(8, LocalDate.class), rs.getString(9)));
+                rs.getString(4), rs.getString(5), rs.getString(6), rs.getString(7), rs.getString(8),
+                rs.getString(9), rs.getString(10), rs.getObject(11, LocalDate.class), rs.getString(12)));
     }
 
     public List<StudentExpense> expenses() {
         return db.query("""
                 SELECT b.id,b.expense_type,b.title,b.institution,b.amount,b.currency,b.destination_country,
-                       b.recipient_account,b.payment_reference,b.due_date,b.evidence_label,b.document_name,
+                       b.recipient_name,b.recipient_bank_name,b.recipient_bank_code,b.recipient_account,
+                       CASE WHEN EXISTS (
+                         SELECT 1 FROM school_registry r
+                         WHERE r.institution=b.institution AND r.recipient_name=b.recipient_name
+                           AND r.recipient_bank_name=b.recipient_bank_name
+                           AND r.recipient_bank_code=b.recipient_bank_code
+                           AND r.recipient_account=b.recipient_account
+                           AND r.destination_country=b.destination_country
+                           AND r.destination_currency=b.currency AND r.verification_status='VERIFIED'
+                       ) THEN 'VERIFIED' ELSE 'MISMATCH' END AS verification_status,
+                       b.payment_reference,b.due_date,b.evidence_label,b.document_name,
                        b.document_content_type,b.document_size,b.selected,b.lifecycle_status,b.created_at,b.updated_at,
                        CASE WHEN EXISTS (
                          SELECT 1 FROM action_plans a JOIN sandbox_transactions s ON s.action_id=a.id
@@ -361,9 +391,10 @@ public class CrossBorderService {
                          b.due_date,b.id
                 """, (rs,n) -> new StudentExpense(rs.getInt(1), rs.getString(2), rs.getString(3), rs.getString(4),
                 rs.getBigDecimal(5), rs.getString(6), rs.getString(7), rs.getString(8), rs.getString(9),
-                rs.getObject(10, LocalDate.class), rs.getString(11), rs.getString(12), rs.getString(13),
-                rs.getObject(14, Long.class), rs.getBoolean(15), rs.getString(16), rs.getBoolean(19),
-                rs.getTimestamp(17).toLocalDateTime(), rs.getTimestamp(18).toLocalDateTime()));
+                rs.getString(10), rs.getString(11), rs.getString(12), rs.getString(13),
+                rs.getObject(14, LocalDate.class), rs.getString(15), rs.getString(16), rs.getString(17),
+                rs.getObject(18, Long.class), rs.getBoolean(19), rs.getString(20), rs.getBoolean(23),
+                rs.getTimestamp(21).toLocalDateTime(), rs.getTimestamp(22).toLocalDateTime()));
     }
 
     public StudentExpense selectedExpense() {
@@ -373,7 +404,8 @@ public class CrossBorderService {
 
     @Transactional
     public int addExpense(String expenseType, String title, String institution, BigDecimal amount,
-                          String destinationCountry, String currency, String recipientAccount,
+                          String destinationCountry, String currency, String recipientName,
+                          String recipientBankName, String recipientBankCode, String recipientAccount,
                           String paymentReference, LocalDate dueDate,
                           String documentName, String documentContentType, Long documentSize) {
         String normalizedType = expenseType == null ? "" : expenseType.trim().toUpperCase();
@@ -385,7 +417,10 @@ public class CrossBorderService {
         String cleanedCurrency = requiredText(currency, "Destination currency", 3).toUpperCase();
         if (!corridorSupported(cleanedCountry, cleanedCurrency))
             throw new IllegalArgumentException("This demo has no configured quote data for the selected corridor");
-        String cleanedRecipient = requiredText(recipientAccount, "Recipient", 120);
+        String cleanedRecipientName = requiredText(recipientName, "Recipient legal name", 160);
+        String cleanedRecipientBank = requiredText(recipientBankName, "Recipient bank", 160);
+        String cleanedRecipientBankCode = requiredText(recipientBankCode, "SWIFT/BIC or bank routing code", 34).toUpperCase();
+        String cleanedRecipient = requiredText(recipientAccount, "Recipient account", 120);
         String cleanedReference = requiredText(paymentReference, "Payment reference", 80);
         if (amount == null || amount.signum() <= 0 || amount.scale() > 2)
             throw new IllegalArgumentException("Amount must be positive with at most two decimal places");
@@ -396,27 +431,40 @@ public class CrossBorderService {
                 .contains(documentContentType.toLowerCase()))
             throw new IllegalArgumentException("Document must be PDF, JPG or PNG");
 
+        boolean verified = recipientProfileVerified(cleanedInstitution, cleanedRecipientName, cleanedRecipientBank,
+                cleanedRecipientBankCode, cleanedRecipient, cleanedCountry, cleanedCurrency);
         Integer id = db.queryForObject("SELECT COALESCE(MAX(id),0)+1 FROM international_bills", Integer.class);
-        db.update("UPDATE international_bills SET selected=FALSE");
+        if (verified) db.update("UPDATE international_bills SET selected=FALSE");
         db.update("""
                 INSERT INTO international_bills
-                (id,expense_type,title,institution,amount,currency,destination_country,recipient_account,payment_reference,due_date,
-                 evidence_label,document_name,document_content_type,document_size,selected,lifecycle_status,created_at,updated_at)
-                VALUES (?,?,?,?,?,?,?,?,?,?,'User-provided expense',?,?,?,TRUE,'ACTIVE',?,?)
+                (id,expense_type,title,institution,amount,currency,destination_country,recipient_name,recipient_bank_name,
+                 recipient_bank_code,recipient_account,payment_reference,due_date,evidence_label,document_name,
+                 document_content_type,document_size,selected,lifecycle_status,created_at,updated_at)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,'User-provided expense',?,?,?,?,'ACTIVE',?,?)
                 """, id, normalizedType, cleanedTitle, cleanedInstitution, amount.setScale(2), cleanedCurrency,
-                cleanedCountry, cleanedRecipient,
-                cleanedReference, dueDate, documentName, documentContentType, documentSize,
+                cleanedCountry, cleanedRecipientName, cleanedRecipientBank, cleanedRecipientBankCode, cleanedRecipient,
+                cleanedReference, dueDate, documentName, documentContentType, documentSize, verified,
                 LocalDateTime.now(), LocalDateTime.now());
-        applySelectedCorridor(cleanedCountry, cleanedCurrency);
+        if (verified) applySelectedCorridor(cleanedCountry, cleanedCurrency);
         return id;
     }
 
     @Transactional
     public void selectExpense(int id) {
         Integer count = db.queryForObject("""
-                SELECT COUNT(*) FROM international_bills WHERE id=? AND lifecycle_status='ACTIVE'
+                SELECT COUNT(*) FROM international_bills b
+                WHERE b.id=? AND b.lifecycle_status='ACTIVE' AND EXISTS (
+                  SELECT 1 FROM school_registry r
+                  WHERE r.institution=b.institution AND r.recipient_name=b.recipient_name
+                    AND r.recipient_bank_name=b.recipient_bank_name
+                    AND r.recipient_bank_code=b.recipient_bank_code
+                    AND r.recipient_account=b.recipient_account
+                    AND r.destination_country=b.destination_country
+                    AND r.destination_currency=b.currency AND r.verification_status='VERIFIED'
+                )
                 """, Integer.class, id);
-        if (count == null || count == 0) throw new IllegalArgumentException("Student expense does not exist");
+        if (count == null || count == 0)
+            throw new IllegalArgumentException("Only an active bill with a verified beneficiary can be selected");
         db.update("UPDATE international_bills SET selected=FALSE");
         db.update("UPDATE international_bills SET selected=TRUE WHERE id=?", id);
         StudentExpense selected = selectedExpense();
@@ -425,7 +473,8 @@ public class CrossBorderService {
 
     @Transactional
     public void updateExpense(int id, String expenseType, String title, String institution, BigDecimal amount,
-                              String destinationCountry, String currency, String recipientAccount,
+                              String destinationCountry, String currency, String recipientName,
+                              String recipientBankName, String recipientBankCode, String recipientAccount,
                               String paymentReference, LocalDate dueDate) {
         StudentExpense current = expense(id);
         if (!current.active()) throw new IllegalArgumentException("Only active student bills can be edited");
@@ -441,22 +490,35 @@ public class CrossBorderService {
         String cleanedCurrency = requiredText(currency, "Destination currency", 3).toUpperCase();
         if (!corridorSupported(cleanedCountry, cleanedCurrency))
             throw new IllegalArgumentException("This demo has no configured quote data for the selected corridor");
-        String cleanedRecipient = requiredText(recipientAccount, "Recipient", 120);
+        String cleanedRecipientName = requiredText(recipientName, "Recipient legal name", 160);
+        String cleanedRecipientBank = requiredText(recipientBankName, "Recipient bank", 160);
+        String cleanedRecipientBankCode = requiredText(recipientBankCode, "SWIFT/BIC or bank routing code", 34).toUpperCase();
+        String cleanedRecipient = requiredText(recipientAccount, "Recipient account", 120);
         String cleanedReference = requiredText(paymentReference, "Payment reference", 80);
         if (amount == null || amount.signum() <= 0 || amount.scale() > 2)
             throw new IllegalArgumentException("Amount must be positive with at most two decimal places");
         if (dueDate == null) throw new IllegalArgumentException("Due date is required");
 
+        boolean verified = recipientProfileVerified(cleanedInstitution, cleanedRecipientName, cleanedRecipientBank,
+                cleanedRecipientBankCode, cleanedRecipient, cleanedCountry, cleanedCurrency);
+        Integer verifiedFallbackId = current.selected() && !verified ? fallbackExpenseId(current) : null;
         invalidatePendingPlans(id, "Student bill details changed");
         db.update("""
                 UPDATE international_bills
                 SET expense_type=?,title=?,institution=?,amount=?,currency=?,destination_country=?,
-                    recipient_account=?,payment_reference=?,due_date=?,updated_at=?
+                    recipient_name=?,recipient_bank_name=?,recipient_bank_code=?,recipient_account=?,
+                    payment_reference=?,due_date=?,updated_at=?
                 WHERE id=?
                 """, normalizedType, cleanedTitle, cleanedInstitution, amount.setScale(2), cleanedCurrency,
-                cleanedCountry, cleanedRecipient, cleanedReference, dueDate, LocalDateTime.now(), id);
+                cleanedCountry, cleanedRecipientName, cleanedRecipientBank, cleanedRecipientBankCode,
+                cleanedRecipient, cleanedReference, dueDate, LocalDateTime.now(), id);
         auditExpense("EXPENSE_UPDATED", id, "Student bill updated; all pending plans and approvals were invalidated");
-        if (current.selected()) applySelectedCorridor(cleanedCountry, cleanedCurrency);
+        if (current.selected() && verified) {
+            applySelectedCorridor(cleanedCountry, cleanedCurrency);
+        } else if (current.selected()) {
+            db.update("UPDATE international_bills SET selected=FALSE WHERE id=?", id);
+            selectExpense(verifiedFallbackId);
+        }
     }
 
     @Transactional
@@ -505,12 +567,20 @@ public class CrossBorderService {
     private Integer fallbackExpenseId(StudentExpense expense) {
         if (!expense.selected()) return null;
         List<Integer> candidates = db.query("""
-                SELECT id FROM international_bills
-                WHERE id<>? AND lifecycle_status='ACTIVE'
-                ORDER BY due_date,id FETCH FIRST 1 ROWS ONLY
+                SELECT b.id FROM international_bills b
+                WHERE b.id<>? AND b.lifecycle_status='ACTIVE' AND EXISTS (
+                  SELECT 1 FROM school_registry r
+                  WHERE r.institution=b.institution AND r.recipient_name=b.recipient_name
+                    AND r.recipient_bank_name=b.recipient_bank_name
+                    AND r.recipient_bank_code=b.recipient_bank_code
+                    AND r.recipient_account=b.recipient_account
+                    AND r.destination_country=b.destination_country
+                    AND r.destination_currency=b.currency AND r.verification_status='VERIFIED'
+                )
+                ORDER BY b.due_date,b.id FETCH FIRST 1 ROWS ONLY
                 """, (rs,n) -> rs.getInt(1), expense.id());
         if (candidates.isEmpty())
-            throw new IllegalArgumentException("Create or restore another active student bill before removing the selected bill");
+            throw new IllegalArgumentException("Create or restore another verified active student bill before removing the selected bill");
         return candidates.getFirst();
     }
 
@@ -534,6 +604,17 @@ public class CrossBorderService {
                 "USER", event, Integer.toString(expenseId), "COMPLETED", null, details);
     }
 
+    private boolean recipientProfileVerified(String institution, String recipientName, String bankName,
+                                             String bankCode, String account, String country, String currency) {
+        Integer count = db.queryForObject("""
+                SELECT COUNT(*) FROM school_registry
+                WHERE institution=? AND recipient_name=? AND recipient_bank_name=? AND recipient_bank_code=?
+                  AND recipient_account=? AND destination_country=? AND destination_currency=?
+                  AND verification_status='VERIFIED'
+                """, Integer.class, institution, recipientName, bankName, bankCode, account, country, currency);
+        return count != null && count > 0;
+    }
+
     private void applySelectedCorridor(String country, String currency) {
         db.update("""
                 UPDATE student_corridor_profile
@@ -552,18 +633,20 @@ public class CrossBorderService {
     public RecipientVerification verifyRecipient() {
         TuitionBill bill = bill();
         List<RecipientVerification> matches = db.query("""
-                SELECT institution,recipient_account,verification_status
+                SELECT institution,recipient_account,recipient_bank_name,recipient_bank_code,verification_status
                 FROM school_registry
-                WHERE institution=? AND recipient_account=? AND destination_country=? AND destination_currency=?
+                WHERE institution=? AND recipient_name=? AND recipient_bank_name=? AND recipient_bank_code=?
+                  AND recipient_account=? AND destination_country=? AND destination_currency=?
                 """, (rs,n) -> new RecipientVerification(
-                "VERIFIED".equals(rs.getString(3)), rs.getString(3),
-                "Bill institution, recipient account, corridor and currency match the verified Education Provider Registry",
-                rs.getString(1), rs.getString(2)), bill.institution(), bill.recipientAccount(),
-                bill.destinationCountry(), bill.currency());
+                "VERIFIED".equals(rs.getString(5)), rs.getString(5),
+                "Provider, beneficiary, receiving bank, account, corridor and currency match the trusted demo registry",
+                rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(4)),
+                bill.institution(), bill.recipientName(), bill.recipientBankName(), bill.recipientBankCode(),
+                bill.recipientAccount(), bill.destinationCountry(), bill.currency());
         if (matches.isEmpty()) {
             return new RecipientVerification(false, "MISMATCH",
-                    "Bill recipient is not registered for this school or education provider",
-                    null, null);
+                    "One or more beneficiary fields do not match the trusted education-provider registry",
+                    null, null, null, null);
         }
         return matches.getFirst();
     }

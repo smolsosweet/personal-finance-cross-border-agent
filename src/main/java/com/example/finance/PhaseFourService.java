@@ -252,7 +252,7 @@ public class PhaseFourService {
         ActionPlan plan=insertPlan(id,"TUITION",bill.id(),"Pay "+expense.title()+" · "+bill.paymentReference(),
                 quote.landedCost(),quote.sourceAmount(),quote.transferFee(),quote.fxMarkup(),"VND",source.accountId(),
                 quote.expectedReceived(),bill.currency(),bill.recipientAccount(),quote.channelId(),quote.quoteId(),
-                "APPROVAL",impact,"Quote, recipient and approval are rechecked before execution");
+                "APPROVAL",impact,"Quote, beneficiary profile and approval are rechecked before execution");
         auditTuitionEvidence(plan, bill, quote);
         audit("PAYMENT_SOURCE","SOURCE_ACCOUNT_SELECTED",plan.id(),"SELECTED",null,
                 source.institution()+" "+source.maskedNumber()+"; balance "+source.balance().toPlainString()+" VND");
@@ -267,10 +267,12 @@ public class PhaseFourService {
                         +bill.currency()+"; recipient "+bill.recipientAccount()+"; due "+bill.dueDate());
 
         var verification=crossBorder.verifyRecipient();
-        audit("SCHOOL_REGISTRY","RECIPIENT_VERIFICATION",plan.id(),
+        audit("EDUCATION_PROVIDER_REGISTRY","RECIPIENT_VERIFICATION",plan.id(),
                 verification.verified()?"VERIFIED":"BLOCKED",
                 verification.verified()?null:"RECIPIENT MISMATCH",
                 verification.reason()+"; registry institution "+value(verification.registryInstitution())
+                        +"; registry bank "+value(verification.registryBankName())
+                        +"; bank code "+value(verification.registryBankCode())
                         +"; registry account "+value(verification.registryAccount()));
 
         String comparison=crossBorder.rankedQuotes().stream()
@@ -712,7 +714,7 @@ public class PhaseFourService {
             case "DUPLICATE ACTION"->"The idempotency key has already produced a receipt.";
             case "CHANNEL NOT AVAILABLE"->"The selected payment channel is unavailable to the user.";
             case "FX QUOTE EXPIRED"->"The stored FX quote is expired or no longer matches the action.";
-            case "RECIPIENT MISMATCH"->"The recipient does not match the tuition bill and School Registry.";
+            case "RECIPIENT MISMATCH"->"The beneficiary profile does not match the trusted education-provider registry.";
             case "CORRIDOR NOT ALLOWED"->"The selected student-payment corridor has no configured deterministic quote data.";
             case "CURRENCY NOT ALLOWED"->"The plan currencies must match the selected expense and corridor.";
             case "SOURCE ACCOUNT NOT ELIGIBLE"->"The source account is not connected, verified, or enabled for this corridor.";

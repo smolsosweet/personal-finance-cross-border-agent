@@ -68,11 +68,20 @@ CREATE TABLE IF NOT EXISTS student_corridor_profile (
 CREATE TABLE IF NOT EXISTS school_registry (
   id INTEGER PRIMARY KEY,
   institution VARCHAR(120) NOT NULL,
+  recipient_name VARCHAR(160) NOT NULL,
+  recipient_bank_name VARCHAR(160) NOT NULL,
+  recipient_bank_code VARCHAR(34) NOT NULL,
   recipient_account VARCHAR(120) NOT NULL UNIQUE,
   destination_country VARCHAR(40) NOT NULL,
   destination_currency VARCHAR(3) NOT NULL,
   verification_status VARCHAR(20) NOT NULL
 );
+ALTER TABLE school_registry ADD COLUMN IF NOT EXISTS recipient_name VARCHAR(160) NOT NULL DEFAULT 'Not provided';
+ALTER TABLE school_registry ADD COLUMN IF NOT EXISTS recipient_bank_name VARCHAR(160) NOT NULL DEFAULT 'Not provided';
+ALTER TABLE school_registry ADD COLUMN IF NOT EXISTS recipient_bank_code VARCHAR(34) NOT NULL DEFAULT 'Not provided';
+UPDATE school_registry SET recipient_name='Shenzhen Demo University Tuition Office', recipient_bank_name='Shenzhen Demo Education Bank', recipient_bank_code='SZDUCNBSXXX' WHERE institution='Shenzhen Demo University' AND recipient_account='SZDU-TUITION-2026' AND recipient_name='Not provided';
+UPDATE school_registry SET recipient_name='Pacific Demo College Bursar', recipient_bank_name='Pacific Demo Bank', recipient_bank_code='PDCMUS33XXX' WHERE institution='Pacific Demo College' AND recipient_account='PDC-TUITION-USD' AND recipient_name='Not provided';
+UPDATE school_registry SET recipient_name='Sydney Demo Institute Fees Office', recipient_bank_name='Sydney Demo Bank', recipient_bank_code='SDIIAU2SXXX' WHERE institution='Sydney Demo Institute' AND recipient_account='SDI-TUITION-AUD' AND recipient_name='Not provided';
 
 CREATE TABLE IF NOT EXISTS international_bills (
   id INTEGER PRIMARY KEY,
@@ -82,6 +91,9 @@ CREATE TABLE IF NOT EXISTS international_bills (
   amount DECIMAL(20,2) NOT NULL,
   currency VARCHAR(3) NOT NULL,
   destination_country VARCHAR(40) NOT NULL DEFAULT 'China',
+  recipient_name VARCHAR(160) NOT NULL,
+  recipient_bank_name VARCHAR(160) NOT NULL,
+  recipient_bank_code VARCHAR(34) NOT NULL,
   recipient_account VARCHAR(120) NOT NULL,
   payment_reference VARCHAR(80) NOT NULL,
   due_date DATE NOT NULL,
@@ -97,6 +109,9 @@ CREATE TABLE IF NOT EXISTS international_bills (
 ALTER TABLE international_bills ADD COLUMN IF NOT EXISTS expense_type VARCHAR(30) NOT NULL DEFAULT 'TUITION';
 ALTER TABLE international_bills ADD COLUMN IF NOT EXISTS title VARCHAR(120) NOT NULL DEFAULT 'Tuition fee';
 ALTER TABLE international_bills ADD COLUMN IF NOT EXISTS destination_country VARCHAR(40) NOT NULL DEFAULT 'China';
+ALTER TABLE international_bills ADD COLUMN IF NOT EXISTS recipient_name VARCHAR(160) NOT NULL DEFAULT 'Not provided';
+ALTER TABLE international_bills ADD COLUMN IF NOT EXISTS recipient_bank_name VARCHAR(160) NOT NULL DEFAULT 'Not provided';
+ALTER TABLE international_bills ADD COLUMN IF NOT EXISTS recipient_bank_code VARCHAR(34) NOT NULL DEFAULT 'Not provided';
 ALTER TABLE international_bills ADD COLUMN IF NOT EXISTS document_name VARCHAR(255);
 ALTER TABLE international_bills ADD COLUMN IF NOT EXISTS document_content_type VARCHAR(100);
 ALTER TABLE international_bills ADD COLUMN IF NOT EXISTS document_size BIGINT;
@@ -104,10 +119,24 @@ ALTER TABLE international_bills ADD COLUMN IF NOT EXISTS selected BOOLEAN NOT NU
 ALTER TABLE international_bills ADD COLUMN IF NOT EXISTS lifecycle_status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE';
 ALTER TABLE international_bills ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
 ALTER TABLE international_bills ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
-UPDATE international_bills
-SET selected=TRUE
-WHERE id=(SELECT MIN(id) FROM international_bills)
-  AND NOT EXISTS (SELECT 1 FROM international_bills WHERE selected=TRUE);
+UPDATE international_bills SET recipient_name='Shenzhen Demo University Tuition Office', recipient_bank_name='Shenzhen Demo Education Bank', recipient_bank_code='SZDUCNBSXXX' WHERE institution='Shenzhen Demo University' AND recipient_account='SZDU-TUITION-2026' AND recipient_name='Not provided';
+UPDATE international_bills SET recipient_name='Pacific Demo College Bursar', recipient_bank_name='Pacific Demo Bank', recipient_bank_code='PDCMUS33XXX' WHERE institution='Pacific Demo College' AND recipient_account='PDC-TUITION-USD' AND recipient_name='Not provided';
+UPDATE international_bills SET recipient_name='Sydney Demo Institute Fees Office', recipient_bank_name='Sydney Demo Bank', recipient_bank_code='SDIIAU2SXXX' WHERE institution='Sydney Demo Institute' AND recipient_account='SDI-TUITION-AUD' AND recipient_name='Not provided';
+UPDATE international_bills b SET selected=FALSE WHERE b.selected=TRUE AND NOT EXISTS (
+  SELECT 1 FROM school_registry r WHERE r.institution=b.institution AND r.recipient_name=b.recipient_name
+    AND r.recipient_bank_name=b.recipient_bank_name AND r.recipient_bank_code=b.recipient_bank_code
+    AND r.recipient_account=b.recipient_account AND r.destination_country=b.destination_country
+    AND r.destination_currency=b.currency AND r.verification_status='VERIFIED'
+);
+UPDATE international_bills SET selected=TRUE WHERE id=(
+  SELECT MIN(b.id) FROM international_bills b WHERE b.lifecycle_status='ACTIVE' AND EXISTS (
+    SELECT 1 FROM school_registry r WHERE r.institution=b.institution AND r.recipient_name=b.recipient_name
+      AND r.recipient_bank_name=b.recipient_bank_name AND r.recipient_bank_code=b.recipient_bank_code
+      AND r.recipient_account=b.recipient_account AND r.destination_country=b.destination_country
+      AND r.destination_currency=b.currency AND r.verification_status='VERIFIED'
+  )
+) AND NOT EXISTS (SELECT 1 FROM international_bills WHERE selected=TRUE);
+
 
 CREATE TABLE IF NOT EXISTS payment_channels (
   id VARCHAR(30) PRIMARY KEY,

@@ -35,7 +35,8 @@ class StudentExpenseIntegrationTest {
     @Test void manualExpenseBecomesSelectedAndRecalculatesQuotes() {
         int id = crossBorder.addExpense("DORMITORY", "Dormitory deposit",
                 CrossBorderService.SCHOOL_NAME, new BigDecimal("2500.00"),
-                "China", "CNY", CrossBorderService.SCHOOL_RECIPIENT,
+                "China", "CNY", CrossBorderService.SCHOOL_RECIPIENT_NAME, CrossBorderService.SCHOOL_RECIPIENT_BANK,
+                CrossBorderService.SCHOOL_RECIPIENT_BANK_CODE, CrossBorderService.SCHOOL_RECIPIENT,
                 "DORM-2026-MINH", LocalDate.now().plusDays(20),
                 null, null, null);
 
@@ -68,6 +69,9 @@ class StudentExpenseIntegrationTest {
                         .param("amount", "2500.00")
                         .param("destinationCountry", "China")
                         .param("currency", "CNY")
+                        .param("recipientName", CrossBorderService.SCHOOL_RECIPIENT_NAME)
+                        .param("recipientBankName", CrossBorderService.SCHOOL_RECIPIENT_BANK)
+                        .param("recipientBankCode", CrossBorderService.SCHOOL_RECIPIENT_BANK_CODE)
                         .param("recipientAccount", CrossBorderService.SCHOOL_RECIPIENT)
                         .param("paymentReference", "DORM-2026-MINH")
                         .param("dueDate", LocalDate.now().plusDays(20).toString()))
@@ -85,18 +89,21 @@ class StudentExpenseIntegrationTest {
     @Test void invalidExpenseAndUnsafeDocumentTypeAreRejected() {
         assertThrows(IllegalArgumentException.class, () -> crossBorder.addExpense(
                 "UNKNOWN", "Unknown fee", CrossBorderService.SCHOOL_NAME, BigDecimal.ONE,
-                "China", "CNY", CrossBorderService.SCHOOL_RECIPIENT,
+                "China", "CNY", CrossBorderService.SCHOOL_RECIPIENT_NAME, CrossBorderService.SCHOOL_RECIPIENT_BANK,
+                CrossBorderService.SCHOOL_RECIPIENT_BANK_CODE, CrossBorderService.SCHOOL_RECIPIENT,
                 "REF", LocalDate.now().plusDays(1), null, null, null));
         assertThrows(IllegalArgumentException.class, () -> crossBorder.addExpense(
                 "OTHER", "Unknown fee", CrossBorderService.SCHOOL_NAME, BigDecimal.ONE,
-                "China", "CNY", CrossBorderService.SCHOOL_RECIPIENT,
+                "China", "CNY", CrossBorderService.SCHOOL_RECIPIENT_NAME, CrossBorderService.SCHOOL_RECIPIENT_BANK,
+                CrossBorderService.SCHOOL_RECIPIENT_BANK_CODE, CrossBorderService.SCHOOL_RECIPIENT,
                 "REF", LocalDate.now().plusDays(1),
                 "unsafe.exe", "application/octet-stream", 10L));
     }
 
     @Test void selectedUsExpenseDrivesCorridorQuotesPlanAndSandboxCurrency() {
         crossBorder.addExpense("TUITION", "Fall tuition", CrossBorderService.US_SCHOOL_NAME,
-                new BigDecimal("2500.00"), "United States", "USD",
+                new BigDecimal("2500.00"), "United States", "USD", CrossBorderService.US_SCHOOL_RECIPIENT_NAME,
+                CrossBorderService.US_SCHOOL_RECIPIENT_BANK, CrossBorderService.US_SCHOOL_RECIPIENT_BANK_CODE,
                 CrossBorderService.US_SCHOOL_RECIPIENT, "PDC-2026-MINH", LocalDate.now().plusDays(20),
                 null, null, null);
 
@@ -117,9 +124,22 @@ class StudentExpenseIntegrationTest {
         assertEquals(0, new BigDecimal("2500.00").compareTo(receipt.cnyCredit()));
     }
 
+    @Test void mismatchedBeneficiaryIsStoredForReviewButCannotBeSelected() {
+        int id = crossBorder.addExpense("OTHER", "Unverified provider fee",
+                "Unknown Education Provider", new BigDecimal("300.00"), "China", "CNY",
+                "Unknown Recipient", "Unknown Bank", "UNKNOWNCODE", "UNKNOWN-ACCOUNT",
+                "UNKNOWN-REF", LocalDate.now().plusDays(10), null, null, null);
+
+        var stored = expense(id);
+        assertEquals("MISMATCH", stored.verificationStatus());
+        assertFalse(stored.selected());
+        assertEquals(1, crossBorder.selectedExpense().id());
+        assertThrows(IllegalArgumentException.class, () -> crossBorder.selectExpense(id));
+    }
     @Test void editingBillInvalidatesItsPendingPlanAndApprovalPath() {
         int id = crossBorder.addExpense("DORMITORY", "Dormitory deposit",
-                CrossBorderService.SCHOOL_NAME, new BigDecimal("2500.00"), "China", "CNY",
+                CrossBorderService.SCHOOL_NAME, new BigDecimal("2500.00"), "China", "CNY", CrossBorderService.SCHOOL_RECIPIENT_NAME,
+                CrossBorderService.SCHOOL_RECIPIENT_BANK, CrossBorderService.SCHOOL_RECIPIENT_BANK_CODE,
                 CrossBorderService.SCHOOL_RECIPIENT, "DORM-EDIT-1", LocalDate.now().plusDays(20),
                 null, null, null);
         var plan = phaseFour.createTuitionPlan("BANK_A");
@@ -127,7 +147,8 @@ class StudentExpenseIntegrationTest {
         assertEquals("AWAITING_APPROVAL", plan.status());
 
         crossBorder.updateExpense(id, "DORMITORY", "Updated dormitory deposit",
-                CrossBorderService.SCHOOL_NAME, new BigDecimal("2600.00"), "China", "CNY",
+                CrossBorderService.SCHOOL_NAME, new BigDecimal("2600.00"), "China", "CNY", CrossBorderService.SCHOOL_RECIPIENT_NAME,
+                CrossBorderService.SCHOOL_RECIPIENT_BANK, CrossBorderService.SCHOOL_RECIPIENT_BANK_CODE,
                 CrossBorderService.SCHOOL_RECIPIENT, "DORM-EDIT-2", LocalDate.now().plusDays(21));
 
         assertEquals("INVALIDATED", phaseFour.action(plan.id()).status());
@@ -139,7 +160,8 @@ class StudentExpenseIntegrationTest {
 
     @Test void activeBillCanBeArchivedRestoredAndCancelled() {
         int id = crossBorder.addExpense("INSURANCE", "Student insurance",
-                CrossBorderService.SCHOOL_NAME, new BigDecimal("500.00"), "China", "CNY",
+                CrossBorderService.SCHOOL_NAME, new BigDecimal("500.00"), "China", "CNY", CrossBorderService.SCHOOL_RECIPIENT_NAME,
+                CrossBorderService.SCHOOL_RECIPIENT_BANK, CrossBorderService.SCHOOL_RECIPIENT_BANK_CODE,
                 CrossBorderService.SCHOOL_RECIPIENT, "INS-1", LocalDate.now().plusDays(25),
                 null, null, null);
         var plan = phaseFour.createTuitionPlan("BANK_A");
@@ -158,7 +180,8 @@ class StudentExpenseIntegrationTest {
 
     @Test void executedBillCannotBeEditedOrCancelledButCanBeArchived() {
         int id = crossBorder.addExpense("TUITION", "Paid tuition",
-                CrossBorderService.US_SCHOOL_NAME, new BigDecimal("1000.00"), "United States", "USD",
+                CrossBorderService.US_SCHOOL_NAME, new BigDecimal("1000.00"), "United States", "USD", CrossBorderService.US_SCHOOL_RECIPIENT_NAME,
+                CrossBorderService.US_SCHOOL_RECIPIENT_BANK, CrossBorderService.US_SCHOOL_RECIPIENT_BANK_CODE,
                 CrossBorderService.US_SCHOOL_RECIPIENT, "PAID-1", LocalDate.now().plusDays(30),
                 null, null, null);
         var plan = phaseFour.createTuitionPlan("BANK_A");
@@ -168,7 +191,9 @@ class StudentExpenseIntegrationTest {
 
         assertThrows(IllegalArgumentException.class, () -> crossBorder.updateExpense(id, "TUITION",
                 "Changed paid tuition", CrossBorderService.US_SCHOOL_NAME, new BigDecimal("1100.00"),
-                "United States", "USD", CrossBorderService.US_SCHOOL_RECIPIENT,
+                "United States", "USD", CrossBorderService.US_SCHOOL_RECIPIENT_NAME,
+                CrossBorderService.US_SCHOOL_RECIPIENT_BANK, CrossBorderService.US_SCHOOL_RECIPIENT_BANK_CODE,
+                CrossBorderService.US_SCHOOL_RECIPIENT,
                 "PAID-CHANGED", LocalDate.now().plusDays(31)));
         assertThrows(IllegalArgumentException.class, () -> crossBorder.cancelExpense(id));
 

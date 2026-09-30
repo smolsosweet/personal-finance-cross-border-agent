@@ -193,6 +193,9 @@ public class PhaseOneController {
                                     @RequestParam BigDecimal amount,
                                     @RequestParam String destinationCountry,
                                     @RequestParam String currency,
+                                    @RequestParam String recipientName,
+                                    @RequestParam String recipientBankName,
+                                    @RequestParam String recipientBankCode,
                                     @RequestParam String recipientAccount,
                                     @RequestParam String paymentReference,
                                     @RequestParam LocalDate dueDate,
@@ -207,8 +210,9 @@ public class PhaseOneController {
             size = document.getSize();
         }
         int id = crossBorder.addExpense(expenseType, title, institution, amount, destinationCountry,
-                currency, recipientAccount, paymentReference, dueDate, fileName, contentType, size);
-        flash.addFlashAttribute("message", "Student expense added and selected for comparison: #" + id);
+                currency, recipientName, recipientBankName, recipientBankCode, recipientAccount,
+                paymentReference, dueDate, fileName, contentType, size);
+        flash.addFlashAttribute("message", "Student bill added: #" + id + ". Only a verified beneficiary can be selected for comparison.");
         return "redirect:/#student-finance";
     }
 
@@ -227,12 +231,16 @@ public class PhaseOneController {
                                      @RequestParam BigDecimal amount,
                                      @RequestParam String destinationCountry,
                                      @RequestParam String currency,
+                                     @RequestParam String recipientName,
+                                     @RequestParam String recipientBankName,
+                                     @RequestParam String recipientBankCode,
                                      @RequestParam String recipientAccount,
                                      @RequestParam String paymentReference,
                                      @RequestParam LocalDate dueDate,
                                      RedirectAttributes flash) {
         crossBorder.updateExpense(id, expenseType, title, institution, amount, destinationCountry,
-                currency, recipientAccount, paymentReference, dueDate);
+                currency, recipientName, recipientBankName, recipientBankCode, recipientAccount,
+                paymentReference, dueDate);
         flash.addFlashAttribute("message", "Student bill updated. Pending plans and approvals were invalidated.");
         return "redirect:/#student-finance";
     }

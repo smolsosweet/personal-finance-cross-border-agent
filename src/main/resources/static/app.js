@@ -125,6 +125,53 @@ const translationsVi = new Map(Object.entries({
   'Demo accounts': 'Tài khoản demo',
   'CROSS BORDER STUDENT FINANCE · SYNTHETIC DATA': 'TÀI CHÍNH DU HỌC XUYÊN BIÊN GIỚI · DỮ LIỆU MÔ PHỎNG',
   'Study expense planning': 'Lập kế hoạch chi phí du học',
+  'EDUCATION BILLS': 'HÓA ĐƠN GIÁO DỤC',
+  'Manage and verify provider bills': 'Quản lý và xác minh hóa đơn nhà cung cấp',
+  'Verification belongs to each bill. Select a verified active bill before comparing payment channels.': 'Mỗi hóa đơn có trạng thái xác minh riêng. Hãy chọn hóa đơn đang hoạt động và đã xác minh trước khi so sánh kênh thanh toán.',
+  'Search': 'Tìm kiếm',
+  'Bill, provider, reference or beneficiary': 'Hóa đơn, nhà cung cấp, mã tham chiếu hoặc người thụ hưởng',
+  'Status': 'Trạng thái',
+  'All statuses': 'Tất cả trạng thái',
+  'Active': 'Đang hoạt động',
+  'Paid': 'Đã thanh toán',
+  'Archived': 'Đã lưu trữ',
+  'Cancelled': 'Đã hủy',
+  'Verification': 'Xác minh',
+  'All verification states': 'Tất cả trạng thái xác minh',
+  'Verified beneficiary': 'Người thụ hưởng đã xác minh',
+  'Needs verification': 'Cần xác minh',
+  'Sort': 'Sắp xếp',
+  'Due date: nearest': 'Hạn gần nhất',
+  'Newest added': 'Mới thêm gần đây',
+  'Amount: highest': 'Số tiền cao nhất',
+  'Provider: A–Z': 'Nhà cung cấp: A–Z',
+  'Clear filters': 'Xóa bộ lọc',
+  'Bill and provider': 'Hóa đơn và nhà cung cấp',
+  'Beneficiary': 'Người thụ hưởng',
+  'Amount and due date': 'Số tiền và hạn thanh toán',
+  'State': 'Tình trạng',
+  'Actions': 'Thao tác',
+  'VERIFIED BENEFICIARY': 'NGƯỜI THỤ HƯỞNG ĐÃ XÁC MINH',
+  'NEEDS VERIFICATION': 'CẦN XÁC MINH',
+  'Only verified active bills can be selected for comparison.': 'Chỉ hóa đơn đang hoạt động và đã xác minh mới có thể được chọn để so sánh.',
+  'No education bills match these filters.': 'Không có hóa đơn giáo dục phù hợp với bộ lọc.',
+  'Beneficiary legal name': 'Tên pháp lý của người thụ hưởng',
+  'Receiving bank or payment provider': 'Ngân hàng nhận hoặc nhà cung cấp thanh toán',
+  'SWIFT/BIC or bank routing code': 'Mã SWIFT/BIC hoặc mã định tuyến ngân hàng',
+  'Beneficiary account / provider ID': 'Tài khoản người thụ hưởng / mã nhà cung cấp',
+  'Receiving bank': 'Ngân hàng nhận',
+  'SWIFT/BIC or routing': 'SWIFT/BIC hoặc mã định tuyến',
+  'Recipient account': 'Tài khoản nhận',
+  'TRUSTED EDUCATION BENEFICIARY REGISTRY · SYNTHETIC': 'DANH BẠ NGƯỜI THỤ HƯỞNG GIÁO DỤC ĐÁNG TIN CẬY · MÔ PHỎNG',
+  'Beneficiary verified': 'Đã xác minh người thụ hưởng',
+  'Beneficiary mismatch': 'Người thụ hưởng không khớp',
+  'No matching trusted beneficiary profile': 'Không có hồ sơ người thụ hưởng đáng tin cậy khớp',
+  'Provider, beneficiary, receiving bank, account, corridor and currency match the trusted demo registry': 'Nhà cung cấp, người thụ hưởng, ngân hàng nhận, tài khoản, hành lang và tiền tệ khớp danh bạ demo đáng tin cậy',
+  'One or more beneficiary fields do not match the trusted education-provider registry': 'Một hoặc nhiều trường người thụ hưởng không khớp danh bạ nhà cung cấp giáo dục đáng tin cậy',
+  'School or education provider': 'Trường hoặc nhà cung cấp giáo dục',
+  'Add and verify bill': 'Thêm và xác minh hóa đơn',
+  'Enter beneficiary details from the official bill or authenticated provider portal. The demo verifies them against a synthetic trusted registry; it does not contact the bank or school.': 'Nhập thông tin người thụ hưởng từ hóa đơn chính thức hoặc cổng nhà cung cấp đã xác thực. Bản demo đối chiếu với danh bạ mô phỏng đáng tin cậy và không liên hệ ngân hàng hoặc trường.',
+  'Changing the bill or beneficiary invalidates every pending plan and approval linked to the previous details.': 'Thay đổi hóa đơn hoặc người thụ hưởng sẽ vô hiệu mọi kế hoạch và phê duyệt đang chờ gắn với thông tin cũ.',
   'This tab is only for bills issued by a verified school or education provider. Personal transfers to friends or family belong to the future Transfers module.': 'Tab này chỉ dành cho hóa đơn do trường hoặc nhà cung cấp giáo dục đã xác minh phát hành. Chuyển tiền cho bạn bè hoặc người thân thuộc module Chuyển tiền trong tương lai.',
   '+ Add student bill': '+ Thêm hóa đơn du học',
   'Manage several student bills, verify the selected recipient and compare simulated payment channels. No provider API or real payment is connected.': 'Quản lý nhiều khoản phí du học, xác minh người nhận của khoản đang chọn và so sánh các kênh thanh toán mô phỏng. Không kết nối API nhà cung cấp hoặc tiền thật.',
@@ -450,6 +497,7 @@ const tabAnchors = {
 };
 let activeTab = 'dashboard';
 let renderTransactionList = () => {};
+let renderStudentBillList = () => {};
 let renderPaymentAccounts = () => {};
 let renderQuoteExpiryStatuses = () => {};
 
@@ -600,6 +648,88 @@ function initializeTransactionList() {
   render();
 }
 
+function initializeStudentBillList() {
+  const list = document.querySelector('[data-testid="student-expense-list"]');
+  if (!list) return;
+  const rows = Array.from(list.querySelectorAll('[data-bill-row]'));
+  const search = document.querySelector('[data-testid="student-bill-search"]');
+  const status = document.querySelector('[data-testid="student-bill-status-filter"]');
+  const verification = document.querySelector('[data-testid="student-bill-verification-filter"]');
+  const sort = document.querySelector('[data-testid="student-bill-sort"]');
+  const clear = document.querySelector('[data-testid="student-bill-clear"]');
+  const previous = document.querySelector('[data-testid="student-bill-prev"]');
+  const next = document.querySelector('[data-testid="student-bill-next"]');
+  const count = document.querySelector('[data-testid="student-bill-visible-count"]');
+  const pageLabel = document.querySelector('[data-testid="student-bill-page"]');
+  const empty = document.querySelector('[data-testid="student-bill-empty"]');
+  const pageSize = 5;
+  let page = 1;
+
+  const matchesStatus = (row) => {
+    if (status.value === 'ALL') return true;
+    if (status.value === 'PAID') return row.dataset.billStatus === 'PAID';
+    if (status.value === 'ACTIVE') {
+      return row.dataset.billLifecycle === 'ACTIVE' && row.dataset.billStatus !== 'PAID';
+    }
+    return row.dataset.billLifecycle === status.value;
+  };
+
+  const render = () => {
+    const query = search.value.trim().toLowerCase();
+    let matches = rows.filter((row) =>
+      (!query || row.textContent.toLowerCase().includes(query))
+      && matchesStatus(row)
+      && (verification.value === 'ALL' || row.dataset.billVerification === verification.value));
+
+    if (sort.value === 'newest') {
+      matches.sort((left, right) => right.dataset.billCreated.localeCompare(left.dataset.billCreated));
+    } else if (sort.value === 'amount-desc') {
+      matches.sort((left, right) => Number(right.dataset.billAmount) - Number(left.dataset.billAmount));
+    } else if (sort.value === 'provider-asc') {
+      matches.sort((left, right) => left.dataset.billProvider.localeCompare(right.dataset.billProvider));
+    } else {
+      matches.sort((left, right) => left.dataset.billDue.localeCompare(right.dataset.billDue));
+    }
+    matches.forEach((row) => list.append(row));
+
+    const pages = Math.max(1, Math.ceil(matches.length / pageSize));
+    page = Math.min(page, pages);
+    const start = (page - 1) * pageSize;
+    const visibleRows = new Set(matches.slice(start, start + pageSize));
+    rows.forEach((row) => { row.hidden = !visibleRows.has(row); });
+
+    const vietnamese = selectedLanguage() === 'vi';
+    count.textContent = vietnamese
+      ? `${matches.length} hóa đơn phù hợp`
+      : `${matches.length} matching bills`;
+    pageLabel.textContent = vietnamese
+      ? `Trang ${page} / ${pages}`
+      : `Page ${page} of ${pages}`;
+    empty.hidden = matches.length !== 0;
+    previous.disabled = page === 1;
+    next.disabled = page === pages;
+  };
+
+  [search, status, verification, sort].forEach((control) => {
+    control.addEventListener(control === search ? 'input' : 'change', () => {
+      page = 1;
+      render();
+    });
+  });
+  clear.addEventListener('click', () => {
+    search.value = '';
+    status.value = 'ALL';
+    verification.value = 'ALL';
+    sort.value = 'due-asc';
+    page = 1;
+    render();
+  });
+  previous.addEventListener('click', () => { page -= 1; render(); });
+  next.addEventListener('click', () => { page += 1; render(); });
+
+  renderStudentBillList = render;
+  render();
+}
 function initializeCategoryReviewForms() {
   document.querySelectorAll('[data-category-review]').forEach((form) => {
     const select = form.querySelector('[data-category-select]');
@@ -646,14 +776,20 @@ function initializeStudentExpenseCorridor() {
     const select = form.querySelector('[data-corridor-select]');
     const currency = form.querySelector('[data-corridor-currency]');
     const institution = form.querySelector('[data-corridor-institution]');
+    const recipientName = form.querySelector('[data-corridor-recipient-name]');
+    const bankName = form.querySelector('[data-corridor-bank-name]');
+    const bankCode = form.querySelector('[data-corridor-bank-code]');
     const recipient = form.querySelector('[data-corridor-recipient]');
-    if (!select || !currency || !institution || !recipient) return;
+    if (!select || !currency || !institution || !recipientName || !bankName || !bankCode || !recipient) return;
     const render = (replaceProvider) => {
       const option = select.selectedOptions[0];
       if (!option) return;
       currency.value = option.dataset.currency;
       if (replaceProvider) {
         institution.value = option.dataset.institution;
+        recipientName.value = option.dataset.recipientName;
+        bankName.value = option.dataset.bankName;
+        bankCode.value = option.dataset.bankCode;
         recipient.value = option.dataset.recipient;
       }
     };
@@ -717,6 +853,9 @@ function translateDynamic(text) {
     [/^(\d+) pending$/, '$1 mục cần xử lý'],
     [/^(\d+) bill\(s\)$/, '$1 khoản phí'],
     [/^Due (.+)$/, 'Hạn $1'],
+    [/^Reference · (.+)$/, 'Mã tham chiếu · $1'],
+    [/^Account · (.+)$/, 'Tài khoản · $1'],
+    [/^Attachment · (.+)$/, 'File đính kèm · $1'],
     [/^Attachment: (.+)$/, 'File đính kèm: $1'],
     [/^(\d+) transaction\(s\) · Active$/, '$1 giao dịch · Đang dùng'],
     [/^(\d+) transaction\(s\) · Archived$/, '$1 giao dịch · Đã lưu trữ'],
@@ -808,6 +947,7 @@ function applyLanguage(language) {
   });
   updateActiveTabLabel(selected);
   renderTransactionList();
+  renderStudentBillList();
   renderPaymentAccounts();
   renderQuoteExpiryStatuses();
 }
@@ -819,6 +959,7 @@ document.addEventListener('DOMContentLoaded', () => {
   activateTab(initialTab(), false);
   requestAnimationFrame(() => window.scrollTo({ top: 0 }));
   initializeTransactionList();
+  initializeStudentBillList();
   initializeCategoryReviewForms();
   initializePaymentAccounts();
   initializeStudentExpenseCorridor();
