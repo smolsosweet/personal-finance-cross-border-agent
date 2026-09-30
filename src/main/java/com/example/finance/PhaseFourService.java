@@ -230,11 +230,12 @@ public class PhaseFourService {
         var quote=crossBorder.rankedQuotes().stream().filter(q->q.channelId().equals(channelId))
                 .findFirst().orElseThrow(()->new IllegalArgumentException("Unknown payment channel"));
         var bill=crossBorder.bill();
+        var expense=crossBorder.selectedExpense();
         String id=newId("ACT");
         String impact="Debit "+quote.landedCost().toPlainString()+" VND; convert "
                 +quote.sourceAmount().toPlainString()+" VND; credit "
                 +quote.expectedReceived().toPlainString()+" CNY";
-        ActionPlan plan=insertPlan(id,"TUITION","Pay tuition bill "+bill.paymentReference(),
+        ActionPlan plan=insertPlan(id,"TUITION","Pay "+expense.title()+" · "+bill.paymentReference(),
                 quote.landedCost(),quote.sourceAmount(),quote.transferFee(),quote.fxMarkup(),"VND",source.accountId(),
                 quote.expectedReceived(),"CNY",bill.recipientAccount(),quote.channelId(),quote.quoteId(),
                 "APPROVAL",impact,"Quote, recipient and approval are rechecked before execution");

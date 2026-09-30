@@ -76,14 +76,32 @@ CREATE TABLE IF NOT EXISTS school_registry (
 
 CREATE TABLE IF NOT EXISTS international_bills (
   id INTEGER PRIMARY KEY,
+  expense_type VARCHAR(30) NOT NULL DEFAULT 'TUITION',
+  title VARCHAR(120) NOT NULL DEFAULT 'Tuition fee',
   institution VARCHAR(120) NOT NULL,
   amount DECIMAL(20,2) NOT NULL,
   currency VARCHAR(3) NOT NULL,
   recipient_account VARCHAR(120) NOT NULL,
   payment_reference VARCHAR(80) NOT NULL,
   due_date DATE NOT NULL,
-  evidence_label VARCHAR(120) NOT NULL
+  evidence_label VARCHAR(120) NOT NULL,
+  document_name VARCHAR(255),
+  document_content_type VARCHAR(100),
+  document_size BIGINT,
+  selected BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+ALTER TABLE international_bills ADD COLUMN IF NOT EXISTS expense_type VARCHAR(30) NOT NULL DEFAULT 'TUITION';
+ALTER TABLE international_bills ADD COLUMN IF NOT EXISTS title VARCHAR(120) NOT NULL DEFAULT 'Tuition fee';
+ALTER TABLE international_bills ADD COLUMN IF NOT EXISTS document_name VARCHAR(255);
+ALTER TABLE international_bills ADD COLUMN IF NOT EXISTS document_content_type VARCHAR(100);
+ALTER TABLE international_bills ADD COLUMN IF NOT EXISTS document_size BIGINT;
+ALTER TABLE international_bills ADD COLUMN IF NOT EXISTS selected BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE international_bills ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+UPDATE international_bills
+SET selected=TRUE
+WHERE id=(SELECT MIN(id) FROM international_bills)
+  AND NOT EXISTS (SELECT 1 FROM international_bills WHERE selected=TRUE);
 
 CREATE TABLE IF NOT EXISTS payment_channels (
   id VARCHAR(30) PRIMARY KEY,

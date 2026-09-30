@@ -14,7 +14,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import java.time.LocalDate;
 
 @Controller
 public class PhaseOneController {
@@ -56,6 +58,8 @@ public class PhaseOneController {
         model.addAttribute("insights", insights);
         model.addAttribute("studentProfile", crossBorder.profile());
         model.addAttribute("tuitionBill", crossBorder.bill());
+        model.addAttribute("studentExpenses", crossBorder.expenses());
+        model.addAttribute("selectedExpense", crossBorder.selectedExpense());
         model.addAttribute("recipientVerification", crossBorder.verifyRecipient());
         var channelQuotes = crossBorder.rankedQuotes();
         var eligibleQuotes = channelQuotes.stream().filter(CrossBorderService.ChannelQuote::eligible).toList();
@@ -176,6 +180,44 @@ public class PhaseOneController {
         PhaseFourService.PaymentSourceAccount selected = phaseFour.selectPaymentSource(account);
         flash.addFlashAttribute("message", "Payment source changed to " + selected.displayName() + ".");
         return "redirect:/#student-finance";
+    }
+
+    @PostMapping("/student/expenses")
+    public String addStudentExpense(@RequestParam String expenseType,
+                                    @RequestParam String title,
+                                    @RequestParam String institution,
+                                    @RequestParam BigDecimal amount,
+                                    @RequestParam String recipientAccount,
+                                    @RequestParam String paymentReference,
+                                    @RequestParam LocalDate dueDate,
+                                    @RequestParam(required=false) MultipartFile document,
+                                    RedirectAttributes flash) {
+        String fileName = null;
+        String contentType = null;
+        Long size = null;
+        if (document != null && !document.isEmpty()) {
+            fileName = safeFileName(document.getOriginalFilename());
+            contentType = document.getContentType();
+            size = document.getSize();
+        }
+        int id = crossBorder.addExpense(expenseType, title, institution, amount, recipientAccount,
+                paymentReference, dueDate, fileName, contentType, size);
+        flash.addFlashAttribute("message", "Student expense added and selected for comparison: #" + id);
+        return "redirect:/#student-finance";
+    }
+
+    @PostMapping("/student/expenses/select")
+    public String selectStudentExpense(@RequestParam int id, RedirectAttributes flash) {
+        crossBorder.selectExpense(id);
+        flash.addFlashAttribute("message", "Selected student expense updated. Channel costs were recalculated.");
+        return "redirect:/#student-finance";
+    }
+
+    private String safeFileName(String originalName) {
+        if (originalName == null || originalName.isBlank()) return "attachment";
+        String normalized = originalName.replace('\\', '/');
+        String fileName = normalized.substring(normalized.lastIndexOf('/') + 1).trim();
+        return fileName.isBlank() ? "attachment" : fileName.substring(0, Math.min(fileName.length(), 255));
     }
 
     @PostMapping("/agent/message")

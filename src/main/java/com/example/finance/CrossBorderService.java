@@ -35,6 +35,12 @@ public class CrossBorderService {
                               String recipientAccount, String paymentReference, LocalDate dueDate,
                               String evidenceLabel) {}
 
+    public record StudentExpense(int id, String expenseType, String title, String institution,
+                                 BigDecimal amount, String currency, String recipientAccount,
+                                 String paymentReference, LocalDate dueDate, String evidenceLabel,
+                                 String documentName, String documentContentType, Long documentSize,
+                                 boolean selected, LocalDateTime createdAt) {}
+
     public record RecipientVerification(boolean verified, String status, String reason,
                                         String registryInstitution, String registryAccount) {}
 
@@ -93,10 +99,11 @@ public class CrossBorderService {
                 """, SCHOOL_NAME, SCHOOL_RECIPIENT);
         db.update("""
                 INSERT INTO international_bills
-                (id,institution,amount,currency,recipient_account,payment_reference,due_date,evidence_label)
-                VALUES (1,?,?,?,?,?,?,'Synthetic tuition bill')
+                (id,expense_type,title,institution,amount,currency,recipient_account,payment_reference,due_date,
+                 evidence_label,document_name,document_content_type,document_size,selected,created_at)
+                VALUES (1,'TUITION','Tuition fee',?,?,?,?,?,?,'Synthetic tuition bill',NULL,NULL,NULL,TRUE,?)
                 """, SCHOOL_NAME, TUITION_AMOUNT, "CNY", SCHOOL_RECIPIENT,
-                "SZDU-2026-MINH", LocalDate.now().plusDays(14));
+                "SZDU-2026-MINH", LocalDate.now().plusDays(14), LocalDateTime.now());
 
         insertChannel("ALIPAY", "Alipay Student Payment", "ALIPAY_VND", true,
                 "Student profile includes an eligible Alipay education account",
@@ -192,10 +199,13 @@ public class CrossBorderService {
 
     public Map<String,Object> tuitionInsight() {
         TuitionBill tuition = bill();
+        StudentExpense expense = selectedExpense();
         RecipientVerification verification = verifyRecipient();
         ChannelQuote option = rankedQuotes("CHEAPER").stream()
                 .filter(ChannelQuote::eligible).findFirst().orElse(null);
-        String title = "Tuition payment needs a controlled plan";
+        String title = "TUITION".equals(expense.expenseType())
+                ? "Tuition payment needs a controlled plan"
+                : expense.title() + " needs a controlled plan";
         String message = verification.verified()
                 ? "Bill " + tuition.paymentReference() + " for " + tuition.amount().toPlainString()
                         + " CNY is verified, due " + tuition.dueDate() + ", with latest safe date "
@@ -210,13 +220,16 @@ public class CrossBorderService {
 
     public Map<String,Object> tuitionInsightForPlan(String channelId, String quoteId, BigDecimal landedCost) {
         TuitionBill tuition = bill();
+        StudentExpense expense = selectedExpense();
         RecipientVerification verification = verifyRecipient();
         ChannelQuote option = rankedQuotes().stream()
                 .filter(quote -> quote.channelId().equals(channelId))
                 .findFirst().orElse(null);
         if (option == null) return tuitionInsight();
 
-        String title = "Selected tuition plan is ready for review";
+        String title = "TUITION".equals(expense.expenseType())
+                ? "Selected tuition plan is ready for review"
+                : "Selected " + expense.title() + " plan is ready for review";
         String message = verification.verified()
                 ? "Selected plan uses " + option.displayName() + " for bill " + tuition.paymentReference()
                         + " of " + tuition.amount().toPlainString() + " CNY, due " + tuition.dueDate()
@@ -235,10 +248,74 @@ public class CrossBorderService {
     public TuitionBill bill() {
         return db.queryForObject("""
                 SELECT id,institution,amount,currency,recipient_account,payment_reference,due_date,evidence_label
-                FROM international_bills WHERE id=1
+                FROM international_bills WHERE selected=TRUE ORDER BY id LIMIT 1
                 """, (rs,n) -> new TuitionBill(rs.getInt(1), rs.getString(2), rs.getBigDecimal(3),
                 rs.getString(4), rs.getString(5), rs.getString(6), rs.getObject(7, LocalDate.class),
                 rs.getString(8)));
+    }
+
+    public List<StudentExpense> expenses() {
+        return db.query("""
+                SELECT id,expense_type,title,institution,amount,currency,recipient_account,payment_reference,
+                       due_date,evidence_label,document_name,document_content_type,document_size,selected,created_at
+                FROM international_bills
+                ORDER BY selected DESC,due_date,id
+                """, (rs,n) -> new StudentExpense(rs.getInt(1), rs.getString(2), rs.getString(3), rs.getString(4),
+                rs.getBigDecimal(5), rs.getString(6), rs.getString(7), rs.getString(8),
+                rs.getObject(9, LocalDate.class), rs.getString(10), rs.getString(11), rs.getString(12),
+                rs.getObject(13, Long.class), rs.getBoolean(14), rs.getTimestamp(15).toLocalDateTime()));
+    }
+
+    public StudentExpense selectedExpense() {
+        return expenses().stream().filter(StudentExpense::selected).findFirst()
+                .orElseThrow(() -> new IllegalStateException("No student expense is selected"));
+    }
+
+    @Transactional
+    public int addExpense(String expenseType, String title, String institution, BigDecimal amount,
+                          String recipientAccount, String paymentReference, LocalDate dueDate,
+                          String documentName, String documentContentType, Long documentSize) {
+        String normalizedType = expenseType == null ? "" : expenseType.trim().toUpperCase();
+        if (!List.of("TUITION", "DORMITORY", "INSURANCE", "VISA", "LIVING", "OTHER").contains(normalizedType))
+            throw new IllegalArgumentException("Choose a supported student expense type");
+        String cleanedTitle = requiredText(title, "Expense title", 120);
+        String cleanedInstitution = requiredText(institution, "Institution", 120);
+        String cleanedRecipient = requiredText(recipientAccount, "Recipient", 120);
+        String cleanedReference = requiredText(paymentReference, "Payment reference", 80);
+        if (amount == null || amount.signum() <= 0 || amount.scale() > 2)
+            throw new IllegalArgumentException("Amount must be positive with at most two decimal places");
+        if (dueDate == null) throw new IllegalArgumentException("Due date is required");
+        if (documentSize != null && documentSize > 5L * 1024 * 1024)
+            throw new IllegalArgumentException("Document must be 5 MB or smaller");
+        if (documentContentType != null && !List.of("application/pdf", "image/jpeg", "image/png")
+                .contains(documentContentType.toLowerCase()))
+            throw new IllegalArgumentException("Document must be PDF, JPG or PNG");
+
+        Integer id = db.queryForObject("SELECT COALESCE(MAX(id),0)+1 FROM international_bills", Integer.class);
+        db.update("UPDATE international_bills SET selected=FALSE");
+        db.update("""
+                INSERT INTO international_bills
+                (id,expense_type,title,institution,amount,currency,recipient_account,payment_reference,due_date,
+                 evidence_label,document_name,document_content_type,document_size,selected,created_at)
+                VALUES (?,?,?,?,?,'CNY',?,?,?,'User-provided expense',?,?,?,TRUE,?)
+                """, id, normalizedType, cleanedTitle, cleanedInstitution, amount.setScale(2), cleanedRecipient,
+                cleanedReference, dueDate, documentName, documentContentType, documentSize, LocalDateTime.now());
+        return id;
+    }
+
+    @Transactional
+    public void selectExpense(int id) {
+        Integer count = db.queryForObject("SELECT COUNT(*) FROM international_bills WHERE id=?", Integer.class, id);
+        if (count == null || count == 0) throw new IllegalArgumentException("Student expense does not exist");
+        db.update("UPDATE international_bills SET selected=FALSE");
+        db.update("UPDATE international_bills SET selected=TRUE WHERE id=?", id);
+    }
+
+    private String requiredText(String value, String label, int maxLength) {
+        if (value == null || value.isBlank()) throw new IllegalArgumentException(label + " is required");
+        String cleaned = value.trim().replaceAll("\\s+", " ");
+        if (cleaned.length() > maxLength) throw new IllegalArgumentException(label + " is too long");
+        return cleaned;
     }
 
     public RecipientVerification verifyRecipient() {

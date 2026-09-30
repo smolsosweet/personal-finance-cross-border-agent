@@ -124,6 +124,45 @@ const translationsVi = new Map(Object.entries({
   'SHARED DEMO PROFILE': 'HỒ SƠ DEMO DÙNG CHUNG',
   'Demo accounts': 'Tài khoản demo',
   'CROSS BORDER STUDENT FINANCE · SYNTHETIC DATA': 'TÀI CHÍNH DU HỌC XUYÊN BIÊN GIỚI · DỮ LIỆU MÔ PHỎNG',
+  'Study expense planning': 'Lập kế hoạch chi phí du học',
+  'Manage several student bills, verify the selected recipient and compare simulated payment channels. No provider API or real payment is connected.': 'Quản lý nhiều khoản phí du học, xác minh người nhận của khoản đang chọn và so sánh các kênh thanh toán mô phỏng. Không kết nối API nhà cung cấp hoặc tiền thật.',
+  '+ Add expense': '+ Thêm khoản phí',
+  'STUDENT EXPENSES': 'CÁC KHOẢN PHÍ DU HỌC',
+  'Select an expense to compare': 'Chọn khoản phí để so sánh',
+  'The selected bill controls recipient verification, quote amounts and the action plan.': 'Khoản đang chọn quyết định việc xác minh người nhận, số tiền báo giá và kế hoạch hành động.',
+  'Selected': 'Đang chọn',
+  'Compare this expense': 'So sánh khoản này',
+  'SELECTED EXPENSE': 'KHOẢN PHÍ ĐANG CHỌN',
+  'Institution': 'Đơn vị thu',
+  'CONNECTED PAYMENT CHANNELS': 'KÊNH THANH TOÁN ĐÃ KẾT NỐI',
+  'Compare the essentials': 'So sánh thông tin cần thiết',
+  'Each row shows the information needed to decide. Open details for the complete fee and quote breakdown.': 'Mỗi hàng hiển thị thông tin cần để ra quyết định. Mở chi tiết để xem đầy đủ phí và báo giá.',
+  'Rank by': 'Xếp hạng theo',
+  'Remaining': 'Còn lại',
+  'Details': 'Chi tiết',
+  'Create plan': 'Tạo kế hoạch',
+  'SIMULATED QUOTE DETAIL': 'CHI TIẾT BÁO GIÁ MÔ PHỎNG',
+  'Funding account': 'Tài khoản nguồn',
+  'These are not linked to your accounts and cannot be selected or executed.': 'Các kênh này chưa liên kết với tài khoản của bạn nên không thể chọn hoặc thực thi.',
+  'Reference saving only': 'Chỉ là mức tiết kiệm tham khảo',
+  'NEW STUDENT EXPENSE': 'KHOẢN PHÍ DU HỌC MỚI',
+  'Add a bill or fee': 'Thêm hóa đơn hoặc khoản phí',
+  'Enter the verified fields from your bill. An attachment is stored as demo evidence only; this version does not run OCR.': 'Nhập các trường đã kiểm tra từ hóa đơn. File đính kèm chỉ được lưu làm bằng chứng demo; phiên bản này chưa chạy OCR.',
+  'Expense type': 'Loại chi phí',
+  'Expense name': 'Tên khoản phí',
+  'Institution or provider': 'Trường hoặc đơn vị cung cấp',
+  'Currency': 'Tiền tệ',
+  'Recipient account': 'Tài khoản người nhận',
+  'Payment reference': 'Mã tham chiếu thanh toán',
+  'Attachment (optional)': 'File đính kèm (không bắt buộc)',
+  'PDF, JPG or PNG · maximum 5 MB · no OCR in this version': 'PDF, JPG hoặc PNG · tối đa 5 MB · phiên bản này chưa có OCR',
+  'Add and compare expense': 'Thêm và so sánh khoản phí',
+  'Tuition': 'Học phí',
+  'Dormitory': 'Ký túc xá',
+  'Insurance': 'Bảo hiểm',
+  'Visa': 'Thị thực',
+  'Living expense': 'Sinh hoạt phí',
+  'Other': 'Khác',
   'Tuition planning': 'Lập kế hoạch học phí',
   'One fixed corridor and one verified bill. No provider API or real payment is connected.': 'Một hành lang cố định và một hóa đơn đã xác minh. Không kết nối API nhà cung cấp hoặc thanh toán thật.',
   'Rank eligible channels by': 'Xếp hạng kênh đủ điều kiện theo',
@@ -626,6 +665,9 @@ function translateDynamic(text) {
     [/^(\d+) records$/, '$1 bản ghi'],
     [/^(\d+) recent events$/, '$1 sự kiện gần đây'],
     [/^(\d+) pending$/, '$1 mục cần xử lý'],
+    [/^(\d+) bill\(s\)$/, '$1 khoản phí'],
+    [/^Due (.+)$/, 'Hạn $1'],
+    [/^Attachment: (.+)$/, 'File đính kèm: $1'],
     [/^(\d+) transaction\(s\) · Active$/, '$1 giao dịch · Đang dùng'],
     [/^(\d+) transaction\(s\) · Archived$/, '$1 giao dịch · Đã lưu trữ'],
     [/^Purpose: (.+)$/, 'Mục đích: $1'],
@@ -649,6 +691,8 @@ function translateDynamic(text) {
     [/^Payment source changed to (.+)\.$/, 'Đã đổi nguồn thanh toán sang $1.'],
     [/^Tuition plan (.+)\. Approval is always required\.$/, 'Kế hoạch học phí $1. Luôn yêu cầu phê duyệt.'],
     [/^Selected plan uses (.+) for bill (.+) of (.+) CNY, due (.+), with latest safe date (.+)\. Approval Mode is required before payment\.$/, 'Kế hoạch đã chọn sử dụng $1 cho hóa đơn $2 trị giá $3 CNY, hạn thanh toán $4, với ngày an toàn cuối cùng $5. Cần phê duyệt trước khi thanh toán.'],
+    [/^Selected (.+) plan is ready for review$/, 'Kế hoạch $1 đã chọn đang chờ xem xét'],
+    [/^(.+) needs a controlled plan$/, '$1 cần một kế hoạch có kiểm soát'],
     [/^Bill (.+) for (.+) CNY is verified, due (.+), with latest safe date (.+)\. Approval Mode is still required before payment\.$/, 'Hóa đơn $1 trị giá $2 CNY đã được xác minh, hạn thanh toán $3, với ngày an toàn cuối cùng $4. Vẫn cần phê duyệt trước khi thanh toán.'],
     [/^Low-risk plan status: (.+)\.$/, 'Trạng thái kế hoạch rủi ro thấp: $1.'],
     [/^Payment Sandbox completed: (.+)$/, 'Payment Sandbox đã hoàn tất: $1'],
@@ -742,6 +786,25 @@ document.addEventListener('DOMContentLoaded', () => {
     button.addEventListener('click', () => {
       localStorage.setItem('finbridge-language', button.dataset.language);
       applyLanguage(button.dataset.language);
+    });
+  });
+
+  document.querySelectorAll('[data-open-dialog]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const dialog = document.getElementById(button.dataset.openDialog);
+      if (dialog && typeof dialog.showModal === 'function') dialog.showModal();
+    });
+  });
+
+  document.querySelectorAll('dialog').forEach((modal) => {
+    modal.querySelectorAll('[data-close-dialog]').forEach((button) => {
+      button.addEventListener('click', () => modal.close());
+    });
+    modal.addEventListener('click', (event) => {
+      const bounds = modal.getBoundingClientRect();
+      const inside = event.clientX >= bounds.left && event.clientX <= bounds.right
+        && event.clientY >= bounds.top && event.clientY <= bounds.bottom;
+      if (!inside) modal.close();
     });
   });
 

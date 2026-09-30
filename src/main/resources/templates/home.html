@@ -106,17 +106,9 @@
       </section>
 
       <section class="card student-section" id="student-finance" data-tab-panel="student" hidden>
-        <div class="section-title">
-          <div><div class="eyebrow">CROSS BORDER STUDENT FINANCE · SYNTHETIC DATA</div><h2>Tuition planning</h2><p>One fixed corridor and one verified bill. No provider API or real payment is connected.</p></div>
-          <form th:action="@{/student/preference}" method="post" class="preference-form">
-            <label>Rank eligible channels by
-              <select name="preference" onchange="this.form.submit()">
-                <option value="CHEAPER" th:selected="${studentProfile.preference == 'CHEAPER'}">Cheaper</option>
-                <option value="FASTER" th:selected="${studentProfile.preference == 'FASTER'}">Faster</option>
-                <option value="SAFER" th:selected="${studentProfile.preference == 'SAFER'}">Safer</option>
-              </select>
-            </label>
-          </form>
+        <div class="section-title student-title">
+          <div><div class="eyebrow">CROSS BORDER STUDENT FINANCE · SYNTHETIC DATA</div><h2>Study expense planning</h2><p>Manage several student bills, verify the selected recipient and compare simulated payment channels. No provider API or real payment is connected.</p></div>
+          <button class="primary-button" type="button" data-open-dialog="add-student-expense">+ Add expense</button>
         </div>
 
         <div class="corridor-strip">
@@ -126,80 +118,60 @@
           <div><small>Preference</small><strong th:text="${studentProfile.preference}"></strong></div>
         </div>
 
-        <div class="tuition-grid">
-          <article class="tuition-bill" data-testid="tuition-bill">
-            <div class="bill-heading"><span class="school-mark">S</span><div><small>TUITION BILL</small><h3 th:text="${tuitionBill.institution}"></h3></div></div>
-            <div class="tuition-amount"><strong th:text="${#numbers.formatDecimal(tuitionBill.amount,1,'COMMA',0,'POINT')}"></strong><span th:text="${tuitionBill.currency}"></span></div>
-            <dl><div><dt>Due date</dt><dd th:text="${tuitionBill.dueDate}"></dd></div><div><dt>Reference</dt><dd th:text="${tuitionBill.paymentReference}"></dd></div><div><dt>Recipient</dt><dd th:text="${tuitionBill.recipientAccount}"></dd></div><div><dt>Evidence</dt><dd th:text="${tuitionBill.evidenceLabel}"></dd></div></dl>
-          </article>
+        <section class="student-expense-section">
+          <div class="student-subheading"><div><div class="eyebrow">STUDENT EXPENSES</div><h3>Select an expense to compare</h3><p>The selected bill controls recipient verification, quote amounts and the action plan.</p></div><span class="pill" th:text="${#lists.size(studentExpenses) + ' bill(s)'}"></span></div>
+          <div class="student-expense-strip" data-testid="student-expense-list">
+            <article class="student-expense-card" th:each="expense : ${studentExpenses}" th:classappend="${expense.selected ? ' selected' : ''}" th:attr="data-testid=${'expense-' + expense.id}">
+              <div class="expense-card-top"><span class="expense-type" th:text="${expense.expenseType}"></span><span th:if="${expense.selected}" class="selected-expense-label">Selected</span></div>
+              <strong th:text="${expense.title}"></strong><small th:text="${expense.institution}"></small>
+              <b th:text="${#numbers.formatDecimal(expense.amount,1,'COMMA',0,'POINT') + ' ' + expense.currency}"></b>
+              <span th:text="${'Due ' + expense.dueDate}"></span><span th:if="${expense.documentName != null}" th:text="${'Attachment: ' + expense.documentName}"></span>
+              <form th:if="${!expense.selected}" th:action="@{/student/expenses/select}" method="post"><input type="hidden" name="id" th:value="${expense.id}"><button class="secondary" type="submit">Compare this expense</button></form>
+            </article>
+          </div>
+        </section>
 
+        <div class="selected-expense-grid">
+          <article class="selected-expense-summary" data-testid="tuition-bill">
+            <div class="bill-heading"><span class="school-mark">S</span><div><small>SELECTED EXPENSE</small><h3 th:text="${selectedExpense.title}"></h3></div></div>
+            <div class="tuition-amount"><strong th:text="${#numbers.formatDecimal(selectedExpense.amount,1,'COMMA',0,'POINT')}"></strong><span th:text="${selectedExpense.currency}"></span></div>
+            <dl><div><dt>Institution</dt><dd th:text="${selectedExpense.institution}"></dd></div><div><dt>Due date</dt><dd th:text="${selectedExpense.dueDate}"></dd></div><div><dt>Reference</dt><dd th:text="${selectedExpense.paymentReference}"></dd></div><div><dt>Recipient</dt><dd th:text="${selectedExpense.recipientAccount}"></dd></div><div><dt>Evidence</dt><dd th:text="${selectedExpense.documentName ?: selectedExpense.evidenceLabel}"></dd></div></dl>
+          </article>
           <article class="verification-card" data-testid="recipient-verification" th:classappend="${recipientVerification.verified ? ' verified' : ' mismatch'}">
             <div class="verification-icon" th:text="${recipientVerification.verified ? '✓' : '!'}"></div>
             <div><small>SCHOOL REGISTRY</small><h3 th:text="${recipientVerification.verified ? 'Recipient verified' : 'Recipient mismatch'}"></h3><p th:text="${recipientVerification.reason}"></p><strong th:text="${recipientVerification.registryAccount ?: 'No matching account'}"></strong></div>
           </article>
         </div>
 
-        <div class="payment-accounts-section connected-payments-section">
+        <div class="channel-comparison-section">
           <div class="payment-accounts-heading">
-            <div><div class="eyebrow">YOUR CONNECTED PAYMENT CHANNELS</div><h3>Accounts and payment options</h3><p>Each card combines one personal account with its linked payment channel, balance, complete cost and amount remaining after payment.</p></div>
-            <div class="channel-heading-tools">
-              <div class="available-balance"><small>Connected channels</small><strong th:text="${#lists.size(eligibleChannelQuotes)}"></strong><span>One account per channel</span></div>
-              <form th:action="@{/student/quotes/refresh}" method="post"><button class="secondary" type="submit">↻ Refresh synthetic quotes</button></form>
-            </div>
+            <div><div class="eyebrow">CONNECTED PAYMENT CHANNELS</div><h3>Compare the essentials</h3><p>Each row shows the information needed to decide. Open details for the complete fee and quote breakdown.</p></div>
+            <div class="channel-heading-tools"><form th:action="@{/student/quotes/refresh}" method="post"><button class="secondary" type="submit">↻ Refresh synthetic quotes</button></form></div>
           </div>
-          <div class="connected-payment-toolbar">
-            <div class="payment-account-tools" data-testid="payment-account-filters">
-              <label>Status<select data-testid="payment-account-filter"><option value="all">All connected channels</option><option value="payable">Ready to pay now</option><option value="insufficient">Insufficient balance</option><option value="expired">Quote expired</option></select></label>
-              <label>Sort<select data-testid="payment-account-sort"><option value="recommended">Recommended</option><option value="cost-asc">Lowest landed cost</option><option value="remaining-desc">Highest remaining balance</option><option value="fastest">Fastest settlement</option><option value="safest">Highest safety score</option><option value="name">Name A–Z</option></select></label>
-            </div>
+          <div class="channel-controls">
+            <form th:action="@{/student/preference}" method="post" class="preference-form"><label>Rank by<select name="preference" onchange="this.form.submit()"><option value="CHEAPER" th:selected="${studentProfile.preference == 'CHEAPER'}">Cheaper</option><option value="FASTER" th:selected="${studentProfile.preference == 'FASTER'}">Faster</option><option value="SAFER" th:selected="${studentProfile.preference == 'SAFER'}">Safer</option></select></label></form>
+            <div class="payment-account-tools" data-testid="payment-account-filters"><label>Status<select data-testid="payment-account-filter"><option value="all">All connected channels</option><option value="payable">Ready to pay now</option><option value="insufficient">Insufficient balance</option><option value="expired">Quote expired</option></select></label><label>Sort<select data-testid="payment-account-sort"><option value="recommended">Recommended</option><option value="cost-asc">Lowest landed cost</option><option value="remaining-desc">Highest remaining balance</option><option value="fastest">Fastest settlement</option><option value="safest">Highest safety score</option><option value="name">Name A–Z</option></select></label></div>
           </div>
-          <div class="channel-grid connected-payment-grid" data-testid="payment-account-list">
-          <th:block th:each="quote : ${eligibleChannelQuotes}" th:with="sourceAccount=${paymentAccountById.get(quote.sourceAccountId)},canFund=${sourceAccount != null and sourceAccount.canFund(quote.landedCost,agentPolicy.safetyBuffer)}">
-          <article class="channel-card connected-payment-card" th:classappend="${!canFund ? ' insufficient-account' : ''}"
-                   th:attr="data-testid=${'channel-' + quote.channelId},data-quote-expiry=${quote.expiresAtEpochMillis},data-state=${quote.expired ? 'expired' : (canFund ? 'payable' : 'insufficient')},data-balance=${sourceAccount.balance},data-remaining=${sourceAccount.balance.subtract(quote.landedCost)},data-cost=${quote.landedCost},data-settlement=${quote.settlementMaxDays},data-safety=${quote.safetyScore},data-name=${quote.displayName}">
-            <div class="channel-top"><span class="rank" th:text="${quote.rank != null ? '#' + quote.rank : 'REF'}"></span><span class="eligibility" th:classappend="${canFund and !quote.expired ? ' eligible' : ' unavailable-tag'}" th:text="${quote.expired ? 'Quote expired' : (canFund ? 'Ready to pay' : 'Insufficient balance')}"></span></div>
-            <h3 th:text="${quote.displayName}"></h3><p class="eligibility-reason" th:text="${quote.eligibilityReason}"></p>
-            <div class="channel-source combined-account-summary">
-              <div class="account-identity"><span class="bank-mark" th:text="${#strings.substring(sourceAccount.institution,0,1)}"></span><div><small>Personal funding account</small><strong th:text="${sourceAccount.displayName + ' · ' + sourceAccount.maskedNumber}"></strong><span th:text="${sourceAccount.institution + ' · ' + sourceAccount.accountType}"></span></div></div>
-              <div class="account-available"><small>Available balance</small><strong th:text="${#numbers.formatDecimal(sourceAccount.balance,1,'COMMA',0,'POINT') + ' ' + sourceAccount.currency}"></strong></div>
-            </div>
-            <div class="cost-summary">
-              <div class="landed-cost"><small>Landed cost</small><strong th:text="${#numbers.formatDecimal(quote.landedCost,1,'COMMA',0,'POINT') + ' VND'}"></strong></div>
-              <div class="remaining-balance" th:classappend="${sourceAccount.balance.compareTo(quote.landedCost) < 0 ? ' insufficient' : (sourceAccount.balance.subtract(quote.landedCost).compareTo(agentPolicy.safetyBuffer) < 0 ? ' warning' : ' safe')}" th:attr="data-testid=${'remaining-' + quote.channelId}">
-                <small>Remaining after payment</small><strong th:text="${#numbers.formatDecimal(sourceAccount.balance.subtract(quote.landedCost),1,'COMMA',0,'POINT') + ' VND'}"></strong>
-                <span th:if="${sourceAccount.balance.compareTo(quote.landedCost) < 0}">Insufficient balance</span><span th:if="${sourceAccount.balance.compareTo(quote.landedCost) >= 0 and sourceAccount.balance.subtract(quote.landedCost).compareTo(agentPolicy.safetyBuffer) < 0}">Below safety buffer</span><span th:if="${canFund}">Safety buffer preserved</span>
-              </div>
-            </div>
-            <dl class="fee-breakdown">
-              <div><dt>Rate</dt><dd th:text="${#numbers.formatDecimal(quote.rateVndPerCny,1,'COMMA',0,'POINT') + ' VND/CNY'}"></dd></div>
-              <div><dt>Source amount</dt><dd th:text="${#numbers.formatDecimal(quote.sourceAmount,1,'COMMA',0,'POINT') + ' VND'}"></dd></div>
-              <div><dt>Transfer fee</dt><dd th:text="${#numbers.formatDecimal(quote.transferFee,1,'COMMA',0,'POINT') + ' VND'}"></dd></div>
-              <div><dt>FX markup</dt><dd th:text="${#numbers.formatDecimal(quote.fxMarkup,1,'COMMA',0,'POINT') + ' VND'}"></dd></div>
-              <div><dt>Expected received</dt><dd th:text="${#numbers.formatDecimal(quote.expectedReceived,1,'COMMA',0,'POINT') + ' CNY'}"></dd></div>
-              <div><dt>Settlement</dt><dd th:text="${quote.settlementMinDays + '–' + quote.settlementMaxDays + ' day(s)'}"></dd></div>
-              <div><dt>Latest safe date</dt><dd th:text="${quote.latestSafeDate}"></dd></div>
-              <div><dt>Safety score</dt><dd th:text="${quote.safetyScore + '/100 synthetic'}"></dd></div>
-            </dl>
-            <div class="quote-meta"><span th:text="${quote.quoteSource}"></span><br><span th:text="${'Quoted ' + #temporals.format(quote.quotedAt,'dd MMM yyyy HH:mm:ss')}"></span><br><span th:text="${'Expires ' + #temporals.format(quote.expiresAt,'dd MMM yyyy HH:mm:ss')}"></span></div>
-            <div class="quote-live-status" data-quote-live-status aria-live="polite"></div>
-            <form th:if="${canFund and !quote.expired}" th:action="@{/agent/plans/tuition}" method="post" class="planning-form"><input type="hidden" name="channel" th:value="${quote.channelId}"><button class="planning-only" type="submit" th:attr="data-testid=${'plan-' + quote.channelId}">Create Approval Mode plan</button></form>
-            <div th:if="${!canFund}" class="source-account-warning">Insufficient balance in linked account</div>
-          </article>
-          </th:block>
+          <div class="channel-list" data-testid="payment-account-list">
+            <th:block th:each="quote : ${eligibleChannelQuotes}" th:with="sourceAccount=${paymentAccountById.get(quote.sourceAccountId)},canFund=${sourceAccount != null and sourceAccount.canFund(quote.landedCost,agentPolicy.safetyBuffer)}">
+              <article class="connected-payment-card channel-list-row" th:classappend="${!canFund ? ' insufficient-account' : ''}" th:attr="data-testid=${'channel-' + quote.channelId},data-quote-expiry=${quote.expiresAtEpochMillis},data-state=${quote.expired ? 'expired' : (canFund ? 'payable' : 'insufficient')},data-balance=${sourceAccount.balance},data-remaining=${sourceAccount.balance.subtract(quote.landedCost)},data-cost=${quote.landedCost},data-settlement=${quote.settlementMaxDays},data-safety=${quote.safetyScore},data-name=${quote.displayName}">
+                <div class="channel-list-name"><span class="rank" th:text="${'#' + quote.rank}"></span><div><strong th:text="${quote.displayName}"></strong><small th:text="${sourceAccount.displayName + ' · ' + sourceAccount.maskedNumber}"></small></div></div>
+                <div><small>Status</small><span class="eligibility" th:classappend="${canFund and !quote.expired ? ' eligible' : ' unavailable-tag'}" th:text="${quote.expired ? 'Quote expired' : (canFund ? 'Ready to pay' : 'Insufficient balance')}"></span></div>
+                <div><small>Landed cost</small><strong th:text="${#numbers.formatDecimal(quote.landedCost,1,'COMMA',0,'POINT') + ' VND'}"></strong></div>
+                <div class="row-remaining" th:attr="data-testid=${'remaining-' + quote.channelId}"><small>Remaining</small><strong th:text="${#numbers.formatDecimal(sourceAccount.balance.subtract(quote.landedCost),1,'COMMA',0,'POINT') + ' VND'}"></strong></div>
+                <div><small>Settlement</small><strong th:text="${quote.settlementMinDays + '–' + quote.settlementMaxDays + ' day(s)'}"></strong></div>
+                <div class="channel-row-actions"><button class="secondary" type="button" th:attr="data-open-dialog=${'quote-detail-' + quote.channelId}">Details</button><form th:if="${canFund and !quote.expired}" th:action="@{/agent/plans/tuition}" method="post" class="planning-form"><input type="hidden" name="channel" th:value="${quote.channelId}"><button class="planning-only" type="submit" th:attr="data-testid=${'plan-' + quote.channelId}">Create plan</button></form></div>
+                <div class="quote-live-status compact" data-quote-live-status aria-live="polite"></div>
+                <dialog class="quote-detail-dialog" th:id="${'quote-detail-' + quote.channelId}"><div class="dialog-heading"><div><small>SIMULATED QUOTE DETAIL</small><h3 th:text="${quote.displayName}"></h3></div><button type="button" data-close-dialog aria-label="Close">×</button></div><p th:text="${quote.eligibilityReason}"></p><dl class="fee-breakdown"><div><dt>Funding account</dt><dd th:text="${sourceAccount.displayName + ' · ' + #numbers.formatDecimal(sourceAccount.balance,1,'COMMA',0,'POINT') + ' VND'}"></dd></div><div><dt>Rate</dt><dd th:text="${#numbers.formatDecimal(quote.rateVndPerCny,1,'COMMA',0,'POINT') + ' VND/CNY'}"></dd></div><div><dt>Source amount</dt><dd th:text="${#numbers.formatDecimal(quote.sourceAmount,1,'COMMA',0,'POINT') + ' VND'}"></dd></div><div><dt>Transfer fee</dt><dd th:text="${#numbers.formatDecimal(quote.transferFee,1,'COMMA',0,'POINT') + ' VND'}"></dd></div><div><dt>FX markup</dt><dd th:text="${#numbers.formatDecimal(quote.fxMarkup,1,'COMMA',0,'POINT') + ' VND'}"></dd></div><div><dt>Expected received</dt><dd th:text="${#numbers.formatDecimal(quote.expectedReceived,1,'COMMA',0,'POINT') + ' CNY'}"></dd></div><div><dt>Latest safe date</dt><dd th:text="${quote.latestSafeDate}"></dd></div><div><dt>Safety score</dt><dd th:text="${quote.safetyScore + '/100 synthetic'}"></dd></div></dl><div class="quote-meta"><span th:text="${quote.quoteSource}"></span><br><span th:text="${'Quoted ' + #temporals.format(quote.quotedAt,'dd MMM yyyy HH:mm:ss')}"></span><br><span th:text="${'Expires ' + #temporals.format(quote.expiresAt,'dd MMM yyyy HH:mm:ss')}"></span></div></dialog>
+              </article>
+            </th:block>
           </div>
           <div class="payment-account-empty" data-testid="payment-account-empty" hidden>No connected channels match this filter.</div>
         </div>
 
-        <div class="suggestion-heading"><div><div class="eyebrow">MARKET SUGGESTIONS · REFERENCE ONLY</div><h3>Potentially better alternatives</h3><p>These channels may be cheaper or otherwise attractive, but they are not linked to your personal accounts. Connect and verify an account before they can become executable.</p></div></div>
-        <div class="suggestion-grid" data-testid="suggested-channels">
-          <article class="channel-card suggestion-card unavailable" th:each="quote : ${suggestedChannelQuotes}" th:attr="data-testid=${'channel-' + quote.channelId}">
-            <div class="channel-top"><span class="rank">TIP</span><span class="eligibility unavailable-tag">Not connected</span></div>
-            <h3 th:text="${quote.displayName}"></h3><p class="eligibility-reason" th:text="${quote.eligibilityReason}"></p>
-            <div class="suggestion-benefit" th:if="${quote.landedCost.compareTo(cheapestEligibleCost) < 0}"><strong th:text="${#numbers.formatDecimal(cheapestEligibleCost.subtract(quote.landedCost),1,'COMMA',0,'POINT') + ' VND less'}"></strong><span>than the cheapest currently eligible option</span></div>
-            <dl class="fee-breakdown"><div><dt>Landed cost</dt><dd th:text="${#numbers.formatDecimal(quote.landedCost,1,'COMMA',0,'POINT') + ' VND'}"></dd></div><div><dt>Rate</dt><dd th:text="${#numbers.formatDecimal(quote.rateVndPerCny,1,'COMMA',0,'POINT') + ' VND/CNY'}"></dd></div><div><dt>Settlement</dt><dd th:text="${quote.settlementMinDays + '–' + quote.settlementMaxDays + ' day(s)'}"></dd></div><div><dt>Safety score</dt><dd th:text="${quote.safetyScore + '/100 synthetic'}"></dd></div></dl>
-            <div class="channel-disabled">Reference only · no payment action</div>
-          </article>
-        </div>
+        <div class="market-suggestion-list"><div class="suggestion-heading"><div><div class="eyebrow">MARKET SUGGESTIONS · REFERENCE ONLY</div><h3>Potentially better alternatives</h3><p>These are not linked to your accounts and cannot be selected or executed.</p></div></div><article class="market-suggestion-row" th:each="quote : ${suggestedChannelQuotes}" th:attr="data-testid=${'channel-' + quote.channelId}"><div><strong th:text="${quote.displayName}"></strong><small th:text="${quote.eligibilityReason}"></small></div><div><small>Landed cost</small><strong th:text="${#numbers.formatDecimal(quote.landedCost,1,'COMMA',0,'POINT') + ' VND'}"></strong></div><div class="suggestion-benefit" th:if="${quote.landedCost.compareTo(cheapestEligibleCost) < 0}"><strong th:text="${#numbers.formatDecimal(cheapestEligibleCost.subtract(quote.landedCost),1,'COMMA',0,'POINT') + ' VND less'}"></strong><span>Reference saving only</span></div><span class="eligibility unavailable-tag">Not connected</span></article></div>
+
+        <dialog id="add-student-expense" class="student-expense-dialog"><div class="dialog-heading"><div><small>NEW STUDENT EXPENSE</small><h3>Add a bill or fee</h3></div><button type="button" data-close-dialog aria-label="Close">×</button></div><p>Enter the verified fields from your bill. An attachment is stored as demo evidence only; this version does not run OCR.</p><form th:action="@{/student/expenses}" method="post" enctype="multipart/form-data" class="student-expense-form"><label><span>Expense type</span><select name="expenseType" required><option value="TUITION">Tuition</option><option value="DORMITORY">Dormitory</option><option value="INSURANCE">Insurance</option><option value="VISA">Visa</option><option value="LIVING">Living expense</option><option value="OTHER">Other</option></select></label><label><span>Expense name</span><input name="title" maxlength="120" required placeholder="Example: Dormitory deposit"></label><label class="wide"><span>Institution or provider</span><input name="institution" maxlength="120" required th:value="${tuitionBill.institution}"></label><label><span>Amount</span><input name="amount" type="number" min="0.01" step="0.01" required></label><label><span>Currency</span><input value="CNY" disabled></label><label class="wide"><span>Recipient account</span><input name="recipientAccount" maxlength="120" required th:value="${tuitionBill.recipientAccount}"></label><label><span>Payment reference</span><input name="paymentReference" maxlength="80" required></label><label><span>Due date</span><input name="dueDate" type="date" required></label><label class="wide"><span>Attachment (optional)</span><input name="document" type="file" accept="application/pdf,image/jpeg,image/png"><small>PDF, JPG or PNG · maximum 5 MB · no OCR in this version</small></label><button class="primary-button wide" type="submit">Add and compare expense</button></form></dialog>
       </section>
 
       <section class="card agent-workspace" id="agent-workspace" data-tab-panel="agent" hidden>
@@ -366,6 +338,6 @@
   </main>
 </div>
 
-<script th:src="@{/app.js(v='20260930-7')}"></script>
+<script th:src="@{/app.js(v='20260930-8')}"></script>
 </body>
 </html>
