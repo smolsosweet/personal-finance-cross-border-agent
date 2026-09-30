@@ -96,9 +96,9 @@ public class PhaseFourService {
         insertPaymentAccount("TCB_VND","Techcombank Everyday","Techcombank","Everyday account","•••• 1106",
                 new BigDecimal("45000000.00"),"CONNECTED","VERIFIED",true,false,3);
         insertPaymentAccount("MOMO_VND","MoMo Wallet","MoMo","E-wallet","•••• 0921",
-                new BigDecimal("12000000.00"),"CONNECTED","VERIFIED",false,false,4);
-        insertPaymentAccount("SAVINGS_VND","Emergency Savings","Bank A","Savings account","•••• 7715",
-                new BigDecimal("50000000.00"),"CONNECTED","VERIFIED",false,false,5);
+                new BigDecimal("12000000.00"),"CONNECTED","VERIFIED",true,false,4);
+        insertPaymentAccount("ALIPAY_VND","Alipay Education Wallet","Alipay","Education wallet","•••• 8890",
+                new BigDecimal("75000000.00"),"CONNECTED","VERIFIED",true,false,5);
         db.update("INSERT INTO sandbox_accounts VALUES ('SCHOOL_CNY','Shenzhen Demo University','CNY',0.00)");
         db.update("INSERT INTO sandbox_accounts VALUES ('EMERGENCY_VND','Emergency Fund sandbox recipient','VND',0.00)");
         addMessage("ASSISTANT", "I can explain the tuition bill, create a structured payment plan, or prepare a low-risk Emergency Fund transfer. Every amount comes from deterministic demo data.");
@@ -113,8 +113,11 @@ public class PhaseFourService {
             reset();
             return;
         }
-        Integer sources = db.queryForObject("SELECT COUNT(*) FROM payment_source_accounts", Integer.class);
-        if (sources == null || sources == 0) {
+        Integer sources = db.queryForObject("""
+                SELECT COUNT(*) FROM payment_source_accounts
+                WHERE account_id IN ('PAYER_VND','VCB_VND','TCB_VND','MOMO_VND','ALIPAY_VND')
+                """, Integer.class);
+        if (sources == null || sources != 5) {
             reset();
         }
     }
@@ -216,7 +219,9 @@ public class PhaseFourService {
 
     @Transactional
     public ActionPlan createTuitionPlan(String channelId) {
-        return createTuitionPlan(channelId, selectedPaymentSource().accountId());
+        var quote=crossBorder.rankedQuotes().stream().filter(q->q.channelId().equals(channelId))
+                .findFirst().orElseThrow(()->new IllegalArgumentException("Unknown payment channel"));
+        return createTuitionPlan(channelId, quote.sourceAccountId()==null?PAYER:quote.sourceAccountId());
     }
 
     @Transactional
@@ -349,6 +354,8 @@ public class PhaseFourService {
             var quote=crossBorder.rankedQuotes().stream().filter(q->q.channelId().equals(plan.channelId()))
                     .findFirst().orElse(null);
             if(quote==null||!quote.eligible()) return blocked("CHANNEL NOT AVAILABLE");
+            if(!plan.sourceAccountId().equals(quote.sourceAccountId()))
+                return blocked("SOURCE ACCOUNT CHANNEL MISMATCH");
             if(!quote.quoteId().equals(plan.quoteId())||quote.expired()) return blocked("FX QUOTE EXPIRED");
             if(quote.landedCost().compareTo(plan.debitAmount())!=0
                     ||quote.sourceAmount().compareTo(plan.conversionAmount())!=0
@@ -666,6 +673,7 @@ public class PhaseFourService {
             case "CORRIDOR NOT ALLOWED"->"The tuition payment corridor must remain Vietnam to China.";
             case "CURRENCY NOT ALLOWED"->"The tuition payment currencies must remain VND to CNY.";
             case "SOURCE ACCOUNT NOT ELIGIBLE"->"The source account is not connected, verified, or enabled for this corridor.";
+            case "SOURCE ACCOUNT CHANNEL MISMATCH"->"The selected source account does not belong to this payment channel.";
             case "DEADLINE RISK"->"Settlement time plus the one-day safety margin may miss the tuition due date.";
             default->code;
         };

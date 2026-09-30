@@ -3,6 +3,7 @@ package com.example.finance;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -65,14 +66,12 @@ public class PhaseOneController {
         model.addAttribute("suggestedChannelQuotes", suggestedQuotes);
         model.addAttribute("cheapestEligibleCost", cheapestEligibleCost);
         model.addAttribute("agentPolicy", phaseFour.policy());
-        BigDecimal safePaymentThreshold = cheapestEligibleCost.add(phaseFour.policy().safetyBuffer());
-        var selectedPaymentAccount = phaseFour.selectedPaymentSource();
-        model.addAttribute("safePaymentThreshold", safePaymentThreshold);
-        model.addAttribute("paymentAccounts", phaseFour.paymentSourceAccounts());
-        model.addAttribute("selectedPaymentAccount", selectedPaymentAccount);
-        model.addAttribute("selectedPaymentCanFund", selectedPaymentAccount.canFund(cheapestEligibleCost,
-                phaseFour.policy().safetyBuffer()));
-        model.addAttribute("paymentBalance", selectedPaymentAccount.balance());
+        var paymentAccounts = phaseFour.paymentSourceAccounts();
+        model.addAttribute("paymentAccounts", paymentAccounts);
+        model.addAttribute("paymentAccountById", paymentAccounts.stream().collect(Collectors.toMap(
+                PhaseFourService.PaymentSourceAccount::accountId, account -> account)));
+        model.addAttribute("channelBySourceAccountId", eligibleQuotes.stream().collect(Collectors.toMap(
+                CrossBorderService.ChannelQuote::sourceAccountId, quote -> quote)));
         model.addAttribute("conversation", phaseFour.messages());
         model.addAttribute("latestAction", phaseFour.latestAction());
         model.addAttribute("latestReceipt", phaseFour.latestReceipt());
@@ -147,9 +146,8 @@ public class PhaseOneController {
     }
 
     @PostMapping("/agent/plans/tuition")
-    public String tuitionPlan(@RequestParam String channel, @RequestParam String sourceAccount,
-                              RedirectAttributes flash) {
-        PhaseFourService.ActionPlan plan = phaseFour.createTuitionPlan(channel, sourceAccount);
+    public String tuitionPlan(@RequestParam String channel, RedirectAttributes flash) {
+        PhaseFourService.ActionPlan plan = phaseFour.createTuitionPlan(channel);
         flash.addFlashAttribute("message", "Tuition plan " + plan.status() + ". Approval is always required.");
         return "redirect:/#agent-workspace";
     }

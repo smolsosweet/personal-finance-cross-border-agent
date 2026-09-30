@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Atlas · Phase 5</title><link rel="stylesheet" th:href="@{/app.css}">
+  <title>Atlas · Phase 5</title><link rel="stylesheet" th:href="@{/app.css(v='20260930-2')}">
 </head>
 <body>
 <div class="shell">
@@ -139,26 +139,23 @@
 
         <div class="payment-accounts-section">
           <div class="payment-accounts-heading">
-            <div><div class="eyebrow">YOUR CONNECTED PAYMENT SOURCES</div><h3>Personal accounts</h3><p>Status includes connection, corridor support, the cheapest eligible tuition cost and the 3,000,000 VND safety buffer.</p></div>
+            <div><div class="eyebrow">YOUR CONNECTED PAYMENT SOURCES</div><h3>Personal accounts</h3><p>Each connected account has its own payment channel. Balance readiness is calculated against that channel's landed cost and the safety buffer.</p></div>
             <div class="payment-account-tools" data-testid="payment-account-filters">
               <label>Status<select data-testid="payment-account-filter"><option value="all">All accounts</option><option value="payable">Ready to pay now</option><option value="insufficient">Insufficient balance</option><option value="unavailable">Unavailable for this corridor</option></select></label>
               <label>Sort<select data-testid="payment-account-sort"><option value="recommended">Recommended</option><option value="balance-desc">Highest balance</option><option value="balance-asc">Lowest balance</option><option value="name">Name A–Z</option></select></label>
             </div>
           </div>
           <div class="payment-account-grid" data-testid="payment-account-list">
-            <th:block th:each="account : ${paymentAccounts}" th:with="canFund=${account.canFund(cheapestEligibleCost,agentPolicy.safetyBuffer)}">
-              <article th:class="${'payment-account' + (account.selected ? ' selected' : '') + (!canFund ? (account.ready ? ' insufficient-account' : ' unavailable') : '')}"
-                       th:attr="data-testid=${'payment-account-' + account.accountId},data-state=${canFund ? 'payable' : (account.ready ? 'insufficient' : 'unavailable')},data-selected=${account.selected},data-balance=${account.balance},data-name=${account.displayName}">
-                <div class="payment-account-top"><span class="bank-mark" th:text="${#strings.substring(account.institution,0,1)}"></span><span class="eligibility" th:classappend="${canFund ? ' eligible' : ' unavailable-tag'}" th:text="${canFund ? 'Ready to pay' : (account.ready ? 'Insufficient balance' : 'Unavailable')}"></span></div>
+            <th:block th:each="account : ${paymentAccounts}" th:with="channel=${channelBySourceAccountId.get(account.accountId)},canFund=${channel != null and account.canFund(channel.landedCost,agentPolicy.safetyBuffer)}">
+              <article th:class="${'payment-account' + (!canFund ? (channel != null ? ' insufficient-account' : ' unavailable') : '')}"
+                       th:attr="data-testid=${'payment-account-' + account.accountId},data-state=${canFund ? 'payable' : (channel != null ? 'insufficient' : 'unavailable')},data-selected=false,data-balance=${account.balance},data-name=${account.displayName}">
+                <div class="payment-account-top"><span class="bank-mark" th:text="${#strings.substring(account.institution,0,1)}"></span><span class="eligibility" th:classappend="${canFund ? ' eligible' : ' unavailable-tag'}" th:text="${canFund ? 'Ready to pay' : (channel != null ? 'Insufficient balance' : 'Unavailable')}"></span></div>
                 <h4 th:text="${account.displayName}"></h4><p th:text="${account.institution + ' · ' + account.accountType + ' · ' + account.maskedNumber}"></p>
                 <strong class="account-balance" th:text="${#numbers.formatDecimal(account.balance,1,'COMMA',0,'POINT') + ' ' + account.currency}"></strong>
-                <small th:if="${canFund}" class="account-reason" th:text="${'Can cover the cheapest eligible option and keep the ' + #numbers.formatDecimal(agentPolicy.safetyBuffer,1,'COMMA',0,'POINT') + ' VND safety buffer.'}"></small>
-                <small th:if="${account.ready and !canFund}" class="account-reason insufficient-reason" th:text="${'Needs ' + #numbers.formatDecimal(safePaymentThreshold.subtract(account.balance),1,'COMMA',0,'POINT') + ' VND more to pay safely.'}"></small>
-                <small th:if="${!account.ready}" class="account-reason" th:text="${account.eligibilityReason + '. Choose an eligible bank account for this tuition payment.'}"></small>
-                <div th:if="${canFund and account.selected}" class="selected-account-label">✓ Selected for payment</div>
-                <div th:if="${account.selected and !canFund}" class="selected-account-label insufficient-selected">Selected for comparison · cannot fund this bill</div>
-                <form th:if="${canFund and !account.selected}" th:action="@{/student/source-account}" method="post"><input type="hidden" name="account" th:value="${account.accountId}"><button type="submit" class="select-account" th:attr="data-testid=${'select-account-' + account.accountId}">Use for payment</button></form>
-                <button th:if="${!canFund}" type="button" class="account-help" data-account-action="show-payable">Show accounts ready to pay</button>
+                <small th:if="${canFund}" class="account-reason" th:text="${'Enough for ' + channel.displayName + ' and the ' + #numbers.formatDecimal(agentPolicy.safetyBuffer,1,'COMMA',0,'POINT') + ' VND safety buffer.'}"></small>
+                <small th:if="${channel != null and !canFund}" class="account-reason insufficient-reason" th:text="${'Needs ' + #numbers.formatDecimal(channel.landedCost.add(agentPolicy.safetyBuffer).subtract(account.balance),1,'COMMA',0,'POINT') + ' VND more for its linked channel.'}"></small>
+                <small th:if="${channel == null}" class="account-reason">No supported payment channel is linked to this account.</small>
+                <div th:if="${channel != null}" class="linked-channel"><small>Linked channel</small><strong th:text="${channel.displayName}"></strong></div>
               </article>
             </th:block>
           </div>
@@ -166,21 +163,23 @@
         </div>
 
         <div class="channel-heading">
-          <div><h3>Eligible channel comparison</h3><p>Eligibility is applied before preference and price. Bank B remains reference-only even when its synthetic rate is lower.</p></div>
+          <div><h3>Connected channel comparison</h3><p>Each channel uses its own linked account. Balance sufficiency is calculated separately after rate, fees and safety buffer.</p></div>
           <div class="channel-heading-tools">
-            <div class="available-balance" data-testid="payment-balance"><small>Selected payment balance</small><strong th:text="${#numbers.formatDecimal(paymentBalance,1,'COMMA',0,'POINT') + ' VND'}"></strong><span th:text="${selectedPaymentAccount.displayName + ' · ' + selectedPaymentAccount.maskedNumber}"></span></div>
+            <div class="available-balance"><small>Connected executable channels</small><strong th:text="${#lists.size(eligibleChannelQuotes)}"></strong><span>One linked account per channel</span></div>
             <form th:action="@{/student/quotes/refresh}" method="post"><button class="secondary" type="submit">↻ Refresh synthetic quotes</button></form>
           </div>
         </div>
         <div class="channel-grid">
-          <article class="channel-card" th:each="quote : ${eligibleChannelQuotes}" th:attr="data-testid=${'channel-' + quote.channelId},data-quote-expiry=${#temporals.format(quote.expiresAt,'yyyy-MM-dd''T''HH:mm:ss')}">
+          <th:block th:each="quote : ${eligibleChannelQuotes}" th:with="sourceAccount=${paymentAccountById.get(quote.sourceAccountId)},canFund=${sourceAccount != null and sourceAccount.canFund(quote.landedCost,agentPolicy.safetyBuffer)}">
+          <article class="channel-card" th:attr="data-testid=${'channel-' + quote.channelId},data-quote-expiry=${quote.expiresAtEpochMillis}">
             <div class="channel-top"><span class="rank" th:text="${quote.rank != null ? '#' + quote.rank : 'REF'}"></span><span class="eligibility" th:classappend="${quote.eligible ? ' eligible' : ' unavailable-tag'}" th:text="${quote.eligible ? 'Eligible' : 'Unavailable'}"></span></div>
             <h3 th:text="${quote.displayName}"></h3><p class="eligibility-reason" th:text="${quote.eligibilityReason}"></p>
+            <div class="channel-source"><small>Linked funding account</small><strong th:text="${sourceAccount.displayName + ' · ' + sourceAccount.maskedNumber}"></strong><span th:text="${#numbers.formatDecimal(sourceAccount.balance,1,'COMMA',0,'POINT') + ' VND available'}"></span></div>
             <div class="cost-summary">
               <div class="landed-cost"><small>Landed cost</small><strong th:text="${#numbers.formatDecimal(quote.landedCost,1,'COMMA',0,'POINT') + ' VND'}"></strong></div>
-              <div class="remaining-balance" th:classappend="${paymentBalance.compareTo(quote.landedCost) < 0 ? ' insufficient' : (paymentBalance.subtract(quote.landedCost).compareTo(agentPolicy.safetyBuffer) < 0 ? ' warning' : ' safe')}" th:attr="data-testid=${'remaining-' + quote.channelId}">
-                <small>Remaining after payment</small><strong th:text="${#numbers.formatDecimal(paymentBalance.subtract(quote.landedCost),1,'COMMA',0,'POINT') + ' VND'}"></strong>
-                <span th:if="${paymentBalance.compareTo(quote.landedCost) < 0}">Insufficient balance</span><span th:if="${paymentBalance.compareTo(quote.landedCost) >= 0 and paymentBalance.subtract(quote.landedCost).compareTo(agentPolicy.safetyBuffer) < 0}">Below safety buffer</span><span th:if="${paymentBalance.subtract(quote.landedCost).compareTo(agentPolicy.safetyBuffer) >= 0}">Safety buffer preserved</span>
+              <div class="remaining-balance" th:classappend="${sourceAccount.balance.compareTo(quote.landedCost) < 0 ? ' insufficient' : (sourceAccount.balance.subtract(quote.landedCost).compareTo(agentPolicy.safetyBuffer) < 0 ? ' warning' : ' safe')}" th:attr="data-testid=${'remaining-' + quote.channelId}">
+                <small>Remaining after payment</small><strong th:text="${#numbers.formatDecimal(sourceAccount.balance.subtract(quote.landedCost),1,'COMMA',0,'POINT') + ' VND'}"></strong>
+                <span th:if="${sourceAccount.balance.compareTo(quote.landedCost) < 0}">Insufficient balance</span><span th:if="${sourceAccount.balance.compareTo(quote.landedCost) >= 0 and sourceAccount.balance.subtract(quote.landedCost).compareTo(agentPolicy.safetyBuffer) < 0}">Below safety buffer</span><span th:if="${canFund}">Safety buffer preserved</span>
               </div>
             </div>
             <dl class="fee-breakdown">
@@ -195,9 +194,10 @@
             </dl>
             <div class="quote-meta"><span th:text="${quote.quoteSource}"></span><br><span th:text="${'Quoted ' + #temporals.format(quote.quotedAt,'dd MMM yyyy HH:mm:ss')}"></span><br><span th:text="${'Expires ' + #temporals.format(quote.expiresAt,'dd MMM yyyy HH:mm:ss')}"></span></div>
             <div class="quote-live-status" data-quote-live-status aria-live="polite"></div>
-            <form th:if="${selectedPaymentCanFund}" th:action="@{/agent/plans/tuition}" method="post" class="planning-form"><input type="hidden" name="channel" th:value="${quote.channelId}"><input type="hidden" name="sourceAccount" th:value="${selectedPaymentAccount.accountId}"><button class="planning-only" type="submit" th:attr="data-testid=${'plan-' + quote.channelId}">Create Approval Mode plan</button></form>
-            <button th:unless="${selectedPaymentCanFund}" type="button" class="source-account-warning" data-account-action="show-payable">Select an account ready to pay</button>
+            <form th:if="${canFund and !quote.expired}" th:action="@{/agent/plans/tuition}" method="post" class="planning-form"><input type="hidden" name="channel" th:value="${quote.channelId}"><button class="planning-only" type="submit" th:attr="data-testid=${'plan-' + quote.channelId}">Create Approval Mode plan</button></form>
+            <div th:if="${!canFund}" class="source-account-warning">Insufficient balance in linked account</div>
           </article>
+          </th:block>
         </div>
 
         <div class="suggestion-heading"><div><div class="eyebrow">MARKET SUGGESTIONS · REFERENCE ONLY</div><h3>Potentially better alternatives</h3><p>These channels may be cheaper or otherwise attractive, but they are not linked to your personal accounts. Connect and verify an account before they can become executable.</p></div></div>
@@ -356,6 +356,6 @@
     <div class="dialog-actions"><a class="secondary link-button" href="/#transactions">Cancel</a><button class="primary-button" type="submit">Confirm</button></div>
   </form>
 </dialog>
-<script th:src="@{/app.js}"></script>
+<script th:src="@{/app.js(v='20260930-2')}"></script>
 </body>
 </html>

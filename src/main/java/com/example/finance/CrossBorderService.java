@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -40,6 +41,7 @@ public class CrossBorderService {
     public record ChannelQuote(
             String channelId,
             String displayName,
+            String sourceAccountId,
             boolean eligible,
             String eligibilityReason,
             Integer rank,
@@ -48,6 +50,7 @@ public class CrossBorderService {
             String quoteSource,
             LocalDateTime quotedAt,
             LocalDateTime expiresAt,
+            long expiresAtEpochMillis,
             boolean expired,
             BigDecimal destinationAmount,
             BigDecimal sourceAmount,
@@ -62,8 +65,8 @@ public class CrossBorderService {
             LocalDate latestSafeDate,
             int safetyScore) {
         ChannelQuote withRank(Integer value) {
-            return new ChannelQuote(channelId, displayName, eligible, eligibilityReason, value,
-                    rateVndPerCny, quoteId, quoteSource, quotedAt, expiresAt, expired,
+            return new ChannelQuote(channelId, displayName, sourceAccountId, eligible, eligibilityReason, value,
+                    rateVndPerCny, quoteId, quoteSource, quotedAt, expiresAt, expiresAtEpochMillis, expired,
                     destinationAmount, sourceAmount, transferFee, markupRate, fxMarkup,
                     landedCost, expectedReceived, settlementMinDays, settlementMaxDays,
                     estimatedArrival, latestSafeDate, safetyScore);
@@ -95,15 +98,27 @@ public class CrossBorderService {
                 """, SCHOOL_NAME, TUITION_AMOUNT, "CNY", SCHOOL_RECIPIENT,
                 "SZDU-2026-MINH", LocalDate.now().plusDays(14));
 
-        insertChannel("ALIPAY", "Alipay Student Payment", true,
+        insertChannel("ALIPAY", "Alipay Student Payment", "ALIPAY_VND", true,
                 "Student profile includes an eligible Alipay education account",
                 "3535.0000", "120000.00", "0.003000", 85, 1, 1,
                 "Synthetic Alipay education quote feed");
-        insertChannel("BANK_A", "Bank A International Transfer", true,
+        insertChannel("BANK_A", "Bank A International Transfer", "PAYER_VND", true,
                 "Student profile includes an active Bank A account",
                 "3520.0000", "220000.00", "0.002000", 95, 2, 3,
                 "Synthetic Bank A treasury quote");
-        insertChannel("BANK_B", "Bank B Promotional Rate", false,
+        insertChannel("VCB", "Vietcombank International Transfer", "VCB_VND", true,
+                "Connected Vietcombank account supports the Vietnam to China corridor",
+                "3527.0000", "180000.00", "0.001800", 93, 2, 3,
+                "Synthetic Vietcombank treasury quote");
+        insertChannel("TCB", "Techcombank International Transfer", "TCB_VND", true,
+                "Connected Techcombank account supports the Vietnam to China corridor",
+                "3518.0000", "250000.00", "0.002200", 91, 2, 3,
+                "Synthetic Techcombank treasury quote");
+        insertChannel("MOMO", "MoMo Education Payment", "MOMO_VND", true,
+                "Connected MoMo wallet supports this synthetic education corridor",
+                "3542.0000", "90000.00", "0.003500", 82, 1, 2,
+                "Synthetic MoMo education quote feed");
+        insertChannel("BANK_B", "Bank B Promotional Rate", null, false,
                 "Unavailable: the student does not have a Bank B account",
                 "3480.0000", "100000.00", "0.001000", 90, 1, 2,
                 "Synthetic Bank B promotional quote");
@@ -120,18 +135,24 @@ public class CrossBorderService {
         }
         Integer activeQuoteCount = db.queryForObject("SELECT COUNT(*) FROM fx_quotes WHERE expires_at>?",
                 Integer.class, LocalDateTime.now());
-        if (activeQuoteCount == null || activeQuoteCount == 0) refreshQuotes();
+        Integer linkedChannelCount = db.queryForObject(
+                "SELECT COUNT(*) FROM payment_channels WHERE source_account_id IS NOT NULL", Integer.class);
+        if (linkedChannelCount == null || linkedChannelCount != 5) {
+            reset();
+        } else if (activeQuoteCount == null || activeQuoteCount == 0) {
+            refreshQuotes();
+        }
     }
 
-    private void insertChannel(String id, String name, boolean eligible, String reason,
+    private void insertChannel(String id, String name, String sourceAccountId, boolean eligible, String reason,
                                String rate, String fee, String markup, int safety,
                                int minDays, int maxDays, String source) {
         db.update("""
                 INSERT INTO payment_channels
-                (id,display_name,eligible,eligibility_reason,seed_rate_vnd_per_cny,transfer_fee_vnd,
+                (id,display_name,source_account_id,eligible,eligibility_reason,seed_rate_vnd_per_cny,transfer_fee_vnd,
                  fx_markup_rate,safety_score,settlement_min_days,settlement_max_days,quote_source)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?)
-                """, id, name, eligible, reason, new BigDecimal(rate), new BigDecimal(fee),
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+                """, id, name, sourceAccountId, eligible, reason, new BigDecimal(rate), new BigDecimal(fee),
                 new BigDecimal(markup), safety, minDays, maxDays, source);
     }
 
@@ -223,28 +244,29 @@ public class CrossBorderService {
         TuitionBill bill = bill();
         LocalDateTime now = LocalDateTime.now();
         List<ChannelQuote> options = db.query("""
-                SELECT c.id,c.display_name,c.eligible,c.eligibility_reason,c.transfer_fee_vnd,c.fx_markup_rate,
+                SELECT c.id,c.display_name,c.source_account_id,c.eligible,c.eligibility_reason,c.transfer_fee_vnd,c.fx_markup_rate,
                        c.safety_score,c.settlement_min_days,c.settlement_max_days,
                        q.id,q.rate_vnd_per_cny,q.source_label,q.quoted_at,q.expires_at
                 FROM payment_channels c JOIN fx_quotes q ON q.channel_id=c.id
                 """, (rs,n) -> {
-            BigDecimal rate = rs.getBigDecimal(11);
+            BigDecimal rate = rs.getBigDecimal(12);
             BigDecimal sourceAmount = bill.amount().multiply(rate).setScale(2, RoundingMode.HALF_UP);
-            BigDecimal markupRate = rs.getBigDecimal(6);
+            BigDecimal markupRate = rs.getBigDecimal(7);
             BigDecimal fxMarkup = sourceAmount.multiply(markupRate).setScale(2, RoundingMode.HALF_UP);
-            BigDecimal transferFee = rs.getBigDecimal(5);
+            BigDecimal transferFee = rs.getBigDecimal(6);
             BigDecimal landedCost = sourceAmount.add(transferFee).add(fxMarkup).setScale(2, RoundingMode.HALF_UP);
-            int maxDays = rs.getInt(9);
-            LocalDateTime quotedAt = rs.getTimestamp(13).toLocalDateTime();
-            LocalDateTime expiresAt = rs.getTimestamp(14).toLocalDateTime();
+            int maxDays = rs.getInt(10);
+            LocalDateTime quotedAt = rs.getTimestamp(14).toLocalDateTime();
+            LocalDateTime expiresAt = rs.getTimestamp(15).toLocalDateTime();
             return new ChannelQuote(
-                    rs.getString(1), rs.getString(2), rs.getBoolean(3), rs.getString(4), null,
-                    rate, rs.getString(10), rs.getString(12), quotedAt, expiresAt,
+                    rs.getString(1), rs.getString(2), rs.getString(3), rs.getBoolean(4), rs.getString(5), null,
+                    rate, rs.getString(11), rs.getString(13), quotedAt, expiresAt,
+                    expiresAt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(),
                     !now.isBefore(expiresAt), bill.amount(), sourceAmount, transferFee,
                     markupRate, fxMarkup, landedCost, bill.amount(),
-                    rs.getInt(8), maxDays, LocalDate.now().plusDays(maxDays),
+                    rs.getInt(9), maxDays, LocalDate.now().plusDays(maxDays),
                     bill.dueDate().minusDays(maxDays + SETTLEMENT_SAFETY_MARGIN_DAYS),
-                    rs.getInt(7));
+                    rs.getInt(8));
         });
 
         Comparator<ChannelQuote> preferenceComparator = switch(normalizedPreference) {

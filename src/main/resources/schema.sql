@@ -77,6 +77,7 @@ CREATE TABLE IF NOT EXISTS international_bills (
 
 CREATE TABLE IF NOT EXISTS payment_channels (
   id VARCHAR(30) PRIMARY KEY,
+  source_account_id VARCHAR(40),
   display_name VARCHAR(120) NOT NULL,
   eligible BOOLEAN NOT NULL,
   eligibility_reason VARCHAR(255) NOT NULL,
@@ -88,6 +89,7 @@ CREATE TABLE IF NOT EXISTS payment_channels (
   settlement_max_days INTEGER NOT NULL,
   quote_source VARCHAR(120) NOT NULL
 );
+ALTER TABLE payment_channels ADD COLUMN IF NOT EXISTS source_account_id VARCHAR(40);
 
 CREATE TABLE IF NOT EXISTS fx_quotes (
   id VARCHAR(50) PRIMARY KEY,

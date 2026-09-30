@@ -272,6 +272,16 @@ const translationsVi = new Map(Object.entries({
   'Use for payment': 'Dùng để thanh toán',
   'Show accounts ready to pay': 'Xem tài khoản đủ tiền',
   'Select an account ready to pay': 'Chọn tài khoản đủ tiền',
+  'Education wallet': 'Ví giáo dục',
+  'Linked channel': 'Kênh liên kết',
+  'Connected channel comparison': 'So sánh kênh đã kết nối',
+  'Each channel uses its own linked account. Balance sufficiency is calculated separately after rate, fees and safety buffer.': 'Mỗi kênh sử dụng đúng tài khoản đã liên kết. Khả năng đủ tiền được tính riêng sau tỷ giá, phí và vùng an toàn.',
+  'Connected executable channels': 'Kênh đã kết nối có thể thực thi',
+  'One linked account per channel': 'Mỗi kênh liên kết với một tài khoản',
+  'Linked funding account': 'Tài khoản nguồn liên kết',
+  'Insufficient balance in linked account': 'Tài khoản liên kết không đủ số dư',
+  'Each connected account has its own payment channel. Balance readiness is calculated against that channel\'s landed cost and the safety buffer.': 'Mỗi tài khoản đã kết nối có một kênh thanh toán riêng. Khả năng đủ tiền được tính theo tổng chi phí của chính kênh đó và vùng an toàn.',
+  'No supported payment channel is linked to this account.': 'Chưa có kênh thanh toán được hỗ trợ liên kết với tài khoản này.',
   'Everyday account': 'Tài khoản thanh toán',
   'Savings account': 'Tài khoản tiết kiệm',
   'E-wallet': 'Ví điện tử'
@@ -481,9 +491,9 @@ function initializeQuoteExpiryStatuses() {
   const render = () => {
     const vietnamese = selectedLanguage() === 'vi';
     cards.forEach((card) => {
-      const expiry = new Date(card.dataset.quoteExpiry);
-      const remainingSeconds = Math.floor((expiry.getTime() - Date.now()) / 1000);
-      const expired = !Number.isFinite(expiry.getTime()) || remainingSeconds <= 0;
+      const expiryEpochMillis = Number(card.dataset.quoteExpiry);
+      const remainingSeconds = Math.floor((expiryEpochMillis - Date.now()) / 1000);
+      const expired = !Number.isFinite(expiryEpochMillis) || remainingSeconds <= 0;
       const status = card.querySelector('[data-quote-live-status]');
       const planForm = card.querySelector('.planning-form');
       card.classList.toggle('quote-is-expired', expired);
@@ -516,6 +526,9 @@ function translateDynamic(text) {
     [/^(.+) VND remaining$/, 'Còn lại $1 VND'],
     [/^(.+) VND less$/, 'Ít hơn $1 VND'],
     [/^Needs (.+) VND more to pay safely\.$/, 'Cần thêm $1 VND để thanh toán an toàn.'],
+    [/^Needs (.+) VND more for its linked channel\.$/, 'Cần thêm $1 VND cho kênh liên kết.'],
+    [/^Enough for (.+) and the (.+) VND safety buffer\.$/, 'Đủ tiền cho $1 và vùng an toàn $2 VND.'],
+    [/^(.+) VND available$/, 'Số dư khả dụng $1 VND'],
     [/^(.+)\. Choose an eligible bank account for this tuition payment\.$/, '$1. Hãy chọn tài khoản ngân hàng đủ điều kiện cho khoản học phí này.'],
     [/^Quoted (.+)$/, 'Báo giá lúc $1'],
     [/^Expires (.+)$/, 'Hết hạn lúc $1'],
