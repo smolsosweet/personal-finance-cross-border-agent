@@ -127,6 +127,7 @@ const translationsVi = new Map(Object.entries({
   'Study expense planning': 'Lập kế hoạch chi phí du học',
   'EDUCATION BILLS': 'HÓA ĐƠN GIÁO DỤC',
   'Manage and verify provider bills': 'Quản lý và xác minh hóa đơn nhà cung cấp',
+  '← Scroll horizontally to view bills and providers →': '← Cuộn ngang để xem hóa đơn và nhà cung cấp →',
   'Verification belongs to each bill. Select a verified active bill before comparing payment channels.': 'Mỗi hóa đơn có trạng thái xác minh riêng. Hãy chọn hóa đơn đang hoạt động và đã xác minh trước khi so sánh kênh thanh toán.',
   'Search': 'Tìm kiếm',
   'Bill, provider, reference or beneficiary': 'Hóa đơn, nhà cung cấp, mã tham chiếu hoặc người thụ hưởng',
@@ -697,6 +698,7 @@ function initializeStudentBillList() {
     const start = (page - 1) * pageSize;
     const visibleRows = new Set(matches.slice(start, start + pageSize));
     rows.forEach((row) => { row.hidden = !visibleRows.has(row); });
+    list.scrollLeft = 0;
 
     const vietnamese = selectedLanguage() === 'vi';
     count.textContent = vietnamese

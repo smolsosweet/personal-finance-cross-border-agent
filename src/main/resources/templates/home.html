@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Atlas · Phase 5</title><link rel="stylesheet" th:href="@{/app.css(v='20261001-1')}">
+  <title>Atlas · Phase 5</title><link rel="stylesheet" th:href="@{/app.css(v='20261001-2')}">
 </head>
 <body>
 <div class="shell">
@@ -120,7 +120,7 @@
 
         <section class="student-expense-section">
           <div class="student-subheading">
-            <div><div class="eyebrow">EDUCATION BILLS</div><h3>Manage and verify provider bills</h3><p>Verification belongs to each bill. Select a verified active bill before comparing payment channels.</p></div>
+            <div><div class="eyebrow">EDUCATION BILLS</div><h3 id="student-bill-heading">Manage and verify provider bills</h3><p>Verification belongs to each bill. Select a verified active bill before comparing payment channels.</p></div>
             <span class="pill" th:text="${#lists.size(studentExpenses) + ' bill(s)'}"></span>
           </div>
           <div class="student-bill-toolbar" data-testid="student-bill-filters">
@@ -130,8 +130,8 @@
             <label><span>Sort</span><select data-testid="student-bill-sort"><option value="due-asc">Due date: nearest</option><option value="newest">Newest added</option><option value="amount-desc">Amount: highest</option><option value="provider-asc">Provider: A–Z</option></select></label>
             <button type="button" class="secondary clear-filters" data-testid="student-bill-clear">Clear filters</button>
           </div>
-          <div class="student-bill-list-heading" aria-hidden="true"><span>Bill and provider</span><span>Beneficiary</span><span>Amount and due date</span><span>State</span><span>Actions</span></div>
-          <div class="student-bill-list" data-testid="student-expense-list">
+          <div class="horizontal-scroll-hint">← Scroll horizontally to view bills and providers →</div>
+          <div class="student-bill-list" data-testid="student-expense-list" role="region" aria-labelledby="student-bill-heading" tabindex="0">
             <th:block th:each="expense : ${studentExpenses}">
               <article class="student-expense-card student-bill-row" th:classappend="${(expense.selected ? ' selected' : '') + (!expense.active ? ' inactive' : '')}"
                        th:attr="data-testid=${'expense-' + expense.id},data-bill-row=${expense.id},data-bill-status=${expense.executed ? 'PAID' : expense.lifecycleStatus},data-bill-lifecycle=${expense.lifecycleStatus},data-bill-verification=${expense.verificationStatus},data-bill-due=${expense.dueDate},data-bill-created=${expense.createdAt},data-bill-amount=${expense.amount},data-bill-provider=${expense.institution}">
@@ -399,6 +399,6 @@
   </main>
 </div>
 
-<script th:src="@{/app.js(v='20261001-1')}"></script>
+<script th:src="@{/app.js(v='20261001-2')}"></script>
 </body>
 </html>

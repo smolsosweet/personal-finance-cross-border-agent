@@ -11,6 +11,7 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.LoadState;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import org.junit.jupiter.api.AfterAll;
@@ -91,6 +92,35 @@ class StudentExpensePlaywrightE2ETest {
             assertEquals(1,page.locator("[data-bill-row]:visible").count());
             page.getByTestId("student-bill-clear").click();
             assertEquals(2,page.locator("[data-bill-row]:visible").count());
+            var bills = page.getByTestId("student-expense-list");
+            var firstBill = page.locator("[data-bill-row]:visible").nth(0).boundingBox();
+            var secondBill = page.locator("[data-bill-row]:visible").nth(1).boundingBox();
+            assertTrue(secondBill.x > firstBill.x, "Bills should be arranged horizontally on desktop");
+            assertTrue(Math.abs(secondBill.y - firstBill.y) < 2, "Bills should share one row");
+            bills.screenshot(new com.microsoft.playwright.Locator.ScreenshotOptions()
+                    .setPath(Path.of("target", "student-bills-desktop.png")));
+
+            page.setViewportSize(390, 844);
+            firstBill = page.locator("[data-bill-row]:visible").nth(0).boundingBox();
+            secondBill = page.locator("[data-bill-row]:visible").nth(1).boundingBox();
+            assertTrue(secondBill.x > firstBill.x, "Bills should remain horizontal on mobile");
+            assertTrue(Math.abs(secondBill.y - firstBill.y) < 2);
+            assertTrue((Boolean) bills.evaluate("element => element.scrollWidth > element.clientWidth"),
+                    "The bill container should allow horizontal scrolling");
+            assertTrue((Boolean) page.evaluate("""
+                    () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1
+                    """), "The page should not overflow horizontally");
+            bills.evaluate("element => { element.scrollLeft = element.scrollWidth; }");
+            page.waitForFunction("""
+                    () => document.querySelector('[data-testid="student-expense-list"]').scrollLeft > 0
+                    """);
+            page.getByTestId("language-vi").click();
+            assertThat(page.locator("#student-finance")).containsText("Cuộn ngang để xem hóa đơn và nhà cung cấp");
+            bills.screenshot(new com.microsoft.playwright.Locator.ScreenshotOptions()
+                    .setPath(Path.of("target", "student-bills-mobile-vi.png")));
+            page.getByTestId("language-en").click();
+            bills.evaluate("element => { element.scrollLeft = 0; }");
+            page.setViewportSize(1440, 1000);
             assertThat(page.getByTestId("tuition-bill")).containsText("2,500");
             assertThat(page.getByTestId("tuition-bill")).containsText("USD");
             assertThat(page.getByTestId("student-corridor")).containsText("United States");
