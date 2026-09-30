@@ -65,9 +65,14 @@ public class PhaseOneController {
         model.addAttribute("suggestedChannelQuotes", suggestedQuotes);
         model.addAttribute("cheapestEligibleCost", cheapestEligibleCost);
         model.addAttribute("agentPolicy", phaseFour.policy());
+        BigDecimal safePaymentThreshold = cheapestEligibleCost.add(phaseFour.policy().safetyBuffer());
+        var selectedPaymentAccount = phaseFour.selectedPaymentSource();
+        model.addAttribute("safePaymentThreshold", safePaymentThreshold);
         model.addAttribute("paymentAccounts", phaseFour.paymentSourceAccounts());
-        model.addAttribute("selectedPaymentAccount", phaseFour.selectedPaymentSource());
-        model.addAttribute("paymentBalance", phaseFour.selectedPaymentSource().balance());
+        model.addAttribute("selectedPaymentAccount", selectedPaymentAccount);
+        model.addAttribute("selectedPaymentCanFund", selectedPaymentAccount.canFund(cheapestEligibleCost,
+                phaseFour.policy().safetyBuffer()));
+        model.addAttribute("paymentBalance", selectedPaymentAccount.balance());
         model.addAttribute("conversation", phaseFour.messages());
         model.addAttribute("latestAction", phaseFour.latestAction());
         model.addAttribute("latestReceipt", phaseFour.latestReceipt());

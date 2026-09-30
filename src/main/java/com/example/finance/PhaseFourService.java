@@ -60,6 +60,9 @@ public class PhaseFourService {
             return "CONNECTED".equals(connectionStatus) && "VERIFIED".equals(verificationStatus)
                     && crossBorderEnabled && "VND".equals(currency);
         }
+        public boolean canFund(BigDecimal amount, BigDecimal safetyBuffer) {
+            return ready() && balance.subtract(amount).compareTo(safetyBuffer) >= 0;
+        }
     }
     public record AuditEvent(String id, LocalDateTime occurredAt, String actor,
             String eventType, String referenceId, String status, String reasonCode, String details) {}
@@ -607,6 +610,8 @@ public class PhaseFourService {
     public PaymentSourceAccount selectPaymentSource(String id) {
         PaymentSourceAccount source=paymentSource(id);
         if(!source.ready()) throw new IllegalArgumentException("Source account is not eligible for this corridor");
+        if(!source.canFund(cheapestEligibleTuitionCost(), policy().safetyBuffer()))
+            throw new IllegalArgumentException("Source account cannot safely cover this tuition bill");
         db.update("UPDATE payment_source_accounts SET selected=FALSE");
         db.update("UPDATE payment_source_accounts SET selected=TRUE WHERE account_id=?",id);
         audit("USER","PAYMENT_SOURCE_CHANGED",id,"COMPLETED",null,
@@ -617,6 +622,12 @@ public class PhaseFourService {
     private boolean sourceAccountEligible(String id) {
         try { return paymentSource(id).ready(); }
         catch (Exception ignored) { return false; }
+    }
+
+    private BigDecimal cheapestEligibleTuitionCost() {
+        return crossBorder.rankedQuotes().stream().filter(CrossBorderService.ChannelQuote::eligible)
+                .map(CrossBorderService.ChannelQuote::landedCost).min(BigDecimal::compareTo)
+                .orElse(BigDecimal.ZERO);
     }
 
     public int sandboxTransactionCount() {

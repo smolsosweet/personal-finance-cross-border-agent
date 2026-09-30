@@ -262,6 +262,16 @@ const translationsVi = new Map(Object.entries({
   'than the cheapest currently eligible option': 'so với lựa chọn hợp lệ rẻ nhất hiện tại',
   'Reference only · no payment action': 'Chỉ tham khảo · không có thao tác thanh toán',
   'Source account': 'Tài khoản nguồn',
+  'Ready to pay now': 'Sẵn sàng thanh toán ngay',
+  'Insufficient balance': 'Không đủ số dư',
+  'Unavailable for this corridor': 'Không khả dụng cho hành lang này',
+  'Ready to pay': 'Sẵn sàng thanh toán',
+  'Can cover the cheapest eligible option and keep the 3,000,000 VND safety buffer.': 'Đủ chi trả lựa chọn hợp lệ rẻ nhất và vẫn giữ vùng an toàn 3.000.000 VND.',
+  'Selected for payment': 'Đang chọn để thanh toán',
+  'Selected for comparison · cannot fund this bill': 'Đang dùng để so sánh · chưa đủ cho hóa đơn này',
+  'Use for payment': 'Dùng để thanh toán',
+  'Show accounts ready to pay': 'Xem tài khoản đủ tiền',
+  'Select an account ready to pay': 'Chọn tài khoản đủ tiền',
   'Everyday account': 'Tài khoản thanh toán',
   'Savings account': 'Tài khoản tiết kiệm',
   'E-wallet': 'Ví điện tử'
@@ -436,9 +446,7 @@ function initializePaymentAccounts() {
   const originalOrder = new Map(cards.map((card, index) => [card, index]));
 
   const render = () => {
-    const visible = cards.filter((card) => filter.value === 'all'
-      || (filter.value === 'ready' && card.dataset.ready === 'true')
-      || (filter.value === 'attention' && card.dataset.ready === 'false'));
+    const visible = cards.filter((card) => filter.value === 'all' || card.dataset.state === filter.value);
     const ordered = [...cards].sort((left, right) => {
       if (sort.value === 'balance-desc') return Number(right.dataset.balance) - Number(left.dataset.balance);
       if (sort.value === 'balance-asc') return Number(left.dataset.balance) - Number(right.dataset.balance);
@@ -454,6 +462,13 @@ function initializePaymentAccounts() {
     empty.hidden = visible.length !== 0;
   };
   [filter, sort].forEach((control) => control.addEventListener('change', render));
+  document.querySelectorAll('[data-account-action="show-payable"]').forEach((button) => {
+    button.addEventListener('click', () => {
+      filter.value = 'payable';
+      render();
+      grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
   renderPaymentAccounts = render;
   render();
 }
@@ -465,6 +480,8 @@ function translateDynamic(text) {
     [/^(\d+) recent events$/, '$1 sự kiện gần đây'],
     [/^(.+) VND remaining$/, 'Còn lại $1 VND'],
     [/^(.+) VND less$/, 'Ít hơn $1 VND'],
+    [/^Needs (.+) VND more to pay safely\.$/, 'Cần thêm $1 VND để thanh toán an toàn.'],
+    [/^(.+)\. Choose an eligible bank account for this tuition payment\.$/, '$1. Hãy chọn tài khoản ngân hàng đủ điều kiện cho khoản học phí này.'],
     [/^Quoted (.+)$/, 'Báo giá lúc $1'],
     [/^Expires (.+)$/, 'Hết hạn lúc $1'],
     [/^(.+) day\(s\)$/, '$1 ngày'],

@@ -27,6 +27,17 @@ class PaymentSourceIntegrationTest {
         assertEquals(5, accounts.size());
         assertEquals(3, accounts.stream().filter(PhaseFourService.PaymentSourceAccount::ready).count());
         assertEquals(2, accounts.stream().filter(account -> !account.ready()).count());
+        assertEquals(2, accounts.stream().filter(account -> account.canFund(
+                new BigDecimal("70760800.00"), PhaseFourService.SAFETY_BUFFER)).count());
+        assertEquals(PhaseFourService.PAYER, phaseFour.selectedPaymentSource().accountId());
+    }
+
+    @Test
+    void connectedAccountWithoutEnoughSafeBalanceCannotBeSelectedForThisBill() {
+        var error = assertThrows(IllegalArgumentException.class,
+                () -> phaseFour.selectPaymentSource("TCB_VND"));
+
+        assertTrue(error.getMessage().contains("cannot safely cover"));
         assertEquals(PhaseFourService.PAYER, phaseFour.selectedPaymentSource().accountId());
     }
 

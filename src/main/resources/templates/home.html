@@ -139,24 +139,28 @@
 
         <div class="payment-accounts-section">
           <div class="payment-accounts-heading">
-            <div><div class="eyebrow">YOUR CONNECTED PAYMENT SOURCES</div><h3>Personal accounts</h3><p>Every connected demo account is shown. Choose the account whose balance should be used for comparison and payment.</p></div>
+            <div><div class="eyebrow">YOUR CONNECTED PAYMENT SOURCES</div><h3>Personal accounts</h3><p>Status includes connection, corridor support, the cheapest eligible tuition cost and the 3,000,000 VND safety buffer.</p></div>
             <div class="payment-account-tools" data-testid="payment-account-filters">
-              <label>Status<select data-testid="payment-account-filter"><option value="all">All accounts</option><option value="ready">Ready for this corridor</option><option value="attention">Needs attention</option></select></label>
+              <label>Status<select data-testid="payment-account-filter"><option value="all">All accounts</option><option value="payable">Ready to pay now</option><option value="insufficient">Insufficient balance</option><option value="unavailable">Unavailable for this corridor</option></select></label>
               <label>Sort<select data-testid="payment-account-sort"><option value="recommended">Recommended</option><option value="balance-desc">Highest balance</option><option value="balance-asc">Lowest balance</option><option value="name">Name A–Z</option></select></label>
             </div>
           </div>
           <div class="payment-account-grid" data-testid="payment-account-list">
-            <article class="payment-account" th:each="account : ${paymentAccounts}"
-                     th:classappend="${account.selected ? ' selected' : (!account.ready ? ' unavailable' : '')}"
-                     th:attr="data-testid=${'payment-account-' + account.accountId},data-ready=${account.ready},data-selected=${account.selected},data-balance=${account.balance},data-name=${account.displayName}">
-              <div class="payment-account-top"><span class="bank-mark" th:text="${#strings.substring(account.institution,0,1)}"></span><span class="eligibility" th:classappend="${account.ready ? ' eligible' : ' unavailable-tag'}" th:text="${account.ready ? 'Ready' : 'Needs attention'}"></span></div>
-              <h4 th:text="${account.displayName}"></h4><p th:text="${account.institution + ' · ' + account.accountType + ' · ' + account.maskedNumber}"></p>
-              <strong class="account-balance" th:text="${#numbers.formatDecimal(account.balance,1,'COMMA',0,'POINT') + ' ' + account.currency}"></strong>
-              <small class="account-reason" th:text="${account.eligibilityReason}"></small>
-              <div th:if="${account.selected}" class="selected-account-label">✓ Selected for comparison</div>
-              <form th:if="${!account.selected and account.ready}" th:action="@{/student/source-account}" method="post"><input type="hidden" name="account" th:value="${account.accountId}"><button type="submit" class="select-account" th:attr="data-testid=${'select-account-' + account.accountId}">Use this account</button></form>
-              <div th:if="${!account.ready}" class="account-disabled">Not available for this corridor</div>
-            </article>
+            <th:block th:each="account : ${paymentAccounts}" th:with="canFund=${account.canFund(cheapestEligibleCost,agentPolicy.safetyBuffer)}">
+              <article th:class="${'payment-account' + (account.selected ? ' selected' : '') + (!canFund ? (account.ready ? ' insufficient-account' : ' unavailable') : '')}"
+                       th:attr="data-testid=${'payment-account-' + account.accountId},data-state=${canFund ? 'payable' : (account.ready ? 'insufficient' : 'unavailable')},data-selected=${account.selected},data-balance=${account.balance},data-name=${account.displayName}">
+                <div class="payment-account-top"><span class="bank-mark" th:text="${#strings.substring(account.institution,0,1)}"></span><span class="eligibility" th:classappend="${canFund ? ' eligible' : ' unavailable-tag'}" th:text="${canFund ? 'Ready to pay' : (account.ready ? 'Insufficient balance' : 'Unavailable')}"></span></div>
+                <h4 th:text="${account.displayName}"></h4><p th:text="${account.institution + ' · ' + account.accountType + ' · ' + account.maskedNumber}"></p>
+                <strong class="account-balance" th:text="${#numbers.formatDecimal(account.balance,1,'COMMA',0,'POINT') + ' ' + account.currency}"></strong>
+                <small th:if="${canFund}" class="account-reason" th:text="${'Can cover the cheapest eligible option and keep the ' + #numbers.formatDecimal(agentPolicy.safetyBuffer,1,'COMMA',0,'POINT') + ' VND safety buffer.'}"></small>
+                <small th:if="${account.ready and !canFund}" class="account-reason insufficient-reason" th:text="${'Needs ' + #numbers.formatDecimal(safePaymentThreshold.subtract(account.balance),1,'COMMA',0,'POINT') + ' VND more to pay safely.'}"></small>
+                <small th:if="${!account.ready}" class="account-reason" th:text="${account.eligibilityReason + '. Choose an eligible bank account for this tuition payment.'}"></small>
+                <div th:if="${canFund and account.selected}" class="selected-account-label">✓ Selected for payment</div>
+                <div th:if="${account.selected and !canFund}" class="selected-account-label insufficient-selected">Selected for comparison · cannot fund this bill</div>
+                <form th:if="${canFund and !account.selected}" th:action="@{/student/source-account}" method="post"><input type="hidden" name="account" th:value="${account.accountId}"><button type="submit" class="select-account" th:attr="data-testid=${'select-account-' + account.accountId}">Use for payment</button></form>
+                <button th:if="${!canFund}" type="button" class="account-help" data-account-action="show-payable">Show accounts ready to pay</button>
+              </article>
+            </th:block>
           </div>
           <div class="payment-account-empty" data-testid="payment-account-empty" hidden>No accounts match this filter.</div>
         </div>
@@ -191,7 +195,8 @@
             </dl>
             <div class="quote-meta"><span th:text="${quote.quoteSource}"></span><br><span th:text="${'Quoted ' + #temporals.format(quote.quotedAt,'dd MMM yyyy HH:mm:ss')}"></span><br><span th:text="${'Expires ' + #temporals.format(quote.expiresAt,'dd MMM yyyy HH:mm:ss')}"></span></div>
             <div th:if="${quote.expired}" class="quote-expired">Quote expired · refresh required</div>
-            <form th:action="@{/agent/plans/tuition}" method="post" class="planning-form"><input type="hidden" name="channel" th:value="${quote.channelId}"><input type="hidden" name="sourceAccount" th:value="${selectedPaymentAccount.accountId}"><button class="planning-only" type="submit" th:attr="data-testid=${'plan-' + quote.channelId}">Create Approval Mode plan</button></form>
+            <form th:if="${selectedPaymentCanFund}" th:action="@{/agent/plans/tuition}" method="post" class="planning-form"><input type="hidden" name="channel" th:value="${quote.channelId}"><input type="hidden" name="sourceAccount" th:value="${selectedPaymentAccount.accountId}"><button class="planning-only" type="submit" th:attr="data-testid=${'plan-' + quote.channelId}">Create Approval Mode plan</button></form>
+            <button th:unless="${selectedPaymentCanFund}" type="button" class="source-account-warning" data-account-action="show-payable">Select an account ready to pay</button>
           </article>
         </div>
 

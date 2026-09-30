@@ -51,7 +51,14 @@ class PaymentSourcePlaywrightE2ETest {
             assertThat(page.getByTestId("channel-BANK_B")).containsText("Reference only");
             assertEquals(0,page.getByTestId("channel-BANK_B").locator("button").count());
 
-            page.getByTestId("payment-account-filter").selectOption("attention");
+            page.getByTestId("payment-account-filter").selectOption("unavailable");
+            assertEquals(2,page.locator(".payment-account:visible").count());
+            page.getByTestId("payment-account-filter").selectOption("insufficient");
+            assertEquals(1,page.locator(".payment-account:visible").count());
+            assertThat(page.getByTestId("payment-account-TCB_VND")).containsText("Needs 28,760,800 VND more");
+            page.getByTestId("payment-account-filter").selectOption("all");
+
+            page.getByTestId("payment-account-MOMO_VND").getByRole(com.microsoft.playwright.options.AriaRole.BUTTON).click();
             assertEquals(2,page.locator(".payment-account:visible").count());
             page.getByTestId("payment-account-filter").selectOption("all");
 
