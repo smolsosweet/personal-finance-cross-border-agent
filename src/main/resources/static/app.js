@@ -237,6 +237,20 @@ const translationsVi = new Map(Object.entries({
   'Agent resumed.': 'Tác vụ đã hoạt động trở lại.',
   'Synthetic Phase 4 data reset.': 'Đã đặt lại dữ liệu mô phỏng Giai đoạn 4.',
   'YOUR CONNECTED PAYMENT SOURCES': 'NGUỒN THANH TOÁN ĐÃ KẾT NỐI',
+  'YOUR CONNECTED PAYMENT CHANNELS': 'KÊNH THANH TOÁN ĐÃ KẾT NỐI',
+  'Accounts and payment options': 'Tài khoản và phương án thanh toán',
+  'Each card combines one personal account with its linked payment channel, balance, complete cost and amount remaining after payment.': 'Mỗi thẻ gộp một tài khoản cá nhân với kênh thanh toán liên kết, số dư, tổng chi phí và số tiền còn lại sau thanh toán.',
+  'Connected channels': 'Kênh đã kết nối',
+  'One account per channel': 'Mỗi kênh dùng một tài khoản',
+  'All connected channels': 'Tất cả kênh đã kết nối',
+  'Quote expired': 'Báo giá đã hết hạn',
+  'Lowest landed cost': 'Tổng chi phí thấp nhất',
+  'Highest remaining balance': 'Số dư còn lại cao nhất',
+  'Fastest settlement': 'Quyết toán nhanh nhất',
+  'Highest safety score': 'Điểm an toàn cao nhất',
+  'Personal funding account': 'Tài khoản cá nhân dùng thanh toán',
+  'Available balance': 'Số dư hiện có',
+  'No connected channels match this filter.': 'Không có kênh đã kết nối phù hợp bộ lọc.',
   'Personal accounts': 'Tài khoản cá nhân',
   'Every connected demo account is shown. Choose the account whose balance should be used for comparison and payment.': 'Hiển thị đầy đủ các tài khoản demo đã kết nối. Chọn tài khoản có số dư sẽ được dùng để so sánh và thanh toán.',
   'All accounts': 'Tất cả tài khoản',
@@ -450,7 +464,7 @@ function initializeTransactionList() {
 function initializePaymentAccounts() {
   const grid = document.querySelector('[data-testid="payment-account-list"]');
   if (!grid) return;
-  const cards = Array.from(grid.querySelectorAll('.payment-account'));
+  const cards = Array.from(grid.querySelectorAll('.connected-payment-card'));
   const filter = document.querySelector('[data-testid="payment-account-filter"]');
   const sort = document.querySelector('[data-testid="payment-account-sort"]');
   const empty = document.querySelector('[data-testid="payment-account-empty"]');
@@ -459,12 +473,12 @@ function initializePaymentAccounts() {
   const render = () => {
     const visible = cards.filter((card) => filter.value === 'all' || card.dataset.state === filter.value);
     const ordered = [...cards].sort((left, right) => {
-      if (sort.value === 'balance-desc') return Number(right.dataset.balance) - Number(left.dataset.balance);
-      if (sort.value === 'balance-asc') return Number(left.dataset.balance) - Number(right.dataset.balance);
+      if (sort.value === 'cost-asc') return Number(left.dataset.cost) - Number(right.dataset.cost);
+      if (sort.value === 'remaining-desc') return Number(right.dataset.remaining) - Number(left.dataset.remaining);
+      if (sort.value === 'fastest') return Number(left.dataset.settlement) - Number(right.dataset.settlement);
+      if (sort.value === 'safest') return Number(right.dataset.safety) - Number(left.dataset.safety);
       if (sort.value === 'name') return left.dataset.name.localeCompare(right.dataset.name);
-      const selectedDifference = Number(right.dataset.selected === 'true') - Number(left.dataset.selected === 'true');
-      const readyDifference = Number(right.dataset.ready === 'true') - Number(left.dataset.ready === 'true');
-      return selectedDifference || readyDifference || originalOrder.get(left) - originalOrder.get(right);
+      return originalOrder.get(left) - originalOrder.get(right);
     });
     ordered.forEach((card) => {
       grid.append(card);
@@ -490,14 +504,25 @@ function initializeQuoteExpiryStatuses() {
 
   const render = () => {
     const vietnamese = selectedLanguage() === 'vi';
+    let accountFilterChanged = false;
     cards.forEach((card) => {
       const expiryEpochMillis = Number(card.dataset.quoteExpiry);
       const remainingSeconds = Math.floor((expiryEpochMillis - Date.now()) / 1000);
       const expired = !Number.isFinite(expiryEpochMillis) || remainingSeconds <= 0;
       const status = card.querySelector('[data-quote-live-status]');
       const planForm = card.querySelector('.planning-form');
+      const eligibility = card.querySelector('.eligibility');
       card.classList.toggle('quote-is-expired', expired);
       if (planForm) planForm.hidden = expired;
+      if (expired && card.classList.contains('connected-payment-card')) {
+        if (card.dataset.state !== 'expired') accountFilterChanged = true;
+        card.dataset.state = 'expired';
+        if (eligibility) {
+          eligibility.classList.remove('eligible');
+          eligibility.classList.add('unavailable-tag');
+          eligibility.textContent = vietnamese ? 'Báo giá đã hết hạn' : 'Quote expired';
+        }
+      }
       if (!status) return;
       status.classList.toggle('quote-expired', expired);
       if (expired) {
@@ -512,6 +537,7 @@ function initializeQuoteExpiryStatuses() {
         ? `Báo giá còn hiệu lực · còn ${minutes} phút ${seconds} giây`
         : `Quote valid · ${minutes}m ${seconds}s remaining`;
     });
+    if (accountFilterChanged) renderPaymentAccounts();
   };
   renderQuoteExpiryStatuses = render;
   render();

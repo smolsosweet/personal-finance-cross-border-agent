@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Atlas · Phase 5</title><link rel="stylesheet" th:href="@{/app.css(v='20260930-2')}">
+  <title>Atlas · Phase 5</title><link rel="stylesheet" th:href="@{/app.css(v='20260930-3')}">
 </head>
 <body>
 <div class="shell">
@@ -137,44 +137,30 @@
           </article>
         </div>
 
-        <div class="payment-accounts-section">
+        <div class="payment-accounts-section connected-payments-section">
           <div class="payment-accounts-heading">
-            <div><div class="eyebrow">YOUR CONNECTED PAYMENT SOURCES</div><h3>Personal accounts</h3><p>Each connected account has its own payment channel. Balance readiness is calculated against that channel's landed cost and the safety buffer.</p></div>
-            <div class="payment-account-tools" data-testid="payment-account-filters">
-              <label>Status<select data-testid="payment-account-filter"><option value="all">All accounts</option><option value="payable">Ready to pay now</option><option value="insufficient">Insufficient balance</option><option value="unavailable">Unavailable for this corridor</option></select></label>
-              <label>Sort<select data-testid="payment-account-sort"><option value="recommended">Recommended</option><option value="balance-desc">Highest balance</option><option value="balance-asc">Lowest balance</option><option value="name">Name A–Z</option></select></label>
+            <div><div class="eyebrow">YOUR CONNECTED PAYMENT CHANNELS</div><h3>Accounts and payment options</h3><p>Each card combines one personal account with its linked payment channel, balance, complete cost and amount remaining after payment.</p></div>
+            <div class="channel-heading-tools">
+              <div class="available-balance"><small>Connected channels</small><strong th:text="${#lists.size(eligibleChannelQuotes)}"></strong><span>One account per channel</span></div>
+              <form th:action="@{/student/quotes/refresh}" method="post"><button class="secondary" type="submit">↻ Refresh synthetic quotes</button></form>
             </div>
           </div>
-          <div class="payment-account-grid" data-testid="payment-account-list">
-            <th:block th:each="account : ${paymentAccounts}" th:with="channel=${channelBySourceAccountId.get(account.accountId)},canFund=${channel != null and account.canFund(channel.landedCost,agentPolicy.safetyBuffer)}">
-              <article th:class="${'payment-account' + (!canFund ? (channel != null ? ' insufficient-account' : ' unavailable') : '')}"
-                       th:attr="data-testid=${'payment-account-' + account.accountId},data-state=${canFund ? 'payable' : (channel != null ? 'insufficient' : 'unavailable')},data-selected=false,data-balance=${account.balance},data-name=${account.displayName}">
-                <div class="payment-account-top"><span class="bank-mark" th:text="${#strings.substring(account.institution,0,1)}"></span><span class="eligibility" th:classappend="${canFund ? ' eligible' : ' unavailable-tag'}" th:text="${canFund ? 'Ready to pay' : (channel != null ? 'Insufficient balance' : 'Unavailable')}"></span></div>
-                <h4 th:text="${account.displayName}"></h4><p th:text="${account.institution + ' · ' + account.accountType + ' · ' + account.maskedNumber}"></p>
-                <strong class="account-balance" th:text="${#numbers.formatDecimal(account.balance,1,'COMMA',0,'POINT') + ' ' + account.currency}"></strong>
-                <small th:if="${canFund}" class="account-reason" th:text="${'Enough for ' + channel.displayName + ' and the ' + #numbers.formatDecimal(agentPolicy.safetyBuffer,1,'COMMA',0,'POINT') + ' VND safety buffer.'}"></small>
-                <small th:if="${channel != null and !canFund}" class="account-reason insufficient-reason" th:text="${'Needs ' + #numbers.formatDecimal(channel.landedCost.add(agentPolicy.safetyBuffer).subtract(account.balance),1,'COMMA',0,'POINT') + ' VND more for its linked channel.'}"></small>
-                <small th:if="${channel == null}" class="account-reason">No supported payment channel is linked to this account.</small>
-                <div th:if="${channel != null}" class="linked-channel"><small>Linked channel</small><strong th:text="${channel.displayName}"></strong></div>
-              </article>
-            </th:block>
+          <div class="connected-payment-toolbar">
+            <div class="payment-account-tools" data-testid="payment-account-filters">
+              <label>Status<select data-testid="payment-account-filter"><option value="all">All connected channels</option><option value="payable">Ready to pay now</option><option value="insufficient">Insufficient balance</option><option value="expired">Quote expired</option></select></label>
+              <label>Sort<select data-testid="payment-account-sort"><option value="recommended">Recommended</option><option value="cost-asc">Lowest landed cost</option><option value="remaining-desc">Highest remaining balance</option><option value="fastest">Fastest settlement</option><option value="safest">Highest safety score</option><option value="name">Name A–Z</option></select></label>
+            </div>
           </div>
-          <div class="payment-account-empty" data-testid="payment-account-empty" hidden>No accounts match this filter.</div>
-        </div>
-
-        <div class="channel-heading">
-          <div><h3>Connected channel comparison</h3><p>Each channel uses its own linked account. Balance sufficiency is calculated separately after rate, fees and safety buffer.</p></div>
-          <div class="channel-heading-tools">
-            <div class="available-balance"><small>Connected executable channels</small><strong th:text="${#lists.size(eligibleChannelQuotes)}"></strong><span>One linked account per channel</span></div>
-            <form th:action="@{/student/quotes/refresh}" method="post"><button class="secondary" type="submit">↻ Refresh synthetic quotes</button></form>
-          </div>
-        </div>
-        <div class="channel-grid">
+          <div class="channel-grid connected-payment-grid" data-testid="payment-account-list">
           <th:block th:each="quote : ${eligibleChannelQuotes}" th:with="sourceAccount=${paymentAccountById.get(quote.sourceAccountId)},canFund=${sourceAccount != null and sourceAccount.canFund(quote.landedCost,agentPolicy.safetyBuffer)}">
-          <article class="channel-card" th:attr="data-testid=${'channel-' + quote.channelId},data-quote-expiry=${quote.expiresAtEpochMillis}">
-            <div class="channel-top"><span class="rank" th:text="${quote.rank != null ? '#' + quote.rank : 'REF'}"></span><span class="eligibility" th:classappend="${quote.eligible ? ' eligible' : ' unavailable-tag'}" th:text="${quote.eligible ? 'Eligible' : 'Unavailable'}"></span></div>
+          <article class="channel-card connected-payment-card" th:classappend="${!canFund ? ' insufficient-account' : ''}"
+                   th:attr="data-testid=${'channel-' + quote.channelId},data-quote-expiry=${quote.expiresAtEpochMillis},data-state=${quote.expired ? 'expired' : (canFund ? 'payable' : 'insufficient')},data-balance=${sourceAccount.balance},data-remaining=${sourceAccount.balance.subtract(quote.landedCost)},data-cost=${quote.landedCost},data-settlement=${quote.settlementMaxDays},data-safety=${quote.safetyScore},data-name=${quote.displayName}">
+            <div class="channel-top"><span class="rank" th:text="${quote.rank != null ? '#' + quote.rank : 'REF'}"></span><span class="eligibility" th:classappend="${canFund and !quote.expired ? ' eligible' : ' unavailable-tag'}" th:text="${quote.expired ? 'Quote expired' : (canFund ? 'Ready to pay' : 'Insufficient balance')}"></span></div>
             <h3 th:text="${quote.displayName}"></h3><p class="eligibility-reason" th:text="${quote.eligibilityReason}"></p>
-            <div class="channel-source"><small>Linked funding account</small><strong th:text="${sourceAccount.displayName + ' · ' + sourceAccount.maskedNumber}"></strong><span th:text="${#numbers.formatDecimal(sourceAccount.balance,1,'COMMA',0,'POINT') + ' VND available'}"></span></div>
+            <div class="channel-source combined-account-summary">
+              <div class="account-identity"><span class="bank-mark" th:text="${#strings.substring(sourceAccount.institution,0,1)}"></span><div><small>Personal funding account</small><strong th:text="${sourceAccount.displayName + ' · ' + sourceAccount.maskedNumber}"></strong><span th:text="${sourceAccount.institution + ' · ' + sourceAccount.accountType}"></span></div></div>
+              <div class="account-available"><small>Available balance</small><strong th:text="${#numbers.formatDecimal(sourceAccount.balance,1,'COMMA',0,'POINT') + ' ' + sourceAccount.currency}"></strong></div>
+            </div>
             <div class="cost-summary">
               <div class="landed-cost"><small>Landed cost</small><strong th:text="${#numbers.formatDecimal(quote.landedCost,1,'COMMA',0,'POINT') + ' VND'}"></strong></div>
               <div class="remaining-balance" th:classappend="${sourceAccount.balance.compareTo(quote.landedCost) < 0 ? ' insufficient' : (sourceAccount.balance.subtract(quote.landedCost).compareTo(agentPolicy.safetyBuffer) < 0 ? ' warning' : ' safe')}" th:attr="data-testid=${'remaining-' + quote.channelId}">
@@ -198,6 +184,8 @@
             <div th:if="${!canFund}" class="source-account-warning">Insufficient balance in linked account</div>
           </article>
           </th:block>
+          </div>
+          <div class="payment-account-empty" data-testid="payment-account-empty" hidden>No connected channels match this filter.</div>
         </div>
 
         <div class="suggestion-heading"><div><div class="eyebrow">MARKET SUGGESTIONS · REFERENCE ONLY</div><h3>Potentially better alternatives</h3><p>These channels may be cheaper or otherwise attractive, but they are not linked to your personal accounts. Connect and verify an account before they can become executable.</p></div></div>
@@ -356,6 +344,6 @@
     <div class="dialog-actions"><a class="secondary link-button" href="/#transactions">Cancel</a><button class="primary-button" type="submit">Confirm</button></div>
   </form>
 </dialog>
-<script th:src="@{/app.js(v='20260930-2')}"></script>
+<script th:src="@{/app.js(v='20260930-3')}"></script>
 </body>
 </html>
