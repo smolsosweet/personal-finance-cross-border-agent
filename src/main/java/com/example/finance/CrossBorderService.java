@@ -45,7 +45,11 @@ public class CrossBorderService {
                                  String recipientAccount,
                                  String paymentReference, LocalDate dueDate, String evidenceLabel,
                                  String documentName, String documentContentType, Long documentSize,
-                                 boolean selected, LocalDateTime createdAt) {}
+                                 boolean selected, String lifecycleStatus, boolean executed,
+                                 LocalDateTime createdAt, LocalDateTime updatedAt) {
+        public boolean active() { return "ACTIVE".equals(lifecycleStatus); }
+        public boolean editable() { return active() && !executed; }
+    }
 
     public record RecipientVerification(boolean verified, String status, String reason,
                                         String registryInstitution, String registryAccount) {}
@@ -105,10 +109,10 @@ public class CrossBorderService {
         db.update("""
                 INSERT INTO international_bills
                 (id,expense_type,title,institution,amount,currency,destination_country,recipient_account,payment_reference,due_date,
-                 evidence_label,document_name,document_content_type,document_size,selected,created_at)
-                VALUES (1,'TUITION','Tuition fee',?,?,?,?,?,?,?,'Synthetic tuition bill',NULL,NULL,NULL,TRUE,?)
+                 evidence_label,document_name,document_content_type,document_size,selected,lifecycle_status,created_at,updated_at)
+                VALUES (1,'TUITION','Tuition fee',?,?,?,?,?,?,?,'Synthetic tuition bill',NULL,NULL,NULL,TRUE,'ACTIVE',?,?)
                 """, SCHOOL_NAME, TUITION_AMOUNT, "CNY", "China", SCHOOL_RECIPIENT,
-                "SZDU-2026-MINH", LocalDate.now().plusDays(14), LocalDateTime.now());
+                "SZDU-2026-MINH", LocalDate.now().plusDays(14), LocalDateTime.now(), LocalDateTime.now());
 
         insertChannel("ALIPAY", "Alipay Student Payment", "ALIPAY_VND", true,
                 "Student profile includes an eligible Alipay education account",
@@ -300,8 +304,8 @@ public class CrossBorderService {
                         + tuition.destinationCountry() + " and " + tuition.currency() + "."
                 : "Bill " + tuition.paymentReference()
                         + " has a recipient mismatch and is blocked until verification succeeds.";
-        String evidence = option == null ? "School Registry verification" :
-                "Verified School Registry · " + option.displayName() + " · landed cost " + option.landedCost().toPlainString() + " VND";
+        String evidence = option == null ? "Education Provider Registry verification" :
+                "Verified Education Provider Registry · " + option.displayName() + " · landed cost " + option.landedCost().toPlainString() + " VND";
         return Map.of("priority", verification.verified() ? "HIGH" : "BLOCKED",
                 "title", title, "message", message, "evidence", evidence);
     }
@@ -326,9 +330,9 @@ public class CrossBorderService {
                 : "Bill " + tuition.paymentReference()
                         + " has a recipient mismatch and is blocked until verification succeeds.";
         String evidence = verification.verified()
-                ? "Selected plan · Verified School Registry · " + option.displayName()
+                ? "Selected plan · Verified Education Provider Registry · " + option.displayName()
                         + " · quote " + quoteId + " · landed cost " + landedCost.toPlainString() + " VND"
-                : "Selected plan · School Registry verification failed";
+                : "Selected plan · Education Provider Registry verification failed";
         return Map.of("priority", verification.verified() ? "HIGH" : "BLOCKED",
                 "title", title, "message", message, "evidence", evidence);
     }
@@ -336,7 +340,7 @@ public class CrossBorderService {
     public TuitionBill bill() {
         return db.queryForObject("""
                 SELECT id,institution,amount,currency,destination_country,recipient_account,payment_reference,due_date,evidence_label
-                FROM international_bills WHERE selected=TRUE ORDER BY id LIMIT 1
+                FROM international_bills WHERE selected=TRUE AND lifecycle_status='ACTIVE' ORDER BY id LIMIT 1
                 """, (rs,n) -> new TuitionBill(rs.getInt(1), rs.getString(2), rs.getBigDecimal(3),
                 rs.getString(4), rs.getString(5), rs.getString(6), rs.getString(7),
                 rs.getObject(8, LocalDate.class), rs.getString(9)));
@@ -344,14 +348,22 @@ public class CrossBorderService {
 
     public List<StudentExpense> expenses() {
         return db.query("""
-                SELECT id,expense_type,title,institution,amount,currency,destination_country,recipient_account,payment_reference,
-                       due_date,evidence_label,document_name,document_content_type,document_size,selected,created_at
-                FROM international_bills
-                ORDER BY selected DESC,due_date,id
+                SELECT b.id,b.expense_type,b.title,b.institution,b.amount,b.currency,b.destination_country,
+                       b.recipient_account,b.payment_reference,b.due_date,b.evidence_label,b.document_name,
+                       b.document_content_type,b.document_size,b.selected,b.lifecycle_status,b.created_at,b.updated_at,
+                       CASE WHEN EXISTS (
+                         SELECT 1 FROM action_plans a JOIN sandbox_transactions s ON s.action_id=a.id
+                         WHERE a.expense_id=b.id AND s.status='COMPLETED'
+                       ) THEN TRUE ELSE FALSE END AS executed
+                FROM international_bills b
+                ORDER BY b.selected DESC,
+                         CASE b.lifecycle_status WHEN 'ACTIVE' THEN 0 WHEN 'ARCHIVED' THEN 1 ELSE 2 END,
+                         b.due_date,b.id
                 """, (rs,n) -> new StudentExpense(rs.getInt(1), rs.getString(2), rs.getString(3), rs.getString(4),
                 rs.getBigDecimal(5), rs.getString(6), rs.getString(7), rs.getString(8), rs.getString(9),
                 rs.getObject(10, LocalDate.class), rs.getString(11), rs.getString(12), rs.getString(13),
-                rs.getObject(14, Long.class), rs.getBoolean(15), rs.getTimestamp(16).toLocalDateTime()));
+                rs.getObject(14, Long.class), rs.getBoolean(15), rs.getString(16), rs.getBoolean(19),
+                rs.getTimestamp(17).toLocalDateTime(), rs.getTimestamp(18).toLocalDateTime()));
     }
 
     public StudentExpense selectedExpense() {
@@ -389,23 +401,137 @@ public class CrossBorderService {
         db.update("""
                 INSERT INTO international_bills
                 (id,expense_type,title,institution,amount,currency,destination_country,recipient_account,payment_reference,due_date,
-                 evidence_label,document_name,document_content_type,document_size,selected,created_at)
-                VALUES (?,?,?,?,?,?,?,?,?,?,'User-provided expense',?,?,?,TRUE,?)
+                 evidence_label,document_name,document_content_type,document_size,selected,lifecycle_status,created_at,updated_at)
+                VALUES (?,?,?,?,?,?,?,?,?,?,'User-provided expense',?,?,?,TRUE,'ACTIVE',?,?)
                 """, id, normalizedType, cleanedTitle, cleanedInstitution, amount.setScale(2), cleanedCurrency,
                 cleanedCountry, cleanedRecipient,
-                cleanedReference, dueDate, documentName, documentContentType, documentSize, LocalDateTime.now());
+                cleanedReference, dueDate, documentName, documentContentType, documentSize,
+                LocalDateTime.now(), LocalDateTime.now());
         applySelectedCorridor(cleanedCountry, cleanedCurrency);
         return id;
     }
 
     @Transactional
     public void selectExpense(int id) {
-        Integer count = db.queryForObject("SELECT COUNT(*) FROM international_bills WHERE id=?", Integer.class, id);
+        Integer count = db.queryForObject("""
+                SELECT COUNT(*) FROM international_bills WHERE id=? AND lifecycle_status='ACTIVE'
+                """, Integer.class, id);
         if (count == null || count == 0) throw new IllegalArgumentException("Student expense does not exist");
         db.update("UPDATE international_bills SET selected=FALSE");
         db.update("UPDATE international_bills SET selected=TRUE WHERE id=?", id);
         StudentExpense selected = selectedExpense();
         applySelectedCorridor(selected.destinationCountry(), selected.currency());
+    }
+
+    @Transactional
+    public void updateExpense(int id, String expenseType, String title, String institution, BigDecimal amount,
+                              String destinationCountry, String currency, String recipientAccount,
+                              String paymentReference, LocalDate dueDate) {
+        StudentExpense current = expense(id);
+        if (!current.active()) throw new IllegalArgumentException("Only active student bills can be edited");
+        if (current.executed())
+            throw new IllegalArgumentException("An executed student bill cannot be edited; archive it to preserve the receipt and Audit Log");
+
+        String normalizedType = expenseType == null ? "" : expenseType.trim().toUpperCase();
+        if (!List.of("TUITION", "DORMITORY", "INSURANCE", "VISA", "LIVING", "OTHER").contains(normalizedType))
+            throw new IllegalArgumentException("Choose a supported student expense type");
+        String cleanedTitle = requiredText(title, "Expense title", 120);
+        String cleanedInstitution = requiredText(institution, "Institution or education provider", 120);
+        String cleanedCountry = requiredText(destinationCountry, "Destination country", 40);
+        String cleanedCurrency = requiredText(currency, "Destination currency", 3).toUpperCase();
+        if (!corridorSupported(cleanedCountry, cleanedCurrency))
+            throw new IllegalArgumentException("This demo has no configured quote data for the selected corridor");
+        String cleanedRecipient = requiredText(recipientAccount, "Recipient", 120);
+        String cleanedReference = requiredText(paymentReference, "Payment reference", 80);
+        if (amount == null || amount.signum() <= 0 || amount.scale() > 2)
+            throw new IllegalArgumentException("Amount must be positive with at most two decimal places");
+        if (dueDate == null) throw new IllegalArgumentException("Due date is required");
+
+        invalidatePendingPlans(id, "Student bill details changed");
+        db.update("""
+                UPDATE international_bills
+                SET expense_type=?,title=?,institution=?,amount=?,currency=?,destination_country=?,
+                    recipient_account=?,payment_reference=?,due_date=?,updated_at=?
+                WHERE id=?
+                """, normalizedType, cleanedTitle, cleanedInstitution, amount.setScale(2), cleanedCurrency,
+                cleanedCountry, cleanedRecipient, cleanedReference, dueDate, LocalDateTime.now(), id);
+        auditExpense("EXPENSE_UPDATED", id, "Student bill updated; all pending plans and approvals were invalidated");
+        if (current.selected()) applySelectedCorridor(cleanedCountry, cleanedCurrency);
+    }
+
+    @Transactional
+    public void archiveExpense(int id) {
+        StudentExpense expense = expense(id);
+        if (!expense.active()) throw new IllegalArgumentException("Only active student bills can be archived");
+        Integer fallbackId = fallbackExpenseId(expense);
+        invalidatePendingPlans(id, "Student bill archived");
+        db.update("UPDATE international_bills SET lifecycle_status='ARCHIVED',selected=FALSE,updated_at=? WHERE id=?",
+                LocalDateTime.now(), id);
+        auditExpense("EXPENSE_ARCHIVED", id, expense.executed()
+                ? "Executed student bill archived; receipt and Audit Log preserved"
+                : "Student bill archived; pending plans invalidated");
+        if (fallbackId != null) selectExpense(fallbackId);
+    }
+
+    @Transactional
+    public void cancelExpense(int id) {
+        StudentExpense expense = expense(id);
+        if (!expense.active()) throw new IllegalArgumentException("Only active student bills can be cancelled");
+        if (expense.executed())
+            throw new IllegalArgumentException("An executed student bill cannot be cancelled or deleted; archive it instead");
+        Integer fallbackId = fallbackExpenseId(expense);
+        invalidatePendingPlans(id, "Student bill cancelled");
+        db.update("UPDATE international_bills SET lifecycle_status='CANCELLED',selected=FALSE,updated_at=? WHERE id=?",
+                LocalDateTime.now(), id);
+        auditExpense("EXPENSE_CANCELLED", id, "Student bill cancelled; pending plans and approvals invalidated");
+        if (fallbackId != null) selectExpense(fallbackId);
+    }
+
+    @Transactional
+    public void restoreExpense(int id) {
+        StudentExpense expense = expense(id);
+        if (!"ARCHIVED".equals(expense.lifecycleStatus()))
+            throw new IllegalArgumentException("Only archived student bills can be restored");
+        db.update("UPDATE international_bills SET lifecycle_status='ACTIVE',updated_at=? WHERE id=?",
+                LocalDateTime.now(), id);
+        auditExpense("EXPENSE_RESTORED", id, "Archived student bill restored as active");
+    }
+
+    private StudentExpense expense(int id) {
+        return expenses().stream().filter(item -> item.id() == id).findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Student bill does not exist"));
+    }
+
+    private Integer fallbackExpenseId(StudentExpense expense) {
+        if (!expense.selected()) return null;
+        List<Integer> candidates = db.query("""
+                SELECT id FROM international_bills
+                WHERE id<>? AND lifecycle_status='ACTIVE'
+                ORDER BY due_date,id FETCH FIRST 1 ROWS ONLY
+                """, (rs,n) -> rs.getInt(1), expense.id());
+        if (candidates.isEmpty())
+            throw new IllegalArgumentException("Create or restore another active student bill before removing the selected bill");
+        return candidates.getFirst();
+    }
+
+    private void invalidatePendingPlans(int expenseId, String reason) {
+        List<String> planIds = db.query("""
+                SELECT id FROM action_plans
+                WHERE expense_id=? AND status NOT IN ('COMPLETED','INVALIDATED')
+                """, (rs,n) -> rs.getString(1), expenseId);
+        for (String planId : planIds) {
+            db.update("UPDATE action_plans SET status='INVALIDATED',risk=? WHERE id=?", reason, planId);
+            db.update("UPDATE approvals SET status='REVOKED' WHERE action_id=? AND status='VALID'", planId);
+            db.update("INSERT INTO audit_log VALUES (?,?,?,?,?,?,?,?)",
+                    "AUD-" + UUID.randomUUID().toString().substring(0,12).toUpperCase(), LocalDateTime.now(),
+                    "POLICY_GUARD", "ACTION_INVALIDATED", planId, "INVALIDATED", "EXPENSE CHANGED", reason);
+        }
+    }
+
+    private void auditExpense(String event, int expenseId, String details) {
+        db.update("INSERT INTO audit_log VALUES (?,?,?,?,?,?,?,?)",
+                "AUD-" + UUID.randomUUID().toString().substring(0,12).toUpperCase(), LocalDateTime.now(),
+                "USER", event, Integer.toString(expenseId), "COMPLETED", null, details);
     }
 
     private void applySelectedCorridor(String country, String currency) {
@@ -431,12 +557,12 @@ public class CrossBorderService {
                 WHERE institution=? AND recipient_account=? AND destination_country=? AND destination_currency=?
                 """, (rs,n) -> new RecipientVerification(
                 "VERIFIED".equals(rs.getString(3)), rs.getString(3),
-                "Bill institution, recipient account, corridor and currency match the School Registry",
+                "Bill institution, recipient account, corridor and currency match the verified Education Provider Registry",
                 rs.getString(1), rs.getString(2)), bill.institution(), bill.recipientAccount(),
                 bill.destinationCountry(), bill.currency());
         if (matches.isEmpty()) {
             return new RecipientVerification(false, "MISMATCH",
-                    "Bill recipient does not match the School Registry",
+                    "Bill recipient is not registered for this school or education provider",
                     null, null);
         }
         return matches.getFirst();

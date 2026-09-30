@@ -2,6 +2,7 @@ package com.example.finance;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -114,5 +115,70 @@ class StudentExpenseIntegrationTest {
         var receipt = phaseFour.approveAndExecute(plan.id());
         assertEquals("USD", receipt.destinationCurrency());
         assertEquals(0, new BigDecimal("2500.00").compareTo(receipt.cnyCredit()));
+    }
+
+    @Test void editingBillInvalidatesItsPendingPlanAndApprovalPath() {
+        int id = crossBorder.addExpense("DORMITORY", "Dormitory deposit",
+                CrossBorderService.SCHOOL_NAME, new BigDecimal("2500.00"), "China", "CNY",
+                CrossBorderService.SCHOOL_RECIPIENT, "DORM-EDIT-1", LocalDate.now().plusDays(20),
+                null, null, null);
+        var plan = phaseFour.createTuitionPlan("BANK_A");
+        assertEquals(id, plan.expenseId());
+        assertEquals("AWAITING_APPROVAL", plan.status());
+
+        crossBorder.updateExpense(id, "DORMITORY", "Updated dormitory deposit",
+                CrossBorderService.SCHOOL_NAME, new BigDecimal("2600.00"), "China", "CNY",
+                CrossBorderService.SCHOOL_RECIPIENT, "DORM-EDIT-2", LocalDate.now().plusDays(21));
+
+        assertEquals("INVALIDATED", phaseFour.action(plan.id()).status());
+        assertNull(phaseFour.approveAndExecute(plan.id()));
+        assertEquals("INVALIDATED", phaseFour.action(plan.id()).status());
+        assertEquals(0, phaseFour.sandboxTransactionCount());
+        assertEquals("Updated dormitory deposit", crossBorder.selectedExpense().title());
+    }
+
+    @Test void activeBillCanBeArchivedRestoredAndCancelled() {
+        int id = crossBorder.addExpense("INSURANCE", "Student insurance",
+                CrossBorderService.SCHOOL_NAME, new BigDecimal("500.00"), "China", "CNY",
+                CrossBorderService.SCHOOL_RECIPIENT, "INS-1", LocalDate.now().plusDays(25),
+                null, null, null);
+        var plan = phaseFour.createTuitionPlan("BANK_A");
+
+        crossBorder.archiveExpense(id);
+        assertEquals("ARCHIVED", expense(id).lifecycleStatus());
+        assertEquals("INVALIDATED", phaseFour.action(plan.id()).status());
+        assertEquals(1, crossBorder.selectedExpense().id());
+
+        crossBorder.restoreExpense(id);
+        assertEquals("ACTIVE", expense(id).lifecycleStatus());
+        crossBorder.cancelExpense(id);
+        assertEquals("CANCELLED", expense(id).lifecycleStatus());
+        assertFalse(expense(id).selected());
+    }
+
+    @Test void executedBillCannotBeEditedOrCancelledButCanBeArchived() {
+        int id = crossBorder.addExpense("TUITION", "Paid tuition",
+                CrossBorderService.US_SCHOOL_NAME, new BigDecimal("1000.00"), "United States", "USD",
+                CrossBorderService.US_SCHOOL_RECIPIENT, "PAID-1", LocalDate.now().plusDays(30),
+                null, null, null);
+        var plan = phaseFour.createTuitionPlan("BANK_A");
+        var receipt = phaseFour.approveAndExecute(plan.id());
+        assertEquals("COMPLETED", receipt.status());
+        assertTrue(expense(id).executed());
+
+        assertThrows(IllegalArgumentException.class, () -> crossBorder.updateExpense(id, "TUITION",
+                "Changed paid tuition", CrossBorderService.US_SCHOOL_NAME, new BigDecimal("1100.00"),
+                "United States", "USD", CrossBorderService.US_SCHOOL_RECIPIENT,
+                "PAID-CHANGED", LocalDate.now().plusDays(31)));
+        assertThrows(IllegalArgumentException.class, () -> crossBorder.cancelExpense(id));
+
+        crossBorder.archiveExpense(id);
+        assertEquals("ARCHIVED", expense(id).lifecycleStatus());
+        assertTrue(expense(id).executed());
+        assertEquals(1, phaseFour.sandboxTransactionCount());
+    }
+
+    private CrossBorderService.StudentExpense expense(int id) {
+        return crossBorder.expenses().stream().filter(item -> item.id() == id).findFirst().orElseThrow();
     }
 }

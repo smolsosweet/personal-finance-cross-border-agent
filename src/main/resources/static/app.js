@@ -125,13 +125,27 @@ const translationsVi = new Map(Object.entries({
   'Demo accounts': 'Tài khoản demo',
   'CROSS BORDER STUDENT FINANCE · SYNTHETIC DATA': 'TÀI CHÍNH DU HỌC XUYÊN BIÊN GIỚI · DỮ LIỆU MÔ PHỎNG',
   'Study expense planning': 'Lập kế hoạch chi phí du học',
+  'This tab is only for bills issued by a verified school or education provider. Personal transfers to friends or family belong to the future Transfers module.': 'Tab này chỉ dành cho hóa đơn do trường hoặc nhà cung cấp giáo dục đã xác minh phát hành. Chuyển tiền cho bạn bè hoặc người thân thuộc module Chuyển tiền trong tương lai.',
+  '+ Add student bill': '+ Thêm hóa đơn du học',
   'Manage several student bills, verify the selected recipient and compare simulated payment channels. No provider API or real payment is connected.': 'Quản lý nhiều khoản phí du học, xác minh người nhận của khoản đang chọn và so sánh các kênh thanh toán mô phỏng. Không kết nối API nhà cung cấp hoặc tiền thật.',
   '+ Add expense': '+ Thêm khoản phí',
   'STUDENT EXPENSES': 'CÁC KHOẢN PHÍ DU HỌC',
+  'VERIFIED EDUCATION BILLS': 'HÓA ĐƠN GIÁO DỤC ĐÃ XÁC MINH',
+  'Select an active bill to compare': 'Chọn hóa đơn đang hoạt động để so sánh',
+  'The selected school or provider bill controls recipient verification, quote amounts and the action plan.': 'Hóa đơn trường hoặc nhà cung cấp đang chọn quyết định việc xác minh người nhận, số tiền báo giá và kế hoạch hành động.',
   'Select an expense to compare': 'Chọn khoản phí để so sánh',
   'The selected bill controls recipient verification, quote amounts and the action plan.': 'Khoản đang chọn quyết định việc xác minh người nhận, số tiền báo giá và kế hoạch hành động.',
   'Selected': 'Đang chọn',
   'Compare this expense': 'So sánh khoản này',
+  'Compare': 'So sánh',
+  'Edit': 'Sửa',
+  'Archive': 'Lưu trữ',
+  'Cancel bill': 'Hủy khoản phí',
+  'Restore': 'Khôi phục',
+  'ARCHIVED': 'ĐÃ LƯU TRỮ',
+  'CANCELLED': 'ĐÃ HỦY',
+  'PAID': 'ĐÃ THANH TOÁN',
+  'Payment completed · receipt and Audit Log are immutable': 'Đã thanh toán · biên nhận và Audit Log không thể chỉnh sửa',
   'SELECTED EXPENSE': 'KHOẢN PHÍ ĐANG CHỌN',
   'Institution': 'Đơn vị thu',
   'Destination': 'Điểm đến',
@@ -150,26 +164,41 @@ const translationsVi = new Map(Object.entries({
   'These are not linked to your accounts and cannot be selected or executed.': 'Các kênh này chưa liên kết với tài khoản của bạn nên không thể chọn hoặc thực thi.',
   'Reference saving only': 'Chỉ là mức tiết kiệm tham khảo',
   'NEW STUDENT EXPENSE': 'KHOẢN PHÍ DU HỌC MỚI',
+  'NEW EDUCATION BILL': 'HÓA ĐƠN GIÁO DỤC MỚI',
+  'Add a school or provider bill': 'Thêm hóa đơn của trường hoặc nhà cung cấp',
+  'Only enter bills issued by a verified school or education provider. Personal payments to friends or family are outside this tab.': 'Chỉ nhập hóa đơn do trường hoặc nhà cung cấp giáo dục đã xác minh phát hành. Thanh toán cá nhân cho bạn bè hoặc người thân không thuộc tab này.',
+  'EDIT STUDENT BILL': 'SỬA HÓA ĐƠN DU HỌC',
+  'Changing this bill invalidates every pending plan and approval linked to its previous details.': 'Thay đổi hóa đơn này sẽ vô hiệu mọi kế hoạch và phê duyệt đang chờ gắn với thông tin cũ.',
   'Add a bill or fee': 'Thêm hóa đơn hoặc khoản phí',
   'Enter the verified fields from your bill. An attachment is stored as demo evidence only; this version does not run OCR.': 'Nhập các trường đã kiểm tra từ hóa đơn. File đính kèm chỉ được lưu làm bằng chứng demo; phiên bản này chưa chạy OCR.',
   'Expense type': 'Loại chi phí',
+  'Education expense type': 'Loại chi phí giáo dục',
   'Expense name': 'Tên khoản phí',
+  'Bill name': 'Tên hóa đơn',
   'Institution or provider': 'Trường hoặc đơn vị cung cấp',
+  'Verified school or education provider': 'Trường hoặc nhà cung cấp giáo dục đã xác minh',
   'Currency': 'Tiền tệ',
   'China': 'Trung Quốc',
   'United States': 'Hoa Kỳ',
   'Australia': 'Úc',
   'Recipient account': 'Tài khoản người nhận',
+  'Verified recipient account': 'Tài khoản người nhận đã xác minh',
   'Payment reference': 'Mã tham chiếu thanh toán',
   'Attachment (optional)': 'File đính kèm (không bắt buộc)',
   'PDF, JPG or PNG · maximum 5 MB · no OCR in this version': 'PDF, JPG hoặc PNG · tối đa 5 MB · phiên bản này chưa có OCR',
   'Add and compare expense': 'Thêm và so sánh khoản phí',
+  'Add and compare bill': 'Thêm và so sánh hóa đơn',
+  'Save and invalidate old plans': 'Lưu và vô hiệu kế hoạch cũ',
   'Tuition': 'Học phí',
   'Dormitory': 'Ký túc xá',
   'Insurance': 'Bảo hiểm',
+  'Student insurance': 'Bảo hiểm du học',
   'Visa': 'Thị thực',
+  'Visa fee': 'Phí thị thực',
   'Living expense': 'Sinh hoạt phí',
+  'Provider-billed living expense': 'Sinh hoạt phí do nhà cung cấp thu',
   'Other': 'Khác',
+  'Other education fee': 'Chi phí giáo dục khác',
   'Tuition planning': 'Lập kế hoạch học phí',
   'One fixed corridor and one verified bill. No provider API or real payment is connected.': 'Một hành lang cố định và một hóa đơn đã xác minh. Không kết nối API nhà cung cấp hoặc thanh toán thật.',
   'Rank eligible channels by': 'Xếp hạng kênh đủ điều kiện theo',
@@ -186,11 +215,15 @@ const translationsVi = new Map(Object.entries({
   'Recipient': 'Người nhận',
   'Evidence': 'Bằng chứng',
   'SCHOOL REGISTRY': 'DANH BẠ NHÀ TRƯỜNG',
+  'VERIFIED EDUCATION PROVIDER REGISTRY': 'DANH BẠ NHÀ CUNG CẤP GIÁO DỤC ĐÃ XÁC MINH',
   'Recipient verified': 'Đã xác minh người nhận',
   'Recipient mismatch': 'Người nhận không khớp',
   'No matching account': 'Không có tài khoản khớp',
+  'No matching education-provider account': 'Không có tài khoản nhà cung cấp giáo dục khớp',
   'Bill institution, recipient account, corridor and currency match the School Registry': 'Trường, tài khoản nhận, hành lang và tiền tệ trên hóa đơn khớp Danh bạ Nhà trường',
   'Bill recipient does not match the School Registry': 'Người nhận trên hóa đơn không khớp Danh bạ Nhà trường',
+  'Bill institution, recipient account, corridor and currency match the verified Education Provider Registry': 'Trường hoặc nhà cung cấp, tài khoản nhận, hành lang và tiền tệ trên hóa đơn khớp Danh bạ Nhà cung cấp Giáo dục đã xác minh',
+  'Bill recipient is not registered for this school or education provider': 'Tài khoản người nhận chưa được đăng ký cho trường hoặc nhà cung cấp giáo dục này',
   'Eligible channel comparison': 'So sánh kênh đủ điều kiện',
   'Eligibility is applied before preference and price. Bank B remains reference-only even when its synthetic rate is lower.': 'Điều kiện sử dụng được xét trước ưu tiên và giá. Bank B chỉ để tham khảo dù tỷ giá mô phỏng thấp hơn.',
   'Available payment balance': 'Số dư thanh toán hiện có',
@@ -609,20 +642,24 @@ function initializePaymentAccounts() {
 }
 
 function initializeStudentExpenseCorridor() {
-  const select = document.querySelector('[data-corridor-select]');
-  if (!select) return;
-  const currency = document.querySelector('[data-corridor-currency]');
-  const institution = document.querySelector('[data-corridor-institution]');
-  const recipient = document.querySelector('[data-corridor-recipient]');
-  const render = () => {
-    const option = select.selectedOptions[0];
-    if (!option) return;
-    currency.value = option.dataset.currency;
-    institution.value = option.dataset.institution;
-    recipient.value = option.dataset.recipient;
-  };
-  select.addEventListener('change', render);
-  render();
+  document.querySelectorAll('[data-corridor-form]').forEach((form) => {
+    const select = form.querySelector('[data-corridor-select]');
+    const currency = form.querySelector('[data-corridor-currency]');
+    const institution = form.querySelector('[data-corridor-institution]');
+    const recipient = form.querySelector('[data-corridor-recipient]');
+    if (!select || !currency || !institution || !recipient) return;
+    const render = (replaceProvider) => {
+      const option = select.selectedOptions[0];
+      if (!option) return;
+      currency.value = option.dataset.currency;
+      if (replaceProvider) {
+        institution.value = option.dataset.institution;
+        recipient.value = option.dataset.recipient;
+      }
+    };
+    select.addEventListener('change', () => render(true));
+    render(form.dataset.useCorridorDefaults === 'true');
+  });
 }
 
 function initializeQuoteExpiryStatuses() {

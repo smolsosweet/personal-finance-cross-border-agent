@@ -39,7 +39,7 @@ public class PhaseFourService {
 
     public record Policy(String mode, String state, String runtimeMode, BigDecimal perTxLimit,
                          BigDecimal dailyLimit, int frequencyLimit, BigDecimal safetyBuffer) {}
-    public record ActionPlan(String id, String actionType, String purpose,
+    public record ActionPlan(String id, String actionType, Integer expenseId, String purpose,
             BigDecimal debitAmount, BigDecimal conversionAmount, BigDecimal transferFee,
             BigDecimal fxMarkup, String sourceCurrency, String sourceAccountId, BigDecimal destinationAmount,
             String destinationCurrency, String recipient, String channelId, String quoteId,
@@ -249,7 +249,7 @@ public class PhaseFourService {
         String impact="Debit "+quote.landedCost().toPlainString()+" VND; convert "
                 +quote.sourceAmount().toPlainString()+" VND; credit "
                 +quote.expectedReceived().toPlainString()+" "+bill.currency();
-        ActionPlan plan=insertPlan(id,"TUITION","Pay "+expense.title()+" · "+bill.paymentReference(),
+        ActionPlan plan=insertPlan(id,"TUITION",bill.id(),"Pay "+expense.title()+" · "+bill.paymentReference(),
                 quote.landedCost(),quote.sourceAmount(),quote.transferFee(),quote.fxMarkup(),"VND",source.accountId(),
                 quote.expectedReceived(),bill.currency(),bill.recipientAccount(),quote.channelId(),quote.quoteId(),
                 "APPROVAL",impact,"Quote, recipient and approval are rechecked before execution");
@@ -296,7 +296,7 @@ public class PhaseFourService {
         if(amount==null||amount.signum()<=0) throw new IllegalArgumentException("Amount must be positive");
         BigDecimal normalized=amount.setScale(2);
         String id=newId("ACT");
-        ActionPlan plan=insertPlan(id,"LOW_RISK","Move funds to Emergency Fund",normalized,normalized,
+        ActionPlan plan=insertPlan(id,"LOW_RISK",null,"Move funds to Emergency Fund",normalized,normalized,
                 BigDecimal.ZERO.setScale(2),BigDecimal.ZERO.setScale(2),"VND",PAYER,normalized,"VND",
                 EMERGENCY,null,null,policy().mode().equals("DELEGATED")?"DELEGATED":"APPROVAL",
                 "Debit "+normalized.toPlainString()+" VND and credit the allowlisted Emergency Fund",
@@ -309,7 +309,7 @@ public class PhaseFourService {
         return plan;
     }
 
-    private ActionPlan insertPlan(String id,String type,String purpose,BigDecimal debit,
+    private ActionPlan insertPlan(String id,String type,Integer expenseId,String purpose,BigDecimal debit,
             BigDecimal conversion,BigDecimal fee,BigDecimal markup,String sourceCurrency,String sourceAccountId,
             BigDecimal destination,String destinationCurrency,String recipient,String channelId,
             String quoteId,String permission,String impact,String risk) {
@@ -318,11 +318,11 @@ public class PhaseFourService {
         String hash=hash(id,type,purpose,debit,destination,recipient,channelId,quoteId,sourceAccountId);
         db.update("""
                 INSERT INTO action_plans
-                (id,action_type,purpose,debit_amount,conversion_amount,transfer_fee,fx_markup,
+                (id,action_type,expense_id,purpose,debit_amount,conversion_amount,transfer_fee,fx_markup,
                  source_currency,source_account_id,destination_amount,destination_currency,recipient,channel_id,quote_id,
                  required_permission,impact,risk,status,action_hash,idempotency_key,created_at)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-                """,id,type,purpose,debit,conversion,fee,markup,sourceCurrency,sourceAccountId,destination,
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                """,id,type,expenseId,purpose,debit,conversion,fee,markup,sourceCurrency,sourceAccountId,destination,
                 destinationCurrency,recipient,channelId,quoteId,permission,impact,risk,
                 "PLANNED",hash,idem,now);
         audit("AGENT_ORCHESTRATOR","ACTION_PLANNED",id,"COMPLETED",null,
@@ -347,6 +347,7 @@ public class PhaseFourService {
 
     public PolicyDecision evaluate(ActionPlan plan,boolean execution) {
         Policy p=policy();
+        if("INVALIDATED".equals(plan.status())) return blocked("ACTION INVALIDATED");
         if("PAUSED".equals(p.state())) return blocked("AGENT PAUSED");
         if(!recipientAllowed(plan.recipient(),plan.actionType())) return blocked("RECIPIENT NOT ALLOWED");
         if(!sourceAccountEligible(plan.sourceAccountId())) return blocked("SOURCE ACCOUNT NOT ELIGIBLE");
@@ -427,7 +428,7 @@ public class PhaseFourService {
     @Transactional
     public Receipt approveAndExecute(String actionId) {
         ActionPlan approved=approve(actionId);
-        return "BLOCKED".equals(approved.status())?null:execute(actionId);
+        return List.of("BLOCKED","INVALIDATED").contains(approved.status())?null:execute(actionId);
     }
 
     @Transactional
@@ -494,7 +495,8 @@ public class PhaseFourService {
     }
 
     private ActionPlan block(ActionPlan plan,PolicyDecision d) {
-        db.update("UPDATE action_plans SET status='BLOCKED' WHERE id=?",plan.id());
+        if (!"ACTION INVALIDATED".equals(d.reasonCode()))
+            db.update("UPDATE action_plans SET status='BLOCKED' WHERE id=?",plan.id());
         audit("POLICY_GUARD","ACTION_BLOCKED",plan.id(),"BLOCKED",d.reasonCode(),d.explanation());
         return action(plan.id());
     }
@@ -526,16 +528,16 @@ public class PhaseFourService {
 
     public ActionPlan action(String id) {
         return db.queryForObject("""
-                SELECT id,action_type,purpose,debit_amount,conversion_amount,transfer_fee,fx_markup,
+                SELECT id,action_type,expense_id,purpose,debit_amount,conversion_amount,transfer_fee,fx_markup,
                        source_currency,COALESCE(source_account_id,'PAYER_VND'),destination_amount,destination_currency,recipient,channel_id,quote_id,
                        required_permission,impact,risk,status,action_hash,idempotency_key,created_at
                 FROM action_plans WHERE id=?
-                """,(rs,n)->new ActionPlan(rs.getString(1),rs.getString(2),rs.getString(3),
-                rs.getBigDecimal(4),rs.getBigDecimal(5),rs.getBigDecimal(6),rs.getBigDecimal(7),
-                rs.getString(8),rs.getString(9),rs.getBigDecimal(10),rs.getString(11),rs.getString(12),
-                rs.getString(13),rs.getString(14),rs.getString(15),rs.getString(16),
-                rs.getString(17),rs.getString(18),rs.getString(19),rs.getString(20),
-                rs.getTimestamp(21).toLocalDateTime()),id);
+                """,(rs,n)->new ActionPlan(rs.getString(1),rs.getString(2),rs.getObject(3,Integer.class),rs.getString(4),
+                rs.getBigDecimal(5),rs.getBigDecimal(6),rs.getBigDecimal(7),rs.getBigDecimal(8),
+                rs.getString(9),rs.getString(10),rs.getBigDecimal(11),rs.getString(12),rs.getString(13),
+                rs.getString(14),rs.getString(15),rs.getString(16),rs.getString(17),
+                rs.getString(18),rs.getString(19),rs.getString(20),rs.getString(21),
+                rs.getTimestamp(22).toLocalDateTime()),id);
     }
 
     public ActionPlan latestAction() {
@@ -547,7 +549,8 @@ public class PhaseFourService {
     public boolean matchesCurrentStudentSelection(ActionPlan plan) {
         if (plan == null || !"TUITION".equals(plan.actionType())) return true;
         var bill = crossBorder.bill();
-        if (!bill.recipientAccount().equals(plan.recipient())
+        if (plan.expenseId() == null || plan.expenseId() != bill.id()
+                || !bill.recipientAccount().equals(plan.recipient())
                 || !bill.currency().equals(plan.destinationCurrency())
                 || bill.amount().compareTo(plan.destinationAmount()) != 0) return false;
         return crossBorder.rankedQuotes().stream().anyMatch(quote ->
@@ -702,6 +705,7 @@ public class PhaseFourService {
             case "RECIPIENT NOT ALLOWED"->"Recipient is not on the allowlist for this action.";
             case "APPROVAL REQUIRED"->"User approval is required before sandbox execution.";
             case "APPROVAL EXPIRED"->"Approval is missing, expired, or no longer matches the action.";
+            case "ACTION INVALIDATED"->"The linked student bill changed, was archived, or was cancelled; create a new plan.";
             case "AGENT PAUSED"->"Emergency Stop is active, so new actions are blocked.";
             case "INSUFFICIENT SAFE BALANCE"->"Action would reduce the VND balance below the safety buffer.";
             case "UNTRUSTED INSTRUCTION"->"Untrusted input cannot modify policy, recipient, rates, fees or approval.";

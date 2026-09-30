@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.time.LocalDate;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Controller
 public class PhaseOneController {
@@ -218,6 +219,45 @@ public class PhaseOneController {
         return "redirect:/#student-finance";
     }
 
+    @PostMapping("/student/expenses/{id}/edit")
+    public String editStudentExpense(@PathVariable int id,
+                                     @RequestParam String expenseType,
+                                     @RequestParam String title,
+                                     @RequestParam String institution,
+                                     @RequestParam BigDecimal amount,
+                                     @RequestParam String destinationCountry,
+                                     @RequestParam String currency,
+                                     @RequestParam String recipientAccount,
+                                     @RequestParam String paymentReference,
+                                     @RequestParam LocalDate dueDate,
+                                     RedirectAttributes flash) {
+        crossBorder.updateExpense(id, expenseType, title, institution, amount, destinationCountry,
+                currency, recipientAccount, paymentReference, dueDate);
+        flash.addFlashAttribute("message", "Student bill updated. Pending plans and approvals were invalidated.");
+        return "redirect:/#student-finance";
+    }
+
+    @PostMapping("/student/expenses/{id}/archive")
+    public String archiveStudentExpense(@PathVariable int id, RedirectAttributes flash) {
+        crossBorder.archiveExpense(id);
+        flash.addFlashAttribute("message", "Student bill archived. Receipts and Audit Log were preserved.");
+        return "redirect:/#student-finance";
+    }
+
+    @PostMapping("/student/expenses/{id}/cancel")
+    public String cancelStudentExpense(@PathVariable int id, RedirectAttributes flash) {
+        crossBorder.cancelExpense(id);
+        flash.addFlashAttribute("message", "Student bill cancelled. It can no longer be compared or paid.");
+        return "redirect:/#student-finance";
+    }
+
+    @PostMapping("/student/expenses/{id}/restore")
+    public String restoreStudentExpense(@PathVariable int id, RedirectAttributes flash) {
+        crossBorder.restoreExpense(id);
+        flash.addFlashAttribute("message", "Student bill restored as active.");
+        return "redirect:/#student-finance";
+    }
+
     private String safeFileName(String originalName) {
         if (originalName == null || originalName.isBlank()) return "attachment";
         String normalized = originalName.replace('\\', '/');
@@ -301,8 +341,9 @@ public class PhaseOneController {
     }
 
     @ExceptionHandler(Exception.class)
-    public String error(Exception ex, RedirectAttributes flash) {
+    public String error(Exception ex, HttpServletRequest request, RedirectAttributes flash) {
         flash.addFlashAttribute("message", "Request failed: " + ex.getMessage());
-        return "redirect:/";
+        return request.getRequestURI().startsWith("/student/")
+                ? "redirect:/#student-finance" : "redirect:/";
     }
 }
