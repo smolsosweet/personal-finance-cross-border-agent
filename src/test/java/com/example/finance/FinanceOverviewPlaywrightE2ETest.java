@@ -87,6 +87,11 @@ class FinanceOverviewPlaywrightE2ETest {
         assertThat(page.locator(".plan-list > .finance-plan-row h3").filter(
                 new com.microsoft.playwright.Locator.FilterOptions().setHasText("Weekly groceries"))).isVisible();
         assertThat(page.locator("[data-dashboard-view='planning']")).hasAttribute("aria-selected", "true");
+        page.getByText("+ Add budget", new Page.GetByTextOptions().setExact(true)).click();
+        page.locator("#add-budget select[name='category']").selectOption("Groceries");
+        page.locator("#add-budget input[name='monthlyLimit']").fill("1800000");
+        page.locator("#add-budget button[type='submit']").click();
+        assertThat(page.locator(".budget-editor")).containsText("Groceries");
         page.locator("[data-dashboard-view='summary']").click();
         assertThat(page.getByTestId("total-personal-balance")).containsText("103,000,000");
         assertThat(page.getByTestId("reserved-next-30")).containsText("13,300,000");

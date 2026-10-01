@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Atlas · Finance workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261001-7')}">
+  <title>Atlas · Finance workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261001-8')}">
 </head>
 <body>
 <div class="shell">
@@ -150,12 +150,15 @@
               <div class="plan-main"><span class="plan-status" th:text="${plan.status}"></span><h3 th:text="${plan.title}"></h3><p th:text="${plan.category + ' · ' + (plan.funding_account_name ?: 'No funding source selected')}"></p><small th:if="${plan.notes != null}" th:text="${plan.notes}"></small></div>
               <div class="plan-money"><strong th:text="${#numbers.formatDecimal(plan.amount,1,'COMMA',0,'POINT') + ' VND'}"></strong><span th:if="${plan.reserve_funds}" th:text="${#numbers.formatDecimal(plan.projected_30_day_amount,1,'COMMA',0,'POINT') + ' reserved in 30 days'}"></span><span th:if="${!plan.reserve_funds}">Tracking only</span></div>
               <div class="plan-row-actions" th:if="${plan.status == 'ACTIVE'}"><button class="secondary" type="button" th:attr="data-open-dialog=${'edit-finance-plan-' + plan.id}">Edit</button><form th:action="@{'/finance/plans/' + ${plan.id} + '/complete'}" method="post"><button class="text-action" type="submit">Mark complete</button></form><form th:action="@{'/finance/plans/' + ${plan.id} + '/archive'}" method="post"><button class="text-action" type="submit">Archive</button></form></div>
-              <div class="plan-row-actions" th:if="${plan.status == 'COMPLETED'}"><form th:action="@{'/finance/plans/' + ${plan.id} + '/archive'}" method="post"><button class="text-action" type="submit">Archive</button></form></div>
+              <div class="plan-row-actions" th:if="${plan.status == 'COMPLETED'}"><form th:action="@{'/finance/plans/' + ${plan.id} + '/reopen'}" method="post"><button class="secondary" type="submit">Reopen plan</button></form><form th:action="@{'/finance/plans/' + ${plan.id} + '/archive'}" method="post"><button class="text-action" type="submit">Archive</button></form></div>
             </article>
           </div>
-          <section class="budget-editor" id="budget"><div class="subsection-heading"><div><h3>Monthly category budgets</h3><p>Weekly guidance is derived from monthly limits, preventing conflicting targets.</p></div></div>
+          <section class="budget-editor" id="budget"><div class="subsection-heading budget-heading"><div><h3>Monthly category budgets</h3><p>Weekly guidance is derived from monthly limits, preventing conflicting targets.</p></div><button class="secondary" type="button" data-open-dialog="add-budget">+ Add budget</button></div>
             <div class="budget-row" th:each="budget : ${budgets}"><div class="budget-head"><strong th:text="${budget.category}"></strong><span th:text="${#numbers.formatDecimal(budget.spent,1,'COMMA',0,'POINT') + ' / ' + #numbers.formatDecimal(budget.monthly_limit,1,'COMMA',0,'POINT') + ' VND'}"></span></div><div class="progress"><span th:style="|width: ${budget.percent}%|"></span></div><small th:text="${#numbers.formatDecimal(budget.remaining,1,'COMMA',0,'POINT') + ' VND remaining'}"></small><form th:action="@{/finance/budgets}" method="post" class="budget-edit-form"><input type="hidden" name="category" th:value="${budget.category}"><label><span>Monthly limit</span><input name="monthlyLimit" type="number" min="1" step="1" required th:value="${budget.monthly_limit}"></label><button class="secondary" type="submit">Update</button></form></div>
           </section>
+        <dialog id="add-budget" class="finance-dialog"><div class="dialog-heading"><div><small>NEW CATEGORY BUDGET</small><h3>Add a monthly budget</h3></div><button type="button" data-close-dialog aria-label="Close">×</button></div><p>Choose an active spending category. A category can have one monthly budget; update that budget instead of creating a duplicate.</p>
+          <form th:action="@{/finance/budgets/new}" method="post" class="finance-form"><label class="wide"><span>Category</span><select name="category" required><option value="">Choose a category</option><option th:each="category : ${budgetCategories}" th:value="${category}" th:text="${category}"></option></select></label><label class="wide"><span>Monthly limit (VND)</span><input name="monthlyLimit" type="number" min="1" step="1" required></label><button class="primary-button wide" type="submit">Add budget</button></form>
+        </dialog>
         </div>
         <dialog id="add-finance-plan" class="finance-dialog"><div class="dialog-heading"><div><small>NEW FINANCE PLAN</small><h3>Plan upcoming money</h3></div><button type="button" data-close-dialog aria-label="Close">×</button></div><p>A plan is a forecast. It never executes a payment. Payment approval remains in Agent &amp; Payments.</p>
           <form th:action="@{/finance/plans}" method="post" class="finance-form"><label class="wide"><span>Plan name</span><input name="title" maxlength="120" required placeholder="Example: Rent or weekly groceries"></label><label><span>Plan type</span><select name="planType" required><option value="EXPENSE">One-time expense</option><option value="RECURRING_BILL">Recurring bill</option><option value="SAVINGS_GOAL">Savings goal</option></select></label><label><span>Category</span><input name="category" maxlength="80" required placeholder="Example: Housing"></label><label><span>Amount (VND)</span><input name="amount" type="number" min="1" step="0.01" required></label><label><span>Cadence</span><select name="cadence" required><option value="ONCE">Once</option><option value="WEEKLY">Weekly</option><option value="MONTHLY">Monthly</option></select></label><label><span>Next due date</span><input name="nextDueDate" type="date" required></label><label><span>Funding source</span><select name="fundingAccountId"><option value="">Decide later</option><option th:each="account : ${accounts}" th:value="${account.id}" th:text="${account.account_name + ' · ' + #numbers.formatDecimal(account.balance,1,'COMMA',0,'POINT') + ' VND'}"></option></select></label><label class="wide reserve-choice"><input name="reserveFunds" type="checkbox" value="true"><span>Reserve this money in available-to-allocate calculations</span></label><label class="wide"><span>Notes</span><input name="notes" maxlength="255" placeholder="Optional context"></label><button class="primary-button wide" type="submit">Add plan</button></form>
@@ -464,6 +467,6 @@
   </main>
 </div>
 
-<script th:src="@{/app.js(v='20261001-7')}"></script>
+<script th:src="@{/app.js(v='20261001-8')}"></script>
 </body>
 </html>

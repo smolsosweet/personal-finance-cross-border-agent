@@ -296,6 +296,15 @@ public class FinanceWorkspaceService {
     }
 
     @Transactional
+    public void reopenPlan(String id) {
+        int updated = db.update("""
+                UPDATE finance_plans SET status='ACTIVE',updated_at=CURRENT_TIMESTAMP
+                WHERE id=? AND status='COMPLETED'
+                """, id);
+        if (updated == 0) throw new IllegalStateException("Only completed plans can be reopened");
+    }
+
+    @Transactional
     public void updateBudget(String category, BigDecimal monthlyLimit) {
         category = required(category, "Category", 80);
         if (monthlyLimit == null || monthlyLimit.signum() <= 0) {
@@ -304,6 +313,44 @@ public class FinanceWorkspaceService {
         int updated = db.update("UPDATE budgets SET monthly_limit=? WHERE category=?",
                 monthlyLimit.setScale(2), category);
         if (updated == 0) throw new IllegalArgumentException("Budget category not found");
+    }
+
+    public List<String> budgetCategories() {
+        return db.queryForList("""
+                SELECT c.name
+                FROM transaction_categories c
+                WHERE c.active=TRUE
+                  AND LOWER(c.name) NOT IN ('income','transfer','refund')
+                  AND NOT EXISTS (
+                    SELECT 1 FROM budgets b WHERE LOWER(b.category)=LOWER(c.name)
+                  )
+                ORDER BY c.name
+                """, String.class);
+    }
+
+    @Transactional
+    public void addBudget(String category, BigDecimal monthlyLimit) {
+        category = required(category, "Category", 80);
+        if (monthlyLimit == null || monthlyLimit.signum() <= 0) {
+            throw new IllegalArgumentException("Monthly limit must be positive");
+        }
+        Integer eligible = db.queryForObject("""
+                SELECT COUNT(*) FROM transaction_categories
+                WHERE active=TRUE AND LOWER(name)=LOWER(?)
+                  AND LOWER(name) NOT IN ('income','transfer','refund')
+                """, Integer.class, category);
+        if (eligible == null || eligible == 0) {
+            throw new IllegalArgumentException("Choose an active spending category");
+        }
+        Integer existing = db.queryForObject(
+                "SELECT COUNT(*) FROM budgets WHERE LOWER(category)=LOWER(?)", Integer.class, category);
+        if (existing != null && existing > 0) {
+            throw new IllegalStateException("This category already has a monthly budget");
+        }
+        String canonicalCategory = db.queryForObject(
+                "SELECT name FROM transaction_categories WHERE LOWER(name)=LOWER(?)", String.class, category);
+        db.update("INSERT INTO budgets(category,monthly_limit) VALUES (?,?)",
+                canonicalCategory, monthlyLimit.setScale(2));
     }
 
     private int projectedOccurrences(LocalDate due, String cadence, LocalDate start, LocalDate end) {

@@ -57,6 +57,7 @@ public class PhaseOneController {
         model.addAttribute("eventCount", transactions.eventCount());
         model.addAttribute("dashboard", transactions.dashboard());
         model.addAttribute("budgets", transactions.budgetSummary());
+        model.addAttribute("budgetCategories", financeWorkspace.budgetCategories());
         model.addAttribute("financeSummary", financeWorkspace.summary());
         model.addAttribute("financePlans", financeWorkspace.plans());
         model.addAttribute("attentionItems", financeWorkspace.attentionItems(
@@ -281,12 +282,28 @@ public class PhaseOneController {
         return "redirect:/#planning";
     }
 
+    @PostMapping("/finance/plans/{id}/reopen")
+    public String reopenFinancePlan(@PathVariable String id, RedirectAttributes flash) {
+        financeWorkspace.reopenPlan(id);
+        flash.addFlashAttribute("message", "Plan reopened. Reserved money was recalculated.");
+        return "redirect:/#planning";
+    }
+
     @PostMapping("/finance/budgets")
     public String updateBudget(@RequestParam String category,
                                @RequestParam BigDecimal monthlyLimit,
                                RedirectAttributes flash) {
         financeWorkspace.updateBudget(category, monthlyLimit);
         flash.addFlashAttribute("message", "Monthly budget updated. The weekly guide was recalculated.");
+        return "redirect:/#planning";
+    }
+
+    @PostMapping("/finance/budgets/new")
+    public String addBudget(@RequestParam String category,
+                            @RequestParam BigDecimal monthlyLimit,
+                            RedirectAttributes flash) {
+        financeWorkspace.addBudget(category, monthlyLimit);
+        flash.addFlashAttribute("message", "Monthly category budget added. The weekly guide was recalculated.");
         return "redirect:/#planning";
     }
 

@@ -36,6 +36,10 @@ class FinanceWorkspaceIntegrationTest {
         workspace.completePlan("PLAN-RENT");
         assertMoney("300000.00", workspace.summary().reservedNext30Days());
         assertMoney("97700000.00", workspace.summary().availableToAllocate());
+
+        workspace.reopenPlan("PLAN-RENT");
+        assertMoney("8300000.00", workspace.summary().reservedNext30Days());
+        assertMoney("89700000.00", workspace.summary().availableToAllocate());
     }
 
     @Test
@@ -77,6 +81,18 @@ class FinanceWorkspaceIntegrationTest {
 
         assertMoney("8645000.00", workspace.summary().monthlyBudget());
         assertMoney("1989643.00", workspace.summary().weeklyGuide());
+    }
+
+    @Test
+    void activeSpendingCategoryCanReceiveOneBudgetOnly() {
+        workspace.addBudget("Groceries", new BigDecimal("1800000"));
+
+        assertTrue(workspace.budgetCategories().stream().noneMatch("Groceries"::equals));
+        assertMoney("8100000.00", workspace.summary().monthlyBudget());
+        assertThrows(IllegalStateException.class,
+                () -> workspace.addBudget("Groceries", new BigDecimal("2000000")));
+        assertThrows(IllegalArgumentException.class,
+                () -> workspace.addBudget("Income", new BigDecimal("2000000")));
     }
 
     private static void assertMoney(String expected, BigDecimal actual) {
