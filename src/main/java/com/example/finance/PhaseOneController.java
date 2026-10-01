@@ -25,15 +25,18 @@ public class PhaseOneController {
     private final CrossBorderService crossBorder;
     private final PhaseFourService phaseFour;
     private final DemoDataService demoData;
+    private final FinanceWorkspaceService financeWorkspace;
     private final boolean demoToolsEnabled;
 
     public PhaseOneController(TransactionService transactions, CrossBorderService crossBorder,
                               PhaseFourService phaseFour, DemoDataService demoData,
+                              FinanceWorkspaceService financeWorkspace,
                               @Value("${app.demo-tools-enabled:true}") boolean demoToolsEnabled) {
         this.transactions = transactions;
         this.crossBorder = crossBorder;
         this.phaseFour = phaseFour;
         this.demoData = demoData;
+        this.financeWorkspace = financeWorkspace;
         this.demoToolsEnabled = demoToolsEnabled;
     }
 
@@ -47,13 +50,17 @@ public class PhaseOneController {
                        @RequestParam(required=false) String newTransaction,
                        @RequestParam(required=false) String action, HttpServletRequest request, Model model) {
         model.addAttribute("profile", transactions.profile());
-        model.addAttribute("accounts", transactions.accounts());
+        model.addAttribute("accounts", financeWorkspace.accounts());
         model.addAttribute("transactions", transactions.transactions());
         model.addAttribute("pendingTransactions", transactions.pendingTransactions());
         model.addAttribute("transactionCategories", transactions.categories());
         model.addAttribute("eventCount", transactions.eventCount());
         model.addAttribute("dashboard", transactions.dashboard());
         model.addAttribute("budgets", transactions.budgetSummary());
+        model.addAttribute("financeSummary", financeWorkspace.summary());
+        model.addAttribute("financePlans", financeWorkspace.plans());
+        model.addAttribute("attentionItems", financeWorkspace.attentionItems(
+                ((Number) transactions.dashboard().get("pendingReview")).intValue()));
         Map<String,Object> defaultTuitionInsight = crossBorder.tuitionInsight();
         var insights = new ArrayList<>(transactions.proactiveFeed());
         insights.add(defaultTuitionInsight);
@@ -191,6 +198,96 @@ public class PhaseOneController {
         crossBorder.setPreference(preference);
         flash.addFlashAttribute("message", "Channel ranking updated to " + preference.toLowerCase() + ".");
         return "redirect:/#student-finance";
+    }
+
+    @PostMapping("/finance/accounts")
+    public String addMoneySource(@RequestParam String name,
+                                 @RequestParam String institution,
+                                 @RequestParam String accountType,
+                                 @RequestParam(required=false) String maskedNumber,
+                                 @RequestParam BigDecimal balance,
+                                 RedirectAttributes flash) {
+        financeWorkspace.addManualAccount(name, institution, accountType, maskedNumber, balance);
+        flash.addFlashAttribute("message", "Money source added. Manual balances are included in your personal overview.");
+        return "redirect:/#accounts";
+    }
+
+    @PostMapping("/finance/accounts/{id}/edit")
+    public String editMoneySource(@PathVariable String id,
+                                  @RequestParam String name,
+                                  @RequestParam String institution,
+                                  @RequestParam String accountType,
+                                  @RequestParam(required=false) String maskedNumber,
+                                  @RequestParam BigDecimal balance,
+                                  RedirectAttributes flash) {
+        financeWorkspace.updateManualAccount(id, name, institution, accountType, maskedNumber, balance);
+        flash.addFlashAttribute("message", "Manual money source updated.");
+        return "redirect:/#accounts";
+    }
+
+    @PostMapping("/finance/accounts/{id}/archive")
+    public String archiveMoneySource(@PathVariable String id, RedirectAttributes flash) {
+        financeWorkspace.archiveManualAccount(id);
+        flash.addFlashAttribute("message", "Manual money source archived. Historical plans are preserved.");
+        return "redirect:/#accounts";
+    }
+
+    @PostMapping("/finance/plans")
+    public String addFinancePlan(@RequestParam String title,
+                                 @RequestParam String planType,
+                                 @RequestParam String category,
+                                 @RequestParam BigDecimal amount,
+                                 @RequestParam String cadence,
+                                 @RequestParam LocalDate nextDueDate,
+                                 @RequestParam(required=false) String fundingAccountId,
+                                 @RequestParam(defaultValue="false") boolean reserveFunds,
+                                 @RequestParam(required=false) String notes,
+                                 RedirectAttributes flash) {
+        financeWorkspace.addPlan(title, planType, category, amount, cadence, nextDueDate,
+                fundingAccountId, reserveFunds, notes);
+        flash.addFlashAttribute("message", "Plan added. Reserved money and available balance were recalculated.");
+        return "redirect:/#planning";
+    }
+
+    @PostMapping("/finance/plans/{id}/edit")
+    public String editFinancePlan(@PathVariable String id,
+                                  @RequestParam String title,
+                                  @RequestParam String planType,
+                                  @RequestParam String category,
+                                  @RequestParam BigDecimal amount,
+                                  @RequestParam String cadence,
+                                  @RequestParam LocalDate nextDueDate,
+                                  @RequestParam(required=false) String fundingAccountId,
+                                  @RequestParam(defaultValue="false") boolean reserveFunds,
+                                  @RequestParam(required=false) String notes,
+                                  RedirectAttributes flash) {
+        financeWorkspace.updatePlan(id, title, planType, category, amount, cadence, nextDueDate,
+                fundingAccountId, reserveFunds, notes);
+        flash.addFlashAttribute("message", "Plan updated and the 30-day projection was recalculated.");
+        return "redirect:/#planning";
+    }
+
+    @PostMapping("/finance/plans/{id}/complete")
+    public String completeFinancePlan(@PathVariable String id, RedirectAttributes flash) {
+        financeWorkspace.completePlan(id);
+        flash.addFlashAttribute("message", "Plan marked complete. Reserved money was released.");
+        return "redirect:/#planning";
+    }
+
+    @PostMapping("/finance/plans/{id}/archive")
+    public String archiveFinancePlan(@PathVariable String id, RedirectAttributes flash) {
+        financeWorkspace.archivePlan(id);
+        flash.addFlashAttribute("message", "Plan archived. It no longer affects projections.");
+        return "redirect:/#planning";
+    }
+
+    @PostMapping("/finance/budgets")
+    public String updateBudget(@RequestParam String category,
+                               @RequestParam BigDecimal monthlyLimit,
+                               RedirectAttributes flash) {
+        financeWorkspace.updateBudget(category, monthlyLimit);
+        flash.addFlashAttribute("message", "Monthly budget updated. The weekly guide was recalculated.");
+        return "redirect:/#planning";
     }
 
     @PostMapping("/student/quotes/refresh")
@@ -379,7 +476,7 @@ public class PhaseOneController {
     @PostMapping("/reset")
     public String reset(RedirectAttributes flash) {
         demoData.resetAll();
-        flash.addFlashAttribute("message", "Synthetic Phase 4 data reset.");
+        flash.addFlashAttribute("message", "Synthetic workspace data reset.");
         return "redirect:/";
     }
 
@@ -393,6 +490,8 @@ public class PhaseOneController {
         }
         if (uri.equals("/agent/plans/tuition")) return "redirect:/#student-finance";
         if (uri.startsWith("/agent/")) return paymentRedirect(request.getParameter("action"));
+        if (uri.startsWith("/finance/accounts")) return "redirect:/#accounts";
+        if (uri.startsWith("/finance/")) return "redirect:/#planning";
         return uri.startsWith("/student/")?"redirect:/#student-finance":"redirect:/";
     }
 }

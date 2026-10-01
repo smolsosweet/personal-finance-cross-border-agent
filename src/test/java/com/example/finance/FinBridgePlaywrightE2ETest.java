@@ -143,7 +143,7 @@ class FinBridgePlaywrightE2ETest {
         openTab("student");
         assertThat(page.locator("#student-finance")).isVisible();
         assertThat(page.locator("[data-tab-panel='dashboard']").first()).isHidden();
-        assertThat(page.locator("#student-finance")).containsText("Lập kế hoạch học phí");
+        assertThat(page.locator("#student-finance")).containsText("Lập kế hoạch chi phí du học");
 
         openTab("transactions");
         assertThat(page.locator("#transactions")).isVisible();

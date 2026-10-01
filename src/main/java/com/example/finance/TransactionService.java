@@ -61,8 +61,16 @@ public class TransactionService {
         db.update("DELETE FROM financial_accounts");
         db.update("DELETE FROM demo_profile");
         db.update("INSERT INTO demo_profile VALUES (1,'Minh Nguyen','Vietnam','China','VND','CNY')");
-        db.update("INSERT INTO financial_accounts VALUES ('CHECKING',1,'Demo Checking','VND',100000000.00)");
-        db.update("INSERT INTO financial_accounts VALUES ('SAVINGS',1,'Emergency Fund','VND',1000000.00)");
+        db.update("""
+                INSERT INTO financial_accounts
+                (id,owner_profile_id,account_name,currency,balance,institution,account_type,masked_number,source_type,connection_status,balance_updated_at,archived)
+                VALUES ('CHECKING',1,'Everyday account','VND',100000000.00,'Demo Bank','CHECKING','•••• 1106','CONNECTED','CONNECTED',CURRENT_TIMESTAMP,FALSE)
+                """);
+        db.update("""
+                INSERT INTO financial_accounts
+                (id,owner_profile_id,account_name,currency,balance,institution,account_type,masked_number,source_type,connection_status,balance_updated_at,archived)
+                VALUES ('SAVINGS',1,'Emergency fund','VND',1000000.00,'Demo Bank','SAVINGS','•••• 7715','CONNECTED','CONNECTED',CURRENT_TIMESTAMP,FALSE)
+                """);
         seedCategories();
         seedBudgets();
 
@@ -333,7 +341,7 @@ public class TransactionService {
     }
 
     public Map<String,Object> profile() { return db.queryForMap("SELECT * FROM demo_profile WHERE id=1"); }
-    public List<Map<String,Object>> accounts() { return db.queryForList("SELECT * FROM financial_accounts ORDER BY id"); }
+    public List<Map<String,Object>> accounts() { return db.queryForList("SELECT * FROM financial_accounts WHERE archived=FALSE ORDER BY source_type,account_name"); }
     public List<Map<String,Object>> transactions() {
         return db.queryForList("""
                 SELECT t.*

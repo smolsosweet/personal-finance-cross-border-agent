@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Atlas · Finance workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261001-6')}">
+  <title>Atlas · Finance workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261001-7')}">
 </head>
 <body>
 <div class="shell">
@@ -40,16 +40,22 @@
     <div class="content">
       <div th:if="${message}" class="notice" role="status" th:text="${message}"></div>
 
-      <section id="overview" class="intro" data-tab-panel="dashboard">
-        <div><div class="eyebrow">PERSONAL FINANCE · PHASE 5</div><h1>Good morning, <span th:text="${profile.display_name}">Minh Nguyen</span> <em>✳</em></h1><p>Your deterministic finance dashboard updates after every simulated event.</p></div>
-        <form method="post" th:action="@{/reset}" data-confirm-en="Reset all Phase 4 synthetic data?" data-confirm-vi="Đặt lại toàn bộ dữ liệu mô phỏng Giai đoạn 4?"><button class="secondary" data-testid="reset-demo">↺ Reset demo data</button></form>
+      <section id="overview" class="intro dashboard-intro" data-tab-panel="dashboard">
+        <div><div class="eyebrow">PERSONAL FINANCE WORKSPACE</div><h1>Your money today, <span th:text="${profile.display_name}">Minh Nguyen</span></h1><p>See what you own, what is already planned and what remains safe to allocate.</p></div>
+        <form method="post" th:action="@{/reset}" data-confirm-en="Reset all synthetic workspace data?" data-confirm-vi="Đặt lại toàn bộ dữ liệu mô phỏng trong không gian làm việc?"><button class="secondary" data-testid="reset-demo">↺ Reset demo data</button></form>
       </section>
 
-      <section class="stats" data-tab-panel="dashboard">
-        <article><span class="icon blue">◫</span><small>Checking balance</small><strong th:text="${#numbers.formatDecimal(dashboard.balance,1,'COMMA',0,'POINT')}"></strong><p>VND · synthetic account</p></article>
-        <article data-testid="stat-income"><span class="icon green">↙</span><small>Income in dataset</small><strong th:text="${#numbers.formatDecimal(dashboard.income,1,'COMMA',0,'POINT')}"></strong><p>Internal transfers excluded</p></article>
-        <article data-testid="stat-expenses"><span class="icon orange">↗</span><small>Expenses in dataset</small><strong th:text="${#numbers.formatDecimal(dashboard.expenses,1,'COMMA',0,'POINT')}"></strong><p>Refunds tracked separately</p></article>
-        <article><span class="icon violet">?</span><small>Needs review</small><strong th:text="${dashboard.pendingReview}"></strong><p>Medium or low confidence</p></article>
+      <nav class="dashboard-view-tabs" data-tab-panel="dashboard" aria-label="Overview views">
+        <button type="button" data-dashboard-view="summary" aria-selected="true">Summary</button>
+        <button type="button" data-dashboard-view="accounts" aria-selected="false">Accounts &amp; cash</button>
+        <button type="button" data-dashboard-view="planning" aria-selected="false">Plans &amp; budgets</button>
+      </nav>
+
+      <section class="stats overview-stats" data-tab-panel="dashboard" data-dashboard-view-panel="summary">
+        <article data-testid="total-personal-balance"><span class="icon blue">◫</span><small>Total personal balance</small><strong th:text="${#numbers.formatDecimal(financeSummary.totalBalance,1,'COMMA',0,'POINT')}"></strong><p>VND · active personal sources</p></article>
+        <article data-testid="reserved-next-30"><span class="icon orange">⌛</span><small>Reserved for next 30 days</small><strong th:text="${#numbers.formatDecimal(financeSummary.reservedNext30Days,1,'COMMA',0,'POINT')}"></strong><p>Recurring and one-time plans</p></article>
+        <article data-testid="available-to-allocate"><span class="icon green">✓</span><small>Available to allocate</small><strong th:classappend="${financeSummary.availableToAllocate.signum() < 0 ? ' negative-money' : ''}" th:text="${#numbers.formatDecimal(financeSummary.availableToAllocate,1,'COMMA',0,'POINT')}"></strong><p>After plans and 3,000,000 VND safety buffer</p></article>
+        <article><span class="icon violet">?</span><small>Needs review</small><strong th:text="${dashboard.pendingReview}"></strong><p>Transactions waiting for your input</p></article>
       </section>
 
       <nav class="transaction-view-tabs" data-tab-panel="transactions" aria-label="Transaction views" hidden>
@@ -85,7 +91,17 @@
         <p class="fine">Rules: ≥90% auto-categorize · 60–89% confirm suggestion · below 60% ask transaction purpose. No LLM is used for balances or categorization in this phase.</p>
       </section>
 
-      <div class="dashboard-grid" data-tab-panel="dashboard">
+      <div class="dashboard-grid overview-summary-grid" data-tab-panel="dashboard" data-dashboard-view-panel="summary">
+        <section class="card attention-center" data-testid="attention-center">
+          <div class="section-title"><div><div class="eyebrow">ACTION CENTER</div><h2>What needs your attention</h2><p>Each item opens the workspace where you can resolve it.</p></div><span class="pill" th:text="${#lists.size(attentionItems) + ' item(s)'}"></span></div>
+          <div th:if="${#lists.isEmpty(attentionItems)}" class="empty-state">Nothing urgent. Your current plans and transactions are in order.</div>
+          <a class="attention-item" th:each="item : ${attentionItems}" th:href="${item.href}">
+            <span class="priority" th:classappend="${#strings.toLowerCase(item.priority)}" th:text="${item.priority}"></span>
+            <div><strong th:text="${item.title}"></strong><p th:text="${item.message}"></p></div><b th:text="${item.action + ' →'}"></b>
+          </a>
+          <a class="attention-item workflow-link" href="#student-finance"><span class="priority opportunity">STUDENT</span><div><strong>Education payments</strong><p>Verify a provider bill and compare eligible payment channels.</p></div><b>Open student finance →</b></a>
+          <a th:if="${!#lists.isEmpty(paymentPlans)}" class="attention-item workflow-link" href="#agent-workspace"><span class="priority medium">PAYMENT</span><div><strong>Controlled payment plans</strong><p>Review approvals, Sandbox receipts and the Audit Log.</p></div><b>Open payments →</b></a>
+        </section>
         <section class="card" id="feed" data-testid="proactive-feed">
           <div class="section-title"><div><div class="eyebrow">PROACTIVE FEED</div><h2>Worth your attention</h2><p>Every insight shows the deterministic evidence behind it.</p></div><span class="pill" th:text="${#lists.size(insights) + ' insights'}"></span></div>
           <div class="insight" th:each="insight : ${insights}">
@@ -93,23 +109,63 @@
             <div><strong th:text="${insight.title}"></strong><p th:text="${insight.message}"></p><small th:text="${'Evidence: ' + insight.evidence}"></small></div>
           </div>
         </section>
-
-        <section class="card" id="budget">
-          <div class="section-title"><div><div class="eyebrow">BUDGET SUMMARY</div><h2>Monthly category limits</h2><p>Only confirmed and auto-categorized expenses are allocated.</p></div></div>
-          <div class="budget-row" th:each="budget : ${budgets}">
-            <div class="budget-head"><strong th:text="${budget.category}"></strong><span th:text="${#numbers.formatDecimal(budget.spent,1,'COMMA',0,'POINT') + ' / ' + #numbers.formatDecimal(budget.monthly_limit,1,'COMMA',0,'POINT') + ' VND'}"></span></div>
-            <div class="progress"><span th:style="|width: ${budget.percent}%|"></span></div>
-            <small th:text="${#numbers.formatDecimal(budget.remaining,1,'COMMA',0,'POINT') + ' VND remaining'}"></small>
-          </div>
+        <section class="card cashflow-snapshot">
+          <div class="section-title"><div><div class="eyebrow">CURRENT DATASET</div><h2>Cash-flow snapshot</h2><p>Internal transfers remain excluded from income and expense totals.</p></div></div>
+          <div class="cashflow-facts"><div data-testid="stat-income"><small>Income</small><strong th:text="${#numbers.formatDecimal(dashboard.income,1,'COMMA',0,'POINT') + ' VND'}"></strong></div><div data-testid="stat-expenses"><small>Expenses</small><strong th:text="${#numbers.formatDecimal(dashboard.expenses,1,'COMMA',0,'POINT') + ' VND'}"></strong></div><div><small>Refunds</small><strong th:text="${#numbers.formatDecimal(dashboard.refunds,1,'COMMA',0,'POINT') + ' VND'}"></strong></div><div><small>Monthly budget</small><strong th:text="${#numbers.formatDecimal(financeSummary.monthlyBudget,1,'COMMA',0,'POINT') + ' VND'}"></strong></div></div>
+          <button type="button" class="text-action dashboard-inline-link" data-dashboard-view-target="planning">Review plans and budgets →</button>
         </section>
       </div>
 
-      <section class="card" data-tab-panel="dashboard">
-        <div class="section-title"><div><div class="eyebrow">SHARED DEMO PROFILE</div><h2>Demo accounts</h2></div><span class="pill" th:text="${profile.source_country + ' → ' + profile.study_country}"></span></div>
-        <div class="account-grid"><div th:each="account : ${accounts}" class="account"><div><strong th:text="${account.account_name}"></strong><small th:text="${account.id + ' · ' + account.currency}"></small></div><b th:text="${#numbers.formatDecimal(account.balance,1,'COMMA',0,'POINT') + ' VND'}"></b></div></div>
+      <section class="card money-sources" id="accounts" data-tab-panel="dashboard" data-dashboard-view-panel="accounts" hidden>
+        <div class="section-title"><div><div class="eyebrow">PERSONAL MONEY SOURCES</div><h2>Accounts and cash</h2><p>Connected balances follow incoming bank events. You control balances entered manually, including cash.</p></div><button class="primary-button" type="button" data-open-dialog="add-money-source">+ Add money source</button></div>
+        <div class="source-ledger-note"><strong>Personal ledger</strong><span>These balances drive the Overview. Payment Sandbox balances remain separate so the same money is never counted twice.</span></div>
+        <div class="money-source-grid">
+          <article class="money-source-card" th:each="account : ${accounts}" th:attr="data-testid=${'money-source-' + account.id}">
+            <div class="money-source-top"><span class="source-type" th:classappend="${#strings.toLowerCase(account.source_type)}" th:text="${account.source_type}"></span><span class="connection-state" th:text="${account.connection_status}"></span></div>
+            <h3 th:text="${account.account_name}"></h3><p th:text="${account.institution + ' · ' + account.account_type + ' · ' + account.masked_number}"></p>
+            <strong th:text="${#numbers.formatDecimal(account.balance,1,'COMMA',0,'POINT') + ' ' + account.currency}"></strong>
+            <small th:text="${'Updated ' + #dates.format(account.balance_updated_at,'dd MMM yyyy HH:mm')}"></small>
+            <div class="source-actions" th:if="${account.source_type != 'CONNECTED'}">
+              <button class="secondary" type="button" th:attr="data-open-dialog=${'edit-money-source-' + account.id}">Edit balance</button>
+              <form th:action="@{'/finance/accounts/' + ${account.id} + '/archive'}" method="post" data-confirm-en="Archive this manual money source?" data-confirm-vi="Lưu trữ nguồn tiền nhập thủ công này?"><button class="text-action" type="submit">Archive</button></form>
+            </div>
+            <div class="source-actions" th:if="${account.source_type == 'CONNECTED'}"><span>Read-only · updated by bank events</span></div>
+          </article>
+        </div>
+        <dialog id="add-money-source" class="finance-dialog"><div class="dialog-heading"><div><small>NEW MONEY SOURCE</small><h3>Add an account or cash</h3></div><button type="button" data-close-dialog aria-label="Close">×</button></div><p>Use manual entry for cash or a source that is not connected. It is included in your personal total and marked as manually maintained.</p>
+          <form th:action="@{/finance/accounts}" method="post" class="finance-form"><label><span>Name</span><input name="name" maxlength="80" required placeholder="Example: Cash wallet"></label><label><span>Institution</span><input name="institution" maxlength="120" required placeholder="Example: Cash or bank name"></label><label><span>Type</span><select name="accountType" required><option value="CHECKING">Checking</option><option value="SAVINGS">Savings</option><option value="CASH">Cash</option><option value="EWALLET">E-wallet</option></select></label><label><span>Reference / last digits</span><input name="maskedNumber" maxlength="20" placeholder="Example: •••• 1234"></label><label class="wide"><span>Current balance (VND)</span><input name="balance" type="number" min="0" step="0.01" required></label><button class="primary-button wide" type="submit">Add money source</button></form>
+        </dialog>
+        <dialog th:each="account : ${accounts}" th:if="${account.source_type != 'CONNECTED'}" class="finance-dialog" th:id="${'edit-money-source-' + account.id}"><div class="dialog-heading"><div><small>EDIT MANUAL SOURCE</small><h3 th:text="${account.account_name}"></h3></div><button type="button" data-close-dialog aria-label="Close">×</button></div><p>Update this balance after reconciling your cash or unsupported account. Connected accounts cannot be edited here.</p>
+          <form th:action="@{'/finance/accounts/' + ${account.id} + '/edit'}" method="post" class="finance-form"><label><span>Name</span><input name="name" maxlength="80" required th:value="${account.account_name}"></label><label><span>Institution</span><input name="institution" maxlength="120" required th:value="${account.institution}"></label><label><span>Type</span><select name="accountType" required><option value="CHECKING" th:selected="${account.account_type == 'CHECKING'}">Checking</option><option value="SAVINGS" th:selected="${account.account_type == 'SAVINGS'}">Savings</option><option value="CASH" th:selected="${account.account_type == 'CASH'}">Cash</option><option value="EWALLET" th:selected="${account.account_type == 'EWALLET'}">E-wallet</option></select></label><label><span>Reference / last digits</span><input name="maskedNumber" maxlength="20" th:value="${account.masked_number}"></label><label class="wide"><span>Current balance (VND)</span><input name="balance" type="number" min="0" step="0.01" required th:value="${account.balance}"></label><button class="primary-button wide" type="submit">Save balance</button></form>
+        </dialog>
       </section>
 
-      <details th:if="${demoToolsEnabled}" class="card payment-demo-entry" data-tab-panel="dashboard"><summary>Payment Sandbox demo</summary><p>Create a synthetic low-risk example to explore demo permission settings. Education payments start from Student finance and always require approval.</p><form th:action="@{/agent/plans/low-risk}" method="post" data-next-anchor="#agent-workspace"><input type="hidden" name="amount" value="250000"><button class="secondary" data-testid="create-first-demo-action">Create low-risk demo plan</button></form></details>
+      <section class="card planning-workspace" id="planning" data-tab-panel="dashboard" data-dashboard-view-panel="planning" hidden>
+        <div class="section-title"><div><div class="eyebrow">FORWARD PLAN</div><h2>Plans and budgets</h2><p>Plan a one-time expense, recurring bill or savings target. Only active plans marked “reserve money” reduce the available amount.</p></div><button class="primary-button" type="button" data-open-dialog="add-finance-plan">+ Add plan</button></div>
+        <div class="planning-summary"><div><small>Active plans</small><strong th:text="${financeSummary.activePlanCount}"></strong></div><div><small>Reserved · next 30 days</small><strong th:text="${#numbers.formatDecimal(financeSummary.reservedNext30Days,1,'COMMA',0,'POINT') + ' VND'}"></strong></div><div><small>Monthly budget</small><strong th:text="${#numbers.formatDecimal(financeSummary.monthlyBudget,1,'COMMA',0,'POINT') + ' VND'}"></strong></div><div><small>Weekly guide</small><strong th:text="${#numbers.formatDecimal(financeSummary.weeklyGuide,1,'COMMA',0,'POINT') + ' VND'}"></strong></div></div>
+        <div class="planning-layout">
+          <div class="plan-list"><div class="subsection-heading"><div><h3>Upcoming and saved plans</h3><p>Completed and archived records stay visible but stop affecting projections.</p></div></div>
+            <article class="finance-plan-row" th:each="plan : ${financePlans}" th:classappend="${#strings.toLowerCase(plan.status)}" th:attr="data-testid=${'finance-plan-' + plan.id}">
+              <div class="plan-date"><strong th:text="${plan.next_due_date}"></strong><small th:text="${plan.cadence}"></small></div>
+              <div class="plan-main"><span class="plan-status" th:text="${plan.status}"></span><h3 th:text="${plan.title}"></h3><p th:text="${plan.category + ' · ' + (plan.funding_account_name ?: 'No funding source selected')}"></p><small th:if="${plan.notes != null}" th:text="${plan.notes}"></small></div>
+              <div class="plan-money"><strong th:text="${#numbers.formatDecimal(plan.amount,1,'COMMA',0,'POINT') + ' VND'}"></strong><span th:if="${plan.reserve_funds}" th:text="${#numbers.formatDecimal(plan.projected_30_day_amount,1,'COMMA',0,'POINT') + ' reserved in 30 days'}"></span><span th:if="${!plan.reserve_funds}">Tracking only</span></div>
+              <div class="plan-row-actions" th:if="${plan.status == 'ACTIVE'}"><button class="secondary" type="button" th:attr="data-open-dialog=${'edit-finance-plan-' + plan.id}">Edit</button><form th:action="@{'/finance/plans/' + ${plan.id} + '/complete'}" method="post"><button class="text-action" type="submit">Mark complete</button></form><form th:action="@{'/finance/plans/' + ${plan.id} + '/archive'}" method="post"><button class="text-action" type="submit">Archive</button></form></div>
+              <div class="plan-row-actions" th:if="${plan.status == 'COMPLETED'}"><form th:action="@{'/finance/plans/' + ${plan.id} + '/archive'}" method="post"><button class="text-action" type="submit">Archive</button></form></div>
+            </article>
+          </div>
+          <section class="budget-editor" id="budget"><div class="subsection-heading"><div><h3>Monthly category budgets</h3><p>Weekly guidance is derived from monthly limits, preventing conflicting targets.</p></div></div>
+            <div class="budget-row" th:each="budget : ${budgets}"><div class="budget-head"><strong th:text="${budget.category}"></strong><span th:text="${#numbers.formatDecimal(budget.spent,1,'COMMA',0,'POINT') + ' / ' + #numbers.formatDecimal(budget.monthly_limit,1,'COMMA',0,'POINT') + ' VND'}"></span></div><div class="progress"><span th:style="|width: ${budget.percent}%|"></span></div><small th:text="${#numbers.formatDecimal(budget.remaining,1,'COMMA',0,'POINT') + ' VND remaining'}"></small><form th:action="@{/finance/budgets}" method="post" class="budget-edit-form"><input type="hidden" name="category" th:value="${budget.category}"><label><span>Monthly limit</span><input name="monthlyLimit" type="number" min="1" step="1" required th:value="${budget.monthly_limit}"></label><button class="secondary" type="submit">Update</button></form></div>
+          </section>
+        </div>
+        <dialog id="add-finance-plan" class="finance-dialog"><div class="dialog-heading"><div><small>NEW FINANCE PLAN</small><h3>Plan upcoming money</h3></div><button type="button" data-close-dialog aria-label="Close">×</button></div><p>A plan is a forecast. It never executes a payment. Payment approval remains in Agent &amp; Payments.</p>
+          <form th:action="@{/finance/plans}" method="post" class="finance-form"><label class="wide"><span>Plan name</span><input name="title" maxlength="120" required placeholder="Example: Rent or weekly groceries"></label><label><span>Plan type</span><select name="planType" required><option value="EXPENSE">One-time expense</option><option value="RECURRING_BILL">Recurring bill</option><option value="SAVINGS_GOAL">Savings goal</option></select></label><label><span>Category</span><input name="category" maxlength="80" required placeholder="Example: Housing"></label><label><span>Amount (VND)</span><input name="amount" type="number" min="1" step="0.01" required></label><label><span>Cadence</span><select name="cadence" required><option value="ONCE">Once</option><option value="WEEKLY">Weekly</option><option value="MONTHLY">Monthly</option></select></label><label><span>Next due date</span><input name="nextDueDate" type="date" required></label><label><span>Funding source</span><select name="fundingAccountId"><option value="">Decide later</option><option th:each="account : ${accounts}" th:value="${account.id}" th:text="${account.account_name + ' · ' + #numbers.formatDecimal(account.balance,1,'COMMA',0,'POINT') + ' VND'}"></option></select></label><label class="wide reserve-choice"><input name="reserveFunds" type="checkbox" value="true"><span>Reserve this money in available-to-allocate calculations</span></label><label class="wide"><span>Notes</span><input name="notes" maxlength="255" placeholder="Optional context"></label><button class="primary-button wide" type="submit">Add plan</button></form>
+        </dialog>
+        <dialog th:each="plan : ${financePlans}" th:if="${plan.status == 'ACTIVE'}" class="finance-dialog" th:id="${'edit-finance-plan-' + plan.id}"><div class="dialog-heading"><div><small>EDIT FINANCE PLAN</small><h3 th:text="${plan.title}"></h3></div><button type="button" data-close-dialog aria-label="Close">×</button></div><p>Saving recalculates the 30-day reserved amount immediately.</p>
+          <form th:action="@{'/finance/plans/' + ${plan.id} + '/edit'}" method="post" class="finance-form"><label class="wide"><span>Plan name</span><input name="title" maxlength="120" required th:value="${plan.title}"></label><label><span>Plan type</span><select name="planType" required><option value="EXPENSE" th:selected="${plan.plan_type == 'EXPENSE'}">One-time expense</option><option value="RECURRING_BILL" th:selected="${plan.plan_type == 'RECURRING_BILL'}">Recurring bill</option><option value="SAVINGS_GOAL" th:selected="${plan.plan_type == 'SAVINGS_GOAL'}">Savings goal</option></select></label><label><span>Category</span><input name="category" maxlength="80" required th:value="${plan.category}"></label><label><span>Amount (VND)</span><input name="amount" type="number" min="1" step="0.01" required th:value="${plan.amount}"></label><label><span>Cadence</span><select name="cadence" required><option value="ONCE" th:selected="${plan.cadence == 'ONCE'}">Once</option><option value="WEEKLY" th:selected="${plan.cadence == 'WEEKLY'}">Weekly</option><option value="MONTHLY" th:selected="${plan.cadence == 'MONTHLY'}">Monthly</option></select></label><label><span>Next due date</span><input name="nextDueDate" type="date" required th:value="${plan.next_due_date}"></label><label><span>Funding source</span><select name="fundingAccountId"><option value="">Decide later</option><option th:each="account : ${accounts}" th:value="${account.id}" th:text="${account.account_name}" th:selected="${account.id == plan.funding_account_id}"></option></select></label><label class="wide reserve-choice"><input name="reserveFunds" type="checkbox" value="true" th:checked="${plan.reserve_funds}"><span>Reserve this money in available-to-allocate calculations</span></label><label class="wide"><span>Notes</span><input name="notes" maxlength="255" th:value="${plan.notes}"></label><button class="primary-button wide" type="submit">Save plan</button></form>
+        </dialog>
+      </section>
+
+      <details th:if="${demoToolsEnabled}" class="card payment-demo-entry" data-tab-panel="dashboard" data-dashboard-view-panel="summary"><summary>Payment Sandbox demo</summary><p>Create a synthetic low-risk example to explore demo permission settings. Education payments start from Student finance and always require approval.</p><form th:action="@{/agent/plans/low-risk}" method="post" data-next-anchor="#agent-workspace"><input type="hidden" name="amount" value="250000"><button class="secondary" data-testid="create-first-demo-action">Create low-risk demo plan</button></form></details>
       <section class="card student-section" id="student-finance" data-tab-panel="student" hidden>
         <div class="section-title student-title">
           <div><div class="eyebrow">CROSS BORDER STUDENT FINANCE · SYNTHETIC DATA</div><h2>Study expense planning</h2><p>This tab is only for bills issued by a verified school or education provider. Personal transfers to friends or family belong to the future Transfers module.</p></div>
@@ -408,6 +464,6 @@
   </main>
 </div>
 
-<script th:src="@{/app.js(v='20261001-6')}"></script>
+<script th:src="@{/app.js(v='20261001-7')}"></script>
 </body>
 </html>

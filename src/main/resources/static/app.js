@@ -23,6 +23,110 @@ const translationsVi = new Map(Object.entries({
   'PERSONAL FINANCE · PHASE 5': 'TÀI CHÍNH CÁ NHÂN · GIAI ĐOẠN 5',
   'Good morning,': 'Chào buổi sáng,',
   'Your deterministic finance dashboard updates after every simulated event.': 'Bảng điều khiển tài chính theo quy tắc được cập nhật sau mỗi sự kiện mô phỏng.',
+  'PERSONAL FINANCE WORKSPACE': 'KHÔNG GIAN TÀI CHÍNH CÁ NHÂN',
+  'Your money today,': 'Tài chính hôm nay của',
+  'See what you own, what is already planned and what remains safe to allocate.': 'Xem tổng tiền hiện có, các khoản đã lên kế hoạch và số tiền còn có thể phân bổ an toàn.',
+  'Summary': 'Tóm tắt',
+  'Accounts & cash': 'Tài khoản & tiền mặt',
+  'Plans & budgets': 'Kế hoạch & ngân sách',
+  'Total personal balance': 'Tổng số dư cá nhân',
+  'VND · active personal sources': 'VND · các nguồn tiền cá nhân đang hoạt động',
+  'Reserved for next 30 days': 'Giữ trước cho 30 ngày tới',
+  'Recurring and one-time plans': 'Kế hoạch định kỳ và một lần',
+  'Available to allocate': 'Có thể phân bổ',
+  'After plans and 3,000,000 VND safety buffer': 'Sau các kế hoạch và vùng đệm an toàn 3.000.000 VND',
+  'Transactions waiting for your input': 'Giao dịch đang chờ bạn xử lý',
+  'ACTION CENTER': 'TRUNG TÂM HÀNH ĐỘNG',
+  'What needs your attention': 'Việc cần bạn chú ý',
+  'Each item opens the workspace where you can resolve it.': 'Mỗi mục mở đúng khu vực để bạn xử lý.',
+  'Nothing urgent. Your current plans and transactions are in order.': 'Không có việc khẩn cấp. Các kế hoạch và giao dịch hiện đang ổn.',
+  'Education payments': 'Thanh toán giáo dục',
+  'Verify a provider bill and compare eligible payment channels.': 'Xác minh hóa đơn nhà cung cấp và so sánh các kênh thanh toán hợp lệ.',
+  'Open student finance →': 'Mở tài chính du học →',
+  'Controlled payment plans': 'Kế hoạch thanh toán có kiểm soát',
+  'Review approvals, Sandbox receipts and the Audit Log.': 'Xem phê duyệt, biên nhận Sandbox và Nhật ký kiểm toán.',
+  'Open payments →': 'Mở thanh toán →',
+  'CURRENT DATASET': 'DỮ LIỆU HIỆN TẠI',
+  'Cash-flow snapshot': 'Tóm tắt dòng tiền',
+  'Internal transfers remain excluded from income and expense totals.': 'Chuyển khoản nội bộ không được tính vào tổng thu nhập và chi tiêu.',
+  'Monthly budget': 'Ngân sách tháng',
+  'Review plans and budgets →': 'Xem kế hoạch và ngân sách →',
+  'PERSONAL MONEY SOURCES': 'NGUỒN TIỀN CÁ NHÂN',
+  'Accounts and cash': 'Tài khoản và tiền mặt',
+  'Connected balances follow incoming bank events. You control balances entered manually, including cash.': 'Số dư đã kết nối cập nhật theo sự kiện ngân hàng. Bạn tự quản lý số dư nhập thủ công, gồm cả tiền mặt.',
+  '+ Add money source': '+ Thêm nguồn tiền',
+  'Personal ledger': 'Sổ tài chính cá nhân',
+  'These balances drive the Overview. Payment Sandbox balances remain separate so the same money is never counted twice.': 'Các số dư này dùng cho Tổng quan. Số dư Payment Sandbox được tách riêng để không cộng trùng tiền.',
+  'Read-only · updated by bank events': 'Chỉ đọc · cập nhật bởi sự kiện ngân hàng',
+  'Edit balance': 'Sửa số dư',
+  'NEW MONEY SOURCE': 'NGUỒN TIỀN MỚI',
+  'Add an account or cash': 'Thêm tài khoản hoặc tiền mặt',
+  'Use manual entry for cash or a source that is not connected. It is included in your personal total and marked as manually maintained.': 'Dùng nhập thủ công cho tiền mặt hoặc nguồn chưa kết nối. Nguồn này được tính vào tổng cá nhân và được đánh dấu là tự quản lý.',
+  'Name': 'Tên',
+  'Institution': 'Tổ chức',
+  'Type': 'Loại',
+  'Checking': 'Tài khoản thanh toán',
+  'Savings': 'Tiết kiệm',
+  'Cash': 'Tiền mặt',
+  'E-wallet': 'Ví điện tử',
+  'Reference / last digits': 'Tham chiếu / số cuối',
+  'Current balance (VND)': 'Số dư hiện tại (VND)',
+  'Add money source': 'Thêm nguồn tiền',
+  'EDIT MANUAL SOURCE': 'SỬA NGUỒN NHẬP THỦ CÔNG',
+  'Update this balance after reconciling your cash or unsupported account. Connected accounts cannot be edited here.': 'Cập nhật số dư sau khi đối soát tiền mặt hoặc tài khoản chưa hỗ trợ. Không thể sửa tài khoản đã kết nối tại đây.',
+  'Save balance': 'Lưu số dư',
+  'FORWARD PLAN': 'KẾ HOẠCH TƯƠNG LAI',
+  'Plans and budgets': 'Kế hoạch và ngân sách',
+  'Plan a one-time expense, recurring bill or savings target. Only active plans marked “reserve money” reduce the available amount.': 'Lập kế hoạch cho khoản chi một lần, hóa đơn định kỳ hoặc mục tiêu tiết kiệm. Chỉ kế hoạch đang hoạt động có bật giữ tiền mới làm giảm số tiền có thể phân bổ.',
+  '+ Add plan': '+ Thêm kế hoạch',
+  'Active plans': 'Kế hoạch đang hoạt động',
+  'Reserved · next 30 days': 'Giữ trước · 30 ngày tới',
+  'Weekly guide': 'Gợi ý theo tuần',
+  'Upcoming and saved plans': 'Kế hoạch sắp tới và đã lưu',
+  'Completed and archived records stay visible but stop affecting projections.': 'Bản ghi hoàn tất và lưu trữ vẫn hiển thị nhưng không ảnh hưởng dự báo.',
+  'Tracking only': 'Chỉ theo dõi',
+  'Edit': 'Sửa',
+  'Mark complete': 'Đánh dấu hoàn tất',
+  'Monthly category budgets': 'Ngân sách danh mục theo tháng',
+  'Weekly guidance is derived from monthly limits, preventing conflicting targets.': 'Gợi ý theo tuần được suy ra từ hạn mức tháng để tránh các mục tiêu mâu thuẫn.',
+  'Monthly limit': 'Hạn mức tháng',
+  'Update': 'Cập nhật',
+  'NEW FINANCE PLAN': 'KẾ HOẠCH TÀI CHÍNH MỚI',
+  'Plan upcoming money': 'Lập kế hoạch dòng tiền sắp tới',
+  'A plan is a forecast. It never executes a payment. Payment approval remains in Agent & Payments.': 'Kế hoạch chỉ là dự báo và không thực thi thanh toán. Việc phê duyệt thanh toán vẫn nằm trong Tác vụ & Thanh toán.',
+  'Plan name': 'Tên kế hoạch',
+  'Plan type': 'Loại kế hoạch',
+  'One-time expense': 'Khoản chi một lần',
+  'Recurring bill': 'Hóa đơn định kỳ',
+  'Savings goal': 'Mục tiêu tiết kiệm',
+  'Category': 'Danh mục',
+  'Amount (VND)': 'Số tiền (VND)',
+  'Cadence': 'Chu kỳ',
+  'Once': 'Một lần',
+  'Weekly': 'Hàng tuần',
+  'Monthly': 'Hàng tháng',
+  'Next due date': 'Ngày đến hạn tiếp theo',
+  'Funding source': 'Nguồn tiền',
+  'Decide later': 'Chọn sau',
+  'Reserve this money in available-to-allocate calculations': 'Giữ trước khoản này khi tính số tiền có thể phân bổ',
+  'Notes': 'Ghi chú',
+  'Add plan': 'Thêm kế hoạch',
+  'EDIT FINANCE PLAN': 'SỬA KẾ HOẠCH TÀI CHÍNH',
+  'Saving recalculates the 30-day reserved amount immediately.': 'Khi lưu, số tiền giữ trước trong 30 ngày được tính lại ngay.',
+  'Save plan': 'Lưu kế hoạch',
+  'Money source added. Manual balances are included in your personal overview.': 'Đã thêm nguồn tiền. Số dư nhập thủ công được tính vào tổng quan cá nhân.',
+  'Manual money source updated.': 'Đã cập nhật nguồn tiền thủ công.',
+  'Manual money source archived. Historical plans are preserved.': 'Đã lưu trữ nguồn tiền thủ công. Các kế hoạch lịch sử vẫn được giữ lại.',
+  'Plan added. Reserved money and available balance were recalculated.': 'Đã thêm kế hoạch. Số tiền giữ trước và số dư có thể phân bổ đã được tính lại.',
+  'Plan updated and the 30-day projection was recalculated.': 'Đã cập nhật kế hoạch và tính lại dự báo 30 ngày.',
+  'Plan marked complete. Reserved money was released.': 'Đã đánh dấu kế hoạch hoàn tất và giải phóng số tiền giữ trước.',
+  'Plan archived. It no longer affects projections.': 'Đã lưu trữ kế hoạch. Kế hoạch không còn ảnh hưởng dự báo.',
+  'Monthly budget updated. The weekly guide was recalculated.': 'Đã cập nhật ngân sách tháng và tính lại gợi ý theo tuần.',
+  'Synthetic workspace data reset.': 'Đã đặt lại dữ liệu mô phỏng trong không gian làm việc.',
+  'CONNECTED': 'ĐÃ KẾT NỐI',
+  'MANUAL': 'THỦ CÔNG',
+  'CASH': 'TIỀN MẶT',
+  'COMPLETED': 'HOÀN TẤT',
   '↺ Reset demo data': '↺ Đặt lại dữ liệu demo',
   'Checking balance': 'Số dư tài khoản thanh toán',
   'VND · synthetic account': 'VND · tài khoản mô phỏng',
@@ -545,6 +649,7 @@ const tabAnchors = {
   agent: '#agent-workspace'
 };
 let activeTab = 'dashboard';
+let activeDashboardView = 'summary';
 let renderTransactionList = () => {};
 let renderStudentBillList = () => {};
 let renderPaymentAccounts = () => {};
@@ -586,10 +691,32 @@ function activateTab(tab, updateLocation = true) {
   if (activeTab === 'transactions') {
     activateTransactionView(updateLocation ? 'history' : initialTransactionView(), false);
   }
+  if (activeTab === 'dashboard') {
+    activateDashboardView(updateLocation ? 'summary' : initialDashboardView(), false);
+  }
   updateActiveTabLabel();
   localStorage.setItem('finbridge-active-tab', activeTab);
   if (updateLocation) {
     history.replaceState(null, '', tabAnchors[activeTab]);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+function initialDashboardView() {
+  return { '#accounts': 'accounts', '#planning': 'planning' }[window.location.hash] || 'summary';
+}
+
+function activateDashboardView(view, updateLocation = true) {
+  activeDashboardView = document.querySelector('[data-dashboard-view="' + view + '"]') ? view : 'summary';
+  document.querySelectorAll('[data-dashboard-view-panel]').forEach((panel) => {
+    panel.hidden = panel.dataset.dashboardViewPanel !== activeDashboardView;
+  });
+  document.querySelectorAll('[data-dashboard-view]').forEach((button) => {
+    button.setAttribute('aria-selected', String(button.dataset.dashboardView === activeDashboardView));
+  });
+  if (updateLocation) {
+    const hashes = { summary: '#overview', accounts: '#accounts', planning: '#planning' };
+    history.replaceState(null, '', hashes[activeDashboardView]);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
@@ -623,6 +750,7 @@ function activateTransactionView(view, updateLocation = true) {
 function initialTab() {
   const hashTabs = {
     '#overview': 'dashboard', '#feed': 'dashboard', '#budget': 'dashboard',
+    '#accounts': 'dashboard', '#planning': 'dashboard',
     '#transaction-tools': 'transactions', '#transactions': 'transactions',
     '#transaction-review': 'transactions', '#transaction-categories': 'transactions',
     '#student-finance': 'student', '#agent-workspace': 'agent'
@@ -928,6 +1056,12 @@ function translateDynamic(text) {
     [/^(\d+) records$/, '$1 bản ghi'],
     [/^(\d+) recent events$/, '$1 sự kiện gần đây'],
     [/^(\d+) pending$/, '$1 mục cần xử lý'],
+    [/^(\d+) item\(s\)$/, '$1 mục'],
+    [/^(\d+) transaction\(s\) need review$/, '$1 giao dịch cần xem xét'],
+    [/^(\d+) planned item\(s\) are overdue$/, '$1 khoản kế hoạch đã quá hạn'],
+    [/^(.+) VND is protected for plans due in the next 30 days\.$/, '$1 VND được giữ cho các kế hoạch đến hạn trong 30 ngày tới.'],
+    [/^(.+) reserved in 30 days$/, 'Giữ trước $1 trong 30 ngày'],
+    [/^Updated (.+)$/, 'Cập nhật $1'],
     [/^(\d+) bill\(s\)$/, '$1 khoản phí'],
     [/^Due (.+)$/, 'Hạn $1'],
     [/^Reference · (.+)$/, 'Mã tham chiếu · $1'],
@@ -1068,6 +1202,7 @@ function captureWorkspaceState() {
   });
   return {
     tab: activeTab,
+    dashboardView: activeDashboardView,
     anchor: window.location.hash || tabAnchors[activeTab],
     top: window.scrollY,
     left: window.scrollX,
@@ -1191,6 +1326,9 @@ function initializeWorkspaceContent(state) {
   syncPaymentNavigation();
   state?.paymentDetails?.forEach((testId) => { const details = document.querySelector('[data-testid="' + CSS.escape(testId) + '"]'); if (details?.tagName === 'DETAILS') details.open = true; });
   activateTab(state?.tab || initialTab(), false);
+  if ((state?.tab || initialTab()) === 'dashboard') {
+    activateDashboardView(state?.dashboardView || initialDashboardView(), false);
+  }
   applyLanguage(selectedLanguage());
 
   document.querySelectorAll('[data-open-dialog]').forEach((button) => {
@@ -1212,6 +1350,12 @@ function initializeWorkspaceContent(state) {
   });
   document.querySelectorAll('[data-transaction-view]').forEach((button) => {
     button.addEventListener('click', () => activateTransactionView(button.dataset.transactionView));
+  });
+  document.querySelectorAll('[data-dashboard-view]').forEach((button) => {
+    button.addEventListener('click', () => activateDashboardView(button.dataset.dashboardView));
+  });
+  document.querySelectorAll('[data-dashboard-view-target]').forEach((button) => {
+    button.addEventListener('click', () => activateDashboardView(button.dataset.dashboardViewTarget));
   });
   const dialog = document.querySelector('dialog[data-auto-open="true"]');
   if (dialog && typeof dialog.showModal === 'function') dialog.showModal();
@@ -1286,7 +1430,8 @@ async function submitWorkspaceForm(event) {
         : state.anchor;
     }
     const destinationTabs = {
-      '#overview': 'dashboard', '#transactions': 'transactions',
+      '#overview': 'dashboard', '#accounts': 'dashboard', '#planning': 'dashboard',
+      '#transactions': 'transactions',
       '#transaction-review': 'transactions', '#transaction-categories': 'transactions',
       '#transaction-tools': 'transactions', '#student-finance': 'student',
       '#agent-workspace': 'agent'
@@ -1372,6 +1517,24 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('click', openPaymentPlan);
   document.addEventListener('click', (event) => {
     if (event.target.closest('[data-return-to-comparison]')) { event.preventDefault(); activateTab('student'); }
+  });
+  document.addEventListener('click', (event) => {
+    const link = event.target.closest('a[href^="#"]');
+    if (!link) return;
+    const hash = link.getAttribute('href');
+    const destination = {
+      '#overview': ['dashboard', 'summary'], '#accounts': ['dashboard', 'accounts'],
+      '#planning': ['dashboard', 'planning'], '#transaction-review': ['transactions', 'review'],
+      '#transactions': ['transactions', 'history'], '#student-finance': ['student', null],
+      '#agent-workspace': ['agent', null]
+    }[hash];
+    if (!destination) return;
+    event.preventDefault();
+    activateTab(destination[0], false);
+    if (destination[0] === 'dashboard') activateDashboardView(destination[1], false);
+    if (destination[0] === 'transactions') activateTransactionView(destination[1], false);
+    history.replaceState(null, '', hash);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
   document.addEventListener('click', (event) => {

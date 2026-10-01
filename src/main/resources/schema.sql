@@ -13,6 +13,13 @@ CREATE TABLE IF NOT EXISTS financial_accounts (
   currency VARCHAR(3) NOT NULL,
   balance DECIMAL(20,2) NOT NULL
 );
+ALTER TABLE financial_accounts ADD COLUMN IF NOT EXISTS institution VARCHAR(120) NOT NULL DEFAULT 'Manual source';
+ALTER TABLE financial_accounts ADD COLUMN IF NOT EXISTS account_type VARCHAR(30) NOT NULL DEFAULT 'CHECKING';
+ALTER TABLE financial_accounts ADD COLUMN IF NOT EXISTS masked_number VARCHAR(20) NOT NULL DEFAULT '••••';
+ALTER TABLE financial_accounts ADD COLUMN IF NOT EXISTS source_type VARCHAR(20) NOT NULL DEFAULT 'CONNECTED';
+ALTER TABLE financial_accounts ADD COLUMN IF NOT EXISTS connection_status VARCHAR(20) NOT NULL DEFAULT 'CONNECTED';
+ALTER TABLE financial_accounts ADD COLUMN IF NOT EXISTS balance_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE financial_accounts ADD COLUMN IF NOT EXISTS archived BOOLEAN NOT NULL DEFAULT FALSE;
 CREATE TABLE IF NOT EXISTS bank_events (
   id VARCHAR(40) PRIMARY KEY,
   source_label VARCHAR(50) NOT NULL,
@@ -53,6 +60,23 @@ CREATE TABLE IF NOT EXISTS transaction_categories (
 CREATE TABLE IF NOT EXISTS budgets (
   category VARCHAR(80) PRIMARY KEY,
   monthly_limit DECIMAL(20,2) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS finance_plans (
+  id VARCHAR(40) PRIMARY KEY,
+  title VARCHAR(120) NOT NULL,
+  plan_type VARCHAR(30) NOT NULL,
+  category VARCHAR(80) NOT NULL,
+  amount DECIMAL(20,2) NOT NULL,
+  currency VARCHAR(3) NOT NULL,
+  cadence VARCHAR(20) NOT NULL,
+  next_due_date DATE NOT NULL,
+  funding_account_id VARCHAR(40),
+  reserve_funds BOOLEAN NOT NULL,
+  status VARCHAR(20) NOT NULL,
+  notes VARCHAR(255),
+  created_at TIMESTAMP NOT NULL,
+  updated_at TIMESTAMP NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS student_corridor_profile (
