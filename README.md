@@ -1,6 +1,6 @@
-# Personal Finance Cross Border Agent — Guarded AI Intent Phase
+# Personal Finance Cross Border Agent — Guarded AI Intent Providers
 
-The `main` branch implements the deterministic demo through Phase 5 plus an optional guarded OpenAI intent classifier.
+The `main` branch implements the deterministic demo through Phase 5 plus an optional guarded intent classifier using OpenAI or local Ollama.
 
 - Phase 1: synthetic user, bank events, normalization and transaction type detection.
 - Phase 2: merchant categorization, confidence handling, Undo, dashboard, budgets and Proactive Feed.
@@ -9,7 +9,7 @@ The `main` branch implements the deterministic demo through Phase 5 plus an opti
 - Phase 5: prompt-injection, recipient, channel, FX, deadline, limit and safe-balance guards, offline fallback, reset/replay and the five-minute demo acceptance flow.
 
 All data and payments are synthetic. No real Alipay, bank or payment provider is connected. When enabled,
-the OpenAI integration classifies a narrow tuition intent through strict Structured Outputs. It cannot execute
+the selected LLM provider classifies a narrow tuition intent through strict structured output. It cannot execute
 payments, modify policy, invent rates or fees, or change a recipient after approval.
 
 ## Run
@@ -48,16 +48,70 @@ See [the workflow and targeted verification report](docs/PAYMENT_WORKFLOW.md) fo
 
 ## Guarded AI intent configuration
 
-The optional AI intent boundary is disabled by default. Enable it only through environment variables:
+The optional AI intent boundary is disabled by default. Provider selection is explicit; an API key by itself never enables a provider.
+
+### Local Ollama with qwen3:4b
+
+Install and start Ollama locally, then check and download the required model:
+
+```powershell
+ollama --version
+ollama list
+ollama pull qwen3:4b
+```
+
+Start FinBridge with Ollama:
+
+```powershell
+$env:FINBRIDGE_LLM_ENABLED="true"
+$env:FINBRIDGE_LLM_PROVIDER="ollama"
+$env:FINBRIDGE_LLM_MODEL="qwen3:4b"
+$env:FINBRIDGE_LLM_BASE_URL="http://localhost:11434"
+$env:FINBRIDGE_LLM_CONNECT_TIMEOUT="3s"
+$env:FINBRIDGE_LLM_REQUEST_TIMEOUT="60s"
+mvn spring-boot:run
+```
+
+`FINBRIDGE_LLM_MODEL` may be omitted for Ollama; it defaults to `qwen3:4b`. Keep Ollama bound locally and do not expose port 11434 publicly.
+
+Check the local service and installed models without sending a prompt:
+
+```powershell
+Invoke-WebRequest -UseBasicParsing http://localhost:11434/api/tags
+```
+
+
+With FinBridge running on port 8089 using the configuration above, run the opt-in browser smoke test that calls the real local model:
+
+```powershell
+mvn "-Dtest=OllamaLivePlaywrightIT" test
+```
+
+This live test is intentionally excluded from the default Maven test suite so normal builds do not depend on a local Ollama process.
+
+### OpenAI
+
+The existing OpenAI setup remains compatible. `openai` is the default provider value, but the enable flag, model and API key are still required:
 
 ```powershell
 $env:OPENAI_API_KEY="<set locally; never commit>"
+$env:FINBRIDGE_LLM_PROVIDER="openai"
 $env:FINBRIDGE_LLM_MODEL="<a Structured Outputs capable model>"
 $env:FINBRIDGE_LLM_ENABLED="true"
 mvn spring-boot:run
 ```
 
-The OpenAI response can select only a backend-owned tuition intent and a cheapest/fastest preference.
+To force the guided deterministic experience without any model request:
+
+```powershell
+$env:FINBRIDGE_LLM_PROVIDER="disabled"
+$env:FINBRIDGE_LLM_ENABLED="false"
+mvn spring-boot:run
+```
+
+Unknown provider values stop application configuration with a clear error. Provider timeout, connection failure, HTTP error, invalid JSON or schema mismatch produces the existing safe unavailable message. Fallback never creates a chat-driven payment plan; the guided deterministic tuition workflow remains usable.
+
+The provider response can select only a backend-owned tuition intent and a cheapest/fastest preference.
 Amounts, recipients, accounts, bills, quotes, currencies, corridors, approval and policy outcomes are loaded and
 validated by deterministic backend services. Missing configuration, provider errors and invalid structured output
 fall back without creating or executing a payment plan.
