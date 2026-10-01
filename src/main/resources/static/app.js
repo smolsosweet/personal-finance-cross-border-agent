@@ -504,6 +504,7 @@ let renderStudentBillList = () => {};
 let renderPaymentAccounts = () => {};
 let renderQuoteExpiryStatuses = () => {};
 let quoteExpiryTimer;
+const noticeTimers = new WeakMap();
 let pendingUpdate = 0;
 let updateSequence = 0;
 const workspaceFilterSelectors = [
@@ -939,6 +940,9 @@ function applyLanguage(language) {
   });
   const languageGroup = document.querySelector('.language-switcher');
   if (languageGroup) languageGroup.setAttribute('aria-label', selected === 'vi' ? 'Ngôn ngữ' : 'Language');
+  document.querySelectorAll('[data-dismiss-notice]').forEach((button) => {
+    button.setAttribute('aria-label', selected === 'vi' ? 'Đóng thông báo' : 'Dismiss notification');
+  });
 
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
     acceptNode(node) {
@@ -971,6 +975,28 @@ function applyLanguage(language) {
   renderStudentBillList();
   renderPaymentAccounts();
   renderQuoteExpiryStatuses();
+}
+
+function initializeWorkspaceNotices(root = document) {
+  root.querySelectorAll('.notice').forEach((notice) => {
+    if (notice.querySelector('[data-dismiss-notice]')) return;
+    if (!notice.closest('dialog')) notice.classList.add('in-place-notice');
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'notice-dismiss';
+    close.dataset.dismissNotice = '';
+    close.textContent = '×';
+    close.setAttribute('aria-label', selectedLanguage() === 'vi' ? 'Đóng thông báo' : 'Dismiss notification');
+    close.addEventListener('click', () => {
+      window.clearTimeout(noticeTimers.get(notice));
+      notice.remove();
+    });
+    notice.append(close);
+    if (notice.getAttribute('role') === 'status' && !notice.classList.contains('request-error')) {
+      // Capture this notice so an older timeout cannot dismiss a newer message.
+      noticeTimers.set(notice, window.setTimeout(() => notice.remove(), 4000));
+    }
+  });
 }
 
 function captureWorkspaceState() {
@@ -1014,6 +1040,7 @@ function initializeWorkspaceContent(state) {
       control.value = value;
     }
   });
+  initializeWorkspaceNotices();
   activateTab(state?.tab || initialTab(), false);
   applyLanguage(selectedLanguage());
 
@@ -1052,6 +1079,7 @@ function showWorkspaceUpdateError(form) {
   notice.textContent = translateValue(message, selectedLanguage());
   originalText.set(notice.firstChild, message);
   container.prepend(notice);
+  initializeWorkspaceNotices(container);
 }
 
 async function submitWorkspaceForm(event) {
@@ -1072,6 +1100,7 @@ async function submitWorkspaceForm(event) {
   // Emergency Stop must remain available while another request is pending.
   if (pendingUpdate && action.pathname !== '/agent/emergency-stop') return;
 
+  const restoreBillFocus = event.submitter?.matches('.student-bill-select:focus-visible');
   const requestId = ++updateSequence;
   pendingUpdate = requestId;
   const data = new FormData(form);
@@ -1112,7 +1141,7 @@ async function submitWorkspaceForm(event) {
       '#agent-workspace': 'agent'
     };
     const destinationTab = destinationTabs[anchor] || state.tab;
-    const sameTab = destinationTab === state.tab && anchor === state.anchor;
+    const preservePosition = !form.dataset.nextAnchor || (destinationTab === state.tab && anchor === state.anchor);
     if (action.pathname === '/reset') {
       state.filters.clear();
       state.scrolls.clear();
@@ -1123,6 +1152,16 @@ async function submitWorkspaceForm(event) {
     const nextLocation = resultUrl.pathname + resultUrl.search + anchor;
     if (nextLocation !== window.location.pathname + window.location.search + window.location.hash) {
       history.replaceState(null, '', nextLocation);
+    }
+    // Keep the intended panel visible during replacement, avoiding viewport clamping.
+    nextContent.querySelectorAll('[data-tab-panel]').forEach((panel) => {
+      panel.hidden = panel.dataset.tabPanel !== destinationTab;
+    });
+    if (destinationTab === 'transactions') {
+      const view = initialTransactionView();
+      nextContent.querySelectorAll('[data-transaction-view-panel]').forEach((panel) => {
+        panel.hidden = panel.dataset.transactionViewPanel !== view;
+      });
     }
     content.replaceChildren(...nextContent.childNodes);
     content.querySelector('.notice')?.classList.add('in-place-notice');
@@ -1139,10 +1178,10 @@ async function submitWorkspaceForm(event) {
       if (focusTestId) {
         document.querySelector('[data-testid="' + CSS.escape(focusTestId) + '"]')
           ?.focus({ preventScroll: true });
-      } else if (action.pathname === '/student/expenses/select') {
+      } else if (action.pathname === '/student/expenses/select' && restoreBillFocus) {
         document.querySelector('.student-bill-select[aria-pressed="true"]')?.focus({ preventScroll: true });
       }
-      window.scrollTo({ left: sameTab ? state.left : 0, top: sameTab ? state.top : 0, behavior: 'instant' });
+      window.scrollTo({ left: preservePosition ? state.left : 0, top: preservePosition ? state.top : 0, behavior: 'instant' });
     };
     restorePosition();
     await new Promise(requestAnimationFrame);

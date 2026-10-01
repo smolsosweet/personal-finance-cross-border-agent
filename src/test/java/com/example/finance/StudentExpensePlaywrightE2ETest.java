@@ -99,6 +99,101 @@ class StudentExpensePlaywrightE2ETest {
         }
     }
 
+    @Test void tuitionSelectionPreservesMobileScrollAndSuccessNoticeCanAutoDismissOrClose() {
+        int otherBill = addVerifiedBill("Campus selection fixture", "1200.00");
+        try (BrowserContext context = browser.newContext(new Browser.NewContextOptions().setViewportSize(390, 844))) {
+            Page page = context.newPage();
+            var errors = new ArrayList<String>();
+            var navigations = new ArrayList<String>();
+            page.onPageError(errors::add);
+            page.navigate(BASE_URL);
+            page.locator(".mobile-tabs [data-tab='student']").click();
+            assertEquals(otherBill, crossBorder.selectedExpense().id());
+            page.onFrameNavigated(frame -> {
+                if (frame.parentFrame() == null) navigations.add(frame.url());
+            });
+
+            var tuitionSelect = page.getByTestId("expense-1").locator(".student-bill-select");
+            tuitionSelect.scrollIntoViewIfNeeded();
+            page.evaluate("""
+                    () => {
+                        const bill = document.querySelector('[data-testid="expense-1"]');
+                        window.scrollTo(0, Math.max(150, bill.getBoundingClientRect().top + window.scrollY - 140));
+                        document.querySelector('[data-testid="student-expense-list"]').scrollLeft = 20;
+                    }
+                    """);
+            page.waitForFunction("() => window.scrollY >= 150 && document.querySelector('[data-testid=student-expense-list]').scrollLeft > 0");
+            double previousY = ((Number) page.evaluate("() => window.scrollY")).doubleValue();
+            double previousX = ((Number) page.getByTestId("student-expense-list")
+                    .evaluate("element => element.scrollLeft")).doubleValue();
+            page.evaluate("""
+                    () => {
+                        window.__billSelectionScroll = [window.scrollY];
+                        window.addEventListener('scroll', () => window.__billSelectionScroll.push(window.scrollY), { passive: true });
+                    }
+                    """);
+
+            tuitionSelect.click();
+            assertThat(page.getByTestId("expense-1")).hasClass(java.util.regex.Pattern.compile(".*selected.*"));
+            assertEquals(1, crossBorder.selectedExpense().id());
+            page.waitForFunction("() => document.querySelector('.content')?.getAttribute('aria-busy') !== 'true'");
+            page.waitForFunction("value => Math.abs(window.scrollY - value) <= 2", previousY);
+            assertEquals(previousX, ((Number) page.getByTestId("student-expense-list")
+                    .evaluate("element => element.scrollLeft")).doubleValue(), 2);
+            assertTrue((Boolean) page.evaluate("() => window.__billSelectionScroll.every(value => value >= 150)"),
+                    "Selecting tuition must never jump to the top before restoring the previous scroll");
+            assertThat(page.locator(".notice[role='status']")).hasCount(1);
+            assertThat(page.locator(".notice[role='status'] .notice-dismiss[data-dismiss-notice]")).isVisible();
+            assertThat(page.locator(".notice[role='status']")).hasCount(0,
+                    new com.microsoft.playwright.assertions.LocatorAssertions.HasCountOptions().setTimeout(6000));
+
+            page.getByTestId("expense-" + otherBill).locator(".student-bill-select-form")
+                    .evaluate("form => form.requestSubmit()");
+            assertThat(page.locator(".notice[role='status']")).hasCount(1);
+            page.locator(".notice[role='status'] .notice-dismiss").click();
+            assertThat(page.locator(".notice[role='status']")).hasCount(0);
+            assertTrue(navigations.isEmpty(), "Selecting bills must update in place: " + navigations);
+            assertTrue(errors.isEmpty(), String.join(" | ", errors));
+        }
+    }
+
+    @Test void replacementNoticeHasItsOwnLifetimeAndRequestErrorsRemainUntilDismissed() {
+        int otherBill = addVerifiedBill("Campus notice fixture", "1200.00");
+        try (BrowserContext context = browser.newContext(new Browser.NewContextOptions().setViewportSize(1440, 1000))) {
+            Page page = context.newPage();
+            var errors = new ArrayList<String>();
+            page.onPageError(errors::add);
+            page.navigate(BASE_URL);
+            page.getByTestId("tab-student").click();
+            page.getByTestId("expense-1").locator(".student-bill-select-form")
+                    .evaluate("form => form.requestSubmit()");
+            assertThat(page.locator(".notice[role='status']")).hasCount(1);
+            page.evaluate("() => { window.__firstNoticeTime = performance.now(); }");
+            page.waitForFunction("() => performance.now() - window.__firstNoticeTime >= 2200");
+
+            page.getByTestId("expense-" + otherBill).locator(".student-bill-select-form")
+                    .evaluate("form => form.requestSubmit()");
+            assertThat(page.getByTestId("expense-" + otherBill)).hasClass(java.util.regex.Pattern.compile(".*selected.*"));
+            assertThat(page.locator(".notice[role='status']")).hasCount(1);
+            page.evaluate("() => { window.__replacementNotice = document.querySelector('.notice[role=status]'); }");
+            page.waitForFunction("() => performance.now() - window.__firstNoticeTime >= 4400");
+            assertThat(page.locator(".notice[role='status']")).hasCount(1);
+            assertTrue((Boolean) page.evaluate("() => document.querySelector('.notice[role=status]') === window.__replacementNotice"),
+                    "An old success timer must not dismiss the newer notice");
+            assertThat(page.locator(".notice[role='status']")).hasCount(0,
+                    new com.microsoft.playwright.assertions.LocatorAssertions.HasCountOptions().setTimeout(5000));
+
+            page.route("**/student/quotes/refresh", route -> route.abort());
+            page.getByTestId("refresh-quotes").click();
+            assertThat(page.locator(".notice.request-error[role='alert']")).hasCount(1);
+            page.evaluate("() => { window.__errorNoticeTime = performance.now(); }");
+            page.waitForFunction("() => performance.now() - window.__errorNoticeTime >= 4400");
+            assertThat(page.locator(".notice.request-error[role='alert']")).hasCount(1);
+            page.locator(".notice.request-error .notice-dismiss[data-dismiss-notice]").click();
+            assertThat(page.locator(".notice.request-error[role='alert']")).hasCount(0);
+            assertTrue(errors.isEmpty(), String.join(" | ", errors));
+        }
+    }
     @Test void quoteRefreshPreservesMobileScrollFiltersAndPagesAndRestartsLiveExpiry() {
         for (int index = 1; index <= 7; index++) {
             addVerifiedBill("Campus fee " + index, String.valueOf(1000 + index));

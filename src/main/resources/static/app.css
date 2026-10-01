@@ -91,3 +91,7 @@ form[aria-busy=true] button{cursor:wait;opacity:.65}
 .notice.in-place-notice{pointer-events:none;position:fixed;top:80px;right:24px;z-index:20;max-width:min(480px,calc(100vw - 36px));margin:0;box-shadow:0 5px 24px #263b5e24}
 .notice.request-error{background:#fff0ed;color:#a3463c}
 .content{overflow-anchor:none}
+
+.notice{position:relative;padding-right:42px}
+.notice-dismiss{position:absolute;top:7px;right:8px;pointer-events:auto;border:0;border-radius:5px;background:transparent;color:inherit;padding:3px 6px;font-size:20px;line-height:1;cursor:pointer}
+.notice-dismiss:focus-visible{outline:2px solid currentColor;outline-offset:2px}
