@@ -386,8 +386,7 @@ public class CrossBorderService {
                          WHERE a.expense_id=b.id AND s.status='COMPLETED'
                        ) THEN TRUE ELSE FALSE END AS executed
                 FROM international_bills b
-                ORDER BY b.selected DESC,
-                         CASE b.lifecycle_status WHEN 'ACTIVE' THEN 0 WHEN 'ARCHIVED' THEN 1 ELSE 2 END,
+                ORDER BY CASE b.lifecycle_status WHEN 'ACTIVE' THEN 0 WHEN 'ARCHIVED' THEN 1 ELSE 2 END,
                          b.due_date,b.id
                 """, (rs,n) -> new StudentExpense(rs.getInt(1), rs.getString(2), rs.getString(3), rs.getString(4),
                 rs.getBigDecimal(5), rs.getString(6), rs.getString(7), rs.getString(8), rs.getString(9),

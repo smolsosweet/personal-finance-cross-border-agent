@@ -700,14 +700,19 @@ function initializeStudentBillList(initialPage = 1) {
       && matchesStatus(row)
       && (verification.value === 'ALL' || row.dataset.billVerification === verification.value));
 
+    const byId = (left, right) => Number(left.dataset.billRow) - Number(right.dataset.billRow);
     if (sort.value === 'newest') {
-      matches.sort((left, right) => right.dataset.billCreated.localeCompare(left.dataset.billCreated));
+      matches.sort((left, right) => right.dataset.billCreated.localeCompare(left.dataset.billCreated)
+        || byId(right, left));
     } else if (sort.value === 'amount-desc') {
-      matches.sort((left, right) => Number(right.dataset.billAmount) - Number(left.dataset.billAmount));
+      matches.sort((left, right) => Number(right.dataset.billAmount) - Number(left.dataset.billAmount)
+        || byId(left, right));
     } else if (sort.value === 'provider-asc') {
-      matches.sort((left, right) => left.dataset.billProvider.localeCompare(right.dataset.billProvider));
+      matches.sort((left, right) => left.dataset.billProvider.localeCompare(right.dataset.billProvider)
+        || byId(left, right));
     } else {
-      matches.sort((left, right) => left.dataset.billDue.localeCompare(right.dataset.billDue));
+      matches.sort((left, right) => left.dataset.billDue.localeCompare(right.dataset.billDue)
+        || byId(left, right));
     }
     matches.forEach((row) => list.append(row));
 

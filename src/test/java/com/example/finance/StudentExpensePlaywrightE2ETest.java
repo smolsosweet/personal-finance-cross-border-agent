@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 @SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.DEFINED_PORT, properties={
         "server.port=8096",
@@ -32,6 +34,7 @@ class StudentExpensePlaywrightE2ETest {
     private static final String BASE_URL="http://localhost:8096";
     @Autowired DemoDataService demoData;
     @Autowired CrossBorderService crossBorder;
+    @Autowired JdbcTemplate db;
     private Playwright playwright;
     private Browser browser;
 
@@ -95,6 +98,65 @@ class StudentExpensePlaywrightE2ETest {
             assertEquals(3, selections.size(), "Selecting the current card or clicking Edit must not submit selection");
             assertEquals(1, crossBorder.selectedExpense().id());
             assertTrue(navigations.isEmpty(), "Bill selection must not reload the main document: " + navigations);
+            assertTrue(errors.isEmpty(), String.join(" | ", errors));
+        }
+    }
+
+    @Test void selectingBillHighlightsInPlaceWithoutReorderingAnySortOrClearingFilters() {
+        int first = addVerifiedBill("Campus stable Alpha", "1200.00");
+        int second = addVerifiedBill("Campus stable Beta", "1200.00");
+        int third = addVerifiedBill("Campus stable Gamma", "1200.00");
+        db.update("UPDATE international_bills SET created_at=TIMESTAMP '2026-01-01 09:00:00' WHERE id IN (?,?,?)",
+                first, second, third);
+        try (BrowserContext context = browser.newContext(new Browser.NewContextOptions().setViewportSize(1440, 1000))) {
+            Page page = context.newPage();
+            var errors = new ArrayList<String>();
+            var navigations = new ArrayList<String>();
+            page.onPageError(errors::add);
+            page.navigate(BASE_URL);
+            page.getByTestId("tab-student").click();
+            page.onFrameNavigated(frame -> {
+                if (frame.parentFrame() == null) navigations.add(frame.url());
+            });
+            page.getByTestId("student-bill-search").fill("Campus stable");
+            page.getByTestId("student-bill-status-filter").selectOption("ACTIVE");
+            page.getByTestId("student-bill-verification-filter").selectOption("VERIFIED");
+
+            for (String sort : List.of("due-asc", "newest", "amount-desc", "provider-asc")) {
+                page.getByTestId("student-bill-sort").selectOption(sort);
+                var rows = page.locator("[data-bill-row]:visible");
+                assertEquals(3, rows.count());
+                List<?> visibleOrder = (List<?>) rows.evaluateAll("rows => rows.map(row => row.dataset.billRow)");
+                List<String> expectedOrder = "newest".equals(sort)
+                        ? List.of(String.valueOf(third), String.valueOf(second), String.valueOf(first))
+                        : List.of(String.valueOf(first), String.valueOf(second), String.valueOf(third));
+                assertEquals(expectedOrder, visibleOrder, "Tied " + sort + " values must use stable bill IDs");
+                List<?> before = (List<?>) page.locator("[data-bill-row]")
+                        .evaluateAll("rows => rows.map(row => row.dataset.billRow)");
+                String targetId = (String) rows.evaluateAll("rows => rows.slice(1).find(row => !row.classList.contains('selected')).dataset.billRow");
+                var target = page.getByTestId("expense-" + targetId);
+                String targetTitle = target.locator(".student-bill-identity > strong").innerText();
+
+                target.click();
+                assertThat(page.getByTestId("expense-" + targetId))
+                        .hasClass(java.util.regex.Pattern.compile(".*selected.*"));
+                assertThat(page.getByTestId("tuition-bill")).containsText(targetTitle);
+                page.waitForFunction("() => document.querySelector('.content')?.getAttribute('aria-busy') !== 'true'");
+
+                assertEquals(before, page.locator("[data-bill-row]")
+                        .evaluateAll("rows => rows.map(row => row.dataset.billRow)"),
+                        "Selection must not move a card to the beginning under " + sort);
+                assertEquals(visibleOrder, page.locator("[data-bill-row]:visible")
+                        .evaluateAll("rows => rows.map(row => row.dataset.billRow)"));
+                assertEquals(1, page.locator("[data-bill-row].selected").count());
+                assertEquals(Integer.parseInt(targetId), crossBorder.selectedExpense().id());
+                assertEquals("Campus stable", page.getByTestId("student-bill-search").inputValue());
+                assertEquals("ACTIVE", page.getByTestId("student-bill-status-filter").inputValue());
+                assertEquals("VERIFIED", page.getByTestId("student-bill-verification-filter").inputValue());
+                assertEquals(sort, page.getByTestId("student-bill-sort").inputValue());
+                assertThat(page.getByTestId("student-bill-page")).hasText("Page 1 of 1");
+            }
+            assertTrue(navigations.isEmpty(), "Selection must update without document navigation: " + navigations);
             assertTrue(errors.isEmpty(), String.join(" | ", errors));
         }
     }

@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +56,33 @@ class StudentExpenseIntegrationTest {
         assertEquals(1, crossBorder.selectedExpense().id());
         assertEquals(0, CrossBorderService.TUITION_AMOUNT.compareTo(crossBorder.bill().amount()));
         assertFalse(phaseFour.matchesCurrentStudentSelection(plan));
+    }
+
+    @Test void selectingBillKeepsEqualDeadlineExpensesInTheirOriginalOrder() {
+        LocalDate deadline = crossBorder.selectedExpense().dueDate();
+        int second = crossBorder.addExpense("INSURANCE", "Campus stable insurance",
+                CrossBorderService.SCHOOL_NAME, new BigDecimal("1200.00"), "China", "CNY",
+                CrossBorderService.SCHOOL_RECIPIENT_NAME, CrossBorderService.SCHOOL_RECIPIENT_BANK,
+                CrossBorderService.SCHOOL_RECIPIENT_BANK_CODE, CrossBorderService.SCHOOL_RECIPIENT,
+                "STABLE-SECOND", deadline, null, null, null);
+        int third = crossBorder.addExpense("DORMITORY", "Campus stable dormitory",
+                CrossBorderService.SCHOOL_NAME, new BigDecimal("1200.00"), "China", "CNY",
+                CrossBorderService.SCHOOL_RECIPIENT_NAME, CrossBorderService.SCHOOL_RECIPIENT_BANK,
+                CrossBorderService.SCHOOL_RECIPIENT_BANK_CODE, CrossBorderService.SCHOOL_RECIPIENT,
+                "STABLE-THIRD", deadline, null, null, null);
+
+        List<Integer> initialOrder = crossBorder.expenses().stream()
+                .map(CrossBorderService.StudentExpense::id).toList();
+        assertEquals(List.of(1, second, third), initialOrder,
+                "Equal deadlines must use a stable order independent of the selected bill");
+        for (int selected : List.of(second, 1, third)) {
+            crossBorder.selectExpense(selected);
+            assertEquals(initialOrder, crossBorder.expenses().stream()
+                    .map(CrossBorderService.StudentExpense::id).toList());
+            assertEquals(selected, crossBorder.selectedExpense().id());
+            assertEquals(1, crossBorder.expenses().stream()
+                    .filter(CrossBorderService.StudentExpense::selected).count());
+        }
     }
 
     @Test void pdfUploadStoresSafeMetadataAndRendersProductionUi() throws Exception {
