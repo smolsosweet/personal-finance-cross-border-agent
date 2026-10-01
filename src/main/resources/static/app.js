@@ -1261,12 +1261,14 @@ function renderPaymentWorkflow() {
     const seconds = Math.floor((Number(quote.dataset.planExpiry) - Date.now()) / 1000);
     const expired = !Number.isFinite(seconds) || seconds <= 0;
     const label = quote.querySelector('[data-plan-expiry-status]');
+    const refreshForm = quote.querySelector('[data-quote-refresh-form]');
     if (label) {
       label.classList.toggle('quote-expired', expired);
       label.textContent = expired
         ? (vietnamese ? 'Báo giá đã hết hạn · quay lại lấy báo giá mới; chưa chuyển tiền.' : 'Quote expired · return for a new quote; no money moved.')
         : (vietnamese ? `Báo giá còn hiệu lực · còn ${Math.floor(seconds / 60)} phút ${String(seconds % 60).padStart(2, '0')} giây` : `Quote valid · ${Math.floor(seconds / 60)}m ${String(seconds % 60).padStart(2, '0')}s remaining`);
     }
+    if (refreshForm) refreshForm.hidden = !expired;
     const button = quote.closest('[data-testid="latest-action"]')?.querySelector('[data-testid="approve-action"]');
     if (button) button.disabled = expired || Boolean(pendingUpdate);
     if (expired) { const status = quote.closest('[data-testid="latest-action"]')?.querySelector('[data-payment-status]'); if (status) status.textContent = vietnamese ? 'Báo giá đã hết hạn' : 'Quote expired'; }

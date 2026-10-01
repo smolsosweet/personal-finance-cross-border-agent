@@ -2,6 +2,7 @@ package com.example.finance;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
@@ -382,6 +383,42 @@ class PaymentWorkflowIntegrationTest {
         assertEquals(receipt.transactionId(), phaseFour.receiptForAction(paidPlans.get(paidExpenseId).id()).transactionId());
         assertEquals(1, phaseFour.sandboxTransactionCount());
     }
+    @Test void completedSandboxPaymentIsLinkedToImmutableTransactionHistoryAndIsIdempotent() {
+        var plan = createLocked("BANK_A");
+        var receipt = phaseFour.approveAndExecute(plan.id());
+        assertNotNull(receipt);
+        var history = db.queryForList("SELECT * FROM transactions WHERE payment_receipt_id=?", receipt.transactionId());
+        assertEquals(1, history.size());
+        assertEquals("Payment Sandbox", history.getFirst().get("source_label"));
+        assertEquals(plan.id(), history.getFirst().get("payment_action_id"));
+        assertEquals(receipt.quoteId(), history.getFirst().get("payment_quote_id"));
+        assertEquals("Education", history.getFirst().get("category"));
+        assertEquals("AUTO", history.getFirst().get("review_status"));
+        var repeated = phaseFour.approveAndExecute(plan.id());
+        assertEquals(receipt.transactionId(), repeated.transactionId());
+        assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM transactions WHERE payment_receipt_id=?", Integer.class, receipt.transactionId()));
+        assertTrue(phaseFour.auditEvents(plan.id()).stream().anyMatch(event ->
+                "PERSONAL_TRANSACTION_RECORDED".equals(event.eventType())
+                        && event.details().contains(receipt.transactionId())));
+    }
+
+    @Test void agentWorkspaceRefreshesExpiredQuoteIntoNewAwaitingApprovalPlan() throws Exception {
+        var old = createLocked("BANK_A");
+        db.update("UPDATE fx_quotes SET expires_at=? WHERE id=?", java.time.LocalDateTime.now().minusMinutes(1), old.quoteId());
+
+        var result = mvc.perform(post("/agent/actions/" + old.id() + "/refresh-quote"))
+                .andExpect(status().is3xxRedirection()).andReturn();
+        assertTrue(result.getResponse().getRedirectedUrl().contains("action="));
+        assertEquals("INVALIDATED", phaseFour.action(old.id()).status());
+        var replacement = db.queryForObject("SELECT id FROM action_plans WHERE id<>? ORDER BY created_at DESC",
+                (rs, rowNum) -> phaseFour.action(rs.getString(1)), old.id());
+        assertNotEquals(old.id(), replacement.id());
+        assertEquals("AWAITING_APPROVAL", replacement.status());
+        assertNotEquals(old.quoteId(), replacement.quoteId());
+        assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM approvals WHERE action_id=?", Integer.class, replacement.id()));
+        assertEquals(0, phaseFour.sandboxTransactionCount());
+    }
+
     private int addVerifiedExpense(String title, String amount, String reference) {
         return crossBorder.addExpense("OTHER", title, CrossBorderService.SCHOOL_NAME,
                 new BigDecimal(amount), "China", "CNY", CrossBorderService.SCHOOL_RECIPIENT_NAME,

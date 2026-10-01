@@ -464,6 +464,34 @@ public class PhaseOneController {
         return paymentRedirect(id);
     }
 
+    @PostMapping("/agent/actions/{id}/refresh-quote")
+    public String refreshExpiredQuote(@PathVariable String id, RedirectAttributes flash) {
+        PhaseFourService.ActionPlan oldPlan = phaseFour.action(id);
+        if (!"TUITION".equals(oldPlan.actionType()) || oldPlan.expenseId() == null)
+            throw new IllegalArgumentException("Only an education payment plan can refresh an FX quote here");
+        PhaseFourService.PolicyDecision decision = phaseFour.evaluate(oldPlan, false);
+        if (!"FX QUOTE EXPIRED".equals(decision.reasonCode()))
+            throw new IllegalArgumentException("This quote is still valid; refresh is available after it expires");
+
+        // Re-select the bill represented by the locked plan, refresh its quotes, then
+        // create a new awaiting-approval plan. No approval or payment is carried over.
+        crossBorder.selectExpense(oldPlan.expenseId());
+        crossBorder.refreshQuotes();
+        var replacementQuote = crossBorder.rankedQuotesForExpense(oldPlan.expenseId()).stream()
+                .filter(quote -> oldPlan.channelId().equals(quote.channelId())
+                        && oldPlan.sourceAccountId().equals(quote.sourceAccountId())
+                        && quote.eligible() && !quote.expired())
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("The selected channel is no longer eligible; choose another channel"));
+        phaseFour.invalidateForQuoteRefresh(oldPlan.id());
+        var bill = crossBorder.expense(oldPlan.expenseId());
+        PhaseFourService.ActionPlan replacement = phaseFour.createTuitionPlan(
+                oldPlan.channelId(), oldPlan.sourceAccountId(), bill.id(), bill.updatedAt().toString(),
+                replacementQuote.quoteId());
+        flash.addFlashAttribute("message", "Expired quote replaced. Review the new plan and approve it again; no payment was executed.");
+        return paymentRedirect(replacement.id());
+    }
+
     @PostMapping("/agent/offline")
     public String offlineFallback(@RequestParam(required=false) String action, RedirectAttributes flash) {
         phaseFour.enableOfflineFallback();

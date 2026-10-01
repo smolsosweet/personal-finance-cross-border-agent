@@ -117,3 +117,4 @@ header{position:sticky;top:0;z-index:10}.mobile-tabs{top:70px}.payment-demo-entr
 
 .global-payment-control .stop-button{background:#c73843;color:#fff;border:0;border-radius:8px;cursor:pointer}.global-payment-control .resume-button{background:#238665;color:#fff;border:0;border-radius:8px;cursor:pointer}@media(max-width:550px){header>span{font-size:0;min-width:0;max-width:40%}header>span>b{display:none}header>span strong{display:block;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.header-actions{flex:none}}
 .budget-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.budget-heading>button{white-space:nowrap}
+.payment-inline-refresh{grid-column:1/-1;display:flex;align-items:center;gap:10px;padding:10px;border:1px solid #efd5a7;border-radius:8px;background:#fffaf2}.payment-inline-refresh button{margin:0}.payment-inline-refresh small{color:#8c6c42}

@@ -49,6 +49,10 @@ ALTER TABLE transactions ADD COLUMN IF NOT EXISTS categorization_evidence VARCHA
 ALTER TABLE transactions ADD COLUMN IF NOT EXISTS purpose VARCHAR(160);
 ALTER TABLE transactions ADD COLUMN IF NOT EXISTS category_source VARCHAR(20) NOT NULL DEFAULT 'RULE';
 ALTER TABLE transactions ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMP;
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS payment_action_id VARCHAR(40);
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS payment_receipt_id VARCHAR(40);
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS payment_quote_id VARCHAR(80);
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS payment_channel_id VARCHAR(40);
 
 CREATE TABLE IF NOT EXISTS transaction_categories (
   name VARCHAR(80) PRIMARY KEY,

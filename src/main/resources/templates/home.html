@@ -361,6 +361,12 @@
             <div><small>Quote source</small><strong th:text="${paymentReview.quoteSource}"></strong><span th:text="${'Quoted ' + #temporals.format(paymentReview.quotedAt,'dd MMM yyyy HH:mm:ss')}"></span><span th:text="${'Expires ' + #temporals.format(paymentReview.expiresAt,'dd MMM yyyy HH:mm:ss')}"></span></div>
             <div><small>Settlement</small><strong th:text="${paymentReview.settlementMinDays + '–' + paymentReview.settlementMaxDays + ' day(s)'}"></strong><small>Latest safe date</small><strong th:text="${paymentReview.latestSafeDate}"></strong></div>
             <div th:if="${latestReceipt == null and latestAction.status != 'CANCELED' and latestAction.status != 'INVALIDATED'}" data-testid="plan-expiry-status" data-plan-expiry-status role="status"></div>
+            <form th:if="${latestAction.actionType == 'TUITION' and latestReceipt == null and latestAction.status != 'CANCELED' and latestAction.status != 'INVALIDATED'}"
+                  th:action="@{'/agent/actions/' + ${latestAction.id} + '/refresh-quote'}" method="post"
+                  class="payment-inline-refresh" data-quote-refresh-form data-next-anchor="#agent-workspace" hidden>
+              <button class="secondary" type="submit" data-testid="refresh-expired-plan-quote">↻ Refresh quote and create replacement plan</button>
+              <small>Review the new amount, beneficiary, source account and expiry before approving again.</small>
+            </form>
             <p th:if="${latestReceipt != null}">This is the quote used for the completed payment. Refreshing quotes does not change this receipt.</p>
           </div>
           <div th:if="${latestReceipt == null}" class="payment-actions">

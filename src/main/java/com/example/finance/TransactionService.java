@@ -179,6 +179,50 @@ public class TransactionService {
         return transactionId;
     }
 
+    /**
+     * Records a completed Payment Sandbox debit in the personal transaction history.
+     * This is intentionally separate from bank-event ingestion: sandbox balances are
+     * maintained by PhaseFourService, while this immutable history row is only a
+     * receipt link for the user's ledger.
+     */
+    @Transactional
+    public String recordSandboxPayment(String receiptId, String actionId, String quoteId,
+                                       String channelId, String merchant, String description,
+                                       BigDecimal amount, String sourceAccountId,
+                                       LocalDateTime occurredAt) {
+        if (receiptId == null || receiptId.isBlank()) throw new IllegalArgumentException("Receipt ID is required");
+        if (actionId == null || actionId.isBlank()) throw new IllegalArgumentException("Action ID is required");
+        if (amount == null || amount.signum() <= 0) throw new IllegalArgumentException("Payment amount must be positive");
+        String existing = db.query("SELECT id FROM transactions WHERE payment_receipt_id=?",
+                (rs, n) -> rs.getString(1), receiptId).stream().findFirst().orElse(null);
+        if (existing != null) return existing;
+
+        String transactionId = UUID.randomUUID().toString();
+        String eventId = "PAY-EVT-" + receiptId.substring(0, Math.min(31, receiptId.length()));
+        String rawReference = "SANDBOX-" + receiptId;
+        String fingerprint = sha256("PAYMENT_SANDBOX|" + receiptId);
+        String cleanMerchant = merchant == null || merchant.isBlank() ? "Cross-border payment" : merchant.trim();
+        String cleanDescription = description == null || description.isBlank()
+                ? "Payment Sandbox completed tuition payment" : description.trim();
+        String account = sourceAccountId == null || sourceAccountId.isBlank() ? "PAYER_VND" : sourceAccountId;
+        LocalDateTime timestamp = occurredAt == null ? LocalDateTime.now() : occurredAt;
+
+        db.update("INSERT INTO bank_events VALUES (?,?,?,?,?)", eventId, "Payment Sandbox", rawReference,
+                LocalDateTime.now(), "COMPLETED");
+        db.update("""
+                INSERT INTO transactions
+                (id,event_id,fingerprint,account_id,occurred_at,merchant,description,amount,currency,direction,type,source_label,
+                 category,previous_category,confidence,review_status,categorization_evidence,category_source,reviewed_at,
+                 payment_action_id,payment_receipt_id,payment_quote_id,payment_channel_id)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,NULL,?,'AUTO',?,?,?,?,?,?,?)
+                """,
+                transactionId, eventId, fingerprint, account, timestamp, cleanMerchant, cleanDescription,
+                amount.setScale(2), "VND", "OUT", "Expense", "Payment Sandbox", "Education", 99,
+                "Payment Sandbox receipt " + receiptId + " · action " + actionId,
+                "RULE", timestamp, actionId, receiptId, quoteId, channelId);
+        return transactionId;
+    }
+
     @Transactional
     public String simulate(String scenario) {
         LocalDateTime now = LocalDateTime.now();

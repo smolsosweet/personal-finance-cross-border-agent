@@ -595,6 +595,11 @@ public class PhaseFourService {
         db.update("UPDATE approvals SET status='USED' WHERE action_id=? AND status='VALID'",plan.id());
         audit("PAYMENT_SANDBOX","SANDBOX_EXECUTED",plan.id(),"COMPLETED",null,
                 "Created transaction "+txId+" with VND debit and "+plan.destinationCurrency()+" credit");
+        String historyId = transactions.recordSandboxPayment(txId, plan.id(), plan.quoteId(), plan.channelId(),
+                snapshot == null ? plan.purpose() : snapshot.review().institution(),
+                "Cross-border payment · " + plan.purpose(), plan.debitAmount(), plan.sourceAccountId(), now);
+        audit("TRANSACTION_HISTORY","PERSONAL_TRANSACTION_RECORDED",plan.id(),"COMPLETED",null,
+                "Transaction history row " + historyId + " linked to receipt " + txId);
         audit("PAYMENT_SANDBOX","PAYMENT_RECEIPT_CREATED",plan.id(),"COMPLETED",null,
                 "Receipt transaction ID "+txId+"; idempotency key "+plan.idempotencyKey()
                 +"; source account "+plan.sourceAccountId()+"; channel "+value(plan.channelId())+"; quote "+value(plan.quoteId()));
@@ -672,6 +677,25 @@ public class PhaseFourService {
                 rs.getString(14),rs.getString(15),rs.getString(16),rs.getString(17),
                 rs.getString(18),rs.getString(19),rs.getString(20),rs.getString(21),
                 rs.getTimestamp(22).toLocalDateTime()),id);
+    }
+
+    @Transactional
+    public ActionPlan invalidateForQuoteRefresh(String actionId) {
+        lockPaymentWorkflow();
+        ActionPlan plan = action(actionId);
+        if (!"TUITION".equals(plan.actionType()))
+            throw new IllegalArgumentException("Only tuition plans can be replaced from an expired FX quote");
+        if ("COMPLETED".equals(plan.status()) || receiptForAction(actionId) != null)
+            throw new IllegalArgumentException("A completed payment cannot be replaced; its receipt is immutable");
+        if ("CANCELED".equals(plan.status()))
+            throw new IllegalArgumentException("A canceled plan cannot be replaced");
+        if ("INVALIDATED".equals(plan.status())) return plan;
+        db.update("UPDATE action_plans SET status='INVALIDATED',risk=? WHERE id=?",
+                "The FX quote expired; a replacement plan must be reviewed and approved again", actionId);
+        db.update("UPDATE approvals SET status='REVOKED' WHERE action_id=? AND status='VALID'", actionId);
+        audit("FX_QUOTE_SERVICE", "ACTION_INVALIDATED", actionId, "INVALIDATED", "FX QUOTE EXPIRED",
+                "Expired quote was replaced from Agent & Payments; no funds were moved and approval was revoked");
+        return action(actionId);
     }
 
     private void lockPaymentWorkflow() {
