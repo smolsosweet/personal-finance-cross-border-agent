@@ -400,7 +400,7 @@ class StudentExpensePlaywrightE2ETest {
             page.getByTestId("plan-BANK_A").click();
             assertThat(page.getByTestId("tab-agent")).hasAttribute("aria-selected", "true");
             assertThat(page.getByTestId("latest-action")).hasAttribute("data-status", "AWAITING_APPROVAL");
-            assertThat(page.getByTestId("latest-action")).containsText("BANK_A");
+            assertThat(page.getByTestId("review-channel")).containsText("Bank A");
             assertThat(page.getByTestId("latest-receipt")).hasCount(0);
 
             page.onceDialog(confirm -> confirm.dismiss());
@@ -421,12 +421,16 @@ class StudentExpensePlaywrightE2ETest {
 
             page.getByTestId("emergency-stop").click();
             assertThat(page.getByTestId("agent-state")).containsText("PAUSED");
-            assertThat(page.getByTestId("audit-log")).containsText("EMERGENCY STOP");
+            assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM audit_log WHERE event_type='EMERGENCY_STOP'", Integer.class));
+            page.getByTestId("payment-demo-tools").locator(":scope > summary").click();
             page.getByTestId("create-low-risk").click();
             assertThat(page.getByTestId("latest-action")).hasAttribute("data-status", "BLOCKED");
             assertThat(page.getByTestId("audit-log")).containsText("AGENT PAUSED");
-            assertEquals(transactionId, page.getByTestId("latest-receipt").getAttribute("data-transaction-id"),
+            assertThat(page.getByTestId("latest-receipt")).hasCount(0);
+            assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM sandbox_transactions", Integer.class),
                     "Emergency Stop must not permit another sandbox receipt");
+            assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM sandbox_transactions WHERE id=?", Integer.class, transactionId),
+                    "A blocked new plan must preserve the completed plan's receipt");
             assertEquals("approval-sandbox-test", page.evaluate("() => window.__inPlaceDocumentMarker"));
             assertTrue(navigationRequests.isEmpty(), "Controlled actions must update in place: " + navigationRequests);
             assertTrue(errors.isEmpty(), String.join(" | ", errors));
@@ -537,7 +541,9 @@ class StudentExpensePlaywrightE2ETest {
                     .setName("Save and invalidate old plans")).click();
             assertThat(page.getByTestId("expense-2")).containsText("Updated dormitory deposit");
             page.getByTestId("tab-agent").click();
-            assertEquals(0,page.getByTestId("latest-action").count());
+            assertThat(page.getByTestId("latest-action")).hasAttribute("data-status", "INVALIDATED");
+            assertThat(page.getByTestId("review-bill")).containsText("Dormitory deposit");
+            assertThat(page.getByTestId("approve-action")).hasCount(0);
 
             page.getByTestId("tab-student").click();
             page.onceDialog(confirm -> confirm.accept());

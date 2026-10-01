@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
@@ -47,6 +48,18 @@ public class PhaseFourService {
             String actionHash, String idempotencyKey, LocalDateTime createdAt) {
         public BigDecimal feeTotal() { return transferFee.add(fxMarkup); }
     }
+    public record PaymentReview(String billTitle, String institution, String paymentReference,
+            LocalDate dueDate, String recipientName, String recipientBankName, String recipientBankCode,
+            String recipientAccount, String sourceDisplayName, String sourceInstitution,
+            String sourceMaskedNumber, String channelName, BigDecimal rate, String quoteSource,
+            LocalDateTime quotedAt, LocalDateTime expiresAt, int settlementMinDays, int settlementMaxDays,
+            LocalDate latestSafeDate, BigDecimal sourceBalance, BigDecimal balanceAfter,
+            BigDecimal safetyBuffer) {
+        public long expiresAtEpochMillis() {
+            return expiresAt == null ? 0 : expiresAt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        }
+    }
+    private record PaymentSnapshot(LocalDateTime billUpdatedAt, String destinationCountry, PaymentReview review) {}
     public record PolicyDecision(String decision, String reasonCode, String explanation) {}
     public record Receipt(String transactionId, String actionId, String idempotencyKey,
             String channelId, String quoteId, String recipient, String sourceAccountId, String destinationCurrency,
@@ -73,10 +86,12 @@ public class PhaseFourService {
 
     @Transactional
     public void reset() {
+        lockPaymentWorkflow();
         db.update("DELETE FROM audit_log");
         db.update("DELETE FROM sandbox_ledger_entries");
         db.update("DELETE FROM sandbox_transactions");
         db.update("DELETE FROM approvals");
+        db.update("DELETE FROM action_payment_snapshots");
         db.update("DELETE FROM action_plans");
         db.update("DELETE FROM conversation_messages");
         db.update("DELETE FROM recipient_allowlist");
@@ -157,6 +172,7 @@ public class PhaseFourService {
 
     @Transactional
     public void setMode(String requested) {
+        lockPaymentWorkflow();
         String mode = requested == null ? "" : requested.trim().toUpperCase(Locale.ROOT);
         if (!List.of("APPROVAL","DELEGATED").contains(mode))
             throw new IllegalArgumentException("Mode must be APPROVAL or DELEGATED");
@@ -166,18 +182,21 @@ public class PhaseFourService {
 
     @Transactional
     public void emergencyStop() {
+        lockPaymentWorkflow();
         db.update("UPDATE agent_policy SET agent_state='PAUSED' WHERE id=1");
         audit("USER","EMERGENCY_STOP","POLICY-1","COMPLETED","AGENT PAUSED",explanation("AGENT PAUSED"));
     }
 
     @Transactional
     public void resumeAgent() {
+        lockPaymentWorkflow();
         db.update("UPDATE agent_policy SET agent_state='ACTIVE' WHERE id=1");
         audit("USER","AGENT_RESUMED","POLICY-1","COMPLETED",null,"Agent resumed by demo user");
     }
 
     @Transactional
     public void enableOfflineFallback() {
+        lockPaymentWorkflow();
         db.update("UPDATE agent_policy SET runtime_mode='OFFLINE' WHERE id=1");
         audit("SYSTEM","OFFLINE_FALLBACK_ENABLED","POLICY-1","COMPLETED",null,
                 "Deterministic local responses are active; no LLM or network dependency is required");
@@ -185,6 +204,7 @@ public class PhaseFourService {
 
     @Transactional
     public String sendMessage(String raw) {
+        lockPaymentWorkflow();
         String message = raw == null ? "" : raw.trim();
         if (message.isBlank()) throw new IllegalArgumentException("Message is required");
         if (message.length()>500) throw new IllegalArgumentException("Message must be 500 characters or fewer");
@@ -233,6 +253,7 @@ public class PhaseFourService {
 
     @Transactional
     public ActionPlan createTuitionPlan(String channelId) {
+        lockPaymentWorkflow();
         var quote=crossBorder.rankedQuotes().stream().filter(q->q.channelId().equals(channelId))
                 .findFirst().orElseThrow(()->new IllegalArgumentException("Unknown payment channel"));
         return createTuitionPlan(channelId, quote.sourceAccountId()==null?PAYER:quote.sourceAccountId());
@@ -240,11 +261,48 @@ public class PhaseFourService {
 
     @Transactional
     public ActionPlan createTuitionPlan(String channelId, String sourceAccountId) {
-        PaymentSourceAccount source = paymentSource(sourceAccountId);
-        var quote=crossBorder.rankedQuotes().stream().filter(q->q.channelId().equals(channelId))
-                .findFirst().orElseThrow(()->new IllegalArgumentException("Unknown payment channel"));
-        var bill=crossBorder.bill();
+        lockPaymentWorkflow();
         var expense=crossBorder.selectedExpense();
+        var quote=crossBorder.rankedQuotesForExpense(expense.id()).stream()
+                .filter(q->q.channelId().equals(channelId))
+                .findFirst().orElseThrow(()->new IllegalArgumentException("Unknown payment channel"));
+        return createTuitionPlan(channelId, sourceAccountId, expense.id(), expense.updatedAt().toString(), quote.quoteId());
+    }
+
+    @Transactional
+    public ActionPlan createTuitionPlan(String channelId, String sourceAccountId, int expenseId,
+                                        String billVersion, String quoteId) {
+        lockPaymentWorkflow();
+        var expense=crossBorder.expense(expenseId);
+        if (!expense.active() || expense.executed())
+            throw new IllegalArgumentException("This bill is inactive or already paid; open its existing payment record instead");
+        LocalDateTime requestedVersion;
+        try { requestedVersion=LocalDateTime.parse(billVersion); }
+        catch (Exception ex) { throw new IllegalArgumentException("Bill version is missing or invalid; reload comparison before creating a plan"); }
+        if (!expense.selected() || !expense.updatedAt().equals(requestedVersion))
+            throw new IllegalArgumentException("The selected bill changed; reload comparison before creating a plan");
+        PaymentSourceAccount source=paymentSource(sourceAccountId);
+        var quote=crossBorder.rankedQuotesForExpense(expenseId).stream()
+                .filter(q->q.channelId().equals(channelId) && q.quoteId().equals(quoteId))
+                .findFirst().orElseThrow(()->new IllegalArgumentException("The FX quote changed; refresh comparison and create a new plan"));
+        if (quote.sourceAccountId()!=null && !source.accountId().equals(quote.sourceAccountId()))
+            throw new IllegalArgumentException("The source account does not belong to this payment channel");
+        var bill=crossBorder.bill(expenseId);
+        for (ActionPlan pending : plansForExpense(expenseId)) {
+            if (terminal(pending.status())) continue;
+            PaymentSnapshot stored=paymentSnapshot(pending);
+            if (source.accountId().equals(pending.sourceAccountId())
+                    && channelId.equals(pending.channelId()) && quoteId.equals(pending.quoteId())
+                    && stored!=null && stored.billUpdatedAt().equals(expense.updatedAt())
+                    && pending.debitAmount().compareTo(quote.landedCost())==0
+                    && pending.destinationAmount().compareTo(bill.amount())==0
+                    && bill.recipientAccount().equals(pending.recipient())) {
+                audit("USER","ACTION_REOPENED",pending.id(),"COMPLETED",null,
+                        "Existing matching pending plan reopened; no new payment was created");
+                return applyInitialPolicy(pending);
+            }
+        }
+        invalidateOtherPlans(expenseId);
         String id=newId("ACT");
         String impact="Debit "+quote.landedCost().toPlainString()+" VND; convert "
                 +quote.sourceAmount().toPlainString()+" VND; credit "
@@ -253,10 +311,43 @@ public class PhaseFourService {
                 quote.landedCost(),quote.sourceAmount(),quote.transferFee(),quote.fxMarkup(),"VND",source.accountId(),
                 quote.expectedReceived(),bill.currency(),bill.recipientAccount(),quote.channelId(),quote.quoteId(),
                 "APPROVAL",impact,"Quote, beneficiary profile and approval are rechecked before execution");
-        auditTuitionEvidence(plan, bill, quote);
+        db.update("""
+                INSERT INTO action_payment_snapshots
+                (action_id,bill_updated_at,bill_title,institution,payment_reference,due_date,destination_country,
+                 recipient_name,recipient_bank_name,recipient_bank_code,recipient_account,source_display_name,
+                 source_institution,source_masked_number,channel_name,rate,quote_source,quoted_at,expires_at,
+                 settlement_min_days,settlement_max_days,latest_safe_date)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                """,id,expense.updatedAt(),expense.title(),bill.institution(),bill.paymentReference(),bill.dueDate(),
+                bill.destinationCountry(),bill.recipientName(),bill.recipientBankName(),bill.recipientBankCode(),
+                bill.recipientAccount(),source.displayName(),source.institution(),source.maskedNumber(),quote.displayName(),
+                quote.rateVndPerCny(),quote.quoteSource(),quote.quotedAt(),quote.expiresAt(),quote.settlementMinDays(),
+                quote.settlementMaxDays(),quote.latestSafeDate());
+        db.update("UPDATE action_plans SET action_hash=? WHERE id=?",currentHash(plan),plan.id());
+        auditTuitionEvidence(plan,bill,quote);
         audit("PAYMENT_SOURCE","SOURCE_ACCOUNT_SELECTED",plan.id(),"SELECTED",null,
                 source.institution()+" "+source.maskedNumber()+"; balance "+source.balance().toPlainString()+" VND");
         return applyInitialPolicy(plan);
+    }
+
+    private boolean terminal(String status) {
+        return List.of("COMPLETED","INVALIDATED","CANCELED").contains(status);
+    }
+
+    private List<ActionPlan> plansForExpense(int expenseId) {
+        return db.query("SELECT id FROM action_plans WHERE expense_id=? ORDER BY created_at DESC,id",(rs,n)->rs.getString(1),expenseId)
+                .stream().map(this::action).toList();
+    }
+
+    private void invalidateOtherPlans(int expenseId) {
+        for (ActionPlan pending : plansForExpense(expenseId)) {
+            if (terminal(pending.status())) continue;
+            db.update("UPDATE action_plans SET status='INVALIDATED',risk=? WHERE id=?",
+                    "A replacement channel or quote was selected; this plan can no longer execute",pending.id());
+            db.update("UPDATE approvals SET status='REVOKED' WHERE action_id=? AND status='VALID'",pending.id());
+            audit("POLICY_GUARD","ACTION_INVALIDATED",pending.id(),"INVALIDATED","PLAN REPLACED",
+                    "A replacement payment plan was created for the same bill; approval must be granted again");
+        }
     }
 
     private void auditTuitionEvidence(ActionPlan plan, CrossBorderService.TuitionBill bill,
@@ -266,7 +357,7 @@ public class PhaseFourService {
                         +bill.institution()+"; amount "+bill.amount().toPlainString()+" "
                         +bill.currency()+"; recipient "+bill.recipientAccount()+"; due "+bill.dueDate());
 
-        var verification=crossBorder.verifyRecipient();
+        var verification=crossBorder.verifyRecipient(bill.id());
         audit("EDUCATION_PROVIDER_REGISTRY","RECIPIENT_VERIFICATION",plan.id(),
                 verification.verified()?"VERIFIED":"BLOCKED",
                 verification.verified()?null:"RECIPIENT MISMATCH",
@@ -275,7 +366,7 @@ public class PhaseFourService {
                         +"; bank code "+value(verification.registryBankCode())
                         +"; registry account "+value(verification.registryAccount()));
 
-        String comparison=crossBorder.rankedQuotes().stream()
+        String comparison=crossBorder.rankedQuotesForExpense(bill.id()).stream()
                 .map(option->option.channelId()+"="+(option.eligible()?"ELIGIBLE":"UNAVAILABLE")
                         +", landed cost "+option.landedCost().toPlainString()+" VND")
                 .collect(Collectors.joining("; "));
@@ -295,6 +386,7 @@ public class PhaseFourService {
 
     @Transactional
     public ActionPlan createLowRiskPlan(BigDecimal amount) {
+        lockPaymentWorkflow();
         if(amount==null||amount.signum()<=0) throw new IllegalArgumentException("Amount must be positive");
         BigDecimal normalized=amount.setScale(2);
         String id=newId("ACT");
@@ -340,7 +432,7 @@ public class PhaseFourService {
             default->"POLICY_ALLOWED";
         };
         db.update("UPDATE action_plans SET status=? WHERE id=?",status,plan.id());
-        if ("DEADLINE RISK".equals(d.reasonCode())) {
+        if ("DEADLINE RISK".equals(d.reasonCode()) && !plan.risk().contains("DEADLINE RISK")) {
             db.update("UPDATE action_plans SET risk='DEADLINE RISK: ' || risk WHERE id=?", plan.id());
         }
         audit("POLICY_GUARD","POLICY_CHECKED",plan.id(),d.decision(),d.reasonCode(),d.explanation());
@@ -350,28 +442,38 @@ public class PhaseFourService {
     public PolicyDecision evaluate(ActionPlan plan,boolean execution) {
         Policy p=policy();
         if("INVALIDATED".equals(plan.status())) return blocked("ACTION INVALIDATED");
+        if("CANCELED".equals(plan.status())) return blocked("ACTION CANCELED");
         if("PAUSED".equals(p.state())) return blocked("AGENT PAUSED");
         if(!recipientAllowed(plan.recipient(),plan.actionType())) return blocked("RECIPIENT NOT ALLOWED");
         if(!sourceAccountEligible(plan.sourceAccountId())) return blocked("SOURCE ACCOUNT NOT ELIGIBLE");
         if(accountBalance(plan.sourceAccountId()).subtract(plan.debitAmount()).compareTo(p.safetyBuffer())<0)
             return blocked("INSUFFICIENT SAFE BALANCE");
         if("TUITION".equals(plan.actionType())) {
+            if (plan.expenseId()==null) return blocked("ACTION INVALIDATED");
+            CrossBorderService.StudentExpense expense;
+            try { expense=crossBorder.expense(plan.expenseId()); }
+            catch (IllegalArgumentException ex) { return blocked("ACTION INVALIDATED"); }
+            if (expense.executed()) return blocked("BILL ALREADY PAID");
+            if (!expense.active()) return blocked("ACTION INVALIDATED");
+            var bill=crossBorder.bill(plan.expenseId());
+            PaymentSnapshot snapshot=paymentSnapshot(plan);
+            if (snapshot==null) return blocked("PLAN SNAPSHOT MISSING");
             var profile=crossBorder.profile();
             if(!"Vietnam".equals(profile.sourceCountry())
-                    ||!crossBorder.corridorSupported(profile.destinationCountry(),profile.destinationCurrency()))
+                    ||!crossBorder.corridorSupported(bill.destinationCountry(),bill.currency()))
                 return blocked("CORRIDOR NOT ALLOWED");
-            if(!"VND".equals(profile.sourceCurrency())
-                    ||!"VND".equals(plan.sourceCurrency())
-                    ||!profile.destinationCurrency().equals(plan.destinationCurrency())
-                    ||!profile.destinationCurrency().equals(crossBorder.bill().currency())
-                    ||!profile.destinationCountry().equals(crossBorder.bill().destinationCountry()))
+            if(!"VND".equals(profile.sourceCurrency()) ||!"VND".equals(plan.sourceCurrency())
+                    ||!bill.currency().equals(plan.destinationCurrency()))
                 return blocked("CURRENCY NOT ALLOWED");
-            var verified=crossBorder.verifyRecipient();
-            if(!verified.verified()||!crossBorder.bill().recipientAccount().equals(plan.recipient()))
+            var verified=crossBorder.verifyRecipient(plan.expenseId());
+            if(!verified.verified()||!bill.recipientAccount().equals(plan.recipient()))
                 return blocked("RECIPIENT MISMATCH");
-            var quote=crossBorder.rankedQuotes().stream().filter(q->q.channelId().equals(plan.channelId()))
-                    .findFirst().orElse(null);
-            if(quote==null||!quote.eligible()) return blocked("CHANNEL NOT AVAILABLE");
+            if (snapshot!=null && (!snapshot.billUpdatedAt().equals(expense.updatedAt())
+                    || !snapshotMatchesBill(snapshot,bill))) return blocked("ACTION INVALIDATED");
+            var quote=crossBorder.rankedQuotesForExpense(plan.expenseId()).stream()
+                    .filter(q->q.channelId().equals(plan.channelId())).findFirst().orElse(null);
+            if(quote==null) return blocked("FX QUOTE EXPIRED");
+            if(!quote.eligible()) return blocked("CHANNEL NOT AVAILABLE");
             if(!plan.sourceAccountId().equals(quote.sourceAccountId()))
                 return blocked("SOURCE ACCOUNT CHANNEL MISMATCH");
             if(!quote.quoteId().equals(plan.quoteId())||quote.expired()) return blocked("FX QUOTE EXPIRED");
@@ -381,16 +483,27 @@ public class PhaseFourService {
                     ||quote.fxMarkup().compareTo(plan.fxMarkup())!=0
                     ||quote.expectedReceived().compareTo(plan.destinationAmount())!=0)
                 return blocked("APPROVAL EXPIRED");
-            boolean deadlineRisk = LocalDate.now()
-                    .plusDays(quote.settlementMaxDays() + CrossBorderService.SETTLEMENT_SAFETY_MARGIN_DAYS)
-                    .isAfter(crossBorder.bill().dueDate());
-            if (deadlineRisk) {
-                if (!execution) return decision("DEADLINE_RISK","DEADLINE RISK");
-                return validApproval(plan) ? decision("ALLOWED",null) : blocked("APPROVAL EXPIRED");
+            if (snapshot!=null && (snapshot.review().rate().compareTo(quote.rateVndPerCny())!=0
+                    || !snapshot.review().quotedAt().equals(quote.quotedAt())
+                    || !snapshot.review().expiresAt().equals(quote.expiresAt())
+                    || snapshot.review().settlementMaxDays()!=quote.settlementMaxDays()))
+                return blocked("FX QUOTE EXPIRED");
+            boolean deadlineRisk=LocalDate.now()
+                    .plusDays(quote.settlementMaxDays()+CrossBorderService.SETTLEMENT_SAFETY_MARGIN_DAYS)
+                    .isAfter(bill.dueDate());
+            if(deadlineRisk) {
+                if(!execution) return decision("DEADLINE_RISK","DEADLINE RISK");
+                return validApproval(plan)?decision("ALLOWED",null):blocked("APPROVAL EXPIRED");
             }
             if(!execution) return decision("APPROVAL_REQUIRED","APPROVAL REQUIRED");
             return validApproval(plan)?decision("ALLOWED",null):blocked("APPROVAL EXPIRED");
         }
+        if(!"VND".equals(plan.sourceCurrency()) || !"VND".equals(plan.destinationCurrency()))
+            return blocked("CURRENCY NOT ALLOWED");
+        if (!"LOW_RISK".equals(plan.actionType()) || !EMERGENCY.equals(plan.recipient())
+                || plan.debitAmount().signum()<=0 || plan.debitAmount().compareTo(plan.destinationAmount())!=0
+                || plan.debitAmount().compareTo(plan.conversionAmount())!=0 || plan.feeTotal().signum()!=0)
+            return blocked("APPROVAL EXPIRED");
         if(plan.debitAmount().compareTo(p.perTxLimit())>0) return blocked("LIMIT PER TX");
         BigDecimal total=db.queryForObject("""
                 SELECT COALESCE(SUM(s.vnd_debit),0) FROM sandbox_transactions s
@@ -411,7 +524,9 @@ public class PhaseFourService {
 
     @Transactional
     public ActionPlan approve(String actionId) {
+        lockPaymentWorkflow();
         ActionPlan plan=action(actionId);
+        if (receiptForAction(actionId)!=null) return plan;
         PolicyDecision check=evaluate(plan,false);
         if("BLOCKED".equals(check.decision())) return block(plan,check);
         LocalDateTime now=LocalDateTime.now();
@@ -430,11 +545,12 @@ public class PhaseFourService {
     @Transactional
     public Receipt approveAndExecute(String actionId) {
         ActionPlan approved=approve(actionId);
-        return List.of("BLOCKED","INVALIDATED").contains(approved.status())?null:execute(actionId);
+        return List.of("BLOCKED","INVALIDATED","CANCELED").contains(approved.status())?null:execute(actionId);
     }
 
     @Transactional
     public Receipt execute(String actionId) {
+        lockPaymentWorkflow();
         ActionPlan plan=action(actionId);
         List<Receipt> prior=receiptsByIdempotency(plan.idempotencyKey());
         if(!prior.isEmpty()) {
@@ -453,8 +569,11 @@ public class PhaseFourService {
         BigDecimal targetBefore=accountBalance(target);
         BigDecimal payerAfter=payerBefore.subtract(plan.debitAmount());
         BigDecimal targetAfter=targetBefore.add(plan.destinationAmount());
+        PaymentSnapshot snapshot=paymentSnapshot(plan);
         BigDecimal rate="TUITION".equals(plan.actionType())
-                ?plan.conversionAmount().divide(plan.destinationAmount()):BigDecimal.ONE.setScale(4);
+                ? snapshot!=null?snapshot.review().rate():plan.conversionAmount()
+                        .divide(plan.destinationAmount(),4,java.math.RoundingMode.HALF_UP)
+                : BigDecimal.ONE.setScale(4);
         String txId=newId("SBOX");
         LocalDateTime now=LocalDateTime.now();
         db.update("UPDATE sandbox_accounts SET balance=? WHERE id=?",payerAfter,plan.sourceAccountId());
@@ -497,8 +616,13 @@ public class PhaseFourService {
     }
 
     private ActionPlan block(ActionPlan plan,PolicyDecision d) {
-        if (!"ACTION INVALIDATED".equals(d.reasonCode()))
-            db.update("UPDATE action_plans SET status='BLOCKED' WHERE id=?",plan.id());
+        String status=switch (d.reasonCode()) {
+            case "ACTION INVALIDATED" -> "INVALIDATED";
+            case "ACTION CANCELED" -> "CANCELED";
+            default -> "BLOCKED";
+        };
+        db.update("UPDATE action_plans SET status=? WHERE id=?",status,plan.id());
+        db.update("UPDATE approvals SET status='REVOKED' WHERE action_id=? AND status='VALID'",plan.id());
         audit("POLICY_GUARD","ACTION_BLOCKED",plan.id(),"BLOCKED",d.reasonCode(),d.explanation());
         return action(plan.id());
     }
@@ -514,8 +638,16 @@ public class PhaseFourService {
     }
 
     private String currentHash(ActionPlan p) {
-        return hash(p.id(),p.actionType(),p.purpose(),p.debitAmount(),p.destinationAmount(),
-                p.recipient(),p.channelId(),p.quoteId(),p.sourceAccountId());
+        String identity=sha256(hash(p.id(),p.actionType(),p.purpose(),p.debitAmount(),p.destinationAmount(),
+                p.recipient(),p.channelId(),p.quoteId(),p.sourceAccountId())+"|"+p.sourceCurrency()
+                +"|"+p.destinationCurrency()+"|"+p.conversionAmount()+"|"+p.transferFee()+"|"+p.fxMarkup()
+                +"|"+p.expenseId()+"|"+p.requiredPermission());
+        PaymentSnapshot snapshot=paymentSnapshot(p);
+        return snapshot==null?identity:sha256(identity+"|"+snapshot.billUpdatedAt()+"|"+snapshot.destinationCountry()
+                +"|"+snapshot.review().institution()+"|"+snapshot.review().recipientName()+"|"+snapshot.review().recipientBankName()
+                +"|"+snapshot.review().recipientBankCode()+"|"+snapshot.review().recipientAccount()
+                +"|"+snapshot.review().paymentReference()+"|"+snapshot.review().dueDate()
+                +"|"+snapshot.review().rate()+"|"+snapshot.review().quotedAt()+"|"+snapshot.review().expiresAt());
     }
 
     private boolean recipientAllowed(String recipient,String type) {        Integer count=db.queryForObject(
@@ -542,8 +674,106 @@ public class PhaseFourService {
                 rs.getTimestamp(22).toLocalDateTime()),id);
     }
 
+    private void lockPaymentWorkflow() {
+        db.query("SELECT id FROM agent_policy WHERE id=1 FOR UPDATE",(rs,n)->rs.getInt(1));
+    }
+
+    @Transactional
+    public ActionPlan cancel(String actionId) {
+        lockPaymentWorkflow();
+        ActionPlan plan=action(actionId);
+        if ("COMPLETED".equals(plan.status()) || receiptForAction(actionId)!=null)
+            throw new IllegalArgumentException("A completed payment cannot be canceled; its receipt and audit history are immutable");
+        if ("CANCELED".equals(plan.status())) return plan;
+        if ("INVALIDATED".equals(plan.status())) return plan;
+        db.update("UPDATE action_plans SET status='CANCELED' WHERE id=?",actionId);
+        db.update("UPDATE approvals SET status='REVOKED' WHERE action_id=? AND status='VALID'",actionId);
+        audit("USER","ACTION_CANCELED",actionId,"CANCELED","ACTION CANCELED",
+                "User canceled the unexecuted payment plan; no funds were debited");
+        return action(actionId);
+    }
+
+    public List<ActionPlan> recentPlans() {
+        return db.query("SELECT id FROM action_plans ORDER BY created_at DESC,id FETCH FIRST 30 ROWS ONLY",(rs,n)->rs.getString(1))
+                .stream().map(this::action).toList();
+    }
+
+    public Map<Integer,ActionPlan> completedPlansByExpense() {
+        return db.query("""
+                SELECT a.id FROM action_plans a
+                WHERE a.action_type='TUITION' AND a.expense_id IS NOT NULL AND a.status='COMPLETED'
+                  AND EXISTS (SELECT 1 FROM sandbox_transactions s WHERE s.action_id=a.id AND s.status='COMPLETED')
+                ORDER BY a.created_at DESC,a.id
+                """,(rs,n)->rs.getString(1)).stream().map(this::action)
+                .collect(Collectors.toMap(ActionPlan::expenseId,plan->plan,(latest,older)->latest));
+    }
+
+    public Receipt receiptForAction(String actionId) {
+        if (actionId==null) return null;
+        List<String> ids=db.query("SELECT id FROM sandbox_transactions WHERE action_id=?",(rs,n)->rs.getString(1),actionId);
+        return ids.isEmpty()?null:receipt(ids.getFirst());
+    }
+
+    private boolean snapshotMatchesBill(PaymentSnapshot snapshot, CrossBorderService.TuitionBill bill) {
+        PaymentReview review=snapshot.review();
+        return snapshot.destinationCountry().equals(bill.destinationCountry())
+                && review.institution().equals(bill.institution())
+                && review.paymentReference().equals(bill.paymentReference()) && review.dueDate().equals(bill.dueDate())
+                && review.recipientName().equals(bill.recipientName())
+                && review.recipientBankName().equals(bill.recipientBankName())
+                && review.recipientBankCode().equals(bill.recipientBankCode())
+                && review.recipientAccount().equals(bill.recipientAccount());
+    }
+
+    private PaymentSnapshot paymentSnapshot(ActionPlan plan) {
+        List<PaymentSnapshot> snapshots=db.query("""
+                SELECT bill_updated_at,destination_country,bill_title,institution,payment_reference,due_date,
+                       recipient_name,recipient_bank_name,recipient_bank_code,recipient_account,
+                       source_display_name,source_institution,source_masked_number,channel_name,rate,quote_source,
+                       quoted_at,expires_at,settlement_min_days,settlement_max_days,latest_safe_date
+                FROM action_payment_snapshots WHERE action_id=?
+                """,(rs,n)->new PaymentSnapshot(rs.getTimestamp(1).toLocalDateTime(),rs.getString(2),
+                new PaymentReview(rs.getString(3),rs.getString(4),rs.getString(5),rs.getObject(6,LocalDate.class),
+                rs.getString(7),rs.getString(8),rs.getString(9),rs.getString(10),rs.getString(11),rs.getString(12),
+                rs.getString(13),rs.getString(14),rs.getBigDecimal(15),rs.getString(16),
+                rs.getTimestamp(17).toLocalDateTime(),rs.getTimestamp(18).toLocalDateTime(),rs.getInt(19),rs.getInt(20),
+                rs.getObject(21,LocalDate.class),null,null,null)),plan.id());
+        return snapshots.isEmpty()?null:snapshots.getFirst();
+    }
+
+    public PaymentReview paymentReview(ActionPlan plan) {
+        if (plan==null) return null;
+        Receipt receipt=receiptForAction(plan.id());
+        BigDecimal balance=receipt==null?accountBalance(plan.sourceAccountId()):receipt.vndBalanceBefore();
+        BigDecimal after=receipt==null?balance.subtract(plan.debitAmount()):receipt.vndBalanceAfter();
+        PaymentSnapshot snapshot=paymentSnapshot(plan);
+        if (snapshot!=null) {
+            PaymentReview r=snapshot.review();
+            return new PaymentReview(r.billTitle(),r.institution(),r.paymentReference(),r.dueDate(),r.recipientName(),
+                    r.recipientBankName(),r.recipientBankCode(),r.recipientAccount(),r.sourceDisplayName(),
+                    r.sourceInstitution(),r.sourceMaskedNumber(),r.channelName(),r.rate(),r.quoteSource(),
+                    r.quotedAt(),r.expiresAt(),r.settlementMinDays(),r.settlementMaxDays(),r.latestSafeDate(),
+                    balance,after,policy().safetyBuffer());
+        }
+        PaymentSourceAccount source=paymentSource(plan.sourceAccountId());
+        CrossBorderService.TuitionBill bill=plan.expenseId()==null?null:crossBorder.bill(plan.expenseId());
+        String channelName=plan.channelId()==null?"Internal Sandbox transfer":db.queryForObject(
+                "SELECT display_name FROM payment_channels WHERE id=?",String.class,plan.channelId());
+        BigDecimal rate=plan.destinationAmount().signum()==0?BigDecimal.ZERO:
+                plan.conversionAmount().divide(plan.destinationAmount(),4,java.math.RoundingMode.HALF_UP);
+        List<String> recipientNames=db.query("SELECT display_name FROM recipient_allowlist WHERE recipient_id=? AND purpose=?",
+                (rs,n)->rs.getString(1),plan.recipient(),plan.actionType());
+        String storedRecipient=recipientNames.isEmpty()?plan.recipient():recipientNames.getFirst();
+        return new PaymentReview(plan.purpose(),bill==null?storedRecipient:bill.institution(),
+                bill==null?null:bill.paymentReference(),bill==null?null:bill.dueDate(),
+                bill==null?storedRecipient:bill.recipientName(),bill==null?null:bill.recipientBankName(),
+                bill==null?null:bill.recipientBankCode(),plan.recipient(),source.displayName(),source.institution(),
+                source.maskedNumber(),channelName,rate,"Legacy stored plan / deterministic Sandbox",null,null,0,0,null,
+                balance,after,policy().safetyBuffer());
+    }
+
     public ActionPlan latestAction() {
-        List<String> ids=db.query("SELECT id FROM action_plans ORDER BY created_at DESC FETCH FIRST 1 ROWS ONLY",
+        List<String> ids=db.query("SELECT id FROM action_plans ORDER BY created_at DESC,id FETCH FIRST 1 ROWS ONLY",
                 (rs,n)->rs.getString(1));
         return ids.isEmpty()?null:action(ids.getFirst());
     }
@@ -614,6 +844,15 @@ public class PhaseFourService {
                 rs.getString(7),rs.getString(8)));
     }
 
+    public List<AuditEvent> auditEvents(String actionId) {
+        if (actionId==null) return List.of();
+        return db.query("""
+                SELECT id,occurred_at,actor,event_type,reference_id,status,reason_code,details
+                FROM audit_log WHERE reference_id=? ORDER BY occurred_at DESC,id FETCH FIRST 50 ROWS ONLY
+                """,(rs,n)->new AuditEvent(rs.getString(1),rs.getTimestamp(2).toLocalDateTime(),rs.getString(3),
+                rs.getString(4),rs.getString(5),rs.getString(6),rs.getString(7),rs.getString(8)),actionId);
+    }
+
     public List<Map<String,Object>> sandboxAccounts() {
         return db.queryForList("SELECT * FROM sandbox_accounts ORDER BY id");
     }
@@ -659,6 +898,7 @@ public class PhaseFourService {
 
     @Transactional
     public PaymentSourceAccount selectPaymentSource(String id) {
+        lockPaymentWorkflow();
         PaymentSourceAccount source=paymentSource(id);
         if(!source.ready()) throw new IllegalArgumentException("Source account is not eligible for this corridor");
         if(!source.canFund(cheapestEligibleTuitionCost(), policy().safetyBuffer()))
@@ -707,6 +947,9 @@ public class PhaseFourService {
             case "RECIPIENT NOT ALLOWED"->"Recipient is not on the allowlist for this action.";
             case "APPROVAL REQUIRED"->"User approval is required before sandbox execution.";
             case "APPROVAL EXPIRED"->"Approval is missing, expired, or no longer matches the action.";
+            case "PLAN SNAPSHOT MISSING"->"This legacy plan has no locked bill and quote snapshot; create and approve a new plan before payment.";
+            case "ACTION CANCELED"->"This unexecuted plan was canceled; no payment will be made.";
+            case "BILL ALREADY PAID"->"This student bill already has a completed payment; another payment is blocked.";
             case "ACTION INVALIDATED"->"The linked student bill changed, was archived, or was cancelled; create a new plan.";
             case "AGENT PAUSED"->"Emergency Stop is active, so new actions are blocked.";
             case "INSUFFICIENT SAFE BALANCE"->"Action would reduce the VND balance below the safety buffer.";

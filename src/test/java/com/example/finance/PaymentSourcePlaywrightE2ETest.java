@@ -47,27 +47,32 @@ class PaymentSourcePlaywrightE2ETest {
             page.navigate(BASE_URL);
             page.getByTestId("tab-student").click();
 
-            assertEquals(5,page.locator(".payment-account").count());
-            assertThat(page.getByTestId("channel-BANK_B")).containsText("Reference only");
+            assertEquals(5,page.locator(".channel-list-row").count());
+            assertThat(page.getByTestId("channel-BANK_B")).containsText("Not connected");
             assertEquals(0,page.getByTestId("channel-BANK_B").locator("button").count());
 
             page.getByTestId("payment-account-filter").selectOption("unavailable");
-            assertEquals(2,page.locator(".payment-account:visible").count());
+            assertEquals(0,page.locator(".channel-list-row:visible").count());
+            assertThat(page.getByTestId("payment-account-empty")).isVisible();
             page.getByTestId("payment-account-filter").selectOption("insufficient");
-            assertEquals(1,page.locator(".payment-account:visible").count());
-            assertThat(page.getByTestId("payment-account-TCB_VND")).containsText("Needs 28,760,800 VND more");
+            assertEquals(2,page.locator(".channel-list-row:visible").count());
+            assertThat(page.getByTestId("channel-TCB")).containsText("Insufficient balance");
+            assertThat(page.getByTestId("channel-MOMO")).containsText("Insufficient balance");
+            assertThat(page.getByTestId("plan-TCB")).hasCount(0);
+            assertThat(page.getByTestId("plan-MOMO")).hasCount(0);
+            page.getByTestId("payment-account-filter").selectOption("payable");
+            assertEquals(3,page.locator(".channel-list-row:visible").count());
+            assertThat(page.getByTestId("channel-BANK_B")).isVisible();
             page.getByTestId("payment-account-filter").selectOption("all");
 
-            page.getByTestId("payment-account-MOMO_VND").getByRole(com.microsoft.playwright.options.AriaRole.BUTTON).click();
-            assertEquals(2,page.locator(".payment-account:visible").count());
-            page.getByTestId("payment-account-filter").selectOption("all");
-
-            page.getByTestId("select-account-VCB_VND").click();
-            assertThat(page.getByTestId("payment-balance")).containsText("82,000,000 VND");
-            assertThat(page.getByTestId("remaining-BANK_A")).containsText("11,239,200 VND");
-
-            page.getByTestId("plan-BANK_A").click();
-            assertThat(page.getByTestId("latest-action")).containsText("VCB_VND");
+            assertThat(page.getByTestId("channel-VCB")).hasAttribute("data-balance", "82000000.00");
+            assertThat(page.getByTestId("remaining-VCB")).containsText("11,153,028 VND");
+            page.getByTestId("plan-VCB").click();
+            assertThat(page.getByTestId("latest-action")).hasAttribute("data-status", "AWAITING_APPROVAL");
+            assertThat(page.getByTestId("review-source")).containsText("Vietcombank Everyday");
+            assertThat(page.getByTestId("review-channel")).containsText("Vietcombank");
+            assertThat(page.getByTestId("review-total")).containsText("70,846,972");
+            assertThat(page.getByTestId("latest-receipt")).hasCount(0);
         }
     }
 }

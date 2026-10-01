@@ -482,6 +482,52 @@ const translationsVi = new Map(Object.entries({
   'E-wallet': 'Ví điện tử'
 }));
 
+Object.entries({
+  'Payment receipt': 'Biên nhận thanh toán', 'You approved this education payment.': 'Bạn đã phê duyệt khoản thanh toán giáo dục này.',
+  'Amount credited in Sandbox': 'Số tiền đã ghi có trong Sandbox',
+  'This payment completed in the Sandbox. Its approved details and receipt are preserved.': 'Thanh toán đã hoàn tất trong Sandbox. Thông tin đã phê duyệt và biên nhận được giữ nguyên.',
+  'The receipt records the exact locked plan. Its beneficiary, amounts and quote cannot be edited.': 'Biên nhận ghi đúng kế hoạch đã khóa. Người thụ hưởng, số tiền và báo giá không thể chỉnh sửa.',
+  'Review and approve payment': 'Kiểm tra và phê duyệt thanh toán',
+  'Creating a plan does not move money. Review its locked details before approving a synthetic payment.': 'Tạo kế hoạch chưa chuyển tiền. Hãy kiểm tra thông tin đã khóa trước khi phê duyệt thanh toán mô phỏng.',
+  'Back to Student finance': 'Quay lại Tài chính du học',
+  'Emergency Stop is active. New payments are blocked; completed payments are not reversed.': 'Dừng khẩn cấp đang bật. Thanh toán mới bị chặn; khoản đã hoàn tất không được hoàn tác.',
+  'No payment plan selected': 'Chưa chọn kế hoạch thanh toán',
+  'Choose a verified bill and an eligible channel in Student finance, then select Create plan.': 'Chọn hóa đơn đã xác minh và kênh hợp lệ trong Tài chính du học, sau đó bấm Tạo kế hoạch.',
+  'Review plan': 'Kiểm tra kế hoạch', 'Sandbox execution': 'Thực thi Sandbox', 'Receipt': 'Biên nhận',
+  'Your approval is required for this education payment.': 'Khoản thanh toán giáo dục này bắt buộc bạn phê duyệt.',
+  'Delegated mode cannot bypass this approval. Amount, beneficiary, account, channel and quote are locked to this plan.': 'Chế độ ủy quyền không bỏ qua bước phê duyệt này. Số tiền, người thụ hưởng, tài khoản, kênh và báo giá đã được khóa theo kế hoạch.',
+  'Payment blocked': 'Thanh toán bị chặn',
+  'Return to the bill or refresh quotes before creating a new plan.': 'Quay lại kiểm tra hóa đơn hoặc làm mới báo giá trước khi tạo kế hoạch mới.',
+  'Bill and beneficiary': 'Hóa đơn và người thụ hưởng', 'Funding and total cost': 'Nguồn tiền và tổng chi phí',
+  'Payment channel': 'Kênh thanh toán', 'Total debit': 'Tổng tiền trừ',
+  'Current source balance': 'Số dư tài khoản hiện tại', 'Source balance before payment': 'Số dư trước thanh toán',
+  'Projected balance after payment': 'Số dư dự kiến sau thanh toán', 'Source balance after payment': 'Số dư sau thanh toán',
+  'Quote source': 'Nguồn báo giá',
+  'This is the quote used for the completed payment. Refreshing quotes does not change this receipt.': 'Đây là báo giá đã dùng cho khoản thanh toán hoàn tất. Làm mới báo giá không thay đổi biên nhận này.',
+  'Policy Guard rechecks the bill, recipient, quote, account, safe balance and Emergency Stop before executing.': 'Policy Guard kiểm tra lại hóa đơn, người nhận, báo giá, tài khoản, số dư an toàn và Dừng khẩn cấp trước khi thực thi.',
+  'Approve and pay in Sandbox': 'Phê duyệt và thanh toán trong Sandbox', 'Cancel plan': 'Hủy kế hoạch',
+  'Processing in Payment Sandbox. Please wait; do not submit another payment.': 'Đang xử lý trong Payment Sandbox. Vui lòng chờ; không gửi thêm thanh toán.',
+  'Payment completed': 'Thanh toán hoàn tất',
+  'This receipt belongs to the displayed plan. No real money was moved.': 'Biên nhận thuộc đúng kế hoạch đang hiển thị. Không có tiền thật được chuyển.',
+  'Total VND debit': 'Tổng tiền VND đã trừ',
+  'Conversion included in total debit': 'Tiền quy đổi nằm trong tổng tiền trừ',
+  'Fees included in total debit': 'Phí nằm trong tổng tiền trừ',
+  'Technical plan details': 'Chi tiết kỹ thuật của kế hoạch', 'Plan ID': 'Mã kế hoạch',
+  'Audit Log for this plan': 'Nhật ký kiểm toán của kế hoạch này', 'Payment plan history': 'Lịch sử kế hoạch thanh toán',
+  'Reopen a plan or receipt without creating a new payment.': 'Mở lại kế hoạch hoặc biên nhận mà không tạo thanh toán mới.',
+  'View receipt': 'Xem biên nhận', 'Demo tools and policy settings': 'Công cụ demo và thiết lập chính sách',
+  'These controls test synthetic behavior. Education payments always require approval; changing the demo mode does not authorize them.': 'Các công cụ này dùng để kiểm tra dữ liệu mô phỏng. Thanh toán giáo dục luôn cần phê duyệt; đổi chế độ demo không cấp quyền thực thi các khoản này.',
+  'This bill has already been paid.': 'Hóa đơn này đã được thanh toán.',
+  'Open its receipt or select another active bill to compare channels. Another payment cannot be created for this bill.': 'Mở biên nhận hoặc chọn hóa đơn đang hoạt động khác để so sánh kênh. Không thể tạo thêm thanh toán cho hóa đơn này.',
+  'Payment plan canceled. No funds were debited.': 'Đã hủy kế hoạch thanh toán. Chưa trừ tiền.',
+  'The selected bill changed; reload comparison before creating a plan': 'Hóa đơn đã chọn đã thay đổi; hãy tải lại so sánh trước khi tạo kế hoạch',
+  'The FX quote changed; refresh comparison and create a new plan': 'Báo giá đã thay đổi; hãy làm mới so sánh và tạo kế hoạch mới',
+  'The source account does not belong to this payment channel': 'Tài khoản nguồn không thuộc kênh thanh toán này',
+  'This bill is inactive or already paid; open its existing payment record instead': 'Hóa đơn không còn hoạt động hoặc đã thanh toán; hãy mở lại hồ sơ thanh toán hiện có',
+  'Sandbox balances': 'Số dư Sandbox', 'Demo audit events': 'Nhật ký kiểm toán demo',
+  'Payment Sandbox demo': 'Demo Payment Sandbox', 'Create low-risk demo plan': 'Tạo kế hoạch demo rủi ro thấp',
+  'Create a synthetic low-risk example to explore demo permission settings. Education payments start from Student finance and always require approval.': 'Tạo ví dụ mô phỏng rủi ro thấp để thử thiết lập quyền hạn demo. Thanh toán giáo dục bắt đầu từ Tài chính du học và luôn cần phê duyệt.'
+}).forEach(([key, value]) => translationsVi.set(key, value));
 const originalText = new WeakMap();
 const originalPlaceholder = new WeakMap();
 const translationFragments = [...translationsVi.entries()]
@@ -530,6 +576,7 @@ function updateActiveTabLabel(language = selectedLanguage()) {
 
 function activateTab(tab, updateLocation = true) {
   activeTab = tabLabels[tab] ? tab : 'dashboard';
+  if (activeTab === 'agent' && !Number(document.querySelector('[data-payment-count]')?.dataset.paymentCount || 0)) activeTab = 'student';
   document.querySelectorAll('[data-tab-panel]').forEach((panel) => {
     panel.hidden = panel.dataset.tabPanel !== activeTab;
   });
@@ -827,7 +874,7 @@ function initializeStudentExpenseCorridor() {
 function initializeQuoteExpiryStatuses() {
   window.clearInterval(quoteExpiryTimer);
   const cards = Array.from(document.querySelectorAll('[data-quote-expiry]'));
-  if (!cards.length) return;
+  if (!cards.length && !document.querySelector('[data-plan-expiry]')) return;
 
   const render = () => {
     const vietnamese = selectedLanguage() === 'vi';
@@ -866,6 +913,7 @@ function initializeQuoteExpiryStatuses() {
         : `Quote valid · ${minutes}m ${seconds}s remaining`;
     });
     if (accountFilterChanged) renderPaymentAccounts();
+    renderPaymentWorkflow();
   };
   renderQuoteExpiryStatuses = render;
   render();
@@ -873,6 +921,8 @@ function initializeQuoteExpiryStatuses() {
 }
 
 function translateDynamic(text) {
+  const planNotice = text.match(/^Student payment plan (.+)\. Approval is always required\.$/);
+  if (planNotice) return `Kế hoạch thanh toán: ${paymentStatusLabels[planNotice[1]]?.[1] || planNotice[1]}. Luôn cần bạn phê duyệt.`;
   const rules = [
     [/^(\d+) insights$/, '$1 thông tin'],
     [/^(\d+) records$/, '$1 bản ghi'],
@@ -980,6 +1030,7 @@ function applyLanguage(language) {
   renderStudentBillList();
   renderPaymentAccounts();
   renderQuoteExpiryStatuses();
+  renderPaymentWorkflow();
 }
 
 function initializeWorkspaceNotices(root = document) {
@@ -1020,6 +1071,7 @@ function captureWorkspaceState() {
     anchor: window.location.hash || tabAnchors[activeTab],
     top: window.scrollY,
     left: window.scrollX,
+    paymentDetails: Array.from(document.querySelectorAll('.payment-workspace details[open]')).map((item) => item.dataset.testid).filter(Boolean),
     filters,
     scrolls,
     transactionPage: Number(document.querySelector('[data-testid="transaction-table-body"]')?.dataset.page || 1),
@@ -1027,6 +1079,96 @@ function captureWorkspaceState() {
   };
 }
 
+const paymentStatusLabels = {
+  AWAITING_APPROVAL: ['Awaiting your approval', 'Chờ bạn phê duyệt'], APPROVED: ['Approved', 'Đã phê duyệt'],
+  POLICY_ALLOWED: ['Allowed by policy', 'Đủ điều kiện theo chính sách'], COMPLETED: ['Completed', 'Hoàn tất'],
+  BLOCKED: ['Blocked', 'Bị chặn'], INVALIDATED: ['No longer valid', 'Không còn hiệu lực'], CANCELED: ['Canceled', 'Đã hủy']
+};
+const paymentReasonLabels = {
+  'AGENT PAUSED': ['Emergency Stop is active. Resume the agent, then explicitly approve this plan again.', 'Dừng khẩn cấp đang bật. Bấm Tiếp tục tác vụ, sau đó phê duyệt lại kế hoạch.'],
+  'FX QUOTE EXPIRED': ['The quote expired or was replaced. Return to comparison and create a plan with a new quote.', 'Báo giá đã hết hạn hoặc bị thay thế. Quay lại so sánh và tạo kế hoạch bằng báo giá mới.'],
+  'INSUFFICIENT SAFE BALANCE': ['This account cannot cover the payment while preserving the safety buffer. Choose another account.', 'Tài khoản không đủ tiền thanh toán và giữ số dư an toàn. Hãy chọn tài khoản khác.'],
+  'RECIPIENT MISMATCH': ['The bill beneficiary does not match the verified registry. Correct and verify the bill before creating another plan.', 'Người thụ hưởng không khớp danh bạ đã xác minh. Hãy sửa và xác minh hóa đơn trước khi tạo kế hoạch khác.'],
+  'CHANNEL NOT AVAILABLE': ['This channel is unavailable for this payment. Choose an eligible connected channel.', 'Kênh này không khả dụng cho khoản thanh toán. Hãy chọn kênh đã kết nối và đủ điều kiện.'],
+  'ACTION INVALIDATED': ['The bill or payment details changed. This plan and its old approval are no longer valid.', 'Hóa đơn hoặc thông tin thanh toán đã thay đổi. Kế hoạch và phê duyệt cũ không còn hiệu lực.'],
+  'ACTION CANCELED': ['You canceled this plan. No payment was executed. You may create a new plan from the bill.', 'Bạn đã hủy kế hoạch này. Chưa thực thi thanh toán. Bạn có thể tạo kế hoạch mới từ hóa đơn.'],
+  'PLAN SNAPSHOT MISSING': ['This old plan has no locked snapshot. Create and approve a new plan from the bill.', 'Kế hoạch cũ chưa có snapshot đã khóa. Hãy tạo và phê duyệt kế hoạch mới từ hóa đơn.'],
+  'BILL ALREADY PAID': ['This bill was already paid. Open its existing receipt instead of paying again.', 'Hóa đơn đã thanh toán. Hãy mở biên nhận hiện có thay vì thanh toán lại.'],
+  'BILL NOT ACTIVE': ['The bill is archived or canceled and cannot be paid.', 'Hóa đơn đã lưu trữ hoặc hủy, không thể thanh toán.'],
+  'APPROVAL EXPIRED': ['The approved details are no longer valid. Review a new plan and approve it again.', 'Thông tin đã phê duyệt không còn hiệu lực. Hãy kiểm tra và phê duyệt kế hoạch mới.'],
+  'SOURCE ACCOUNT NOT ELIGIBLE': ['The funding account is no longer eligible. Choose another connected account.', 'Tài khoản nguồn không còn hợp lệ. Hãy chọn tài khoản đã kết nối khác.'],
+  'SOURCE ACCOUNT CHANNEL MISMATCH': ['The funding account does not belong to this channel. Return to comparison.', 'Tài khoản nguồn không thuộc kênh này. Hãy quay lại so sánh.'],
+  'RECIPIENT NOT ALLOWED': ['This recipient is not authorized for this payment.', 'Người nhận chưa được cho phép đối với khoản thanh toán này.'],
+  'CORRIDOR NOT ALLOWED': ['This payment corridor is not supported.', 'Hành lang thanh toán này chưa được hỗ trợ.'],
+  'CURRENCY NOT ALLOWED': ['The payment currencies do not match the supported corridor.', 'Tiền tệ thanh toán không khớp hành lang được hỗ trợ.'],
+  'LIMIT PER TX': ['The action exceeds the per-transaction limit.', 'Tác vụ vượt hạn mức mỗi giao dịch.'],
+  'LIMIT DAILY': ['The action exceeds the daily amount or frequency limit.', 'Tác vụ vượt hạn mức tiền hoặc số lần trong ngày.']
+};
+function renderPaymentWorkflow() {
+  const vietnamese = selectedLanguage() === 'vi';
+  const index = vietnamese ? 1 : 0;
+  document.querySelectorAll('[data-payment-status]').forEach((label) => {
+    const text = paymentStatusLabels[label.dataset.status];
+    if (text) label.textContent = text[index];
+  });
+  document.querySelectorAll('[data-payment-reason]').forEach((label) => {
+    const text = paymentReasonLabels[label.dataset.reason];
+    if (text) label.textContent = text[index];
+  });
+  document.querySelectorAll('[data-plan-expiry]').forEach((quote) => {
+    const seconds = Math.floor((Number(quote.dataset.planExpiry) - Date.now()) / 1000);
+    const expired = !Number.isFinite(seconds) || seconds <= 0;
+    const label = quote.querySelector('[data-plan-expiry-status]');
+    if (label) {
+      label.classList.toggle('quote-expired', expired);
+      label.textContent = expired
+        ? (vietnamese ? 'Báo giá đã hết hạn · quay lại lấy báo giá mới; chưa chuyển tiền.' : 'Quote expired · return for a new quote; no money moved.')
+        : (vietnamese ? `Báo giá còn hiệu lực · còn ${Math.floor(seconds / 60)} phút ${String(seconds % 60).padStart(2, '0')} giây` : `Quote valid · ${Math.floor(seconds / 60)}m ${String(seconds % 60).padStart(2, '0')}s remaining`);
+    }
+    const button = quote.closest('[data-testid="latest-action"]')?.querySelector('[data-testid="approve-action"]');
+    if (button) button.disabled = expired || Boolean(pendingUpdate);
+    if (expired) { const status = quote.closest('[data-testid="latest-action"]')?.querySelector('[data-payment-status]'); if (status) status.textContent = vietnamese ? 'Báo giá đã hết hạn' : 'Quote expired'; }
+  });
+}
+function syncPaymentNavigation(nextDocument) {
+  const count = Number(document.querySelector('[data-payment-count]')?.dataset.paymentCount || 0);
+  document.querySelectorAll('[data-payment-entry]').forEach((entry) => { entry.hidden = count === 0; });
+  if (nextDocument) {
+    const current = document.querySelector('[data-global-policy]');
+    const next = nextDocument.querySelector('[data-global-policy]');
+    if (current && next) current.replaceWith(next);
+  }
+}
+async function openPaymentPlan(event) {
+  const link = event.target.closest('a[data-open-payment-plan]');
+  if (!link || !window.fetch || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+  const url = new URL(link.href, window.location.href);
+  if (url.origin !== window.location.origin) return;
+  event.preventDefault();
+  if (pendingUpdate) return;
+  const requestId = ++updateSequence;
+  pendingUpdate = requestId;
+  const state = captureWorkspaceState();
+  try {
+    const response = await fetch(url, { credentials: 'same-origin', headers: { Accept: 'text/html' } });
+    if (!response.ok) throw new Error('Plan unavailable');
+    const nextDocument = new DOMParser().parseFromString(await response.text(), 'text/html');
+    if (requestId !== updateSequence) return;
+    const nextContent = nextDocument.querySelector('.content');
+    if (!nextContent) throw new Error('Plan response missing');
+    nextContent.querySelectorAll('[data-tab-panel]').forEach((panel) => { panel.hidden = panel.dataset.tabPanel !== 'agent'; });
+    document.querySelector('.content').replaceChildren(...nextContent.childNodes);
+    syncPaymentNavigation(nextDocument);
+    history.replaceState(null, '', url.pathname + url.search + '#agent-workspace');
+    initializeWorkspaceContent({ ...state, tab: 'agent' });
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  } catch (error) {
+    if (requestId === updateSequence) showWorkspaceUpdateError(link);
+  } finally {
+    if (pendingUpdate === requestId) pendingUpdate = 0;
+    renderPaymentWorkflow();
+  }
+}
 function initializeWorkspaceContent(state) {
   renderTransactionList = () => {};
   renderStudentBillList = () => {};
@@ -1046,6 +1188,8 @@ function initializeWorkspaceContent(state) {
     }
   });
   initializeWorkspaceNotices();
+  syncPaymentNavigation();
+  state?.paymentDetails?.forEach((testId) => { const details = document.querySelector('[data-testid="' + CSS.escape(testId) + '"]'); if (details?.tagName === 'DETAILS') details.open = true; });
   activateTab(state?.tab || initialTab(), false);
   applyLanguage(selectedLanguage());
 
@@ -1090,7 +1234,7 @@ function showWorkspaceUpdateError(form) {
 async function submitWorkspaceForm(event) {
   const form = event.target;
   if (!(form instanceof HTMLFormElement) || form.method.toLowerCase() !== 'post') return;
-  const action = new URL(form.action, window.location.href);
+  const action = new URL(form.getAttribute('action') || window.location.href, window.location.href);
   if (action.origin !== window.location.origin) return;
   if (form.dataset.confirmEn) {
     const message = selectedLanguage() === 'vi' ? form.dataset.confirmVi : form.dataset.confirmEn;
@@ -1105,6 +1249,8 @@ async function submitWorkspaceForm(event) {
   // Emergency Stop must remain available while another request is pending.
   if (pendingUpdate && action.pathname !== '/agent/emergency-stop') return;
 
+  const processing = form.closest('[data-testid="latest-action"]')?.querySelector('[data-payment-processing]');
+  if (processing && action.pathname.endsWith('/approve')) processing.hidden = false;
   const restoreBillFocus = event.submitter?.matches('.student-bill-select:focus-visible');
   const requestId = ++updateSequence;
   pendingUpdate = requestId;
@@ -1120,7 +1266,7 @@ async function submitWorkspaceForm(event) {
   try {
     const response = await fetch(action, {
       method: 'POST', body, credentials: 'same-origin',
-      headers: { Accept: 'text/html' }
+      headers: { Accept: 'text/html', ...(action.pathname !== '/reset' && document.querySelector('[data-testid="latest-action"]')?.dataset.actionId ? { 'X-Workspace-Action': document.querySelector('[data-testid="latest-action"]').dataset.actionId } : {}) }
     });
     if (!response.ok) throw new Error('Update failed');
     const documentText = await response.text();
@@ -1154,6 +1300,8 @@ async function submitWorkspaceForm(event) {
       state.billPage = 1;
     }
     const focusTestId = event.submitter?.dataset.testid;
+    const selectedAction = nextContent.querySelector('[data-testid="latest-action"]')?.dataset.actionId;
+    if (selectedAction) resultUrl.searchParams.set('action', selectedAction); else resultUrl.searchParams.delete('action');
     const nextLocation = resultUrl.pathname + resultUrl.search + anchor;
     if (nextLocation !== window.location.pathname + window.location.search + window.location.hash) {
       history.replaceState(null, '', nextLocation);
@@ -1169,6 +1317,7 @@ async function submitWorkspaceForm(event) {
       });
     }
     content.replaceChildren(...nextContent.childNodes);
+    syncPaymentNavigation(nextDocument);
     content.querySelector('.notice')?.classList.add('in-place-notice');
     initializeWorkspaceContent({ ...state, tab: destinationTab });
 
@@ -1197,9 +1346,11 @@ async function submitWorkspaceForm(event) {
   } finally {
     buttons.forEach(({ button, disabled }) => { if (button.isConnected) button.disabled = disabled; });
     if (form.isConnected) form.removeAttribute('aria-busy');
+    if (processing?.isConnected) processing.hidden = true;
     if (pendingUpdate === requestId) {
       pendingUpdate = 0;
       document.querySelector('.content')?.removeAttribute('aria-busy');
+      renderPaymentWorkflow();
     }
   }
 }
@@ -1218,6 +1369,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
   document.addEventListener('submit', submitWorkspaceForm);
+  document.addEventListener('click', openPaymentPlan);
+  document.addEventListener('click', (event) => {
+    if (event.target.closest('[data-return-to-comparison]')) { event.preventDefault(); activateTab('student'); }
+  });
 
   document.addEventListener('click', (event) => {
     document.querySelectorAll('.category-row-actions details[open]').forEach((details) => {

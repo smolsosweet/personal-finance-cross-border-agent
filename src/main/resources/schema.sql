@@ -223,6 +223,31 @@ CREATE TABLE IF NOT EXISTS action_plans (
 );
 ALTER TABLE action_plans ADD COLUMN IF NOT EXISTS source_account_id VARCHAR(40);
 ALTER TABLE action_plans ADD COLUMN IF NOT EXISTS expense_id INTEGER;
+CREATE TABLE IF NOT EXISTS action_payment_snapshots (
+  action_id VARCHAR(40) PRIMARY KEY,
+  bill_updated_at TIMESTAMP NOT NULL,
+  bill_title VARCHAR(120) NOT NULL,
+  institution VARCHAR(120) NOT NULL,
+  payment_reference VARCHAR(80) NOT NULL,
+  due_date DATE NOT NULL,
+  destination_country VARCHAR(40) NOT NULL,
+  recipient_name VARCHAR(160) NOT NULL,
+  recipient_bank_name VARCHAR(160) NOT NULL,
+  recipient_bank_code VARCHAR(34) NOT NULL,
+  recipient_account VARCHAR(120) NOT NULL,
+  source_display_name VARCHAR(120) NOT NULL,
+  source_institution VARCHAR(120) NOT NULL,
+  source_masked_number VARCHAR(20) NOT NULL,
+  channel_name VARCHAR(120) NOT NULL,
+  rate DECIMAL(20,4) NOT NULL,
+  quote_source VARCHAR(120) NOT NULL,
+  quoted_at TIMESTAMP NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  settlement_min_days INTEGER NOT NULL,
+  settlement_max_days INTEGER NOT NULL,
+  latest_safe_date DATE NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS approvals (
   action_id VARCHAR(40) PRIMARY KEY,
   approved_hash VARCHAR(64) NOT NULL,

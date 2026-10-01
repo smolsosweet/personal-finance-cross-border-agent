@@ -44,7 +44,8 @@ public class PhaseOneController {
 
     @GetMapping("/")
     public String home(@RequestParam(required=false) String review,
-                       @RequestParam(required=false) String newTransaction, Model model) {
+                       @RequestParam(required=false) String newTransaction,
+                       @RequestParam(required=false) String action, HttpServletRequest request, Model model) {
         model.addAttribute("profile", transactions.profile());
         model.addAttribute("accounts", transactions.accounts());
         model.addAttribute("transactions", transactions.transactions());
@@ -82,17 +83,37 @@ public class PhaseOneController {
                 CrossBorderService.ChannelQuote::sourceAccountId, quote -> quote)));
         model.addAttribute("conversation", phaseFour.messages());
         var latestAction = phaseFour.latestAction();
-        if (!phaseFour.matchesCurrentStudentSelection(latestAction)) latestAction = null;
+        if (action == null || action.isBlank()) action=request.getHeader("X-Workspace-Action");
+        if (action != null && !action.isBlank()) {
+            try { latestAction=phaseFour.action(action); }
+            catch (org.springframework.dao.EmptyResultDataAccessException ex) {
+                latestAction=null;
+                model.addAttribute("message", "Request failed: This payment plan no longer exists; choose a bill and create a new plan.");
+            }
+        }
+        var paymentReview=phaseFour.paymentReview(latestAction);
+        var paymentDecision=latestAction==null?null:"COMPLETED".equals(latestAction.status())
+                ? new PhaseFourService.PolicyDecision("COMPLETED",null,"This plan already has a completed Sandbox receipt")
+                : phaseFour.evaluate(latestAction,false);
         model.addAttribute("latestAction", latestAction);
-        Map<String,Object> agentTuitionInsight = latestAction != null
-                && "TUITION".equals(latestAction.actionType())
-                ? crossBorder.tuitionInsightForPlan(latestAction.channelId(), latestAction.quoteId(),
-                        latestAction.debitAmount())
+        model.addAttribute("paymentReview", paymentReview);
+        model.addAttribute("paymentDecision", paymentDecision);
+        model.addAttribute("paymentPlans", phaseFour.recentPlans());
+        model.addAttribute("completedPlanByExpense", phaseFour.completedPlansByExpense());
+        Map<String,Object> agentTuitionInsight=latestAction!=null && "TUITION".equals(latestAction.actionType())
+                ? Map.of("priority", "BLOCKED".equals(paymentDecision.decision())?"BLOCKED":"HIGH",
+                        "title", "Student payment plan needs controlled execution",
+                        "message", "Bill "+paymentReview.paymentReference()+" for "+latestAction.destinationAmount().toPlainString()
+                                +" "+latestAction.destinationCurrency()+"; due "+paymentReview.dueDate()
+                                +"; latest safe date "+paymentReview.latestSafeDate()+". Approval Mode is required before payment.",
+                        "evidence", "Locked payment plan · "+paymentReview.channelName()+" · quote "+latestAction.quoteId()
+                                +" · landed cost "+latestAction.debitAmount().toPlainString()+" VND")
                 : defaultTuitionInsight;
         model.addAttribute("tuitionInsight", agentTuitionInsight);
-        model.addAttribute("latestReceipt", phaseFour.latestReceipt());
+        model.addAttribute("latestReceipt", latestAction==null?null:phaseFour.receiptForAction(latestAction.id()));
         model.addAttribute("sandboxAccounts", phaseFour.sandboxAccounts());
-        model.addAttribute("auditEvents", phaseFour.auditEvents());
+        model.addAttribute("auditEvents", phaseFour.auditEvents(latestAction==null?null:latestAction.id()));
+        model.addAttribute("demoAuditEvents", phaseFour.auditEvents());
         model.addAttribute("demoToolsEnabled", demoToolsEnabled);
         model.addAttribute("newTransaction", newTransaction);
         if (review != null && !review.isBlank()) model.addAttribute("reviewTransactionId", review);
@@ -281,24 +302,26 @@ public class PhaseOneController {
     }
 
     @PostMapping("/agent/mode")
-    public String mode(@RequestParam String mode, RedirectAttributes flash) {
+    public String mode(@RequestParam String mode, @RequestParam(required=false) String action, RedirectAttributes flash) {
         phaseFour.setMode(mode);
         flash.addFlashAttribute("message", "Agent mode changed to " + mode + ".");
-        return "redirect:/#agent-workspace";
+        return paymentRedirect(action);
     }
 
     @PostMapping("/agent/plans/tuition")
-    public String tuitionPlan(@RequestParam String channel, RedirectAttributes flash) {
-        PhaseFourService.ActionPlan plan = phaseFour.createTuitionPlan(channel);
-        flash.addFlashAttribute("message", "Tuition plan " + plan.status() + ". Approval is always required.");
-        return "redirect:/#agent-workspace";
+    public String tuitionPlan(@RequestParam String channel, @RequestParam String sourceAccountId,
+                              @RequestParam int expenseId, @RequestParam String billVersion,
+                              @RequestParam String quoteId, RedirectAttributes flash) {
+        PhaseFourService.ActionPlan plan=phaseFour.createTuitionPlan(channel,sourceAccountId,expenseId,billVersion,quoteId);
+        flash.addFlashAttribute("message", "Student payment plan "+plan.status()+". Approval is always required.");
+        return paymentRedirect(plan.id());
     }
 
     @PostMapping("/agent/plans/low-risk")
     public String lowRiskPlan(@RequestParam(defaultValue="250000") BigDecimal amount, RedirectAttributes flash) {
         PhaseFourService.ActionPlan plan = phaseFour.createLowRiskPlan(amount);
         flash.addFlashAttribute("message", "Low-risk plan status: " + plan.status() + ".");
-        return "redirect:/#agent-workspace";
+        return paymentRedirect(plan.id());
     }
 
     @PostMapping("/agent/actions/{id}/approve")
@@ -308,7 +331,14 @@ public class PhaseOneController {
         flash.addFlashAttribute("message", receipt == null
                 ? "Action blocked: " + plan.status()
                 : "Payment Sandbox completed: " + receipt.transactionId());
-        return "redirect:/#agent-workspace";
+        return paymentRedirect(id);
+    }
+
+    @PostMapping("/agent/actions/{id}/cancel")
+    public String cancelPlan(@PathVariable String id, RedirectAttributes flash) {
+        phaseFour.cancel(id);
+        flash.addFlashAttribute("message", "Payment plan canceled. No funds were debited.");
+        return paymentRedirect(id);
     }
 
     @PostMapping("/agent/actions/{id}/retry")
@@ -317,28 +347,33 @@ public class PhaseOneController {
         flash.addFlashAttribute("message", receipt == null
                 ? "Retry blocked by Policy Guard."
                 : "Idempotent receipt: " + receipt.transactionId());
-        return "redirect:/#agent-workspace";
+        return paymentRedirect(id);
     }
 
     @PostMapping("/agent/offline")
-    public String offlineFallback(RedirectAttributes flash) {
+    public String offlineFallback(@RequestParam(required=false) String action, RedirectAttributes flash) {
         phaseFour.enableOfflineFallback();
         flash.addFlashAttribute("message", "Offline fallback active: deterministic local responses are available without the LLM.");
-        return "redirect:/#agent-workspace";
+        return paymentRedirect(action);
     }
 
     @PostMapping("/agent/emergency-stop")
-    public String emergencyStop(RedirectAttributes flash) {
+    public String emergencyStop(@RequestParam(required=false) String action, RedirectAttributes flash) {
         phaseFour.emergencyStop();
         flash.addFlashAttribute("message", "Emergency Stop active. New actions receive AGENT PAUSED.");
-        return "redirect:/#agent-workspace";
+        return paymentRedirect(action);
     }
 
     @PostMapping("/agent/resume")
-    public String resume(RedirectAttributes flash) {
+    public String resume(@RequestParam(required=false) String action, RedirectAttributes flash) {
         phaseFour.resumeAgent();
         flash.addFlashAttribute("message", "Agent resumed.");
-        return "redirect:/#agent-workspace";
+        return paymentRedirect(action);
+    }
+
+    private String paymentRedirect(String actionId) {
+        return actionId==null || actionId.isBlank()?"redirect:/#agent-workspace"
+                : "redirect:/?action="+java.net.URLEncoder.encode(actionId,java.nio.charset.StandardCharsets.UTF_8)+"#agent-workspace";
     }
 
     @PostMapping("/reset")
@@ -351,7 +386,13 @@ public class PhaseOneController {
     @ExceptionHandler(Exception.class)
     public String error(Exception ex, HttpServletRequest request, RedirectAttributes flash) {
         flash.addFlashAttribute("message", "Request failed: " + ex.getMessage());
-        return request.getRequestURI().startsWith("/student/")
-                ? "redirect:/#student-finance" : "redirect:/";
+        String uri=request.getRequestURI();
+        if (uri.startsWith("/agent/actions/")) {
+            String[] segments=uri.split("/");
+            if (segments.length>3) return paymentRedirect(segments[3]);
+        }
+        if (uri.equals("/agent/plans/tuition")) return "redirect:/#student-finance";
+        if (uri.startsWith("/agent/")) return paymentRedirect(request.getParameter("action"));
+        return uri.startsWith("/student/")?"redirect:/#student-finance":"redirect:/";
     }
 }

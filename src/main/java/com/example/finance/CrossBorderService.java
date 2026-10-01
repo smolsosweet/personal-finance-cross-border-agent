@@ -103,6 +103,7 @@ public class CrossBorderService {
 
     @Transactional
     public void reset() {
+        lockPaymentWorkflow();
         db.update("DELETE FROM fx_quotes");
         db.update("DELETE FROM payment_channel_corridors");
         db.update("DELETE FROM payment_channels");
@@ -258,6 +259,7 @@ public class CrossBorderService {
 
     @Transactional
     public void refreshQuotes() {
+        lockPaymentWorkflow();
         db.update("DELETE FROM fx_quotes");
         StudentProfile profile = profile();
         LocalDateTime now = LocalDateTime.now().withNano(0);
@@ -357,13 +359,18 @@ public class CrossBorderService {
     }
 
     public TuitionBill bill() {
+        Integer id = db.queryForObject("SELECT id FROM international_bills WHERE selected=TRUE AND lifecycle_status='ACTIVE' ORDER BY id LIMIT 1", Integer.class);
+        return bill(id);
+    }
+
+    public TuitionBill bill(int id) {
         return db.queryForObject("""
                 SELECT id,institution,amount,currency,destination_country,recipient_name,recipient_bank_name,
                        recipient_bank_code,recipient_account,payment_reference,due_date,evidence_label
-                FROM international_bills WHERE selected=TRUE AND lifecycle_status='ACTIVE' ORDER BY id LIMIT 1
+                FROM international_bills WHERE id=?
                 """, (rs,n) -> new TuitionBill(rs.getInt(1), rs.getString(2), rs.getBigDecimal(3),
                 rs.getString(4), rs.getString(5), rs.getString(6), rs.getString(7), rs.getString(8),
-                rs.getString(9), rs.getString(10), rs.getObject(11, LocalDate.class), rs.getString(12)));
+                rs.getString(9), rs.getString(10), rs.getObject(11, LocalDate.class), rs.getString(12)), id);
     }
 
     public List<StudentExpense> expenses() {
@@ -407,6 +414,7 @@ public class CrossBorderService {
                           String recipientBankName, String recipientBankCode, String recipientAccount,
                           String paymentReference, LocalDate dueDate,
                           String documentName, String documentContentType, Long documentSize) {
+        lockPaymentWorkflow();
         String normalizedType = expenseType == null ? "" : expenseType.trim().toUpperCase();
         if (!List.of("TUITION", "DORMITORY", "INSURANCE", "VISA", "LIVING", "OTHER").contains(normalizedType))
             throw new IllegalArgumentException("Choose a supported student expense type");
@@ -450,6 +458,7 @@ public class CrossBorderService {
 
     @Transactional
     public void selectExpense(int id) {
+        lockPaymentWorkflow();
         Integer count = db.queryForObject("""
                 SELECT COUNT(*) FROM international_bills b
                 WHERE b.id=? AND b.lifecycle_status='ACTIVE' AND EXISTS (
@@ -475,6 +484,7 @@ public class CrossBorderService {
                               String destinationCountry, String currency, String recipientName,
                               String recipientBankName, String recipientBankCode, String recipientAccount,
                               String paymentReference, LocalDate dueDate) {
+        lockPaymentWorkflow();
         StudentExpense current = expense(id);
         if (!current.active()) throw new IllegalArgumentException("Only active student bills can be edited");
         if (current.executed())
@@ -522,6 +532,7 @@ public class CrossBorderService {
 
     @Transactional
     public void archiveExpense(int id) {
+        lockPaymentWorkflow();
         StudentExpense expense = expense(id);
         if (!expense.active()) throw new IllegalArgumentException("Only active student bills can be archived");
         Integer fallbackId = fallbackExpenseId(expense);
@@ -536,6 +547,7 @@ public class CrossBorderService {
 
     @Transactional
     public void cancelExpense(int id) {
+        lockPaymentWorkflow();
         StudentExpense expense = expense(id);
         if (!expense.active()) throw new IllegalArgumentException("Only active student bills can be cancelled");
         if (expense.executed())
@@ -550,6 +562,7 @@ public class CrossBorderService {
 
     @Transactional
     public void restoreExpense(int id) {
+        lockPaymentWorkflow();
         StudentExpense expense = expense(id);
         if (!"ARCHIVED".equals(expense.lifecycleStatus()))
             throw new IllegalArgumentException("Only archived student bills can be restored");
@@ -558,7 +571,7 @@ public class CrossBorderService {
         auditExpense("EXPENSE_RESTORED", id, "Archived student bill restored as active");
     }
 
-    private StudentExpense expense(int id) {
+    public StudentExpense expense(int id) {
         return expenses().stream().filter(item -> item.id() == id).findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Student bill does not exist"));
     }
@@ -583,10 +596,14 @@ public class CrossBorderService {
         return candidates.getFirst();
     }
 
+    private void lockPaymentWorkflow() {
+        db.query("SELECT id FROM agent_policy WHERE id=1 FOR UPDATE", (rs,n) -> rs.getInt(1));
+    }
+
     private void invalidatePendingPlans(int expenseId, String reason) {
         List<String> planIds = db.query("""
                 SELECT id FROM action_plans
-                WHERE expense_id=? AND status NOT IN ('COMPLETED','INVALIDATED')
+                WHERE expense_id=? AND status NOT IN ('COMPLETED','INVALIDATED','CANCELED')
                 """, (rs,n) -> rs.getString(1), expenseId);
         for (String planId : planIds) {
             db.update("UPDATE action_plans SET status='INVALIDATED',risk=? WHERE id=?", reason, planId);
@@ -630,7 +647,11 @@ public class CrossBorderService {
     }
 
     public RecipientVerification verifyRecipient() {
-        TuitionBill bill = bill();
+        return verifyRecipient(bill().id());
+    }
+
+    public RecipientVerification verifyRecipient(int expenseId) {
+        TuitionBill bill = bill(expenseId);
         List<RecipientVerification> matches = db.query("""
                 SELECT institution,recipient_account,recipient_bank_name,recipient_bank_code,verification_status
                 FROM school_registry
@@ -656,7 +677,14 @@ public class CrossBorderService {
 
     public List<ChannelQuote> rankedQuotes(String preference) {
         String normalizedPreference = preference == null ? "CHEAPER" : preference.toUpperCase();
-        TuitionBill bill = bill();
+        return rankedQuotesForBill(bill(), normalizedPreference);
+    }
+
+    public List<ChannelQuote> rankedQuotesForExpense(int expenseId) {
+        return rankedQuotesForBill(bill(expenseId), profile().preference());
+    }
+
+    private List<ChannelQuote> rankedQuotesForBill(TuitionBill bill, String normalizedPreference) {
         LocalDateTime now = LocalDateTime.now();
         List<ChannelQuote> options = db.query("""
                 SELECT c.id,c.display_name,c.source_account_id,cc.eligible,cc.eligibility_reason,cc.transfer_fee_vnd,cc.fx_markup_rate,

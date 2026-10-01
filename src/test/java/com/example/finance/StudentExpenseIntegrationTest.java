@@ -164,7 +164,7 @@ class StudentExpenseIntegrationTest {
         assertEquals(1, crossBorder.selectedExpense().id());
         assertThrows(IllegalArgumentException.class, () -> crossBorder.selectExpense(id));
     }
-    @Test void editingBillInvalidatesItsPendingPlanAndApprovalPath() {
+    @Test void editingBillInvalidatesItsPendingPlanAndApprovalPath() throws Exception {
         int id = crossBorder.addExpense("DORMITORY", "Dormitory deposit",
                 CrossBorderService.SCHOOL_NAME, new BigDecimal("2500.00"), "China", "CNY", CrossBorderService.SCHOOL_RECIPIENT_NAME,
                 CrossBorderService.SCHOOL_RECIPIENT_BANK, CrossBorderService.SCHOOL_RECIPIENT_BANK_CODE,
@@ -184,6 +184,13 @@ class StudentExpenseIntegrationTest {
         assertEquals("INVALIDATED", phaseFour.action(plan.id()).status());
         assertEquals(0, phaseFour.sandboxTransactionCount());
         assertEquals("Updated dormitory deposit", crossBorder.selectedExpense().title());
+        var model = mvc.perform(get("/").param("action", plan.id())).andExpect(status().isOk())
+                .andReturn().getModelAndView().getModel();
+        var visiblePlan = (PhaseFourService.ActionPlan) model.get("latestAction");
+        assertEquals(plan.id(), visiblePlan.id());
+        assertEquals("INVALIDATED", visiblePlan.status());
+        assertNull(model.get("latestReceipt"));
+        assertEquals("ACTION INVALIDATED", ((PhaseFourService.PolicyDecision) model.get("paymentDecision")).reasonCode());
     }
 
     @Test void activeBillCanBeArchivedRestoredAndCancelled() {
