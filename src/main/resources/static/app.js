@@ -434,6 +434,15 @@ const translationsVi = new Map(Object.entries({
   'GROUNDED CONVERSATION': 'HỘI THOẠI DỰA TRÊN DỮ LIỆU',
   'Ask Atlas': 'Hỏi Atlas',
   'Deterministic offline responses': 'Phản hồi ngoại tuyến theo quy tắc',
+  'Guarded AI intent · deterministic answers': 'AI chỉ hiểu ý định · câu trả lời theo dữ liệu xác định',
+  'Deterministic offline fallback': 'Chế độ dự phòng ngoại tuyến theo quy tắc',
+  'ONLINE · GUARDED INTENT': 'TRỰC TUYẾN · Ý ĐỊNH ĐƯỢC KIỂM SOÁT',
+  'OFFLINE FALLBACK': 'DỰ PHÒNG NGOẠI TUYẾN',
+  'This request cannot change payment safety controls or bypass approval.': 'Yêu cầu này không thể thay đổi kiểm soát an toàn thanh toán hoặc bỏ qua phê duyệt.',
+  'Please clarify whether you want to compare tuition channels, check tuition status, or prepare a tuition-payment plan.': 'Hãy cho biết bạn muốn so sánh kênh học phí, kiểm tra trạng thái học phí hay chuẩn bị kế hoạch thanh toán học phí.',
+  'AI is temporarily unavailable; use the guided tuition flow to compare channels or create a plan.': 'AI tạm thời không khả dụng; hãy dùng luồng học phí có hướng dẫn để so sánh kênh hoặc tạo kế hoạch.',
+  'To prepare the tuition-payment plan, select a source account.': 'Để chuẩn bị kế hoạch thanh toán học phí, hãy chọn một tài khoản nguồn.',
+  'Bank B has a lower quoted rate but is unavailable for your verified profile and cannot be selected.': 'Bank B có tỷ giá báo thấp hơn nhưng không khả dụng với hồ sơ đã xác minh và không thể được chọn.',
   'Send': 'Gửi',
   'Create 250,000 VND low-risk action': 'Tạo tác vụ rủi ro thấp 250.000 VND',
   'Test malicious instruction': 'Kiểm tra chỉ dẫn độc hại',
@@ -524,6 +533,7 @@ const translationsVi = new Map(Object.entries({
   'Category confirmed and dashboard updated.': 'Đã xác nhận danh mục và cập nhật bảng điều khiển.',
   'Category change undone.': 'Đã hoàn tác thay đổi danh mục.',
   'Conversation updated from deterministic demo data.': 'Đã cập nhật hội thoại từ dữ liệu demo theo quy tắc.',
+  'Conversation updated through the guarded intent boundary.': 'Đã cập nhật hội thoại qua lớp hiểu ý định được kiểm soát.',
   'Synthetic FX quotes refreshed for five minutes.': 'Đã làm mới báo giá FX mô phỏng trong năm phút.',
   'Emergency Stop active. New actions receive AGENT PAUSED.': 'Dừng khẩn cấp đang bật. Các tác vụ mới sẽ nhận trạng thái TÁC VỤ ĐÃ TẠM DỪNG.',
   'Agent resumed.': 'Tác vụ đã hoạt động trở lại.',
@@ -1059,6 +1069,8 @@ function translateDynamic(text) {
   const planNotice = text.match(/^Student payment plan (.+)\. Approval is always required\.$/);
   if (planNotice) return `Kế hoạch thanh toán: ${paymentStatusLabels[planNotice[1]]?.[1] || planNotice[1]}. Luôn cần bạn phê duyệt.`;
   const rules = [
+    [/^Prepared tuition-payment plan (.+) from the verified bill and current (.+) quote\. It is awaiting explicit approval; no Sandbox payment has been executed\.$/, 'Đã chuẩn bị kế hoạch học phí $1 từ hóa đơn đã xác minh và báo giá $2 hiện tại. Kế hoạch đang chờ phê duyệt rõ ràng; chưa có thanh toán Sandbox nào được thực thi.'],
+    [/^Verified tuition-channel comparison: (.+)\. Availability, costs, and timing come from the deterministic backend\.$/, 'So sánh kênh học phí đã xác minh: $1. Tính khả dụng, chi phí và thời gian do backend xác định.'],
     [/^(\d+) insights$/, '$1 thông tin'],
     [/^(\d+) records$/, '$1 bản ghi'],
     [/^(\d+) recent events$/, '$1 sự kiện gần đây'],
@@ -1158,8 +1170,8 @@ function applyLanguage(language) {
     const original = originalPlaceholder.get(element);
     if (selected === 'vi' && translationsVi.has(original)) {
       element.placeholder = translationsVi.get(original);
-    } else if (selected === 'vi' && original === 'Ask about tuition, surplus, or create a payment plan') {
-      element.placeholder = 'Hỏi về học phí, số dư khả dụng hoặc tạo kế hoạch thanh toán';
+    } else if (selected === 'vi' && original === 'Ask to compare, check, or prepare a tuition plan') {
+      element.placeholder = 'Yêu cầu so sánh, kiểm tra hoặc chuẩn bị kế hoạch học phí';
     } else if (selected === 'vi' && original === 'e.g. Groceries') {
       element.placeholder = 'ví dụ: Thực phẩm';
     } else {

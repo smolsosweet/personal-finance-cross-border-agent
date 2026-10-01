@@ -6,6 +6,7 @@ import java.security.MessageDigest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Comparator;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
@@ -31,11 +32,14 @@ public class PhaseFourService {
     private final JdbcTemplate db;
     private final CrossBorderService crossBorder;
     private final TransactionService transactions;
+    private final LlmIntentClient llmIntentClient;
 
-    public PhaseFourService(JdbcTemplate db, CrossBorderService crossBorder, TransactionService transactions) {
+    public PhaseFourService(JdbcTemplate db, CrossBorderService crossBorder, TransactionService transactions,
+                            LlmIntentClient llmIntentClient) {
         this.db = db;
         this.crossBorder = crossBorder;
         this.transactions = transactions;
+        this.llmIntentClient = llmIntentClient;
     }
 
     public record Policy(String mode, String state, String runtimeMode, BigDecimal perTxLimit,
@@ -101,8 +105,9 @@ public class PhaseFourService {
         db.update("""
                 INSERT INTO agent_policy
                 (id,mode,agent_state,runtime_mode,per_transaction_limit,daily_limit,frequency_limit,safety_buffer)
-                VALUES (1,'APPROVAL','ACTIVE','OFFLINE',?,?,?,?)
-                """, PER_TX_LIMIT, DAILY_LIMIT, FREQUENCY_LIMIT, SAFETY_BUFFER);
+                VALUES (1,'APPROVAL','ACTIVE',?,?,?,?,?)
+                """, llmIntentClient.enabled() ? "ONLINE" : "OFFLINE",
+                PER_TX_LIMIT, DAILY_LIMIT, FREQUENCY_LIMIT, SAFETY_BUFFER);
         db.update("INSERT INTO recipient_allowlist VALUES (?,?,?)",
                 CrossBorderService.SCHOOL_RECIPIENT, "Shenzhen Demo University", "TUITION");
         db.update("INSERT INTO recipient_allowlist VALUES (?,?,?)",
@@ -146,7 +151,10 @@ public class PhaseFourService {
                 """, Integer.class);
         if (sources == null || sources != 5 || destinationAccounts == null || destinationAccounts != 3) {
             reset();
+            return;
         }
+        db.update("UPDATE agent_policy SET runtime_mode=? WHERE id=1",
+                llmIntentClient.enabled() ? "ONLINE" : "OFFLINE");
     }
 
     private void insertPaymentAccount(String id, String displayName, String institution,
@@ -211,44 +219,178 @@ public class PhaseFourService {
         addMessage("USER",message);
         audit("USER","CONVERSATION_INPUT",null,"RECEIVED",null,"Untrusted user message recorded");
         if (isInjection(message)) {
-            String response="I ignored that instruction. Policy, recipient, quote and fees only come from trusted application data.";
+            String response="This request cannot change payment safety controls or bypass approval.";
             addMessage("ASSISTANT",response);            audit("POLICY_GUARD","INPUT_BLOCKED",null,"BLOCKED","UNTRUSTED INSTRUCTION",
                     explanation("UNTRUSTED INSTRUCTION"));
             return response;
         }
-        String lower=message.toLowerCase(Locale.ROOT);
-        if (lower.contains("tuition")||lower.contains("học phí")||lower.contains("payment plan")) {
-            ActionPlan plan=createTuitionPlan("BANK_A");
-            var bill=crossBorder.bill();
-            String response="Created student-payment plan "+plan.id()+" using Bank A. The "
-                    +bill.amount().toPlainString()+" "+bill.currency()+" payment remains in Approval Mode.";
-            addMessage("ASSISTANT",response);
-            return response;
+        String lower = message.toLowerCase(Locale.ROOT);
+        if (lower.contains("surplus") || lower.contains("balance") || lower.contains("số dư")) {
+            return addAssistantAndReturn(deterministicFallback(message));
         }
-        if (lower.contains("emergency")||lower.contains("low-risk")||lower.contains("low risk")) {
-            ActionPlan plan=createLowRiskPlan(new BigDecimal("250000.00"));
-            String response="Created low-risk action "+plan.id()+" for 250,000 VND. Status: "+plan.status()+".";
-            addMessage("ASSISTANT",response);
-            return response;
+        if (!llmIntentClient.enabled() || "OFFLINE".equals(policy().runtimeMode())) {
+            return addAssistantAndReturn(deterministicFallback(message));
         }
-        if (lower.contains("surplus")||lower.contains("balance")) {
-            BigDecimal surplus=(BigDecimal)transactions.dashboard().get("surplus");
-            String response="The deterministic surplus is "+surplus.toPlainString()+" VND after the 3,000,000 VND safety buffer.";
-            addMessage("ASSISTANT",response);
-            return response;
+        try {
+            LlmIntent classified = llmIntentClient.classify(message);
+            audit("LLM_INTENT","INTENT_CLASSIFIED",null,"COMPLETED",classified.intent().name(),
+                    "Preference "+classified.channelPreference()+"; confidence "+confidenceBand(classified.confidence()));
+            return addAssistantAndReturn(renderIntent(classified));
+        } catch (LlmIntentException ex) {
+            audit("LLM_INTENT","INTENT_PROVIDER_UNAVAILABLE",null,"FALLBACK","LLM UNAVAILABLE",
+                    "Guarded intent provider failed; no payment plan was created from fallback");
+            return addAssistantAndReturn(deterministicFallback(message));
         }
-        var bill=crossBorder.bill();
-        String response="The synthetic tuition bill is "+bill.amount().toPlainString()+" "+bill.currency()
-                +" for "+bill.institution()+", due "+bill.dueDate()+". I only use stored bill and quote data.";
-        addMessage("ASSISTANT",response);
-        return response;
     }
 
     private static boolean isInjection(String value) {
         String s=value.toLowerCase(Locale.ROOT);
-        return s.contains("ignore policy")||s.contains("bypass policy")||s.contains("change recipient")
+        return s.contains("ignore policy")||s.contains("ignore all policy")||s.contains("bypass policy")||s.contains("change recipient")
                 ||s.contains("override recipient")||s.contains("invent rate")
-                ||s.contains("ignore approval")||s.contains("system prompt");
+                ||s.contains("ignore approval")||s.contains("bypass approval")||s.contains("remove approval")
+                ||s.contains("disable policy")||s.contains("change policy")||s.contains("reveal secret")
+                ||s.contains("reveal api key")||s.contains("reveal the api key")||s.contains("show api key")
+                ||s.contains("change amount")||s.contains("change currency")
+                ||s.contains("change corridor")||s.contains("execute directly")||s.contains("execute payment")
+                ||s.contains("system prompt")
+                ||s.contains("bỏ qua phê duyệt")||s.contains("đổi người nhận")
+                ||s.contains("thay đổi chính sách")||s.contains("tiết lộ khóa");
+    }
+
+    private String renderIntent(LlmIntent classified) {
+        return switch (classified.intent()) {
+            case CREATE_TUITION_PLAN -> prepareVerifiedTuitionPlan(classified.channelPreference());
+            case COMPARE_TUITION_CHANNELS -> verifiedChannelComparison(classified.channelPreference());
+            case EXPLAIN_CHANNEL_UNAVAILABLE -> explainBankB();
+            case CHECK_TUITION_STATUS -> verifiedTuitionStatus();
+            case NEED_CLARIFICATION ->
+                    "Please clarify whether you want to compare tuition channels, check tuition status, or prepare a tuition-payment plan.";
+            case UNSAFE_REQUEST -> {
+                audit("POLICY_GUARD","INPUT_BLOCKED",null,"BLOCKED","UNTRUSTED INSTRUCTION",
+                        explanation("UNTRUSTED INSTRUCTION"));
+                yield "This request cannot change payment safety controls or bypass approval.";
+            }
+            case UNSUPPORTED_REQUEST ->
+                    "I can help compare verified tuition channels, explain availability, check tuition status, or prepare a tuition-payment draft.";
+        };
+    }
+
+    private String prepareVerifiedTuitionPlan(LlmIntent.ChannelPreference preference) {
+        CrossBorderService.StudentExpense expense = activeVerifiedTuition();
+        if (expense == null) {
+            return "I cannot prepare a payment plan because no active tuition bill is available.";
+        }
+        PaymentSourceAccount source = paymentSourceAccounts().stream()
+                .filter(PaymentSourceAccount::selected).findFirst().orElse(null);
+        if (source == null) {
+            return "To prepare the tuition-payment plan, select a source account.";
+        }
+        if (!source.ready()) {
+            return "The selected source account is not connected, verified, and enabled for this tuition corridor.";
+        }
+        Comparator<CrossBorderService.ChannelQuote> order = preference == LlmIntent.ChannelPreference.FASTEST
+                ? Comparator.comparingInt(CrossBorderService.ChannelQuote::settlementMaxDays)
+                        .thenComparing(CrossBorderService.ChannelQuote::landedCost)
+                : Comparator.comparing(CrossBorderService.ChannelQuote::landedCost);
+        CrossBorderService.ChannelQuote quote = crossBorder.rankedQuotesForExpense(expense.id()).stream()
+                .filter(CrossBorderService.ChannelQuote::eligible)
+                .filter(option -> !option.expired())
+                .filter(option -> source.accountId().equals(option.sourceAccountId()))
+                .min(order).orElse(null);
+        if (quote == null) {
+            return "The selected source account has no current eligible tuition quote. Use the guided comparison to select another source.";
+        }
+        if (!source.canFund(quote.landedCost(), policy().safetyBuffer())) {
+            return "I cannot prepare the plan because the selected source account would fall below the configured safety buffer.";
+        }
+        ActionPlan plan = createTuitionPlan(quote.channelId(), source.accountId(), expense.id(),
+                expense.updatedAt().toString(), quote.quoteId());
+        return "Prepared tuition-payment plan "+plan.id()+" from the verified bill and current "
+                +quote.displayName()+" quote. It is awaiting explicit approval; no Sandbox payment has been executed.";
+    }
+
+    private String verifiedChannelComparison(LlmIntent.ChannelPreference preference) {
+        CrossBorderService.StudentExpense expense = activeVerifiedTuition();
+        if (expense == null) {
+            return "I cannot compare payment channels because no active verified tuition bill is available.";
+        }
+        Comparator<CrossBorderService.ChannelQuote> order = preference == LlmIntent.ChannelPreference.FASTEST
+                ? Comparator.comparingInt(CrossBorderService.ChannelQuote::settlementMaxDays)
+                        .thenComparing(CrossBorderService.ChannelQuote::landedCost)
+                : Comparator.comparing(CrossBorderService.ChannelQuote::landedCost);
+        List<CrossBorderService.ChannelQuote> eligible = crossBorder.rankedQuotesForExpense(expense.id()).stream()
+                .filter(CrossBorderService.ChannelQuote::eligible)
+                .filter(option -> !option.expired())
+                .sorted(order).toList();
+        if (eligible.isEmpty()) {
+            return "No current eligible tuition channel is available. Refresh the simulated quotes and review the verified bill.";
+        }
+        String options = eligible.stream().limit(3)
+                .map(option -> option.displayName()+": "+option.landedCost().toPlainString()
+                        +" VND, "+option.settlementMinDays()+"–"+option.settlementMaxDays()+" day settlement")
+                .collect(Collectors.joining("; "));
+        return "Verified tuition-channel comparison: "+options
+                +". Availability, costs, and timing come from the deterministic backend.";
+    }
+
+    private String explainBankB() {
+        CrossBorderService.StudentExpense expense = activeVerifiedTuition();
+        if (expense == null) {
+            return "I cannot explain channel availability because no active verified tuition bill is available.";
+        }
+        List<CrossBorderService.ChannelQuote> quotes = crossBorder.rankedQuotesForExpense(expense.id());
+        CrossBorderService.ChannelQuote bankB = quotes.stream()
+                .filter(option -> "BANK_B".equals(option.channelId())).findFirst().orElse(null);
+        if (bankB == null || bankB.eligible()) {
+            return "Bank B availability cannot be determined from the current verified channel data.";
+        }
+        BigDecimal cheapestEligibleRate = quotes.stream().filter(CrossBorderService.ChannelQuote::eligible)
+                .map(CrossBorderService.ChannelQuote::rateVndPerCny).min(BigDecimal::compareTo).orElse(null);
+        if (cheapestEligibleRate != null && bankB.rateVndPerCny().compareTo(cheapestEligibleRate) < 0) {
+            return "Bank B has a lower quoted rate but is unavailable for your verified profile and cannot be selected.";
+        }
+        return "Bank B is unavailable for your verified profile and cannot be selected: "+bankB.eligibilityReason()+".";
+    }
+
+    private String verifiedTuitionStatus() {
+        CrossBorderService.StudentExpense expense = activeVerifiedTuition();
+        if (expense == null) {
+            return "No active verified tuition bill is available.";
+        }
+        return "The active tuition bill "+expense.paymentReference()+" for "+expense.amount().toPlainString()
+                +" "+expense.currency()+" is verified and due "+expense.dueDate()
+                +". Approval is still required before any Sandbox payment.";
+    }
+
+    private CrossBorderService.StudentExpense activeVerifiedTuition() {
+        try {
+            CrossBorderService.StudentExpense expense = crossBorder.selectedExpense();
+            if (!expense.active() || expense.executed() || !"TUITION".equals(expense.expenseType())) return null;
+            return crossBorder.verifyRecipient(expense.id()).verified() ? expense : null;
+        } catch (RuntimeException ex) {
+            return null;
+        }
+    }
+
+    private String deterministicFallback(String message) {
+        String lower = message.toLowerCase(Locale.ROOT);
+        if (lower.contains("surplus") || lower.contains("balance") || lower.contains("số dư")) {
+            BigDecimal surplus=(BigDecimal)transactions.dashboard().get("surplus");
+            return "The deterministic surplus is "+surplus.toPlainString()
+                    +" VND after the 3,000,000 VND safety buffer.";
+        }
+        return "AI is temporarily unavailable; use the guided tuition flow to compare channels or create a plan.";
+    }
+
+    private String addAssistantAndReturn(String response) {
+        addMessage("ASSISTANT",response);
+        return response;
+    }
+
+    private static String confidenceBand(BigDecimal confidence) {
+        if (confidence.compareTo(new BigDecimal("0.80")) >= 0) return "HIGH";
+        if (confidence.compareTo(new BigDecimal("0.50")) >= 0) return "MEDIUM";
+        return "LOW";
     }
 
     @Transactional

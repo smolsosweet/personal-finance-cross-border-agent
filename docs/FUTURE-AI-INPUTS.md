@@ -1,6 +1,7 @@
 # Future AI-assisted input backlog
 
-Status: Planned after the deterministic demo. None of the capabilities below is implemented yet.
+Status: The guarded tuition-intent classifier is implemented separately. The AI-assisted input and extraction
+capabilities below remain planned and are not implemented.
 
 ## Student expense capture
 

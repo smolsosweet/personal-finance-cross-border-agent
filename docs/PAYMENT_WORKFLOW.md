@@ -2,7 +2,7 @@
 
 ## Phạm vi
 
-Hoàn thiện luồng giao diện production trên dữ liệu mô phỏng: chọn hóa đơn giáo dục → so sánh kênh → tạo kế hoạch → kiểm tra → phê duyệt → Payment Sandbox → biên nhận. Không có kết nối ngân hàng, tiền thật, LLM hay tính năng chuyển tiền cá nhân mới.
+Hoàn thiện luồng giao diện production trên dữ liệu mô phỏng: chọn hóa đơn giáo dục → so sánh kênh → tạo kế hoạch → kiểm tra → phê duyệt → Payment Sandbox → biên nhận. Không có kết nối ngân hàng, tiền thật hay tính năng chuyển tiền cá nhân mới. Lớp OpenAI tùy chọn chỉ phân loại intent học phí theo schema; backend vẫn tạo nội dung, kiểm tra và thực thi.
 
 ## Cách sử dụng
 
@@ -18,7 +18,7 @@ Hoàn thiện luồng giao diện production trên dữ liệu mô phỏng: ch�
 
 **Dừng khẩn cấp** ở header cố định, dùng được khi công cụ demo đang đóng. Nó chặn thực thi mới và không hoàn tác khoản đã hoàn tất. **Tiếp tục tác vụ** không tự trả tiền: khoản giáo dục vẫn cần người dùng phê duyệt.
 
-**Công cụ demo và thiết lập chính sách** chứa hội thoại theo quy tắc, thử prompt injection, hạn mức/ủy quyền cho tác vụ rủi ro thấp, offline fallback, thử idempotency và nhật ký demo toàn hệ thống. Nhật ký bên ngoài chỉ thuộc kế hoạch đang xem. Dashboard có mục demo thu gọn để tạo ví dụ rủi ro thấp trước khi có kế hoạch giáo dục.
+**Công cụ demo và thiết lập chính sách** chứa hội thoại intent được kiểm soát, thử prompt injection, hạn mức/ủy quyền cho tác vụ rủi ro thấp, offline fallback, thử idempotency và nhật ký demo toàn hệ thống. Khi AI bị tắt hoặc lỗi, fallback không tạo payment plan. Nhật ký bên ngoài chỉ thuộc kế hoạch đang xem. Dashboard có mục demo thu gọn để tạo ví dụ rủi ro thấp trước khi có kế hoạch giáo dục.
 
 ## Quy tắc dữ liệu và thực thi
 

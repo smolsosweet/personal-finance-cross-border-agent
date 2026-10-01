@@ -1,6 +1,6 @@
-# Personal Finance Cross Border Agent — Phase 5
+# Personal Finance Cross Border Agent — Guarded AI Intent Phase
 
-The `main` branch implements the deterministic demo through Phase 5.
+The `main` branch implements the deterministic demo through Phase 5 plus an optional guarded OpenAI intent classifier.
 
 - Phase 1: synthetic user, bank events, normalization and transaction type detection.
 - Phase 2: merchant categorization, confidence handling, Undo, dashboard, budgets and Proactive Feed.
@@ -8,7 +8,9 @@ The `main` branch implements the deterministic demo through Phase 5.
 - Phase 4: conversation UI, structured action plans, Approval Mode, Delegated Mode for low-risk actions, deterministic Policy Guard, multi-currency Payment Sandbox, receipts, idempotency, Audit Log and Emergency Stop.
 - Phase 5: prompt-injection, recipient, channel, FX, deadline, limit and safe-balance guards, offline fallback, reset/replay and the five-minute demo acceptance flow.
 
-All data and payments are synthetic. No real Alipay, bank, payment provider or LLM execution is connected. The LLM boundary remains read-only: it cannot execute payments, modify policy, invent rates or fees, or change a recipient after approval.
+All data and payments are synthetic. No real Alipay, bank or payment provider is connected. When enabled,
+the OpenAI integration classifies a narrow tuition intent through strict Structured Outputs. It cannot execute
+payments, modify policy, invent rates or fees, or change a recipient after approval.
 
 ## Run
 
@@ -43,3 +45,19 @@ Run the full automated suite and the manual acceptance script described in [PHAS
 The payment screen opens after a plan is created. Its history entry then becomes available for reopening plans. Bill/beneficiary/quote snapshots remain immutable; identical pending requests reuse a plan, replacement plans revoke old approvals, and every execution rechecks Policy Guard. Unexecuted plans can be canceled; completed payments keep their original receipt.
 
 See [the workflow and targeted verification report](docs/PAYMENT_WORKFLOW.md) for the Vietnamese guide, exact test commands, observed results and verification limitations.
+
+## Guarded AI intent configuration
+
+The optional AI intent boundary is disabled by default. Enable it only through environment variables:
+
+```powershell
+$env:OPENAI_API_KEY="<set locally; never commit>"
+$env:FINBRIDGE_LLM_MODEL="<a Structured Outputs capable model>"
+$env:FINBRIDGE_LLM_ENABLED="true"
+mvn spring-boot:run
+```
+
+The OpenAI response can select only a backend-owned tuition intent and a cheapest/fastest preference.
+Amounts, recipients, accounts, bills, quotes, currencies, corridors, approval and policy outcomes are loaded and
+validated by deterministic backend services. Missing configuration, provider errors and invalid structured output
+fall back without creating or executing a payment plan.
