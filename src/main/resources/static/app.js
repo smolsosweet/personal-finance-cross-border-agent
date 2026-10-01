@@ -129,6 +129,8 @@ const translationsVi = new Map(Object.entries({
   'Manage and verify provider bills': 'Quản lý và xác minh hóa đơn nhà cung cấp',
   '← Scroll horizontally to view bills and providers →': '← Cuộn ngang để xem hóa đơn và nhà cung cấp →',
   'Verification belongs to each bill. Select a verified active bill before comparing payment channels.': 'Mỗi hóa đơn có trạng thái xác minh riêng. Hãy chọn hóa đơn đang hoạt động và đã xác minh trước khi so sánh kênh thanh toán.',
+  'Select bill': 'Chọn hóa đơn',
+  'Unable to confirm the result. Reload to check the current data before trying again.': 'Không thể xác nhận kết quả. Hãy tải lại trang để kiểm tra dữ liệu hiện tại trước khi thử lại.',
   'Search': 'Tìm kiếm',
   'Bill, provider, reference or beneficiary': 'Hóa đơn, nhà cung cấp, mã tham chiếu hoặc người thụ hưởng',
   'Status': 'Trạng thái',
@@ -501,6 +503,20 @@ let renderTransactionList = () => {};
 let renderStudentBillList = () => {};
 let renderPaymentAccounts = () => {};
 let renderQuoteExpiryStatuses = () => {};
+let quoteExpiryTimer;
+let pendingUpdate = 0;
+let updateSequence = 0;
+const workspaceFilterSelectors = [
+  '[data-testid="student-bill-search"]', '[data-testid="student-bill-status-filter"]',
+  '[data-testid="student-bill-verification-filter"]', '[data-testid="student-bill-sort"]',
+  '[data-testid="payment-account-filter"]', '[data-testid="transaction-search"]',
+  '[data-testid="transaction-type-filter"]', '[data-testid="transaction-status-filter"]',
+  '[data-testid="transaction-category-filter"]', '[data-testid="transaction-sort"]'
+];
+const workspaceScrollSelectors = [
+  '[data-testid="student-expense-list"]', '[data-testid="payment-account-list"]',
+  '#transactions .table-scroll'
+];
 
 function selectedLanguage() {
   return localStorage.getItem('finbridge-language') === 'vi' ? 'vi' : 'en';
@@ -568,7 +584,7 @@ function initialTab() {
     || 'dashboard';
 }
 
-function initializeTransactionList() {
+function initializeTransactionList(initialPage = 1) {
   const rows = Array.from(document.querySelectorAll('[data-testid="transaction-row"]'));
   if (!rows.length) return;
 
@@ -584,7 +600,7 @@ function initializeTransactionList() {
   const pageLabel = document.querySelector('[data-testid="transaction-page"]');
   const empty = document.querySelector('[data-testid="transaction-empty"]');
   const pageSize = 5;
-  let page = 1;
+  let page = initialPage;
 
   [...new Set(rows.map((row) => row.dataset.category).filter(Boolean))]
     .sort()
@@ -611,6 +627,7 @@ function initializeTransactionList() {
 
     const pages = Math.max(1, Math.ceil(matches.length / pageSize));
     page = Math.min(page, pages);
+    document.querySelector('[data-testid="transaction-table-body"]').dataset.page = page;
     const start = (page - 1) * pageSize;
     const visibleRows = new Set(matches.slice(start, start + pageSize));
     rows.forEach((row) => { row.hidden = !visibleRows.has(row); });
@@ -649,7 +666,7 @@ function initializeTransactionList() {
   render();
 }
 
-function initializeStudentBillList() {
+function initializeStudentBillList(initialPage = 1) {
   const list = document.querySelector('[data-testid="student-expense-list"]');
   if (!list) return;
   const rows = Array.from(list.querySelectorAll('[data-bill-row]'));
@@ -664,7 +681,7 @@ function initializeStudentBillList() {
   const pageLabel = document.querySelector('[data-testid="student-bill-page"]');
   const empty = document.querySelector('[data-testid="student-bill-empty"]');
   const pageSize = 5;
-  let page = 1;
+  let page = initialPage;
 
   const matchesStatus = (row) => {
     if (status.value === 'ALL') return true;
@@ -695,6 +712,7 @@ function initializeStudentBillList() {
 
     const pages = Math.max(1, Math.ceil(matches.length / pageSize));
     page = Math.min(page, pages);
+    list.dataset.page = page;
     const start = (page - 1) * pageSize;
     const visibleRows = new Set(matches.slice(start, start + pageSize));
     rows.forEach((row) => { row.hidden = !visibleRows.has(row); });
@@ -801,6 +819,7 @@ function initializeStudentExpenseCorridor() {
 }
 
 function initializeQuoteExpiryStatuses() {
+  window.clearInterval(quoteExpiryTimer);
   const cards = Array.from(document.querySelectorAll('[data-quote-expiry]'));
   if (!cards.length) return;
 
@@ -844,7 +863,7 @@ function initializeQuoteExpiryStatuses() {
   };
   renderQuoteExpiryStatuses = render;
   render();
-  window.setInterval(render, 1000);
+  quoteExpiryTimer = window.setInterval(render, 1000);
 }
 
 function translateDynamic(text) {
@@ -954,35 +973,49 @@ function applyLanguage(language) {
   renderQuoteExpiryStatuses();
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  const dialog = document.querySelector('dialog[data-auto-open="true"]');
-  if (dialog && typeof dialog.showModal === 'function') dialog.showModal();
+function captureWorkspaceState() {
+  const filters = new Map();
+  workspaceFilterSelectors.forEach((selector) => {
+    const control = document.querySelector(selector);
+    if (control) filters.set(selector, control.value);
+  });
+  const scrolls = new Map();
+  workspaceScrollSelectors.forEach((selector) => {
+    const element = document.querySelector(selector);
+    if (element) scrolls.set(selector, { left: element.scrollLeft, top: element.scrollTop });
+  });
+  return {
+    tab: activeTab,
+    anchor: window.location.hash || tabAnchors[activeTab],
+    top: window.scrollY,
+    left: window.scrollX,
+    filters,
+    scrolls,
+    transactionPage: Number(document.querySelector('[data-testid="transaction-table-body"]')?.dataset.page || 1),
+    billPage: Number(document.querySelector('[data-testid="student-expense-list"]')?.dataset.page || 1)
+  };
+}
 
-  activateTab(initialTab(), false);
-  requestAnimationFrame(() => window.scrollTo({ top: 0 }));
-  initializeTransactionList();
-  initializeStudentBillList();
+function initializeWorkspaceContent(state) {
+  renderTransactionList = () => {};
+  renderStudentBillList = () => {};
+  renderPaymentAccounts = () => {};
+  renderQuoteExpiryStatuses = () => {};
+  initializeTransactionList(state?.transactionPage);
+  initializeStudentBillList(state?.billPage);
   initializeCategoryReviewForms();
   initializePaymentAccounts();
   initializeStudentExpenseCorridor();
   initializeQuoteExpiryStatuses();
-  const savedLanguage = localStorage.getItem('finbridge-language') || 'en';
-  applyLanguage(savedLanguage);
-
-  document.querySelectorAll('[data-tab]').forEach((button) => {
-    button.addEventListener('click', () => activateTab(button.dataset.tab));
+  state?.filters.forEach((value, selector) => {
+    const control = document.querySelector(selector);
+    if (control && (control.tagName !== 'SELECT'
+        || Array.from(control.options).some((option) => option.value === value))) {
+      control.value = value;
+    }
   });
-
-  document.querySelectorAll('[data-transaction-view]').forEach((button) => {
-    button.addEventListener('click', () => activateTransactionView(button.dataset.transactionView));
-  });
-
-  document.querySelectorAll('[data-language]').forEach((button) => {
-    button.addEventListener('click', () => {
-      localStorage.setItem('finbridge-language', button.dataset.language);
-      applyLanguage(button.dataset.language);
-    });
-  });
+  activateTab(state?.tab || initialTab(), false);
+  applyLanguage(selectedLanguage());
 
   document.querySelectorAll('[data-open-dialog]').forEach((button) => {
     button.addEventListener('click', () => {
@@ -990,7 +1023,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (dialog && typeof dialog.showModal === 'function') dialog.showModal();
     });
   });
-
   document.querySelectorAll('dialog').forEach((modal) => {
     modal.querySelectorAll('[data-close-dialog]').forEach((button) => {
       button.addEventListener('click', () => modal.close());
@@ -1002,26 +1034,157 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!inside) modal.close();
     });
   });
+  document.querySelectorAll('[data-transaction-view]').forEach((button) => {
+    button.addEventListener('click', () => activateTransactionView(button.dataset.transactionView));
+  });
+  const dialog = document.querySelector('dialog[data-auto-open="true"]');
+  if (dialog && typeof dialog.showModal === 'function') dialog.showModal();
+}
+
+function showWorkspaceUpdateError(form) {
+  const container = form.closest('dialog[open]') || document.querySelector('.content');
+  if (!container) return;
+  container.querySelector('.request-error')?.remove();
+  const notice = document.createElement('div');
+  notice.className = 'notice request-error' + (container.tagName === 'DIALOG' ? '' : ' in-place-notice');
+  notice.setAttribute('role', 'alert');
+  const message = 'Unable to confirm the result. Reload to check the current data before trying again.';
+  notice.textContent = translateValue(message, selectedLanguage());
+  originalText.set(notice.firstChild, message);
+  container.prepend(notice);
+}
+
+async function submitWorkspaceForm(event) {
+  const form = event.target;
+  if (!(form instanceof HTMLFormElement) || form.method.toLowerCase() !== 'post') return;
+  const action = new URL(form.action, window.location.href);
+  if (action.origin !== window.location.origin) return;
+  if (form.dataset.confirmEn) {
+    const message = selectedLanguage() === 'vi' ? form.dataset.confirmVi : form.dataset.confirmEn;
+    if (!window.confirm(message)) {
+      event.preventDefault();
+      return;
+    }
+  }
+  if (!window.fetch || !window.DOMParser) return;
+  event.preventDefault();
+  if (form.dataset.billSelected === 'true') return;
+  // Emergency Stop must remain available while another request is pending.
+  if (pendingUpdate && action.pathname !== '/agent/emergency-stop') return;
+
+  const requestId = ++updateSequence;
+  pendingUpdate = requestId;
+  const data = new FormData(form);
+  if (event.submitter?.name) data.append(event.submitter.name, event.submitter.value);
+  const body = form.enctype === 'multipart/form-data' ? data : new URLSearchParams(data);
+  const buttons = Array.from(form.querySelectorAll('button[type="submit"], button:not([type])'))
+    .map((button) => ({ button, disabled: button.disabled }));
+  buttons.forEach(({ button }) => { button.disabled = true; });
+  form.setAttribute('aria-busy', 'true');
+  document.querySelector('.content')?.setAttribute('aria-busy', 'true');
+
+  try {
+    const response = await fetch(action, {
+      method: 'POST', body, credentials: 'same-origin',
+      headers: { Accept: 'text/html' }
+    });
+    if (!response.ok) throw new Error('Update failed');
+    const documentText = await response.text();
+    if (requestId !== updateSequence) return;
+    const nextDocument = new DOMParser().parseFromString(documentText, 'text/html');
+    const nextContent = nextDocument.querySelector('.content');
+    const content = document.querySelector('.content');
+    if (!nextContent || !content) throw new Error('Workspace response missing');
+    const resultUrl = new URL(response.url);
+    if (resultUrl.origin !== window.location.origin) throw new Error('Unexpected update destination');
+    // Capture at completion so a user's scrolling while waiting is preserved.
+    const state = captureWorkspaceState();
+    let anchor = form.dataset.nextAnchor || state.anchor;
+    if (anchor === 'transaction-event') {
+      anchor = resultUrl.searchParams.has('newTransaction')
+        ? (resultUrl.searchParams.has('review') ? '#transaction-review' : '#transactions')
+        : state.anchor;
+    }
+    const destinationTabs = {
+      '#overview': 'dashboard', '#transactions': 'transactions',
+      '#transaction-review': 'transactions', '#transaction-categories': 'transactions',
+      '#transaction-tools': 'transactions', '#student-finance': 'student',
+      '#agent-workspace': 'agent'
+    };
+    const destinationTab = destinationTabs[anchor] || state.tab;
+    const sameTab = destinationTab === state.tab && anchor === state.anchor;
+    if (action.pathname === '/reset') {
+      state.filters.clear();
+      state.scrolls.clear();
+      state.transactionPage = 1;
+      state.billPage = 1;
+    }
+    const focusTestId = event.submitter?.dataset.testid;
+    const nextLocation = resultUrl.pathname + resultUrl.search + anchor;
+    if (nextLocation !== window.location.pathname + window.location.search + window.location.hash) {
+      history.replaceState(null, '', nextLocation);
+    }
+    content.replaceChildren(...nextContent.childNodes);
+    content.querySelector('.notice')?.classList.add('in-place-notice');
+    initializeWorkspaceContent({ ...state, tab: destinationTab });
+
+    const restorePosition = () => {
+      state.scrolls.forEach((position, selector) => {
+        const element = document.querySelector(selector);
+        if (element) {
+          element.scrollLeft = position.left;
+          element.scrollTop = position.top;
+        }
+      });
+      if (focusTestId) {
+        document.querySelector('[data-testid="' + CSS.escape(focusTestId) + '"]')
+          ?.focus({ preventScroll: true });
+      } else if (action.pathname === '/student/expenses/select') {
+        document.querySelector('.student-bill-select[aria-pressed="true"]')?.focus({ preventScroll: true });
+      }
+      window.scrollTo({ left: sameTab ? state.left : 0, top: sameTab ? state.top : 0, behavior: 'instant' });
+    };
+    restorePosition();
+    await new Promise(requestAnimationFrame);
+    if (requestId === updateSequence) restorePosition();
+  } catch (error) {
+    // A failed response can follow a successful mutation. Do not resend automatically.
+    if (requestId === updateSequence) showWorkspaceUpdateError(form);
+  } finally {
+    buttons.forEach(({ button, disabled }) => { if (button.isConnected) button.disabled = disabled; });
+    if (form.isConnected) form.removeAttribute('aria-busy');
+    if (pendingUpdate === requestId) {
+      pendingUpdate = 0;
+      document.querySelector('.content')?.removeAttribute('aria-busy');
+    }
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initializeWorkspaceContent();
+
+  document.querySelectorAll('[data-tab]').forEach((button) => {
+    button.addEventListener('click', () => activateTab(button.dataset.tab));
+  });
+
+  document.querySelectorAll('[data-language]').forEach((button) => {
+    button.addEventListener('click', () => {
+      localStorage.setItem('finbridge-language', button.dataset.language);
+      applyLanguage(button.dataset.language);
+    });
+  });
+  document.addEventListener('submit', submitWorkspaceForm);
 
   document.addEventListener('click', (event) => {
     document.querySelectorAll('.category-row-actions details[open]').forEach((details) => {
       if (!details.contains(event.target)) details.removeAttribute('open');
     });
   });
-
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
       document.querySelectorAll('.category-row-actions details[open]').forEach((details) => {
         details.removeAttribute('open');
       });
     }
-  });
-
-  document.querySelectorAll('form[data-confirm-en]').forEach((form) => {
-    form.addEventListener('submit', (event) => {
-      const language = localStorage.getItem('finbridge-language') || 'en';
-      const message = language === 'vi' ? form.dataset.confirmVi : form.dataset.confirmEn;
-      if (!window.confirm(message)) event.preventDefault();
-    });
   });
 });

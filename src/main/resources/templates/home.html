@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Atlas · Phase 5</title><link rel="stylesheet" th:href="@{/app.css(v='20261001-2')}">
+  <title>Atlas · Phase 5</title><link rel="stylesheet" th:href="@{/app.css(v='20261001-3')}">
 </head>
 <body>
 <div class="shell">
@@ -63,18 +63,18 @@
           <section class="event-group">
             <div class="event-group-heading"><span>1</span><div><h3>Test categorization confidence</h3><p>Try how the app handles a clear, uncertain, or unknown merchant.</p></div></div>
             <div class="event-grid phase-two-events">
-              <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="high"><button data-testid="simulate-high"><span>97% confidence</span><strong>Receive coffee purchase</strong><small>Highlands Coffee is categorized automatically as Food &amp; Drinks</small></button></form>
-              <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="medium"><button data-testid="simulate-medium"><span>72% confidence</span><strong>Receive campus purchase</strong><small>Campus Store enters Needs review with a suggested category</small></button></form>
-              <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="low"><button data-testid="simulate-low"><span>35% confidence</span><strong>Receive unknown QR payment</strong><small>The payment already happened; FinBridge asks its purpose for bookkeeping</small></button></form>
+              <form th:action="@{/events/simulate}" method="post" data-next-anchor="transaction-event"><input type="hidden" name="scenario" value="high"><button data-testid="simulate-high"><span>97% confidence</span><strong>Receive coffee purchase</strong><small>Highlands Coffee is categorized automatically as Food &amp; Drinks</small></button></form>
+              <form th:action="@{/events/simulate}" method="post" data-next-anchor="transaction-event"><input type="hidden" name="scenario" value="medium"><button data-testid="simulate-medium"><span>72% confidence</span><strong>Receive campus purchase</strong><small>Campus Store enters Needs review with a suggested category</small></button></form>
+              <form th:action="@{/events/simulate}" method="post" data-next-anchor="transaction-event"><input type="hidden" name="scenario" value="low"><button data-testid="simulate-low"><span>35% confidence</span><strong>Receive unknown QR payment</strong><small>The payment already happened; FinBridge asks its purpose for bookkeeping</small></button></form>
             </div>
           </section>
 
           <section class="event-group">
             <div class="event-group-heading"><span>2</span><div><h3>Test money movement</h3><p>Try how totals change for income, your own transfer, and a refund.</p></div></div>
             <div class="event-grid phase-two-events">
-              <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="income"><button data-testid="simulate-income"><span>99% confidence</span><strong>Receive salary event</strong><small>Adds 900,000 VND to income and checking balance</small></button></form>
-              <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="transfer"><button data-testid="simulate-transfer"><span>99% confidence</span><strong>Move money to savings</strong><small>Moves 200,000 VND between your accounts; income and expenses stay unchanged</small></button></form>
-              <form th:action="@{/events/simulate}" method="post"><input type="hidden" name="scenario" value="refund"><button data-testid="simulate-refund"><span>95% confidence</span><strong>Receive refund event</strong><small>Records an 85,000 VND refund separately from income</small></button></form>
+              <form th:action="@{/events/simulate}" method="post" data-next-anchor="transaction-event"><input type="hidden" name="scenario" value="income"><button data-testid="simulate-income"><span>99% confidence</span><strong>Receive salary event</strong><small>Adds 900,000 VND to income and checking balance</small></button></form>
+              <form th:action="@{/events/simulate}" method="post" data-next-anchor="transaction-event"><input type="hidden" name="scenario" value="transfer"><button data-testid="simulate-transfer"><span>99% confidence</span><strong>Move money to savings</strong><small>Moves 200,000 VND between your accounts; income and expenses stay unchanged</small></button></form>
+              <form th:action="@{/events/simulate}" method="post" data-next-anchor="transaction-event"><input type="hidden" name="scenario" value="refund"><button data-testid="simulate-refund"><span>95% confidence</span><strong>Receive refund event</strong><small>Records an 85,000 VND refund separately from income</small></button></form>
             </div>
           </section>
         </div>
@@ -135,12 +135,15 @@
             <th:block th:each="expense : ${studentExpenses}">
               <article class="student-expense-card student-bill-row" th:classappend="${(expense.selected ? ' selected' : '') + (!expense.active ? ' inactive' : '')}"
                        th:attr="data-testid=${'expense-' + expense.id},data-bill-row=${expense.id},data-bill-status=${expense.executed ? 'PAID' : expense.lifecycleStatus},data-bill-lifecycle=${expense.lifecycleStatus},data-bill-verification=${expense.verificationStatus},data-bill-due=${expense.dueDate},data-bill-created=${expense.createdAt},data-bill-amount=${expense.amount},data-bill-provider=${expense.institution}">
+                <form th:if="${expense.active and !expense.executed and expense.verificationStatus == 'VERIFIED'}" class="student-bill-select-form" th:action="@{/student/expenses/select}" method="post" th:attr="data-bill-selected=${expense.selected}">
+                  <input type="hidden" name="id" th:value="${expense.id}">
+                  <button class="student-bill-select" type="submit" th:attr="aria-pressed=${expense.selected}"><span class="visually-hidden">Select bill</span> <span class="visually-hidden" th:text="${expense.title}"></span></button>
+                </form>
                 <div class="student-bill-identity"><div class="expense-card-top"><span class="expense-type" th:text="${expense.expenseType}"></span><span th:if="${expense.selected}" class="selected-expense-label">Selected</span></div><strong th:text="${expense.title}"></strong><small th:text="${expense.institution}"></small><small th:text="${'Reference · ' + expense.paymentReference}"></small></div>
                 <div class="student-bill-beneficiary"><small>Beneficiary</small><strong th:text="${expense.recipientName}"></strong><span th:text="${expense.recipientBankName + ' · ' + expense.recipientBankCode}"></span><span th:text="${'Account · ' + expense.recipientAccount}"></span></div>
                 <div class="student-bill-value"><strong th:text="${#numbers.formatDecimal(expense.amount,1,'COMMA',0,'POINT') + ' ' + expense.currency}"></strong><span th:text="${expense.destinationCountry + ' · Due ' + expense.dueDate}"></span><span th:if="${expense.documentName != null}" th:text="${'Attachment · ' + expense.documentName}"></span></div>
                 <div class="student-bill-state"><span class="verification-badge" th:classappend="${expense.verificationStatus.toLowerCase()}" th:text="${expense.verificationStatus == 'VERIFIED' ? 'VERIFIED BENEFICIARY' : 'NEEDS VERIFICATION'}"></span><span class="expense-lifecycle" th:classappend="${expense.lifecycleStatus.toLowerCase()}" th:text="${expense.lifecycleStatus}"></span><span th:if="${expense.executed}" class="expense-lifecycle paid">PAID</span><small th:if="${expense.executed}">Receipt and Audit Log are immutable</small></div>
                 <div class="expense-card-actions">
-                  <form th:if="${expense.active and !expense.selected and expense.verificationStatus == 'VERIFIED'}" th:action="@{/student/expenses/select}" method="post"><input type="hidden" name="id" th:value="${expense.id}"><button class="secondary" type="submit">Compare</button></form>
                   <button th:if="${expense.editable}" class="secondary" type="button" th:attr="data-open-dialog=${'edit-student-expense-' + expense.id}">Edit</button>
                   <form th:if="${expense.active}" th:action="@{'/student/expenses/' + ${expense.id} + '/archive'}" method="post" data-confirm-en="Archive this student bill? Pending plans will be invalidated." data-confirm-vi="Lưu trữ khoản phí du học này? Các kế hoạch đang chờ sẽ bị vô hiệu."><button class="secondary" type="submit">Archive</button></form>
                   <form th:if="${expense.editable}" th:action="@{'/student/expenses/' + ${expense.id} + '/cancel'}" method="post" data-confirm-en="Cancel this student bill? This cannot be used for payment afterward." data-confirm-vi="Hủy khoản phí du học này? Sau đó khoản này không thể dùng để thanh toán."><button class="danger-outline" type="submit">Cancel bill</button></form>
@@ -187,10 +190,10 @@
         <div class="channel-comparison-section">
           <div class="payment-accounts-heading">
             <div><div class="eyebrow">CONNECTED PAYMENT CHANNELS</div><h3>Compare the essentials</h3><p>Each compact card shows the information needed to decide. Scroll horizontally, then open details for the complete fee and quote breakdown.</p></div>
-            <div class="channel-heading-tools"><form th:action="@{/student/quotes/refresh}" method="post"><button class="secondary" type="submit">↻ Refresh synthetic quotes</button></form></div>
+            <div class="channel-heading-tools"><form th:action="@{/student/quotes/refresh}" method="post"><button class="secondary" type="submit" data-testid="refresh-quotes">↻ Refresh synthetic quotes</button></form></div>
           </div>
           <div class="channel-controls">
-            <form th:action="@{/student/preference}" method="post" class="preference-form"><label>Priority and order<select name="preference" onchange="this.form.submit()"><option value="CHEAPER" th:selected="${studentProfile.preference == 'CHEAPER'}">Cheaper</option><option value="FASTER" th:selected="${studentProfile.preference == 'FASTER'}">Faster</option><option value="SAFER" th:selected="${studentProfile.preference == 'SAFER'}">Safer</option></select></label><small>This choice determines both recommendation rank and display order.</small></form>
+            <form th:action="@{/student/preference}" method="post" class="preference-form"><label>Priority and order<select name="preference" onchange="this.form.requestSubmit()"><option value="CHEAPER" th:selected="${studentProfile.preference == 'CHEAPER'}">Cheaper</option><option value="FASTER" th:selected="${studentProfile.preference == 'FASTER'}">Faster</option><option value="SAFER" th:selected="${studentProfile.preference == 'SAFER'}">Safer</option></select></label><small>This choice determines both recommendation rank and display order.</small></form>
             <div class="payment-account-tools" data-testid="payment-account-filters"><label>Status<select data-testid="payment-account-filter"><option value="all">All connected channels</option><option value="payable">Ready to pay now</option><option value="insufficient">Insufficient balance</option><option value="unavailable">Unavailable for corridor</option><option value="expired">Quote expired</option></select></label></div>
           </div>
           <div class="horizontal-scroll-hint">← Scroll horizontally to compare channels →</div>
@@ -202,7 +205,7 @@
                 <div><small>Landed cost</small><strong th:text="${#numbers.formatDecimal(quote.landedCost,1,'COMMA',0,'POINT') + ' VND'}"></strong></div>
                 <div class="row-remaining" th:attr="data-testid=${'remaining-' + quote.channelId}"><small>Remaining</small><strong th:text="${#numbers.formatDecimal(sourceAccount.balance.subtract(quote.landedCost),1,'COMMA',0,'POINT') + ' VND'}"></strong></div>
                 <div><small>Settlement</small><strong th:text="${quote.settlementMinDays + '–' + quote.settlementMaxDays + ' day(s)'}"></strong></div>
-                <div class="channel-row-actions"><button class="secondary" type="button" th:attr="data-open-dialog=${'quote-detail-' + quote.channelId}">Details</button><form th:if="${canFund and !quote.expired and recipientVerification.verified}" th:action="@{/agent/plans/tuition}" method="post" class="planning-form"><input type="hidden" name="channel" th:value="${quote.channelId}"><button class="planning-only" type="submit" th:attr="data-testid=${'plan-' + quote.channelId}">Create plan</button></form></div>
+                <div class="channel-row-actions"><button class="secondary" type="button" th:attr="data-open-dialog=${'quote-detail-' + quote.channelId}">Details</button><form th:if="${canFund and !quote.expired and recipientVerification.verified}" th:action="@{/agent/plans/tuition}" method="post" class="planning-form" data-next-anchor="#agent-workspace"><input type="hidden" name="channel" th:value="${quote.channelId}"><button class="planning-only" type="submit" th:attr="data-testid=${'plan-' + quote.channelId}">Create plan</button></form></div>
                 <div class="quote-live-status compact" data-quote-live-status aria-live="polite"></div>
                 <dialog class="quote-detail-dialog" th:id="${'quote-detail-' + quote.channelId}"><div class="dialog-heading"><div><small>SIMULATED QUOTE DETAIL</small><h3 th:text="${quote.displayName}"></h3></div><button type="button" data-close-dialog aria-label="Close">×</button></div><p th:text="${quote.eligibilityReason}"></p><dl class="fee-breakdown"><div><dt>Funding account</dt><dd th:text="${sourceAccount.displayName + ' · ' + #numbers.formatDecimal(sourceAccount.balance,1,'COMMA',0,'POINT') + ' VND'}"></dd></div><div><dt>Rate</dt><dd th:text="${#numbers.formatDecimal(quote.rateVndPerCny,1,'COMMA',0,'POINT') + ' VND/' + selectedExpense.currency}"></dd></div><div><dt>Source amount</dt><dd th:text="${#numbers.formatDecimal(quote.sourceAmount,1,'COMMA',0,'POINT') + ' VND'}"></dd></div><div><dt>Transfer fee</dt><dd th:text="${#numbers.formatDecimal(quote.transferFee,1,'COMMA',0,'POINT') + ' VND'}"></dd></div><div><dt>FX markup</dt><dd th:text="${#numbers.formatDecimal(quote.fxMarkup,1,'COMMA',0,'POINT') + ' VND'}"></dd></div><div><dt>Expected received</dt><dd th:text="${#numbers.formatDecimal(quote.expectedReceived,1,'COMMA',0,'POINT') + ' ' + selectedExpense.currency}"></dd></div><div><dt>Latest safe date</dt><dd th:text="${quote.latestSafeDate}"></dd></div><div><dt>Safety score</dt><dd th:text="${quote.safetyScore + '/100 synthetic'}"></dd></div></dl><div class="quote-meta"><span th:text="${quote.quoteSource}"></span><br><span th:text="${'Quoted ' + #temporals.format(quote.quotedAt,'dd MMM yyyy HH:mm:ss')}"></span><br><span th:text="${'Expires ' + #temporals.format(quote.expiresAt,'dd MMM yyyy HH:mm:ss')}"></span></div></dialog>
               </article>
@@ -386,7 +389,7 @@
             <td class="right amount" th:text="${(tx.direction == 'IN' ? '+' : '−') + #numbers.formatDecimal(tx.amount,1,'COMMA',0,'POINT') + ' VND'}"></td>
             <td>
               <a th:if="${tx.review_status == 'CONFIRMATION_REQUIRED' or tx.review_status == 'PURPOSE_REQUIRED'}" class="text-action" th:href="@{/(review=${tx.id})} + '#transaction-review'">Review</a>
-              <form th:if="${tx.review_status == 'AUTO' or tx.review_status == 'CONFIRMED'}" th:action="@{'/transactions/' + ${tx.id} + '/undo'}" method="post"><button class="text-action" type="submit">Undo</button></form>
+              <form th:if="${tx.review_status == 'AUTO' or tx.review_status == 'CONFIRMED'}" th:action="@{'/transactions/' + ${tx.id} + '/undo'}" method="post" data-next-anchor="#transaction-review"><button class="text-action" type="submit">Undo</button></form>
             </td>
           </tr></tbody>
         </table></div>
@@ -399,6 +402,6 @@
   </main>
 </div>
 
-<script th:src="@{/app.js(v='20261001-2')}"></script>
+<script th:src="@{/app.js(v='20261001-3')}"></script>
 </body>
 </html>
