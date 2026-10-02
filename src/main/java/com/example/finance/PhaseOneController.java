@@ -26,17 +26,19 @@ public class PhaseOneController {
     private final PhaseFourService phaseFour;
     private final DemoDataService demoData;
     private final FinanceWorkspaceService financeWorkspace;
+    private final SessionConversationService conversations;
     private final boolean demoToolsEnabled;
 
     public PhaseOneController(TransactionService transactions, CrossBorderService crossBorder,
                               PhaseFourService phaseFour, DemoDataService demoData,
-                              FinanceWorkspaceService financeWorkspace,
+                              FinanceWorkspaceService financeWorkspace, SessionConversationService conversations,
                               @Value("${app.demo-tools-enabled:true}") boolean demoToolsEnabled) {
         this.transactions = transactions;
         this.crossBorder = crossBorder;
         this.phaseFour = phaseFour;
         this.demoData = demoData;
         this.financeWorkspace = financeWorkspace;
+        this.conversations = conversations;
         this.demoToolsEnabled = demoToolsEnabled;
     }
 
@@ -123,6 +125,9 @@ public class PhaseOneController {
         model.addAttribute("auditEvents", phaseFour.auditEvents(latestAction==null?null:latestAction.id()));
         model.addAttribute("demoAuditEvents", phaseFour.auditEvents());
         model.addAttribute("demoToolsEnabled", demoToolsEnabled);
+        var conversationView=conversations.view(request.getSession(),crossBorder.selectedExpense(),latestAction);
+        model.addAttribute("conversation",conversationView.messages());
+        model.addAttribute("conversationContext",conversationView);
         model.addAttribute("newTransaction", newTransaction);
         if (review != null && !review.isBlank()) model.addAttribute("reviewTransactionId", review);
         return "home";
@@ -409,8 +414,8 @@ public class PhaseOneController {
     }
 
     @PostMapping("/agent/message")
-    public String message(@RequestParam String message, @RequestParam(required=false) String language, RedirectAttributes flash) {
-        phaseFour.sendMessage(message, language);
+    public String message(@RequestParam String message, @RequestParam(required=false) String language, HttpServletRequest request, RedirectAttributes flash) {
+        conversations.send(request.getSession(),message,language);
         flash.addFlashAttribute("message", "Conversation updated through the guarded intent boundary.");
         return "redirect:/#agent-workspace";
     }

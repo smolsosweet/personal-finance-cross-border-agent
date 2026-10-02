@@ -1,5 +1,12 @@
 const translationsVi = new Map(Object.entries({
   'Ask FinBridge': 'Hỏi FinBridge',
+  'Conversation topic': 'Chủ đề hội thoại',
+  'Update conversation context': 'Cập nhật ngữ cảnh hội thoại',
+  'Updating conversation context…': 'Đang cập nhật ngữ cảnh hội thoại…',
+  'Choose the topic in the assistant': 'Chọn chủ đề trong trợ lý',
+  'NONE': 'Chưa chọn', 'SPENDING': 'Chi tiêu', 'BUDGET': 'Ngân sách',
+  'TUITION_AFFORDABILITY': 'Dự kiến sau học phí', 'TUITION_CHANNELS': 'Kênh học phí',
+  'CHANNEL_UNAVAILABLE': 'Điều kiện sử dụng kênh', 'TUITION_PLAN': 'Kế hoạch học phí', 'TUITION_STATUS': 'Trạng thái học phí',
   'Close assistant': 'Đóng trợ lý',
   'Ask about tuition': 'Hỏi về học phí',
   'Explain this plan': 'Giải thích kế hoạch này',
@@ -703,6 +710,7 @@ const noticeTimers = new WeakMap();
 let pendingUpdate = 0;
 let updateSequence = 0;
 let pendingChatController = null;
+const chatControlBaseline = new WeakMap();
 let assistantOpener = null;
 const assistantQuestions = {
   spending: { en: 'Where did I spend the most this month?', vi: 'Tháng này tôi chi nhiều nhất vào đâu?' },
@@ -789,7 +797,8 @@ function setAssistantOpen(open, opener) {
     const input = panel.querySelector('input[name="message"]');
     (input.disabled ? panel.querySelector('[data-close-assistant]') : input).focus({ preventScroll: true });
   } else {
-    (assistantOpener?.isConnected && assistantOpener.getClientRects().length ? assistantOpener : launcher).focus({ preventScroll: true });
+    const returnTarget = assistantOpener?.isConnected ? assistantOpener : assistantOpener?.dataset.testid ? document.querySelector('[data-testid="' + CSS.escape(assistantOpener.dataset.testid) + '"]') : null;
+    (returnTarget?.getClientRects().length ? returnTarget : launcher).focus({ preventScroll: true });
   }
 }
 
@@ -809,6 +818,11 @@ function handleAssistantClick(event) {
       input.focus({ preventScroll: true });
     }
   }
+  if (opener?.dataset.assistantContextToken) {
+    const contextForm = document.querySelector('[data-assistant-context-form]');
+    contextForm.elements.token.value = opener.dataset.assistantContextToken;
+    contextForm.requestSubmit();
+  }
   if (event.target.closest('[data-close-assistant]')) setAssistantOpen(false);
   if (event.target.closest('[data-assistant-review-plan]')) {
     setAssistantOpen(false);
@@ -818,7 +832,7 @@ function handleAssistantClick(event) {
 
 function syncAssistant(nextDocument) {
   // Keep the panel and composer mounted so drafts, focus and pending controls survive tab updates.
-  for (const selector of ['[data-testid="assistant-replies"]', '[data-assistant-plan]', '[data-assistant-policy]']) {
+  for (const selector of ['[data-testid="assistant-replies"]', '[data-assistant-plan]', '[data-assistant-policy]', '[data-assistant-context-state]']) {
     const current = document.querySelector(selector);
     const next = nextDocument.querySelector(selector);
     if (current && next) current.replaceChildren(...next.childNodes);
@@ -1405,7 +1419,8 @@ async function openPaymentPlan(event) {
   const url = new URL(link.href, window.location.href);
   if (url.origin !== window.location.origin) return;
   event.preventDefault();
-  if (pendingUpdate) return;
+  if (pendingUpdate && !pendingChatController) return;
+  if (pendingChatController) { pendingChatController.abort(); pendingChatController = null; }
   const requestId = ++updateSequence;
   pendingUpdate = requestId;
   const state = captureWorkspaceState();
@@ -1495,7 +1510,7 @@ function showWorkspaceUpdateError(form) {
   notice.className = 'notice request-error' + (container.matches('dialog, [data-assistant-panel]') ? '' : ' in-place-notice');
   notice.setAttribute('role', 'alert');
   const message = form.matches('[data-chat-form]')
-    ? (selectedLanguage() === 'vi' ? form.dataset.chatUnavailableVi : form.dataset.chatUnavailableEn)
+    ? (selectedLanguage() === 'vi' ? form.dataset.chatUnavailableVi || 'Không xác nhận được kết quả. Hãy tải lại để kiểm tra dữ liệu trước khi thử lại.' : form.dataset.chatUnavailableEn || 'Unable to confirm the result. Reload to check the current data before trying again.')
     : 'Unable to confirm the result. Reload to check the current data before trying again.';
   notice.textContent = translateValue(message, selectedLanguage());
   originalText.set(notice.firstChild, message);
@@ -1519,8 +1534,9 @@ async function submitWorkspaceForm(event) {
   event.preventDefault();
   if (form.dataset.billSelected === 'true') return;
   // Emergency Stop must remain available while another request is pending.
-  if (pendingUpdate && action.pathname !== '/agent/emergency-stop' && action.pathname !== '/reset') return;
-  if (pendingChatController && (action.pathname === '/reset' || action.pathname === '/agent/emergency-stop')) {
+  const changesContext = ['/reset', '/agent/emergency-stop', '/agent/context', '/agent/context/choice', '/student/expenses/select', '/student/source-account', '/student/quotes/refresh'].includes(action.pathname);
+  if (pendingUpdate && !changesContext) return;
+  if (pendingChatController && changesContext) {
     pendingChatController.abort();
     pendingChatController = null;
   }
@@ -1530,21 +1546,26 @@ async function submitWorkspaceForm(event) {
   const restoreBillFocus = event.submitter?.matches('.student-bill-select:focus-visible');
   const requestId = ++updateSequence;
   pendingUpdate = requestId;
-  const isChat = action.pathname === '/agent/message';
+  const isContext = action.pathname === '/agent/context' || action.pathname === '/agent/context/choice';
+  const isChat = action.pathname === '/agent/message' || isContext;
   const chatController = isChat ? new AbortController() : null;
   if (chatController) pendingChatController = chatController;
   const chatTimer = chatController ? setTimeout(() => chatController.abort(),
     Number(form.dataset.chatTimeout || 70000)) : null;
-  const chatForms = isChat ? Array.from(document.querySelectorAll('[data-chat-form]')) : [];
+  const chatForms = isChat ? Array.from(document.querySelectorAll('[data-chat-form], [data-context-form]')) : [];
   const chatControls = chatForms.flatMap((composer) => Array.from(composer.querySelectorAll('button,input'))
-    .map((control) => ({ control, disabled: control.disabled })));
+    .map((control) => {
+      if (!chatControlBaseline.has(control)) chatControlBaseline.set(control, control.disabled);
+      return { control, disabled: chatControlBaseline.get(control) };
+    }));
   const data = new FormData(form);
+  if (isContext) data.set('token', form.elements.token.value);
   if (isChat) data.set('language', selectedLanguage());
   chatControls.forEach(({ control }) => { control.disabled = true; });
   chatForms.forEach((composer) => {
     composer.setAttribute('aria-busy', 'true');
     const label = composer.querySelector('[data-chat-processing]');
-    if (label) { label.hidden = false; label.setAttribute('role', 'status'); label.textContent = translateValue('Processing your question…', selectedLanguage()); }
+    if (label) { label.hidden = false; label.setAttribute('role', 'status'); label.textContent = translateValue(isContext ? 'Updating conversation context…' : 'Processing your question…', selectedLanguage()); }
   });
   if (event.submitter?.name) data.append(event.submitter.name, event.submitter.value);
   const body = form.enctype === 'multipart/form-data' ? data : new URLSearchParams(data);
@@ -1612,7 +1633,7 @@ async function submitWorkspaceForm(event) {
     content.replaceChildren(...nextContent.childNodes);
     syncPaymentNavigation(nextDocument);
     syncAssistant(nextDocument);
-    if (isChat && form.closest('[data-assistant-panel]')) form.reset();
+    if (action.pathname === '/agent/message' && form.closest('[data-assistant-panel]')) form.reset();
     content.querySelector('.notice')?.classList.add('in-place-notice');
     initializeWorkspaceContent({ ...state, tab: destinationTab });
 
@@ -1653,14 +1674,14 @@ async function submitWorkspaceForm(event) {
   } finally {
     if (chatTimer) clearTimeout(chatTimer);
     if (pendingChatController === chatController) pendingChatController = null;
-    chatControls.forEach(({ control, disabled }) => { if (control.isConnected && (pendingUpdate === requestId || !pendingUpdate)) control.disabled = disabled; });
+    chatControls.forEach(({ control, disabled }) => { if (control.isConnected && (pendingUpdate === requestId || !pendingUpdate)) { control.disabled = disabled; chatControlBaseline.delete(control); } });
     chatForms.forEach((composer) => {
-      if (!composer.isConnected) return;
+      if (!composer.isConnected || (pendingUpdate && pendingUpdate !== requestId)) return;
       composer.removeAttribute('aria-busy');
       const label = composer.querySelector('[data-chat-processing]');
       if (label) { label.hidden = true; label.removeAttribute('role'); }
     });
-    buttons.forEach(({ button, disabled }) => { if (button.isConnected) button.disabled = disabled; });
+    buttons.forEach(({ button, disabled }) => { if (button.isConnected && (pendingUpdate === requestId || !pendingUpdate)) button.disabled = disabled; });
     if (form.isConnected) form.removeAttribute('aria-busy');
     if (processing?.isConnected) processing.hidden = true;
     if (pendingUpdate === requestId) {

@@ -217,13 +217,10 @@ class AssistantPanelPlaywrightTest {
         assertThat(panel().locator("[data-assistant-policy]")).containsText("Emergency Stop is active");
         assertThat(input()).isEnabled();
         stopReply.countDown();
-        page.waitForCondition(() -> payments.latestAction() != null);
+        page.waitForCondition(() -> returned.get() == 1);
+        page.waitForTimeout(300);
         assertEquals("PAUSED", payments.policy().state());
-        var blockedPlan = payments.latestAction();
-        assertNotNull(blockedPlan);
-        assertEquals("BLOCKED", blockedPlan.status());
-        assertEquals("AGENT PAUSED", payments.evaluate(blockedPlan, true).reasonCode());
-        assertNull(payments.receiptForAction(blockedPlan.id()));
+        assertNull(payments.latestAction());
         assertEquals(0, payments.sandboxTransactionCount());
         assertThat(page.getByTestId("assistant-replies")).not().containsText("Prepared tuition-payment plan");
         page.getByTestId("assistant-close").click();

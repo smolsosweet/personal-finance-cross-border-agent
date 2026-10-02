@@ -142,7 +142,7 @@ conservative assumption because personal planner and payment accounts are separa
 
 The chat shows processing, blocks duplicate submissions, restores controls after errors/timeouts,
 and discards responses superseded by reset or a newer request. No automatic retry is performed.
-Responses to the three read-only intents change only conversation and audit records.
+Responses to the three read-only intents change only session display/context and audit records in the web workflow.
 
 Targeted checks:
 
@@ -169,3 +169,39 @@ Opt-in real-Ollama browser rehearsal (synthetic database, port 8093):
 
 See [the Vietnamese demo readiness guide](docs/DEMO_READINESS.md) for the workflow, focused test evidence
 and the transaction timestamp precision fix.
+
+## Session-scoped contextual conversations (Task A)
+
+The web assistant remembers a supported topic and backend-verified object references in the current
+HTTP session. English/Vietnamese follow-ups include "How much is left?" / "Còn bao nhiêu?",
+"What about the fastest option?" / "Còn kênh nhanh nhất?", and "What's its status?" / "Trạng thái thế nào?".
+Ask about tuition and Explain this plan bind to server-issued, session-scoped opaque references.
+Ambiguous questions offer explicit choices; selecting a choice never creates a plan or calls the model.
+
+Only the current message plus enum-level topic/channel/clarification metadata goes to the model.
+The same strict four-field output contract is used. Display history is bounded, session-private and
+never sent as model input or treated as financial truth. Financial data is reloaded on every turn.
+An explicit supported draft request can create only a plan through the existing guarded workflow;
+payment approval remains on the payment screen. Living-expense runway is not implemented.
+
+Tabs sharing the same browser session cookie share context/history. Separate browser profiles or
+private contexts have separate conversational state, while the synthetic demo financial workspace
+remains shared. Reset clears server context/history/choices across registered sessions. Bill/account/
+plan changes or stale quote references invalidate context; the assistant does not refresh quotes silently.
+Restarting FinBridge or expiring the HTTP session removes transient memory. No persistent or distributed
+conversation memory is added.
+
+Targeted backend and browser checks (mock model responses):
+
+    mvn "-Dtest=SessionConversationIntegrationTest,ContextualConversationPlaywrightTest" test
+
+Opt-in real Ollama multi-turn browser verification (synthetic database, port 8104):
+
+    mvn "-Dtest=ContextualConversationOllamaLiveIT" test
+
+Full existing regression gate:
+
+    mvn test
+
+See [the Vietnamese Task A verification report](docs/CONTEXTUAL_CONVERSATION_VERIFICATION.md)
+for results, lifecycle, financial invariance and protected-code diff evidence.

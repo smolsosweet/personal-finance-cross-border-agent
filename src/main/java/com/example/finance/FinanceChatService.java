@@ -13,6 +13,16 @@ import org.springframework.transaction.support.TransactionTemplate;
 /** Model I/O stays outside database locks. Only current requests may publish or create a draft. */
 @Service
 public class FinanceChatService {
+    interface ContextTurn {
+        Object monitor();
+        String begin();
+        ModelConversationContext summary();
+        boolean current();
+        void record(String role, String message);
+        String respond(LlmIntent intent, boolean vi);
+        void rejected(String reason, boolean vi);
+        String reason();
+    }
     private static final Pattern VI = Pattern.compile("[À-ỹ]");
     private static final Pattern OTHER_PERIOD = Pattern.compile(
             "(?iu)\\b(last|next|previous|past)\\s+(month|week|year)|\\b(yesterday|tomorrow|weekly|annual|january|february|march|april|june|july|august|september|october|november|december)\\b|tháng\\s+(trước|sau|tới|\\d+)|tuần|năm\\s+(trước|sau|nay)|hôm\\s+(qua|nay)|ngày\\s+mai|\\b20\\d{2}\\b|\\d{1,2}[/-]\\d{1,2}");
@@ -30,6 +40,10 @@ public class FinanceChatService {
     }
 
     public String send(String raw, String language, PhaseFourService payments) {
+        return send(raw, language, payments, null);
+    }
+
+    String send(String raw, String language, PhaseFourService payments, ContextTurn turn) {
         String message = raw == null ? "" : raw.trim();
         if (message.isBlank()) throw new IllegalArgumentException("Message is required");
         if (message.length() > 500) throw new IllegalArgumentException("Message must be 500 characters or fewer");
@@ -37,7 +51,7 @@ public class FinanceChatService {
         String requestId = "CHAT-" + UUID.randomUUID().toString().substring(0, 12);
         boolean online = Boolean.TRUE.equals(tx.execute(status -> {
             lock();
-            addMessage("USER", message);
+            if (turn == null) addMessage("USER", message); else turn.record("USER", message);
             audit("USER", "CONVERSATION_INPUT", requestId, "RECEIVED", null, "Untrusted user message recorded");
             audit("LLM_INTENT", "AI_REQUEST_STARTED", requestId, "PENDING", null, "Classifier request; no financial payload logged");
             return llm.enabled() && !"OFFLINE".equals(payments.policy().runtimeMode());
@@ -47,14 +61,18 @@ public class FinanceChatService {
         String early = null;
         String outcome = "COMPLETED";
         String reason = null;
+        String contextError = turn == null ? null : tx.execute(status -> { lock(); return turn.begin(); });
         if (PhaseFourService.isInjection(message)) {
             early = "This request cannot change payment safety controls or bypass approval.";
             outcome = "BLOCKED"; reason = "UNTRUSTED INSTRUCTION";
+        } else if (contextError != null) {
+            early = contextError; reason = turn.reason();
         } else if (OTHER_PERIOD.matcher(message).find()) {
             early = clarification(vi);
             reason = "UNSUPPORTED PERIOD";
-        } else if (lower.contains("surplus") || ((lower.contains("balance") || lower.contains("số dư"))
-                && !Pattern.compile("(?iu)tuition|university|fee|budget|spend|học phí|ngân sách|chi tiêu|sinh hoạt|after|remaining|project").matcher(message).find())) {
+        } else if ((turn == null || turn.summary().topic() == ModelConversationContext.Topic.NONE)
+                && (lower.contains("surplus") || ((lower.contains("balance") || lower.contains("số dư"))
+                && !Pattern.compile("(?iu)tuition|university|fee|budget|spend|học phí|ngân sách|chi tiêu|sinh hoạt|after|remaining|project").matcher(message).find()))) {
             early = payments.deterministicFallback(message);
             reason = "GUIDED BALANCE";
         } else if (!online) {
@@ -62,7 +80,9 @@ public class FinanceChatService {
             outcome = "FALLBACK"; reason = "LLM UNAVAILABLE";
         } else {
             try {
-                intent = llm.classify(message);
+                intent = turn == null ? llm.classify(message)
+                        : ModelConversationContext.with(turn.summary(), () -> llm.classify(message));
+                if (intent == null) throw new LlmIntentException("Missing classifier result");
             } catch (LlmIntentException ex) {
                 early = vi
                         ? "AI tạm thời không khả dụng hoặc đã hết thời gian chờ. Chưa tạo kế hoạch hay thanh toán. Bạn có thể xem tổng quan hoặc dùng luồng học phí có hướng dẫn."
@@ -74,12 +94,15 @@ public class FinanceChatService {
         String response = early, finalOutcome = outcome, finalReason = reason;
         return tx.execute(status -> {
             lock();
-            if (!isCurrent(requestId)) {
+            synchronized (turn == null ? this : turn.monitor()) {
+            if (turn == null ? !isCurrent(requestId) : !turn.current()) {
+                if(turn!=null)audit("CONVERSATION_CONTEXT","CONTEXT_TURN",requestId,"DISCARDED","CONTEXT_STALE_RESPONSE","An older session request was discarded; no context or financial mutation");
                 return vi ? "Yêu cầu đã được thay thế hoặc reset; kết quả cũ đã bỏ qua." : "Request superseded or reset; old result discarded.";
             }
             String answer;
             if (response != null) {
                 answer = response;
+                if (turn != null) turn.rejected(finalReason, vi);
                 audit(finalReason != null && finalReason.equals("UNTRUSTED INSTRUCTION") ? "POLICY_GUARD" : "LLM_INTENT",
                         "UNTRUSTED INSTRUCTION".equals(finalReason) ? "INPUT_BLOCKED"
                                 : "LLM UNAVAILABLE".equals(finalReason) ? "INTENT_PROVIDER_UNAVAILABLE" : "AI_REQUEST_CLARIFICATION",
@@ -87,7 +110,9 @@ public class FinanceChatService {
             } else {
                 audit("LLM_INTENT", "INTENT_CLASSIFIED", requestId, "COMPLETED", classified.intent().name(),
                         "Preference " + classified.channelPreference() + "; confidence " + confidenceBand(classified.confidence()));
-                if (isReadOnly(classified.intent())) {
+                if (turn != null) {
+                    answer = turn.respond(classified, vi);
+                } else if (isReadOnly(classified.intent())) {
                     if (classified.confidence().compareTo(new BigDecimal("0.80")) < 0
                             || scopedQuestion(message)) {
                         answer = clarification(vi);
@@ -104,10 +129,15 @@ public class FinanceChatService {
                     answer = payments.renderIntent(classified);
                 }
             }
-            addMessage("ASSISTANT", answer);
+            if (turn == null) addMessage("ASSISTANT", answer); else {
+                turn.record("ASSISTANT", answer);
+                audit("CONVERSATION_CONTEXT", "CONTEXT_TURN", requestId, finalOutcome, turn.reason(),
+                        "Session-scoped validated context; no prompt, transcript or financial payload");
+            }
             audit("LLM_INTENT", "AI_REQUEST_FINISHED", requestId, finalOutcome,
                     classified == null ? finalReason : classified.intent().name(), "Request finished; response comes from backend templates");
             return answer;
+            }
         });
     }
 
@@ -117,7 +147,7 @@ public class FinanceChatService {
                 || intent == LlmIntent.Intent.EXPLAIN_TUITION_AFFORDABILITY;
     }
 
-    private static boolean scopedQuestion(String message) {
+    static boolean scopedQuestion(String message) {
         return Pattern.compile("(?iu)\\b(another|someone|custom|specific|both|account|cash|food|transport|groceries|housing|shopping|Bank A|Bank B|Alipay|MoMo|CNY|USD|AUD)\\b|tài khoản|tiền mặt|của (bạn|người)|riêng|đồng thời|ăn uống tháng|đi lại tháng|chi.*ăn uống|\\d")
                 .matcher(message).find();
     }

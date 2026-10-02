@@ -67,7 +67,7 @@ public class OllamaIntentClient implements LlmIntentClient {
         return Map.of(
                 "model", model,
                 "messages", List.of(
-                        Map.of("role", "system", "content", LlmIntentContract.INSTRUCTIONS),
+                        Map.of("role", "system", "content", ModelConversationContext.instructions()),
                         Map.of("role", "user", "content", userMessage)),
                 "stream", false,
                 "think", false,

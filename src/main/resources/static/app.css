@@ -127,6 +127,7 @@ header{position:sticky;top:0;z-index:10}.mobile-tabs{top:70px}.payment-demo-entr
 .finance-chat .finance-message-list{max-height:420px;overflow:auto}
 
 /* Shared, non-modal assistant: the workspace and payment approval remain separate. */
+.assistant-context-choices{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}.assistant-context-choices form{margin:0}.assistant-context-choices button{font-size:12px;padding:8px 10px}
 .section-help-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px;flex:none}
 .assistant-launcher{position:fixed;right:24px;bottom:24px;z-index:30;display:flex;align-items:center;gap:10px;padding:14px 20px;border:0;border-radius:30px;background:#425bd9;color:#fff;font-size:14px;font-weight:700;box-shadow:0 5px 24px #25397638;cursor:pointer}
 .assistant-launcher>span:first-child{font-size:21px}

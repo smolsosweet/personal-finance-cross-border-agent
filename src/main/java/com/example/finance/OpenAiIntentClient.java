@@ -72,7 +72,7 @@ public class OpenAiIntentClient implements LlmIntentClient {
     Map<String, Object> requestBody(String userMessage) {
         return Map.of(
                 "model", model,
-                "instructions", LlmIntentContract.INSTRUCTIONS,
+                "instructions", ModelConversationContext.instructions(),
                 "input", java.util.List.of(Map.of(
                         "role", "user",
                         "content", java.util.List.of(Map.of("type", "input_text", "text", userMessage)))),
