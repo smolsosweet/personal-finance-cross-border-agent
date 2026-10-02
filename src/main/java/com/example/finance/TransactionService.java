@@ -225,7 +225,8 @@ public class TransactionService {
 
     @Transactional
     public String simulate(String scenario) {
-        LocalDateTime now = LocalDateTime.now();
+        // Compare at the database's microsecond precision, before enforcing increasing demo times.
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS);
         LocalDateTime latest = db.queryForObject("SELECT MAX(occurred_at) FROM transactions", LocalDateTime.class);
         if (latest != null && !now.isAfter(latest)) now = latest.plusNanos(1_000);
         String reference = "SIM-" + UUID.randomUUID();

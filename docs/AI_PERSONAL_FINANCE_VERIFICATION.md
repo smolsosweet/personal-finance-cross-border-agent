@@ -145,3 +145,10 @@ Không khẳng định **toàn bộ** `PhaseFourService.java` hay `PhaseOneContr
 **Definition of Done của phase: ĐẠT.** Chat resilience, ba intent chỉ đọc, phép tính và evidence, bất biến tài chính, regression toàn bộ, live Ollama và Playwright đều đã chạy và quan sát đạt ở lần kiểm chứng cuối. Phạm vi completion là phase chỉ đọc hiện tại; không chứng nhận khả năng production đầy đủ hoặc chống mọi prompt injection.
 
 Commit cục bộ được phép theo yêu cầu: `feat(ai): add read-only personal finance insights`. Không push/deploy và không triển khai phase tiếp theo.
+
+
+### Cập nhật sau phase — 02/10/2026
+
+Vấn đề thứ tự giao dịch đã được tái hiện bằng timestamp điều khiển được và xử lý trong đợt ổn định demo.
+Cảnh báo “ước tính/chưa ánh xạ tài khoản” được đưa lên trước các số tiền. Báo cáo phase ở trên giữ nguyên
+kết quả lịch sử; bằng chứng và quy trình chuẩn bị mới nằm trong [DEMO_READINESS.md](DEMO_READINESS.md).

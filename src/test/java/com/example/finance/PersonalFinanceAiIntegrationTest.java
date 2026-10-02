@@ -81,6 +81,9 @@ class PersonalFinanceAiIntegrationTest {
         stub(LlmIntent.Intent.EXPLAIN_TUITION_AFFORDABILITY);
         var before = snapshot(db);
         String answer = payments.sendMessage("Can I afford living costs after tuition?");
+        assertTrue(answer.contains("estimate, not a payment"));
+        assertTrue(answer.indexOf("accounts are not mapped to each other") < answer.indexOf("Selected source "),
+                "The account-mapping limitation must precede the financial projection figures");
         assertTrue(answer.contains("total cost 70760800.00 VND"));
         assertTrue(answer.contains("Projected balance after tuition: 29239200.00 VND"));
         assertTrue(answer.contains("after buffer 26239200.00 VND"));

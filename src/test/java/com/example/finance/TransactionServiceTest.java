@@ -1,10 +1,14 @@
 package com.example.finance;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -60,6 +64,24 @@ class TransactionServiceTest {
             assertEquals(22,service.transactions().size());
             assertEquals(22,service.eventCount());
             assertEquals(0,new BigDecimal("100000000").compareTo(db.queryForObject("SELECT balance FROM financial_accounts WHERE id='CHECKING'",BigDecimal.class)));
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"100,200", "499,500", "500,600", "900,100", "999,1000"})
+    void simulatedTimestampsRemainStrictlyOrderedAtDatabasePrecision(int firstNanos, int secondNanos) {
+        // The DB stores microseconds. Both raw times otherwise round to the same timestamp.
+        LocalDateTime base = LocalDateTime.now().plusDays(1).withNano(0);
+        LocalDateTime firstRaw = base.plusNanos(firstNanos), secondRaw = base.plusNanos(secondNanos);
+        try (MockedStatic<LocalDateTime> time = mockStatic(LocalDateTime.class, CALLS_REAL_METHODS)) {
+            time.when(LocalDateTime::now).thenReturn(firstRaw);
+            String first = service.simulate("high");
+            time.when(LocalDateTime::now).thenReturn(secondRaw);
+            String second = service.simulate("income");
+            LocalDateTime firstStored = db.queryForObject("SELECT occurred_at FROM transactions WHERE id=?", LocalDateTime.class, first);
+            LocalDateTime secondStored = db.queryForObject("SELECT occurred_at FROM transactions WHERE id=?", LocalDateTime.class, second);
+            assertTrue(secondStored.isAfter(firstStored), "Stored simulation timestamps must be strictly increasing at DB precision");
+            assertEquals(second, service.transactions().getFirst().get("id"));
         }
     }
 

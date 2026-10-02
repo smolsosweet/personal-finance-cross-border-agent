@@ -149,3 +149,17 @@ starts its own synthetic FinBridge instance on port 8091):
 
 The default Maven test suite uses stubs for model responses and does not depend on Ollama.
 See [the Vietnamese verification report](docs/AI_PERSONAL_FINANCE_VERIFICATION.md) for measured results and limitations.
+
+
+## Demo preparation and full-story rehearsal
+
+Run `./scripts/prepare-demo.ps1`, then ask one read-only budget question through FinBridge before presenting.
+Reset synthetic application data if needed and begin the demo promptly; warming model weights alone does not
+guarantee the first classifier request is fast. Keep the existing 60-second timeout and fallback.
+
+Opt-in real-Ollama browser rehearsal (synthetic database, port 8093):
+
+    mvn "-Dtest=DemoRehearsalOllamaLiveIT" test
+
+See [the Vietnamese demo readiness guide](docs/DEMO_READINESS.md) for the workflow, focused test evidence
+and the transaction timestamp precision fix.

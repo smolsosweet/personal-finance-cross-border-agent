@@ -1524,6 +1524,17 @@ async function submitWorkspaceForm(event) {
           element.scrollTop = position.top;
         }
       });
+      if (isChat) {
+        document.querySelectorAll('.finance-message-list, .message-list').forEach((list) => {
+          if (!list.getClientRects().length) return;
+          const latestQuestion = Array.from(list.querySelectorAll('.message.user')).at(-1);
+          const reply = latestQuestion?.nextElementSibling;
+          if (reply?.classList.contains('assistant')) {
+            // Reveal the beginning of the new reply, including assumptions, without moving the page.
+            list.scrollTop += reply.getBoundingClientRect().top - list.getBoundingClientRect().top - 8;
+          }
+        });
+      }
       if (focusTestId) {
         document.querySelector('[data-testid="' + CSS.escape(focusTestId) + '"]')
           ?.focus({ preventScroll: true });

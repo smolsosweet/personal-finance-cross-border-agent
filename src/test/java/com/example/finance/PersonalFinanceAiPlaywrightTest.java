@@ -66,6 +66,28 @@ class PersonalFinanceAiPlaywrightTest {
         assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
     }
 
+    @Test void latestProjectionWarningIsRevealedInALongConversationWithoutPageJump() {
+        for (int i = 0; i < 6; i++) {
+            db.update("INSERT INTO conversation_messages VALUES (?,?,?,?)", "HISTORY-" + i, "ASSISTANT",
+                    "Older synthetic reply. ".repeat(40), java.time.LocalDateTime.now().minusMinutes(10 - i));
+        }
+        when(llm.classify(anyString())).thenReturn(intent(LlmIntent.Intent.EXPLAIN_TUITION_AFFORDABILITY));
+        page.reload();
+        page.getByTestId("language-vi").click();
+        page.getByTestId("finance-conversation-input").fill("Nếu đóng học phí thì còn đủ tiền sinh hoạt không?");
+        // Establish the baseline after Playwright brings the submit button into view.
+        page.getByTestId("finance-send-message").scrollIntoViewIfNeeded();
+        double topBefore = ((Number) page.evaluate("() => window.scrollY")).doubleValue();
+        page.getByTestId("finance-send-message").click();
+        idle();
+        var reply = page.getByTestId("finance-replies").locator(".message.assistant")
+                .filter(new com.microsoft.playwright.Locator.FilterOptions().setHasText("ƯỚC TÍNH SAU HỌC PHÍ")).last();
+        assertThat(reply).containsText("chưa ánh xạ với nhau");
+        assertTrue((Boolean) reply.evaluate("node => { const r=node.getBoundingClientRect(); const p=node.parentElement.getBoundingClientRect(); return r.top>=p.top && r.top<p.bottom; }"),
+                "The beginning of the latest reply must be inside the chat's visible scroll region");
+        assertEquals(topBefore, ((Number) page.evaluate("() => window.scrollY")).doubleValue(), 1.0);
+    }
+
     @Test void networkErrorClientTimeoutAndBackendFailureRestoreControlsWithoutRetry() {
         when(llm.classify(anyString())).thenReturn(intent(LlmIntent.Intent.EXPLAIN_SPENDING_SUMMARY));
         page.route("**/agent/message", route -> route.abort());

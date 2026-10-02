@@ -91,7 +91,9 @@ public class PersonalFinanceInsights {
     }
 
     private String affordability(PhaseFourService payments, boolean vi) {
-        String heading = period(vi) + (vi ? "DỰ KIẾN SAU HỌC PHÍ · VND (không phải thanh toán).\n" : "TUITION PROJECTION · VND (not a payment).\n");
+        String heading = period(vi) + (vi ? "ƯỚC TÍNH SAU HỌC PHÍ · VND (không phải thanh toán).\n" : "TUITION PROJECTION · VND (estimate, not a payment).\n")
+                + (vi ? "Giới hạn: planner và tài khoản Sandbox chưa ánh xạ với nhau. Các con số dưới đây là ước tính; chưa thể kết luận đủ tiền sinh hoạt.\n"
+                      : "Limitation: planner and Sandbox accounts are not mapped to each other. Figures below are estimates; sufficient living funds cannot be confirmed.\n");
         CrossBorderService.StudentExpense expense;
         try { expense = crossBorder.selectedExpense(); }
         catch (IllegalStateException ex) { return heading + limitation(vi, "Không có hóa đơn đang chọn.", "No selected bill."); }
