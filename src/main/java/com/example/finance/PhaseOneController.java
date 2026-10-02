@@ -409,8 +409,8 @@ public class PhaseOneController {
     }
 
     @PostMapping("/agent/message")
-    public String message(@RequestParam String message, RedirectAttributes flash) {
-        phaseFour.sendMessage(message);
+    public String message(@RequestParam String message, @RequestParam(required=false) String language, RedirectAttributes flash) {
+        phaseFour.sendMessage(message, language);
         flash.addFlashAttribute("message", "Conversation updated through the guarded intent boundary.");
         return "redirect:/#agent-workspace";
     }

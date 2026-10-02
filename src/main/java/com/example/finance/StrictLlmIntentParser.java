@@ -54,6 +54,9 @@ public class StrictLlmIntentParser {
                     && preference != LlmIntent.ChannelPreference.NONE) {
                 throw invalid();
             }
+            if (intent.name().startsWith("EXPLAIN_")
+                    && intent != LlmIntent.Intent.EXPLAIN_CHANNEL_UNAVAILABLE
+                    && preference != LlmIntent.ChannelPreference.NONE) throw invalid();
             return new LlmIntent(intent, preference, confidence, clarification);
         } catch (LlmIntentException ex) {
             throw ex;

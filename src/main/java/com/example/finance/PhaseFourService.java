@@ -33,13 +33,15 @@ public class PhaseFourService {
     private final CrossBorderService crossBorder;
     private final TransactionService transactions;
     private final LlmIntentClient llmIntentClient;
+    private final FinanceChatService chat;
 
     public PhaseFourService(JdbcTemplate db, CrossBorderService crossBorder, TransactionService transactions,
-                            LlmIntentClient llmIntentClient) {
+                            LlmIntentClient llmIntentClient, FinanceChatService chat) {
         this.db = db;
         this.crossBorder = crossBorder;
         this.transactions = transactions;
         this.llmIntentClient = llmIntentClient;
+        this.chat = chat;
     }
 
     public record Policy(String mode, String state, String runtimeMode, BigDecimal perTxLimit,
@@ -210,40 +212,11 @@ public class PhaseFourService {
                 "Deterministic local responses are active; no LLM or network dependency is required");
     }
 
-    @Transactional
-    public String sendMessage(String raw) {
-        lockPaymentWorkflow();
-        String message = raw == null ? "" : raw.trim();
-        if (message.isBlank()) throw new IllegalArgumentException("Message is required");
-        if (message.length()>500) throw new IllegalArgumentException("Message must be 500 characters or fewer");
-        addMessage("USER",message);
-        audit("USER","CONVERSATION_INPUT",null,"RECEIVED",null,"Untrusted user message recorded");
-        if (isInjection(message)) {
-            String response="This request cannot change payment safety controls or bypass approval.";
-            addMessage("ASSISTANT",response);            audit("POLICY_GUARD","INPUT_BLOCKED",null,"BLOCKED","UNTRUSTED INSTRUCTION",
-                    explanation("UNTRUSTED INSTRUCTION"));
-            return response;
-        }
-        String lower = message.toLowerCase(Locale.ROOT);
-        if (lower.contains("surplus") || lower.contains("balance") || lower.contains("số dư")) {
-            return addAssistantAndReturn(deterministicFallback(message));
-        }
-        if (!llmIntentClient.enabled() || "OFFLINE".equals(policy().runtimeMode())) {
-            return addAssistantAndReturn(deterministicFallback(message));
-        }
-        try {
-            LlmIntent classified = llmIntentClient.classify(message);
-            audit("LLM_INTENT","INTENT_CLASSIFIED",null,"COMPLETED",classified.intent().name(),
-                    "Preference "+classified.channelPreference()+"; confidence "+confidenceBand(classified.confidence()));
-            return addAssistantAndReturn(renderIntent(classified));
-        } catch (LlmIntentException ex) {
-            audit("LLM_INTENT","INTENT_PROVIDER_UNAVAILABLE",null,"FALLBACK","LLM UNAVAILABLE",
-                    "Guarded intent provider failed; no payment plan was created from fallback");
-            return addAssistantAndReturn(deterministicFallback(message));
-        }
-    }
+    public String sendMessage(String raw) { return chat.send(raw, null, this); }
 
-    private static boolean isInjection(String value) {
+    public String sendMessage(String raw, String language) { return chat.send(raw, language, this); }
+
+    static boolean isInjection(String value) {
         String s=value.toLowerCase(Locale.ROOT);
         return s.contains("ignore policy")||s.contains("ignore all policy")||s.contains("bypass policy")||s.contains("change recipient")
                 ||s.contains("override recipient")||s.contains("invent rate")
@@ -257,12 +230,14 @@ public class PhaseFourService {
                 ||s.contains("thay đổi chính sách")||s.contains("tiết lộ khóa");
     }
 
-    private String renderIntent(LlmIntent classified) {
+    String renderIntent(LlmIntent classified) {
         return switch (classified.intent()) {
             case CREATE_TUITION_PLAN -> prepareVerifiedTuitionPlan(classified.channelPreference());
             case COMPARE_TUITION_CHANNELS -> verifiedChannelComparison(classified.channelPreference());
             case EXPLAIN_CHANNEL_UNAVAILABLE -> explainBankB();
             case CHECK_TUITION_STATUS -> verifiedTuitionStatus();
+            case EXPLAIN_SPENDING_SUMMARY, EXPLAIN_BUDGET_STATUS, EXPLAIN_TUITION_AFFORDABILITY ->
+                    throw new IllegalArgumentException("Read-only intents must use the insights router");
             case NEED_CLARIFICATION ->
                     "Please clarify whether you want to compare tuition channels, check tuition status, or prepare a tuition-payment plan.";
             case UNSAFE_REQUEST -> {
@@ -372,7 +347,7 @@ public class PhaseFourService {
         }
     }
 
-    private String deterministicFallback(String message) {
+    String deterministicFallback(String message) {
         String lower = message.toLowerCase(Locale.ROOT);
         if (lower.contains("surplus") || lower.contains("balance") || lower.contains("số dư")) {
             BigDecimal surplus=(BigDecimal)transactions.dashboard().get("surplus");

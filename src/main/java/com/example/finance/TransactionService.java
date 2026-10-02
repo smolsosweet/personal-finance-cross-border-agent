@@ -436,18 +436,46 @@ public class TransactionService {
         return total == null ? BigDecimal.ZERO : total;
     }
 
+    /** Reporting uses the same system/demo date as existing seed data and plans. */
+    public LocalDate reportingDate() { return LocalDate.now(); }
+
+    public List<Map<String,Object>> monthlySpending() {
+        LocalDate start = reportingDate().withDayOfMonth(1);
+        return db.queryForList("""
+                SELECT currency,COALESCE(category,'Uncategorized') AS category,SUM(amount) AS spent
+                FROM transactions
+                WHERE type='Expense' AND review_status IN ('AUTO','CONFIRMED')
+                  AND occurred_at>=? AND occurred_at<?
+                GROUP BY currency,COALESCE(category,'Uncategorized') ORDER BY currency,spent DESC,category
+                """, start.atStartOfDay(), start.plusMonths(1).atStartOfDay());
+    }
+
+    public List<Map<String,Object>> monthlyRefunds() {
+        LocalDate start = reportingDate().withDayOfMonth(1);
+        return db.queryForList("""
+                SELECT currency,SUM(amount) AS refunded FROM transactions
+                WHERE type='Refund' AND occurred_at>=? AND occurred_at<?
+                GROUP BY currency ORDER BY currency
+                """, start.atStartOfDay(), start.plusMonths(1).atStartOfDay());
+    }
+
+    public int monthlyPendingReviews() {
+        LocalDate start = reportingDate().withDayOfMonth(1);
+        return db.queryForObject("""
+                SELECT COUNT(*) FROM transactions WHERE review_status IN ('CONFIRMATION_REQUIRED','PURPOSE_REQUIRED')
+                  AND occurred_at>=? AND occurred_at<?
+                """, Integer.class, start.atStartOfDay(), start.plusMonths(1).atStartOfDay());
+    }
+
     public List<Map<String,Object>> budgetSummary() {
-        LocalDate monthStart = LocalDate.now().withDayOfMonth(1);
-        LocalDate nextMonth = monthStart.plusMonths(1);
-        List<Map<String,Object>> rows = db.queryForList("""
-                SELECT b.category, b.monthly_limit,
-                       COALESCE(SUM(CASE WHEN t.type='Expense' AND t.review_status IN ('AUTO','CONFIRMED') THEN t.amount ELSE 0 END),0) AS spent
-                FROM budgets b
-                LEFT JOIN transactions t ON t.category=b.category
-                  AND t.occurred_at>=? AND t.occurred_at<?
-                GROUP BY b.category,b.monthly_limit
-                ORDER BY b.category
-                """, monthStart.atStartOfDay(), nextMonth.atStartOfDay());
+        List<Map<String,Object>> rows = db.queryForList("SELECT category,monthly_limit FROM budgets ORDER BY category");
+        List<Map<String,Object>> spending = monthlySpending();
+        for (Map<String,Object> row : rows) {
+            BigDecimal spent = spending.stream()
+                    .filter(item -> "VND".equals(item.get("currency")) && row.get("category").equals(item.get("category")))
+                    .map(item -> (BigDecimal) item.get("spent")).reduce(BigDecimal.ZERO, BigDecimal::add);
+            row.put("spent", spent);
+        }
         List<Map<String,Object>> result = new ArrayList<>();
         for (Map<String,Object> row : rows) {
             BigDecimal limit = (BigDecimal) row.get("monthly_limit");

@@ -1,4 +1,10 @@
 const translationsVi = new Map(Object.entries({
+  'READ-ONLY PERSONAL FINANCE': 'TÀI CHÍNH CÁ NHÂN · CHỈ ĐỌC',
+  'Ask about your money': 'Hỏi về tài chính của bạn',
+  "Ask about this month's spending, remaining budgets, or a tuition affordability projection. Answers use recorded demo data.": 'Hỏi về chi tiêu tháng này, ngân sách còn lại hoặc dự kiến sau học phí. Câu trả lời dùng dữ liệu demo đã ghi nhận.',
+  'Where did I spend the most this month?': 'Tháng này tôi chi nhiều nhất vào đâu?',
+  'Processing your question…': 'Đang xử lý câu hỏi…',
+  'AI understands the question. Backend code calculates the figures. Asking a question does not authorize a payment.': 'AI hiểu câu hỏi. Backend tính số liệu. Đặt câu hỏi không cấp quyền thanh toán.',
   'FINANCE ASSISTANT': 'TRỢ LÝ TÀI CHÍNH',
   'Overview': 'Tổng quan',
   'Dashboard': 'Tổng quan',
@@ -675,6 +681,7 @@ let quoteExpiryTimer;
 const noticeTimers = new WeakMap();
 let pendingUpdate = 0;
 let updateSequence = 0;
+let pendingChatController = null;
 const workspaceFilterSelectors = [
   '[data-testid="student-bill-search"]', '[data-testid="student-bill-status-filter"]',
   '[data-testid="student-bill-verification-filter"]', '[data-testid="student-bill-sort"]',
@@ -1389,7 +1396,9 @@ function showWorkspaceUpdateError(form) {
   const notice = document.createElement('div');
   notice.className = 'notice request-error' + (container.tagName === 'DIALOG' ? '' : ' in-place-notice');
   notice.setAttribute('role', 'alert');
-  const message = 'Unable to confirm the result. Reload to check the current data before trying again.';
+  const message = form.matches('[data-chat-form]')
+    ? (selectedLanguage() === 'vi' ? form.dataset.chatUnavailableVi : form.dataset.chatUnavailableEn)
+    : 'Unable to confirm the result. Reload to check the current data before trying again.';
   notice.textContent = translateValue(message, selectedLanguage());
   originalText.set(notice.firstChild, message);
   container.prepend(notice);
@@ -1412,18 +1421,37 @@ async function submitWorkspaceForm(event) {
   event.preventDefault();
   if (form.dataset.billSelected === 'true') return;
   // Emergency Stop must remain available while another request is pending.
-  if (pendingUpdate && action.pathname !== '/agent/emergency-stop') return;
+  if (pendingUpdate && action.pathname !== '/agent/emergency-stop' && action.pathname !== '/reset') return;
+  if (pendingChatController && (action.pathname === '/reset' || action.pathname === '/agent/emergency-stop')) {
+    pendingChatController.abort();
+    pendingChatController = null;
+  }
 
   const processing = form.closest('[data-testid="latest-action"]')?.querySelector('[data-payment-processing]');
   if (processing && action.pathname.endsWith('/approve')) processing.hidden = false;
   const restoreBillFocus = event.submitter?.matches('.student-bill-select:focus-visible');
   const requestId = ++updateSequence;
   pendingUpdate = requestId;
+  const isChat = action.pathname === '/agent/message';
+  const chatController = isChat ? new AbortController() : null;
+  if (chatController) pendingChatController = chatController;
+  const chatTimer = chatController ? setTimeout(() => chatController.abort(),
+    Number(form.dataset.chatTimeout || 70000)) : null;
+  const chatForms = isChat ? Array.from(document.querySelectorAll('[data-chat-form]')) : [];
+  const chatControls = chatForms.flatMap((composer) => Array.from(composer.querySelectorAll('button,input'))
+    .map((control) => ({ control, disabled: control.disabled })));
   const data = new FormData(form);
+  if (isChat) data.set('language', selectedLanguage());
+  chatControls.forEach(({ control }) => { control.disabled = true; });
+  chatForms.forEach((composer) => {
+    composer.setAttribute('aria-busy', 'true');
+    const label = composer.querySelector('[data-chat-processing]');
+    if (label) { label.hidden = false; label.setAttribute('role', 'status'); label.textContent = translateValue('Processing your question…', selectedLanguage()); }
+  });
   if (event.submitter?.name) data.append(event.submitter.name, event.submitter.value);
   const body = form.enctype === 'multipart/form-data' ? data : new URLSearchParams(data);
   const buttons = Array.from(form.querySelectorAll('button[type="submit"], button:not([type])'))
-    .map((button) => ({ button, disabled: button.disabled }));
+    .map((button) => ({ button, disabled: isChat ? (chatControls.find(item => item.control === button)?.disabled ?? button.disabled) : button.disabled }));
   buttons.forEach(({ button }) => { button.disabled = true; });
   form.setAttribute('aria-busy', 'true');
   document.querySelector('.content')?.setAttribute('aria-busy', 'true');
@@ -1431,6 +1459,7 @@ async function submitWorkspaceForm(event) {
   try {
     const response = await fetch(action, {
       method: 'POST', body, credentials: 'same-origin',
+      ...(chatController ? { signal: chatController.signal } : {}),
       headers: { Accept: 'text/html', ...(action.pathname !== '/reset' && document.querySelector('[data-testid="latest-action"]')?.dataset.actionId ? { 'X-Workspace-Action': document.querySelector('[data-testid="latest-action"]').dataset.actionId } : {}) }
     });
     if (!response.ok) throw new Error('Update failed');
@@ -1510,6 +1539,15 @@ async function submitWorkspaceForm(event) {
     // A failed response can follow a successful mutation. Do not resend automatically.
     if (requestId === updateSequence) showWorkspaceUpdateError(form);
   } finally {
+    if (chatTimer) clearTimeout(chatTimer);
+    if (pendingChatController === chatController) pendingChatController = null;
+    chatControls.forEach(({ control, disabled }) => { if (control.isConnected && (pendingUpdate === requestId || !pendingUpdate)) control.disabled = disabled; });
+    chatForms.forEach((composer) => {
+      if (!composer.isConnected) return;
+      composer.removeAttribute('aria-busy');
+      const label = composer.querySelector('[data-chat-processing]');
+      if (label) { label.hidden = true; label.removeAttribute('role'); }
+    });
     buttons.forEach(({ button, disabled }) => { if (button.isConnected) button.disabled = disabled; });
     if (form.isConnected) form.removeAttribute('aria-busy');
     if (processing?.isConnected) processing.hidden = true;

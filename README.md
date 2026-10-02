@@ -9,7 +9,7 @@ The `main` branch implements the deterministic demo through Phase 5 plus an opti
 - Phase 5: prompt-injection, recipient, channel, FX, deadline, limit and safe-balance guards, offline fallback, reset/replay and the five-minute demo acceptance flow.
 
 All data and payments are synthetic. No real Alipay, bank or payment provider is connected. When enabled,
-the selected LLM provider classifies a narrow tuition intent through strict structured output. It cannot execute
+the selected LLM provider classifies supported personal-finance and tuition intents through strict structured output. It cannot execute
 payments, modify policy, invent rates or fees, or change a recipient after approval.
 
 ## Run
@@ -111,7 +111,41 @@ mvn spring-boot:run
 
 Unknown provider values stop application configuration with a clear error. Provider timeout, connection failure, HTTP error, invalid JSON or schema mismatch produces the existing safe unavailable message. Fallback never creates a chat-driven payment plan; the guided deterministic tuition workflow remains usable.
 
-The provider response can select only a backend-owned tuition intent and a cheapest/fastest preference.
+The provider response selects only supported backend-owned personal-finance or tuition intents.
+Cheapest/fastest preferences apply only to existing tuition actions; read-only insights require NONE.
 Amounts, recipients, accounts, bills, quotes, currencies, corridors, approval and policy outcomes are loaded and
 validated by deterministic backend services. Missing configuration, provider errors and invalid structured output
 fall back without creating or executing a payment plan.
+
+
+## Read-only AI Personal Finance
+
+Ask in the Overview chat about spending in the current demo month, configured category budgets,
+or the projected balance after the selected verified tuition bill. Ollama only classifies the
+question; existing backend services calculate all amounts and backend templates explain their evidence.
+
+Examples: "Where did I spend the most this month?", "Ngân sách tháng này còn bao nhiêu?",
+and "Nếu đóng học phí thì còn đủ tiền sinh hoạt không?".
+
+The scope is the current demo profile/month. Other periods, custom account/category scopes and
+model-generated financial parameters require clarification. Refunds remain separate from gross
+expenses; internal transfers are excluded, and currencies are never summed together. Budgets are
+configured in VND. Tuition affordability is a synthetic projection using the selected Sandbox
+funding account and its eligible, unexpired quote. Planner commitments are shown with an explicit
+conservative assumption because personal planner and payment accounts are separate sources.
+
+The chat shows processing, blocks duplicate submissions, restores controls after errors/timeouts,
+and discards responses superseded by reset or a newer request. No automatic retry is performed.
+Responses to the three read-only intents change only conversation and audit records.
+
+Targeted checks:
+
+    mvn "-Dtest=PersonalFinanceAiIntegrationTest,PersonalFinanceAiPlaywrightTest,FinBridgePlaywrightE2ETest,TransactionServiceTest" test
+
+Separate live model and browser verification (requires installed qwen3:4b and running local Ollama;
+starts its own synthetic FinBridge instance on port 8091):
+
+    mvn "-Dtest=PersonalFinanceOllamaLiveIT" test
+
+The default Maven test suite uses stubs for model responses and does not depend on Ollama.
+See [the Vietnamese verification report](docs/AI_PERSONAL_FINANCE_VERIFICATION.md) for measured results and limitations.
