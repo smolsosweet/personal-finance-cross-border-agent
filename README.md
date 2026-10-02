@@ -40,6 +40,12 @@ Tuition always requires Approval Mode, including when the general permission mod
 
 Run the full automated suite and the manual acceptance script described in [PHASE_5_VERIFICATION.md](PHASE_5_VERIFICATION.md). The manual script starts from reset data and verifies all ten acceptance steps plus offline fallback and reset/replay.
 
+## Assistant access
+
+Use **Ask FinBridge** at the bottom-right of any tab. The side panel shares the existing Overview conversation, supports English/Vietnamese, and keeps drafts while switching tabs. Student finance and payment review also have contextual help buttons. Suggested questions are submitted only after Send; a payment draft must still be reviewed and explicitly approved on the payment screen.
+
+See [the assistant UI guide and targeted test results](docs/ASSISTANT_WORKSPACE.md). The existing `APP_DEMO_TOOLS_ENABLED=false` option hides demo tools while retaining the assistant.
+
 ## Contextual payment workflow
 
 The payment screen opens after a plan is created. Its history entry then becomes available for reopening plans. Bill/beneficiary/quote snapshots remain immutable; identical pending requests reuse a plan, replacement plans revoke old approvals, and every execution rechecks Policy Guard. Unexecuted plans can be canceled; completed payments keep their original receipt.

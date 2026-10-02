@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Atlas · Finance workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261001-8')}">
+  <title>Atlas · Finance workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261002-assistant')}">
 </head>
 <body>
 <div class="shell">
@@ -183,7 +183,7 @@
       <section class="card student-section" id="student-finance" data-tab-panel="student" hidden>
         <div class="section-title student-title">
           <div><div class="eyebrow">CROSS BORDER STUDENT FINANCE · SYNTHETIC DATA</div><h2>Study expense planning</h2><p>This tab is only for bills issued by a verified school or education provider. Personal transfers to friends or family belong to the future Transfers module.</p></div>
-          <button class="primary-button" type="button" data-open-dialog="add-student-expense">+ Add student bill</button>
+          <div class="section-help-actions"><button type="button" class="secondary" data-open-assistant data-assistant-question="affordability" data-testid="assistant-student-help">Ask about tuition</button><button class="primary-button" type="button" data-open-dialog="add-student-expense">+ Add student bill</button></div>
         </div>
 
         <div class="corridor-strip">
@@ -318,7 +318,7 @@
       <section class="card agent-workspace payment-workspace" id="agent-workspace" data-tab-panel="agent" th:attr="data-payment-count=${#lists.size(paymentPlans)}" hidden>
         <div class="section-title">
           <div><div class="eyebrow">CONTROLLED EXECUTION · PAYMENT SANDBOX</div><h2 th:text="${latestReceipt != null ? 'Payment receipt' : 'Review and approve payment'}"></h2><p th:text="${latestReceipt != null ? 'This payment completed in the Sandbox. Its approved details and receipt are preserved.' : 'Creating a plan does not move money. Review its locked details before approving a synthetic payment.'}"></p></div>
-          <a class="secondary link-button" href="#student-finance" data-return-to-comparison data-testid="return-to-comparison">Back to Student finance</a>
+          <div class="section-help-actions"><button type="button" class="secondary" data-open-assistant data-testid="assistant-plan-help">Explain this plan</button><a class="secondary link-button" href="#student-finance" data-return-to-comparison data-testid="return-to-comparison">Back to Student finance</a></div>
         </div>
         <div th:if="${agentPolicy.state == 'PAUSED'}" class="payment-warning" role="alert">Emergency Stop is active. New payments are blocked; completed payments are not reversed.</div>
         <div th:if="${latestAction == null}" class="empty-state payment-empty"><h3>No payment plan selected</h3><p>Choose a verified bill and an eligible channel in Student finance, then select Create plan.</p></div>
@@ -484,6 +484,63 @@
   </main>
 </div>
 
-<script th:src="@{/app.js(v='20261001-8')}"></script>
+<button type="button" class="assistant-launcher" data-open-assistant data-testid="assistant-launcher" aria-controls="finbridge-assistant" aria-expanded="false"><span aria-hidden="true">✦</span><span>Ask FinBridge</span></button>
+<aside id="finbridge-assistant" class="assistant-panel" data-assistant-panel data-testid="assistant-panel" role="dialog" aria-modal="false" aria-labelledby="assistant-title" hidden>
+  <div class="assistant-heading">
+    <div><small>FINANCE ASSISTANT</small><h2 id="assistant-title">Ask FinBridge</h2></div>
+    <button type="button" class="assistant-close" data-close-assistant data-testid="assistant-close"><span aria-hidden="true">×</span><span class="visually-hidden">Close assistant</span></button>
+  </div>
+  <div class="assistant-toolbar">
+    <div role="group" aria-label="Language"><button type="button" data-assistant-language="vi" data-testid="assistant-language-vi" aria-pressed="false">VI</button><button type="button" data-assistant-language="en" data-testid="assistant-language-en" aria-pressed="true">EN</button></div>
+    <div data-assistant-policy>
+      <form th:if="${agentPolicy.state == 'ACTIVE'}" th:action="@{/agent/emergency-stop}" method="post"><input th:if="${latestAction != null}" type="hidden" name="action" th:value="${latestAction.id}"><button type="submit" class="stop-button" data-testid="assistant-emergency-stop">■ Emergency Stop</button></form>
+      <strong th:if="${agentPolicy.state == 'PAUSED'}">Emergency Stop is active</strong>
+    </div>
+  </div>
+  <div class="assistant-body">
+    <section class="assistant-context" aria-label="Current screen">
+      <small>Current screen</small><strong data-assistant-screen data-testid="assistant-screen"></strong>
+      <p>Choose a question, then press Send. Opening the assistant does not create or approve a payment.</p>
+      <div class="assistant-suggestions" data-assistant-for="dashboard transactions">
+        <button type="button" data-assistant-question="spending" data-testid="assistant-question-spending">Spending this month</button>
+        <button type="button" data-assistant-question="budget" data-testid="assistant-question-budget">Remaining budgets</button>
+      </div>
+      <div class="assistant-suggestions" data-assistant-for="student" hidden>
+        <button type="button" data-assistant-question="affordability" data-testid="assistant-question-affordability">Can I afford tuition?</button>
+        <button type="button" data-assistant-question="compare">Compare tuition channels</button>
+        <button type="button" data-assistant-question="unavailable">Why is Bank B unavailable?</button>
+      </div>
+      <div data-assistant-plan data-testid="assistant-plan-context">
+        <div th:if="${latestAction != null}" data-assistant-for="agent" hidden>
+          <details class="assistant-plan-summary" open>
+            <summary>Displayed plan facts</summary>
+            <p th:text="${latestAction.purpose}"></p>
+            <dl>
+              <div><dt>Payment channel</dt><dd th:text="${paymentReview != null ? paymentReview.channelName : (latestAction.channelId ?: 'Internal sandbox')}"></dd></div>
+              <div><dt>Beneficiary</dt><dd th:text="${paymentReview != null ? paymentReview.recipientName : latestAction.recipient}"></dd></div>
+              <div><dt>Funding account</dt><dd th:text="${paymentReview != null ? paymentReview.sourceDisplayName : latestAction.sourceAccountId}"></dd></div>
+              <div><dt>Source amount</dt><dd th:text="${#numbers.formatDecimal(latestAction.conversionAmount,1,'COMMA',2,'POINT') + ' VND'}"></dd></div>
+              <div><dt>Transfer fee</dt><dd th:text="${#numbers.formatDecimal(latestAction.transferFee,1,'COMMA',2,'POINT') + ' VND'}"></dd></div>
+              <div><dt>FX markup</dt><dd th:text="${#numbers.formatDecimal(latestAction.fxMarkup,1,'COMMA',2,'POINT') + ' VND'}"></dd></div>
+              <div><dt>Total debit</dt><dd data-testid="assistant-plan-total" th:text="${#numbers.formatDecimal(latestAction.debitAmount,1,'COMMA',2,'POINT') + ' VND'}"></dd></div>
+              <div th:if="${paymentReview != null}"><dt th:text="${latestReceipt == null ? 'Projected balance after payment' : 'Source balance after payment'}"></dt><dd data-testid="assistant-plan-remaining" th:text="${#numbers.formatDecimal(paymentReview.balanceAfter,1,'COMMA',2,'POINT') + ' VND'}"></dd></div>
+            </dl>
+            <p>These figures come from the displayed plan. Financial questions use recorded data and estimates; they do not approve this plan.</p>
+            <p th:if="${latestAction.requiredPermission == 'APPROVAL'}">This plan requires explicit approval on the payment review screen. Creating a plan or sending a chat message does not execute it.</p>
+          </details>
+        </div>
+        <button th:if="${latestAction != null}" type="button" class="secondary" data-assistant-review-plan data-testid="assistant-review-plan">View payment plan</button>
+      </div>
+    </section>
+    <div class="assistant-message-list" data-testid="assistant-replies" role="log" aria-live="polite" aria-relevant="additions text"><div th:each="item : ${conversation}" class="message" th:classappend="${#strings.toLowerCase(item.role)}"><small th:text="${item.role == 'USER' ? 'You' : 'FinBridge'}"></small><p th:text="${item.message == 'I can explain the tuition bill, create a structured payment plan, or prepare a low-risk Emergency Fund transfer. Every amount comes from deterministic demo data.' ? 'Ask about spending, budgets or tuition. I can prepare a tuition plan for you to review; payments always need explicit approval.' : item.message}"></p></div></div>
+  </div>
+  <form class="composer assistant-composer" th:action="@{/agent/message}" method="post" data-chat-form th:attr="data-chat-timeout=${chatTimeoutMillis}" data-chat-unavailable-en="The request timed out or the connection failed. No automatic retry was sent. Reload to check the current state before retrying." data-chat-unavailable-vi="Yêu cầu hết thời gian chờ hoặc mất kết nối. Chưa tự động gửi lại. Hãy tải lại để kiểm tra trạng thái trước khi thử lại.">
+    <label class="visually-hidden" for="assistant-question">Your question</label><input id="assistant-question" name="message" data-testid="assistant-conversation-input" maxlength="500" required placeholder="Ask about spending, budgets or tuition">
+    <button type="submit" class="primary-button" data-testid="assistant-send-message">Send</button>
+    <span class="chat-processing" data-chat-processing aria-live="polite" aria-atomic="true" hidden>Processing your question…</span>
+  </form>
+  <p class="assistant-safety">AI understands the question. Backend code calculates the figures. Asking a question does not authorize a payment.</p>
+</aside>
+<script th:src="@{/app.js(v='20261002-assistant')}"></script>
 </body>
 </html>

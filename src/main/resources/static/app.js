@@ -1,4 +1,25 @@
 const translationsVi = new Map(Object.entries({
+  'Ask FinBridge': 'Hỏi FinBridge',
+  'Close assistant': 'Đóng trợ lý',
+  'Ask about tuition': 'Hỏi về học phí',
+  'Explain this plan': 'Giải thích kế hoạch này',
+  'Current screen': 'Màn hình đang xem',
+  'Choose a question, then press Send. Opening the assistant does not create or approve a payment.': 'Chọn câu hỏi rồi bấm Gửi. Mở trợ lý không tạo hay phê duyệt thanh toán.',
+  'Spending this month': 'Chi tiêu tháng này',
+  'Remaining budgets': 'Ngân sách còn lại',
+  'Can I afford tuition?': 'Tôi có đủ tiền đóng học phí không?',
+  'Compare tuition channels': 'So sánh kênh đóng học phí',
+  'Why is Bank B unavailable?': 'Vì sao Bank B không khả dụng?',
+  'Displayed plan facts': 'Thông tin từ kế hoạch đang xem',
+  'These figures come from the displayed plan. Financial questions use recorded data and estimates; they do not approve this plan.': 'Các số liệu này lấy từ kế hoạch đang xem. Câu hỏi tài chính sử dụng dữ liệu đã ghi nhận và ước tính; không phê duyệt kế hoạch này.',
+  'This plan requires explicit approval on the payment review screen. Creating a plan or sending a chat message does not execute it.': 'Kế hoạch này cần bạn phê duyệt rõ ràng tại màn hình thanh toán. Tạo kế hoạch hay gửi tin nhắn không thực thi thanh toán.',
+  'View payment plan': 'Xem kế hoạch thanh toán',
+  'Ask about spending, budgets or tuition': 'Hỏi về chi tiêu, ngân sách hoặc học phí',
+  'Your question': 'Câu hỏi của bạn',
+  'You': 'Bạn',
+  'Ask about spending, budgets or tuition. I can prepare a tuition plan for you to review; payments always need explicit approval.': 'Bạn có thể hỏi về chi tiêu, ngân sách hoặc học phí. Tôi có thể tạo kế hoạch học phí để bạn xem xét; thanh toán luôn cần bạn phê duyệt rõ ràng.',
+  'Beneficiary': 'Người thụ hưởng',
+  'Emergency Stop is active': 'Đã bật Dừng khẩn cấp',
   'READ-ONLY PERSONAL FINANCE': 'TÀI CHÍNH CÁ NHÂN · CHỈ ĐỌC',
   'Ask about your money': 'Hỏi về tài chính của bạn',
   "Ask about this month's spending, remaining budgets, or a tuition affordability projection. Answers use recorded demo data.": 'Hỏi về chi tiêu tháng này, ngân sách còn lại hoặc dự kiến sau học phí. Câu trả lời dùng dữ liệu demo đã ghi nhận.',
@@ -682,6 +703,14 @@ const noticeTimers = new WeakMap();
 let pendingUpdate = 0;
 let updateSequence = 0;
 let pendingChatController = null;
+let assistantOpener = null;
+const assistantQuestions = {
+  spending: { en: 'Where did I spend the most this month?', vi: 'Tháng này tôi chi nhiều nhất vào đâu?' },
+  budget: { en: 'How much budget do I have left this month?', vi: 'Ngân sách tháng này của tôi còn bao nhiêu?' },
+  affordability: { en: 'After paying tuition, will I have enough money for living expenses?', vi: 'Nếu đóng học phí thì còn đủ tiền sinh hoạt không?' },
+  compare: { en: 'Compare the available tuition payment channels.', vi: 'So sánh các kênh thanh toán học phí khả dụng.' },
+  unavailable: { en: 'Why is Bank B unavailable?', vi: 'Vì sao Bank B không khả dụng?' }
+};
 const workspaceFilterSelectors = [
   '[data-testid="student-bill-search"]', '[data-testid="student-bill-status-filter"]',
   '[data-testid="student-bill-verification-filter"]', '[data-testid="student-bill-sort"]',
@@ -719,6 +748,7 @@ function activateTab(tab, updateLocation = true) {
     activateDashboardView(updateLocation ? 'summary' : initialDashboardView(), false);
   }
   updateActiveTabLabel();
+  renderAssistantContext();
   localStorage.setItem('finbridge-active-tab', activeTab);
   if (updateLocation) {
     history.replaceState(null, '', tabAnchors[activeTab]);
@@ -728,6 +758,72 @@ function activateTab(tab, updateLocation = true) {
 
 function initialDashboardView() {
   return { '#accounts': 'accounts', '#planning': 'planning' }[window.location.hash] || 'summary';
+}
+
+function renderAssistantContext() {
+  const panel = document.querySelector('[data-assistant-panel]');
+  if (!panel) return;
+  const label = panel.querySelector('[data-assistant-screen]');
+  label.textContent = tabLabels[activeTab].en;
+  originalText.set(label.firstChild, tabLabels[activeTab].en);
+  label.firstChild.nodeValue = tabLabels[activeTab][selectedLanguage()];
+  panel.querySelectorAll('[data-assistant-for]').forEach((group) => {
+    group.hidden = !group.dataset.assistantFor.split(' ').includes(activeTab);
+  });
+  panel.setAttribute('aria-label', selectedLanguage() === 'vi' ? 'Hỏi FinBridge' : 'Ask FinBridge');
+  panel.querySelector('[role="group"]').setAttribute('aria-label', selectedLanguage() === 'vi' ? 'Ngôn ngữ' : 'Language');
+}
+
+function setAssistantOpen(open, opener) {
+  const panel = document.querySelector('[data-assistant-panel]');
+  if (!panel) return;
+  if (open && opener) assistantOpener = opener;
+  panel.hidden = !open;
+  document.querySelectorAll('[data-open-assistant]').forEach((button) => {
+    button.setAttribute('aria-expanded', String(open));
+  });
+  const launcher = document.querySelector('[data-testid="assistant-launcher"]');
+  launcher.hidden = open;
+  if (open) {
+    renderAssistantContext();
+    const input = panel.querySelector('input[name="message"]');
+    (input.disabled ? panel.querySelector('[data-close-assistant]') : input).focus({ preventScroll: true });
+  } else {
+    (assistantOpener?.isConnected && assistantOpener.getClientRects().length ? assistantOpener : launcher).focus({ preventScroll: true });
+  }
+}
+
+function handleAssistantClick(event) {
+  const opener = event.target.closest('[data-open-assistant]');
+  const question = event.target.closest('[data-assistant-question]');
+  if (opener) {
+    setAssistantOpen(true, opener);
+    document.querySelector('.assistant-body').scrollTop = 0;
+  }
+  if (question && !pendingUpdate) {
+    const input = document.querySelector('[data-testid="assistant-conversation-input"]');
+    const suggestion = assistantQuestions[question.dataset.assistantQuestion];
+    // Suggestions fill the existing composer. Only an explicit Send submits a request.
+    if (input && suggestion) {
+      input.value = suggestion[selectedLanguage()];
+      input.focus({ preventScroll: true });
+    }
+  }
+  if (event.target.closest('[data-close-assistant]')) setAssistantOpen(false);
+  if (event.target.closest('[data-assistant-review-plan]')) {
+    setAssistantOpen(false);
+    activateTab('agent');
+  }
+}
+
+function syncAssistant(nextDocument) {
+  // Keep the panel and composer mounted so drafts, focus and pending controls survive tab updates.
+  for (const selector of ['[data-testid="assistant-replies"]', '[data-assistant-plan]', '[data-assistant-policy]']) {
+    const current = document.querySelector(selector);
+    const next = nextDocument.querySelector(selector);
+    if (current && next) current.replaceChildren(...next.childNodes);
+  }
+  document.querySelectorAll('[data-assistant-panel] .request-error').forEach((notice) => notice.remove());
 }
 
 function activateDashboardView(view, updateLocation = true) {
@@ -1150,8 +1246,8 @@ function applyLanguage(language) {
   const selected = language === 'vi' ? 'vi' : 'en';
   document.documentElement.lang = selected;
   document.title = selected === 'vi' ? 'Atlas · Giai đoạn 5' : 'Atlas · Phase 5';
-  document.querySelectorAll('[data-language]').forEach((button) => {
-    button.setAttribute('aria-pressed', String(button.dataset.language === selected));
+  document.querySelectorAll('[data-language], [data-assistant-language]').forEach((button) => {
+    button.setAttribute('aria-pressed', String((button.dataset.language || button.dataset.assistantLanguage) === selected));
   });
   const languageGroup = document.querySelector('.language-switcher');
   if (languageGroup) languageGroup.setAttribute('aria-label', selected === 'vi' ? 'Ngôn ngữ' : 'Language');
@@ -1191,12 +1287,13 @@ function applyLanguage(language) {
   renderPaymentAccounts();
   renderQuoteExpiryStatuses();
   renderPaymentWorkflow();
+  renderAssistantContext();
 }
 
 function initializeWorkspaceNotices(root = document) {
   root.querySelectorAll('.notice').forEach((notice) => {
     if (notice.querySelector('[data-dismiss-notice]')) return;
-    if (!notice.closest('dialog')) notice.classList.add('in-place-notice');
+    if (!notice.closest('dialog, [data-assistant-panel]')) notice.classList.add('in-place-notice');
     const close = document.createElement('button');
     close.type = 'button';
     close.className = 'notice-dismiss';
@@ -1322,6 +1419,7 @@ async function openPaymentPlan(event) {
     nextContent.querySelectorAll('[data-tab-panel]').forEach((panel) => { panel.hidden = panel.dataset.tabPanel !== 'agent'; });
     document.querySelector('.content').replaceChildren(...nextContent.childNodes);
     syncPaymentNavigation(nextDocument);
+    syncAssistant(nextDocument);
     history.replaceState(null, '', url.pathname + url.search + '#agent-workspace');
     initializeWorkspaceContent({ ...state, tab: 'agent' });
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -1390,11 +1488,11 @@ function initializeWorkspaceContent(state) {
 }
 
 function showWorkspaceUpdateError(form) {
-  const container = form.closest('dialog[open]') || document.querySelector('.content');
+  const container = form.closest('[data-assistant-panel]') || form.closest('dialog[open]') || document.querySelector('.content');
   if (!container) return;
   container.querySelector('.request-error')?.remove();
   const notice = document.createElement('div');
-  notice.className = 'notice request-error' + (container.tagName === 'DIALOG' ? '' : ' in-place-notice');
+  notice.className = 'notice request-error' + (container.matches('dialog, [data-assistant-panel]') ? '' : ' in-place-notice');
   notice.setAttribute('role', 'alert');
   const message = form.matches('[data-chat-form]')
     ? (selectedLanguage() === 'vi' ? form.dataset.chatUnavailableVi : form.dataset.chatUnavailableEn)
@@ -1513,6 +1611,8 @@ async function submitWorkspaceForm(event) {
     }
     content.replaceChildren(...nextContent.childNodes);
     syncPaymentNavigation(nextDocument);
+    syncAssistant(nextDocument);
+    if (isChat && form.closest('[data-assistant-panel]')) form.reset();
     content.querySelector('.notice')?.classList.add('in-place-notice');
     initializeWorkspaceContent({ ...state, tab: destinationTab });
 
@@ -1525,13 +1625,14 @@ async function submitWorkspaceForm(event) {
         }
       });
       if (isChat) {
-        document.querySelectorAll('.finance-message-list, .message-list').forEach((list) => {
+        document.querySelectorAll('.finance-message-list, .message-list, .assistant-message-list').forEach((list) => {
           if (!list.getClientRects().length) return;
           const latestQuestion = Array.from(list.querySelectorAll('.message.user')).at(-1);
           const reply = latestQuestion?.nextElementSibling;
           if (reply?.classList.contains('assistant')) {
             // Reveal the beginning of the new reply, including assumptions, without moving the page.
-            list.scrollTop += reply.getBoundingClientRect().top - list.getBoundingClientRect().top - 8;
+            const scrollRegion = list.closest('.assistant-body') || list;
+            scrollRegion.scrollTop += reply.getBoundingClientRect().top - scrollRegion.getBoundingClientRect().top - 8;
           }
         });
       }
@@ -1565,6 +1666,13 @@ async function submitWorkspaceForm(event) {
     if (pendingUpdate === requestId) {
       pendingUpdate = 0;
       document.querySelector('.content')?.removeAttribute('aria-busy');
+      if (action.pathname === '/reset' || action.pathname === '/agent/emergency-stop') {
+        const sharedComposer = document.querySelector('[data-assistant-panel] [data-chat-form]');
+        sharedComposer?.querySelectorAll('input,button').forEach((control) => { control.disabled = false; });
+        sharedComposer?.removeAttribute('aria-busy');
+        const label = sharedComposer?.querySelector('[data-chat-processing]');
+        if (label) { label.hidden = true; label.removeAttribute('role'); }
+      }
       renderPaymentWorkflow();
     }
   }
@@ -1577,14 +1685,16 @@ document.addEventListener('DOMContentLoaded', () => {
     button.addEventListener('click', () => activateTab(button.dataset.tab));
   });
 
-  document.querySelectorAll('[data-language]').forEach((button) => {
+  document.querySelectorAll('[data-language], [data-assistant-language]').forEach((button) => {
     button.addEventListener('click', () => {
-      localStorage.setItem('finbridge-language', button.dataset.language);
-      applyLanguage(button.dataset.language);
+      const language = button.dataset.language || button.dataset.assistantLanguage;
+      localStorage.setItem('finbridge-language', language);
+      applyLanguage(language);
     });
   });
   document.addEventListener('submit', submitWorkspaceForm);
   document.addEventListener('click', openPaymentPlan);
+  document.addEventListener('click', handleAssistantClick);
   document.addEventListener('click', (event) => {
     if (event.target.closest('[data-return-to-comparison]')) { event.preventDefault(); activateTab('student'); }
   });
@@ -1614,6 +1724,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
+      if (!document.querySelector('dialog[open]') && !document.querySelector('[data-assistant-panel]').hidden) setAssistantOpen(false);
       document.querySelectorAll('.category-row-actions details[open]').forEach((details) => {
         details.removeAttribute('open');
       });
