@@ -20,10 +20,73 @@ import org.springframework.jdbc.core.JdbcTemplate;
 class ContextualConversationOllamaLiveIT {
     @Autowired DemoDataService demo;
     @Autowired PhaseFourService payments;
+    @Autowired CrossBorderService crossBorder;
+    @Autowired TransactionService transactions;
     @Autowired JdbcTemplate db;
 
     @Test void englishMultiTurnWithRealModel() { verifyConversation(false); }
     @Test void vietnameseMultiTurnWithRealModel() { verifyConversation(true); }
+
+    @Test void realModelRechecksPinnedPlanReplacementHistoryLanguageAndNonzeroSpending() {
+        demo.resetAll();
+        var old=payments.createTuitionPlan("BANK_A");crossBorder.refreshQuotes();
+        var balances=db.queryForList("SELECT * FROM sandbox_accounts ORDER BY id");
+        var start=java.time.LocalDate.now().withDayOfMonth(1);
+        var seedRows=db.queryForList("SELECT type,review_status,category,occurred_at,amount FROM transactions WHERE occurred_at>=? AND occurred_at<? ORDER BY occurred_at,id",start.atStartOfDay(),start.plusMonths(1).atStartOfDay());
+        var expectedSpent=db.queryForObject("SELECT COALESCE(SUM(amount),0) FROM transactions WHERE type='Expense' AND currency='VND' AND review_status IN ('AUTO','CONFIRMED') AND occurred_at>=? AND occurred_at<?",java.math.BigDecimal.class,start.atStartOfDay(),start.plusMonths(1).atStartOfDay());
+        System.out.printf("CONTEXT_LIVE_SEED period=%s expense_vnd=%s rows=%s%n",start,expectedSpent,seedRows);
+        // A positive synthetic expense makes this check meaningful even when reset occurs on day one.
+        transactions.ingest(new TransactionService.BankEvent("LIVE-READONLY-EXPENSE",start.atTime(12,0),
+                "Highlands Coffee","Synthetic live verification expense",new java.math.BigDecimal("100000"),
+                "OUT","CHECKING",null,"Synthetic Data"));
+        expectedSpent=expectedSpent.add(new java.math.BigDecimal("100000.00"));
+        assertTrue(expectedSpent.signum()>0);
+        System.out.printf("CONTEXT_LIVE_SPENDING expected_seed_plus_fixture_vnd=%s%n",expectedSpent);
+        var errors=new ArrayList<String>();
+        com.microsoft.playwright.assertions.PlaywrightAssertions.setDefaultAssertionTimeout(90000);
+        try(Playwright playwright=Playwright.create();
+            Browser browser=playwright.chromium().launch(new BrowserType.LaunchOptions().setChannel("chrome").setHeadless(true))) {
+            Page page=browser.newPage(new Browser.NewPageOptions().setViewportSize(1440,1000));
+            page.setDefaultTimeout(90000);page.onPageError(errors::add);
+            page.navigate("http://localhost:8104/?action="+old.id()+"#agent-workspace");
+            page.getByTestId("language-en").click();page.getByTestId("assistant-launcher").click();
+            readonly(page,"Show my configured budgets for this month.","EXPLAIN_BUDGET_STATUS");
+            for(String english:java.util.List.of("Category budgets: VND.","Food & Drinks: limit","Shopping: limit","Transport: limit","Utilities: limit","Evidence: configured budgets"))
+                assertThat(page.getByTestId("assistant-replies")).containsText(english);
+            page.getByTestId("assistant-language-vi").click();
+            assertThat(page.getByTestId("assistant-replies")).containsText("Category budgets: VND.");
+            assertThat(page.getByTestId("assistant-replies")).not().containsText("Danh mục budgets");
+            page.getByTestId("assistant-language-en").click();
+            readonly(page,"Show this month's recorded spending.","EXPLAIN_SPENDING_SUMMARY");
+            assertThat(page.getByTestId("assistant-replies")).containsText("Expense total VND: "+expectedSpent.setScale(2).toPlainString());
+            page.getByTestId("assistant-language-vi").click();
+            send(page,"Chuẩn bị kế hoạch học phí rẻ nhất.","CREATE_TUITION_PLAN");
+            var draft=payments.latestAction();assertNotEquals(old.id(),draft.id());
+            assertEquals("INVALIDATED",payments.action(old.id()).status());
+            assertEquals("AWAITING_APPROVAL",draft.status());assertEquals("APPROVAL",draft.requiredPermission());
+            assertThat(page.getByTestId("latest-action")).hasAttribute("data-action-id",draft.id());
+            page.getByTestId("assistant-review-plan").click();
+            assertThat(page.getByTestId("latest-action")).hasAttribute("data-action-id",draft.id());
+            page.getByTestId("assistant-plan-help").click();idle(page);
+            readonly(page,"Trạng thái thế nào?","CHECK_TUITION_STATUS");
+            assertThat(page.getByTestId("assistant-replies").locator(".message.assistant").last()).containsText(draft.id()+" · AWAITING_APPROVAL");
+            page.getByTestId("assistant-close").click();
+            page.navigate("http://localhost:8104/?action="+old.id()+"#agent-workspace");
+            page.getByTestId("assistant-plan-help").click();idle(page);
+            readonly(page,"Trạng thái thế nào?","CHECK_TUITION_STATUS");
+            assertThat(page.getByTestId("assistant-replies").locator(".message.assistant").last()).containsText(old.id()+" · INVALIDATED");
+            page.getByTestId("assistant-language-en").click();
+            readonly(page,"What's its status?","CHECK_TUITION_STATUS");
+            assertThat(page.getByTestId("assistant-replies").locator(".message.assistant").last()).containsText(old.id()+" · INVALIDATED");
+            assertEquals(balances,db.queryForList("SELECT * FROM sandbox_accounts ORDER BY id"));
+            assertEquals(0,payments.sandboxTransactionCount());assertNull(payments.receiptForAction(draft.id()));assertNull(payments.receiptForAction(old.id()));
+            assertEquals(0,db.queryForObject("SELECT COUNT(*) FROM sandbox_ledger_entries",Integer.class));
+            assertEquals("AWAITING_APPROVAL",payments.action(draft.id()).status());
+            assertTrue(errors.isEmpty(),String.join(" | ",errors));
+            page.screenshot(new Page.ScreenshotOptions().setPath(Path.of("target/context-ollama-review-regression.png")));
+            System.out.printf("CONTEXT_LIVE_REGRESSION old=%s old_status=INVALIDATED draft=%s draft_status=AWAITING_APPROVAL english_budget=PASS spending_matches_db=true balances_unchanged=true payments=0 ledger=0 receipts=0 js_errors=0%n",old.id(),draft.id());
+        }
+    }
 
     private void verifyConversation(boolean vi) {
         demo.resetAll();

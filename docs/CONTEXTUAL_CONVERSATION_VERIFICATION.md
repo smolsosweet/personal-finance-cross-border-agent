@@ -239,3 +239,81 @@ này. Không gọi lại Qwen thật, không chạy lại toàn bộ suite khôn
 `git diff --exit-code de38115 --` đối với các file tài chính được bảo vệ ở mục 4, schema,
 `pom.xml` và PRD không có thay đổi. `git diff --check` đạt. Chỉ tạo commit cục bộ;
 không push và chưa bắt đầu Task B.
+
+## 7. Xác minh lại với Qwen thật và full suite sau `a64bbc1` — 04/10/2026
+
+Code production giữ nguyên tại `a64bbc1`. Chỉ bổ sung ca hồi quy vào
+`src/test/java/com/example/finance/ContextualConversationOllamaLiveIT.java` và ghi kết quả tại đây.
+Ollama `http://localhost:11434/api/tags` phản hồi, có `qwen3:4b` 4.0B Q4_K_M.
+FinBridge test chạy tại 8104 bằng H2 in-memory riêng; Chrome headless thực hiện thao tác UI,
+gửi chat qua HTTP tới backend sử dụng Ollama thật. Không mock LlmIntentClient trong live suite.
+Không đọc/reset DB file của app người dùng ở 8080.
+
+### Lệnh và kết quả thực tế
+
+Chạy bằng PowerShell với Java 21:
+
+```powershell
+$env:JAVA_HOME='C:\Program Files\Java\jdk-21'
+$env:Path="$env:JAVA_HOME\bin;$env:Path"
+mvn test
+mvn '-Dtest=ContextualConversationOllamaLiveIT' test
+```
+
+| Lệnh | Kết quả | Thời gian Maven | Phân biệt model |
+| --- | --- | --- | --- |
+| `mvn test` | **184/184 PASS**, failures 0, errors 0, skipped 0; BUILD SUCCESS | 1 phút 53 giây | Suite mặc định; mock/model HTTP fixtures và guided flow, gồm 40 test Chrome. Không tính là live Qwen. |
+| `mvn '-Dtest=ContextualConversationOllamaLiveIT' test` | **3/3 PASS**, failures 0, errors 0, skipped 0; BUILD SUCCESS | 3 phút 35 giây | Chrome + FinBridge + Qwen thật; 28 lượt model có schema hợp lệ và intent đúng kỳ vọng. |
+
+Log thực thi được giữ trong `target/task-a-full-after-a64bbc1.log` và
+`target/task-a-ollama-after-a64bbc1.log` (artifacts ignored, không commit log).
+Mốc kết thúc full suite 00:16:43, live suite 00:20:38 ngày 04/10/2026 (+07).
+Hai ca hội thoại Anh/Việt có tổng 22 model calls và 4 lượt bị prefilter (2 injection,
+2 câu hỏi số tháng sinh hoạt ngoài Task A). Ca hồi quy mới có thêm 6 model calls.
+Lượt đầu 33,625 giây; 27 lượt sau 4,950–8,304 giây, trung bình 5,901 giây.
+Đây là độ trễ qua UI/backend/model; không suy ra model luôn nhanh hoặc mọi cách diễn đạt đều đúng.
+
+### Kỳ vọng so với kết quả hồi quy mới
+
+| Thao tác | Intent kỳ vọng = actual | Schema / độ trễ | Trạng thái thực tế |
+| --- | --- | --- | --- |
+| Ngân sách tiếng Anh | EXPLAIN_BUDGET_STATUS | Hợp lệ / 5,605 giây | Phản hồi chứa Category budgets, Food & Drinks, Shopping, Transport, Utilities và Evidence bằng tiếng Anh. Đổi UI sang Việt không làm thành `Danh mục budgets`; snapshot dữ liệu không đổi. |
+| Chi tiêu tháng này tiếng Anh | EXPLAIN_SPENDING_SUMMARY | Hợp lệ / 5,315 giây | Tổng 190.000 VND khớp seed hợp lệ 90.000 + fixture tổng hợp 100.000; snapshot dữ liệu không đổi. |
+| Chuẩn bị kế hoạch học phí rẻ nhất | CREATE_TUITION_PLAN | Hợp lệ / 5,908 giây | Tạo ACT-4A534EEE-B9A, AWAITING_APPROVAL, quyền APPROVAL; UI review chọn đúng ID mới. Bản cũ ACT-4DC934A4-6F1 bị INVALIDATED theo quy tắc thay thế hiện hữu. |
+| Xem draft mới → Giải thích → hỏi trạng thái Việt | CHECK_TUITION_STATUS | Hợp lệ / 5,660 giây | Câu trả lời đúng ACT-4A534EEE-B9A · AWAITING_APPROVAL; snapshot dữ liệu không đổi. |
+| Chủ động mở plan cũ → hỏi trạng thái Việt | CHECK_TUITION_STATUS | Hợp lệ / 5,042 giây | Câu trả lời đúng ACT-4DC934A4-6F1 · INVALIDATED; không quay về plan mới; snapshot dữ liệu không đổi. |
+| Hỏi tiếp trạng thái plan cũ bằng Anh | CHECK_TUITION_STATUS | Hợp lệ / 5,175 giây | Giữ đúng ACT-4DC934A4-6F1 · INVALIDATED; template tiếng Anh; snapshot dữ liệu không đổi. |
+
+Số dư **mọi sandbox account trước/sau toàn bộ ca hồi quy bằng nhau**.
+Sandbox transactions 0, ledger entries 0, receipt của cả hai plan null; draft mới vẫn
+AWAITING_APPROVAL khi kết thúc. Không bấm phê duyệt; không dùng tiền thật. Không có JS error.
+Hai ca multi-turn ban đầu cũng đạt, gồm clarification, ngân sách, kênh nhanh nhất, Bank B,
+injection và draft chỉ chờ phê duyệt.
+Screenshot `target/context-ollama-review-regression.png` đã được đọc kiểm tra trực quan;
+cùng với `target/context-ollama-live-en.png` và `target/context-ollama-live-vi.png` là artifacts ignored.
+
+### Hai điểm hiển thị được đối chiếu
+
+- **Chi tiêu bằng 0 trong bản ghi cũ:** không kết luận tổng hợp sai từ số 0.
+  `TransactionService.reset()` tạo seed trên 20 ngày trước ngày reset; `monthlySpending()`
+  chỉ lấy Expense AUTO/CONFIRMED trong tháng hiện tại. Không tự reset DB khi sang tháng.
+  Seed reset hôm nay có Utilities AUTO 90.000 VND ngày 01/10; Shopping 110.000 ngày 02/10
+  đang CONFIRMATION_REQUIRED nên không tính. Transfer 300.000, Refund 85.000 và Income
+  5.000.000 cũng không tính vào chi tiêu. Thêm fixture Synthetic Data 100.000 VND đúng tháng
+  cho tổng 190.000 như UI trả về. Dữ liệu này thuộc test DB; chưa xác minh lại ngày/trạng thái
+  giao dịch trong DB của bản ghi người dùng ngày 03/10.
+- **Chat chỉ đưa tối đa ba kênh:** xác nhận `SessionConversationService.Turn.respond()` dùng
+  `.sorted(comparator).limit(3)`: CHEAPEST theo landed cost, FASTEST theo settlementMaxDays rồi
+  landed cost; lọc eligible trước. Tiêu đề hiện chưa ghi rõ top 3. Đây là điểm trình bày còn lại,
+  nên đổi thành “Tối đa 3 kênh đủ điều kiện rẻ nhất/nhanh nhất” ở lượt chỉnh UI được yêu cầu;
+  đợt xác minh này không sửa production. Không coi câu trả lời chat là danh sách toàn bộ kênh.
+
+`git diff --exit-code a64bbc1 -- src/main/java src/main/resources pom.xml
+Product_Requirements_Personal_Finance_Cross_Border_Agent.docx` đạt, không có thay đổi.
+Schema, schema validation, confidence handling, injection guard, Policy Guard, quotes,
+phép tính tiền và Payment Sandbox nguyên trạng. `git diff --check` đạt.
+
+**Task A đạt các kiểm tra lại được yêu cầu, có thể chuẩn bị Task B khi người dùng giao việc.**
+Không có blocker trong full suite hoặc live browser/model; điểm top 3 là ghi chú UX,
+không phải lỗi tính tiền hay thực thi. Chỉ lưu commit cục bộ cho test và báo cáo, không push,
+không triển khai Task B và không bổ sung tính năng AI mới.
