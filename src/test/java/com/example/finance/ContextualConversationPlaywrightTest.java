@@ -23,6 +23,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 class ContextualConversationPlaywrightTest {
     @Autowired DemoDataService demo;
     @Autowired PhaseFourService payments;
+    @Autowired CrossBorderService crossBorder;
     @Autowired JdbcTemplate db;
     @MockitoBean LlmIntentClient llm;
     private Playwright playwright;
@@ -71,6 +72,44 @@ class ContextualConversationPlaywrightTest {
         assertThat(page.getByTestId("assistant-replies")).containsText(plan.id());assertThat(page.getByTestId("assistant-replies")).containsText("AWAITING_APPROVAL");
         assertEquals(0,payments.sandboxTransactionCount());assertNull(payments.receiptForAction(plan.id()));
         assertThat(page.getByTestId("latest-receipt")).hasCount(0);
+    }
+    @Test void newChatDraftReplacesPinnedReviewButHistoryStillSelectsTheExactOldPlan(){
+        var old=payments.createTuitionPlan("BANK_A");
+        crossBorder.refreshQuotes();
+        page.navigate("http://localhost:8103/?action="+old.id()+"#agent-workspace");
+        page.getByTestId("assistant-launcher").click();
+        stub(LlmIntent.Intent.CREATE_TUITION_PLAN);send("Chuẩn bị kế hoạch học phí rẻ nhất.");
+        var draft=payments.latestAction();assertNotEquals(old.id(),draft.id());
+        assertEquals("INVALIDATED",payments.action(old.id()).status());
+        assertThat(page.getByTestId("latest-action")).hasAttribute("data-action-id",draft.id());
+        page.getByTestId("assistant-review-plan").click();
+        assertThat(page.getByTestId("latest-action")).hasAttribute("data-action-id",draft.id());
+        page.getByTestId("assistant-plan-help").click();idle();
+        stub(LlmIntent.Intent.CHECK_TUITION_STATUS);send("Trạng thái thế nào?");
+        assertThat(page.getByTestId("assistant-replies").locator(".message.assistant").last()).containsText(draft.id()+" · AWAITING_APPROVAL");
+        page.getByTestId("assistant-close").click();
+        page.navigate("http://localhost:8103/?action="+old.id()+"#agent-workspace");
+        page.getByTestId("assistant-plan-help").click();idle();send("Trạng thái thế nào?");
+        assertThat(page.getByTestId("assistant-replies").locator(".message.assistant").last()).containsText(old.id()+" · INVALIDATED");
+        assertEquals(0,payments.sandboxTransactionCount());assertNull(payments.receiptForAction(draft.id()));
+        assertEquals("AWAITING_APPROVAL",payments.action(draft.id()).status());
+    }
+    @Test void languageSwitchDoesNotPartiallyTranslateRepliesOrRewriteUserMessages(){
+        var before=PersonalFinanceAiIntegrationTest.snapshot(db);
+        stub(LlmIntent.Intent.EXPLAIN_BUDGET_STATUS);page.getByTestId("assistant-launcher").click();
+        page.getByTestId("assistant-language-en").click();
+        String question="Show budgets. Expense, Refund, Category.";send(question);
+        send("How much is left?");page.getByTestId("assistant-language-vi").click();
+        assertThat(page.getByTestId("assistant-replies")).containsText("Category budgets: VND.");
+        assertThat(page.getByTestId("finance-replies")).containsText("Category budgets: VND.");
+        assertThat(page.getByTestId("assistant-replies")).not().containsText("Danh mục budgets");
+        assertThat(page.getByTestId("assistant-replies").locator(".message.user").first().locator("p")).hasText(question);
+        send("Ngân sách tháng này còn bao nhiêu?");
+        assertThat(page.getByTestId("assistant-replies")).containsText("Ngân sách danh mục: VND.");
+        page.getByTestId("assistant-language-en").click();
+        assertThat(page.getByTestId("assistant-replies")).containsText("Category budgets: VND.");
+        assertThat(page.getByTestId("assistant-replies")).containsText("Ngân sách danh mục: VND.");
+        assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
     }
     @Test void contextSwitchAndResetWhileModelWaitsCannotRestoreOldTopicOrCreateDraft(){
         stub(LlmIntent.Intent.EXPLAIN_BUDGET_STATUS);page.getByTestId("assistant-launcher").click();send("Show budgets");

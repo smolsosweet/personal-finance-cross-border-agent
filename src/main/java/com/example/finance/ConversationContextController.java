@@ -14,6 +14,8 @@ public class ConversationContextController {
     public String select(@RequestParam String token,@RequestParam(required=false) String language,
                          HttpServletRequest request,RedirectAttributes flash){
         String answer=conversations.enter(request.getSession(),token,"vi".equals(language),request.getRequestURI().endsWith("/choice"));
+        String reviewAction=conversations.reviewPlanId(request.getSession());
+        if(reviewAction!=null)flash.addFlashAttribute("conversationReviewAction",reviewAction);
         flash.addFlashAttribute("message",answer);return "redirect:/";
     }
 }

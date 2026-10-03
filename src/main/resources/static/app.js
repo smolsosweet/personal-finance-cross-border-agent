@@ -1243,12 +1243,12 @@ function translateDynamic(text) {
   return text;
 }
 
-function translateValue(value, language) {
+function translateValue(value, language, allowFragments = true) {
   if (language !== 'vi') return value;
   const trimmed = value.trim();
   if (!trimmed) return value;
   let translated = translationsVi.get(trimmed) || translateDynamic(trimmed);
-  if (translated === trimmed) {
+  if (allowFragments && translated === trimmed) {
     for (const [english, vietnamese] of translationFragments) {
       if (translated.includes(english)) translated = translated.split(english).join(vietnamese);
     }
@@ -1279,7 +1279,12 @@ function applyLanguage(language) {
   while (walker.nextNode()) nodes.push(walker.currentNode);
   nodes.forEach((node) => {
     if (!originalText.has(node)) originalText.set(node, node.nodeValue);
-    node.nodeValue = translateValue(originalText.get(node), selected);
+    const messageBody = node.parentElement?.closest('.message p');
+    const original = originalText.get(node);
+    // User text is verbatim. Backend replies already have a language; only complete known
+    // templates may be translated, never word fragments inside financial explanations.
+    node.nodeValue = messageBody?.closest('.message.user') ? original
+      : translateValue(original, selected, !messageBody);
   });
 
   document.querySelectorAll('[placeholder]').forEach((element) => {

@@ -191,3 +191,51 @@ không có browser/model blocker. Không phải chứng nhận production nhiề
 
 Commit cục bộ theo yêu cầu: `feat(ai): add session-scoped contextual conversations`.
 Không push, deploy hoặc bắt đầu Task B. App người dùng đang chạy cần restart để nạp backend mới.
+
+## 6. Hồi quy từ kiểm thử thủ công — 04/10/2026
+
+Đối chiếu bản ghi người dùng gửi ngày 03/10: ngân sách, chuyển chủ đề, dự kiến sau học phí,
+so sánh rẻ/nhanh, Bank B và chặn báo giá hết hạn phù hợp luồng hiện hữu. Phép tính trong bản ghi:
+100.000.000 − 70.760.800 = 29.239.200; trừ buffer 3.000.000 còn 26.239.200;
+giữ thêm planner 8.300.000 còn 17.939.200 VND. Đây là đối chiếu số liệu trong bản ghi,
+không phải đọc lại cơ sở dữ liệu của người dùng.
+
+Hai lỗi đã tái hiện trên Chrome với H2 riêng và sửa:
+
+1. Sau khi làm mới báo giá rồi tạo bản nháp qua chat, `X-Workspace-Action` vẫn giữ ID cũ trên UI.
+   Bấm giải thích kế hoạch dùng đúng đối tượng đang hiển thị, nhưng đó là bản cũ `INVALIDATED`.
+   Controller nay ưu tiên ID kế hoạch đã xác minh trong phiên qua flash attribute sau chat hoặc
+   lựa chọn ngữ cảnh. Không lấy ID từ văn bản model; không tự phê duyệt hoặc thực thi. Mở lại kế
+   hoạch cũ từ lịch sử vẫn giữ đúng ID cũ. Trường hợp báo giá không đổi tiếp tục tái sử dụng bản
+   nháp theo idempotency hiện hữu; fixture hồi quy dùng báo giá mới để kiểm tra bản thay thế.
+2. Bộ dịch giao diện thay từng từ trong câu hỏi và câu trả lời đã có ngôn ngữ, tạo ra
+   `Danh mục budgets`, `Chi tiêus`, `Hoàn tiềns`. Nay giữ nguyên câu hỏi người dùng, tắt dịch
+   mảnh từ trong nội dung phản hồi; chỉ cho phép bản dịch đầy đủ của template đã biết.
+   Câu trả lời cũ Anh/Việt vẫn giữ ngôn ngữ đã nhận; chọn tiếng Việt rồi gửi câu mới để nhận
+   template tiếng Việt. Tên kênh và lý do từ seed còn có thể bằng tiếng Anh.
+
+Tệp sửa: `SessionConversationService.java`, `PhaseOneController.java`,
+`ConversationContextController.java`, `app.js`, `home.html`,
+`ContextualConversationPlaywrightTest.java`, báo cáo này. Tăng phiên bản asset để nạp JS mới.
+
+Lệnh kiểm chứng cuối đã chạy:
+
+```powershell
+mvn '-Dtest=ContextualConversationPlaywrightTest,SessionConversationIntegrationTest,AssistantPanelPlaywrightTest,PersonalFinanceAiPlaywrightTest' test
+```
+
+**32/32 PASS, failures 0, errors 0, skipped 0; BUILD SUCCESS; 51,595 giây.**
+17 integration + 15 Chrome Playwright (context 5, panel 6, Personal Finance 4).
+Hai test mới kiểm tra chọn bản nháp mới/đọc lại bản cũ và đổi ngôn ngữ/giữ nguyên câu hỏi.
+Trước sửa, kiểm thử dịch thất bại và kiểm thử bản thay thế thấy ID cũ trên UI thay vì ID mới.
+Sau sửa, bản mới vẫn `AWAITING_APPROVAL`, Sandbox transaction count 0 và chưa có receipt.
+Snapshot dữ liệu không đổi cho lượt ngân sách; kiểm thử liên quan vẫn kiểm tra tách phiên,
+reset, response chậm, confidence, injection và không thực thi qua chat.
+
+App và Chrome chạy thật với dữ liệu tổng hợp; **LlmIntentClient được mock** trong đợt hồi quy
+này. Không gọi lại Qwen thật, không chạy lại toàn bộ suite không liên quan. Không diễn giải
+32 test này thành một lần chạy 182 test. Không reset hay đổi DB app người dùng tại 8080.
+
+`git diff --exit-code de38115 --` đối với các file tài chính được bảo vệ ở mục 4, schema,
+`pom.xml` và PRD không có thay đổi. `git diff --check` đạt. Chỉ tạo commit cục bộ;
+không push và chưa bắt đầu Task B.

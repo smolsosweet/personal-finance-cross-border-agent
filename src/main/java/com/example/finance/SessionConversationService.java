@@ -126,6 +126,14 @@ public class SessionConversationService {
     public String send(HttpSession session,String message,String language) {
         return chat.send(message,language,payments,new Turn(state(session),message,language));
     }
+    /** UI review follows this session's verified plan, never an ID extracted from model text. */
+    public String reviewPlanId(HttpSession session) {
+        State state=state(session);
+        synchronized(state) {
+            return state.topic==Topic.TUITION_PLAN && state.binding!=null && validate(state.binding)==null
+                    ? state.binding.plan() : null;
+        }
+    }
     private String validate(Binding binding) {
         if(binding==null)return null;
         try{

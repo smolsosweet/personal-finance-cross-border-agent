@@ -93,6 +93,9 @@ public class PhaseOneController {
                 CrossBorderService.ChannelQuote::sourceAccountId, quote -> quote)));
         model.addAttribute("conversation", phaseFour.messages());
         var latestAction = phaseFour.latestAction();
+        // A chat/context response may select a new verified plan while the browser still pins an older one.
+        if (model.getAttribute("conversationReviewAction") instanceof String conversationAction)
+            action=conversationAction;
         if (action == null || action.isBlank()) action=request.getHeader("X-Workspace-Action");
         if (action != null && !action.isBlank()) {
             try { latestAction=phaseFour.action(action); }
@@ -416,6 +419,8 @@ public class PhaseOneController {
     @PostMapping("/agent/message")
     public String message(@RequestParam String message, @RequestParam(required=false) String language, HttpServletRequest request, RedirectAttributes flash) {
         conversations.send(request.getSession(),message,language);
+        String reviewAction=conversations.reviewPlanId(request.getSession());
+        if(reviewAction!=null)flash.addFlashAttribute("conversationReviewAction",reviewAction);
         flash.addFlashAttribute("message", "Conversation updated through the guarded intent boundary.");
         return "redirect:/#agent-workspace";
     }
