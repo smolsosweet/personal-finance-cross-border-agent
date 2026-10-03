@@ -119,7 +119,9 @@ public class FinanceChatService {
                         audit("FINANCE_READ_ONLY", "READ_ONLY_CLARIFICATION", requestId, "CLARIFICATION",
                                 "AMBIGUOUS_REQUEST", "Confidence or scope requires clarification");
                     } else {
-                        answer = insights.render(classified.intent(), payments, vi);
+                        answer = classified.intent()==LlmIntent.Intent.EXPLAIN_LIVING_EXPENSE_RUNWAY
+                                ? (vi?"Mở trợ lý theo phiên và xác nhận mức chi VND trong form để ước tính; không tự suy ra mức chi.":"Use the session assistant and confirm VND monthly expenses in its form; no baseline is inferred.")
+                                : insights.render(classified.intent(), payments, vi);
                         audit("FINANCE_READ_ONLY", "READ_ONLY_RESULT", requestId, "COMPLETED", classified.intent().name(),
                                 "Current demo data; deterministic aggregation; no financial mutation");
                     }
@@ -144,7 +146,8 @@ public class FinanceChatService {
     static boolean isReadOnly(LlmIntent.Intent intent) {
         return intent == LlmIntent.Intent.EXPLAIN_SPENDING_SUMMARY
                 || intent == LlmIntent.Intent.EXPLAIN_BUDGET_STATUS
-                || intent == LlmIntent.Intent.EXPLAIN_TUITION_AFFORDABILITY;
+                || intent == LlmIntent.Intent.EXPLAIN_TUITION_AFFORDABILITY
+                || intent == LlmIntent.Intent.EXPLAIN_LIVING_EXPENSE_RUNWAY;
     }
 
     static boolean scopedQuestion(String message) {

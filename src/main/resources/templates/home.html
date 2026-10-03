@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Atlas · Finance workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261004-context-v2')}">
+  <title>Atlas · Finance workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261004-runway-v1')}">
 </head>
 <body>
 <div class="shell">
@@ -509,6 +509,25 @@
           <form th:each="choice : ${conversationContext.choices}" th:action="@{/agent/context/choice}" method="post" data-context-form data-chat-timeout="10000"><input type="hidden" name="token" th:value="${choice.token}"><button type="submit" class="secondary" data-testid="assistant-context-choice" th:text="${choice.label}"></button></form>
         </div>
       </div>
+      <section data-assistant-runway data-testid="assistant-runway">
+        <div th:if="${conversationContext.runway.visible}" class="runway-scenario">
+          <strong>Living-expense scenario · ESTIMATE</strong>
+          <p>Include rent, food, transport and utilities. This input confirms an estimate only; it does not change budgets or authorize payments.</p>
+          <p th:if="${conversationContext.runway.monthly != null}"><span>Confirmed monthly expense</span>: <b data-testid="runway-confirmed-monthly" th:text="${conversationContext.runway.monthly + ' VND'}"></b></p>
+          <form th:action="@{/agent/runway/monthly-expense}" method="post" data-context-form data-runway-form data-chat-timeout="10000">
+            <input type="hidden" name="token" th:value="${conversationContext.runway.token}">
+            <label for="runway-monthly">Monthly living expense</label>
+            <input id="runway-monthly" name="amount" data-testid="runway-monthly-amount" inputmode="decimal" maxlength="15" pattern="[0-9]{1,12}(\.[0-9]{1,2})?" required th:value="${conversationContext.runway.monthly}">
+            <label for="runway-currency">Currency</label><input id="runway-currency" name="currency" value="VND" readonly data-testid="runway-currency">
+            <button type="submit" class="primary-button" data-testid="runway-confirm">Confirm estimate input</button>
+          </form>
+          <form th:action="@{/agent/runway/monthly-expense}" method="post" data-context-form data-runway-form data-chat-timeout="10000">
+            <input type="hidden" name="token" th:value="${conversationContext.runway.token}"><input type="hidden" name="clear" value="true">
+            <button type="submit" class="secondary" data-testid="runway-clear">Clear monthly assumption</button>
+          </form>
+          <p>Previous estimates are historical snapshots. Ask again or confirm the form for current data. VND only; no automatic currency conversion.</p>
+        </div>
+      </section>
       <div class="assistant-suggestions" data-assistant-for="dashboard transactions">
         <button type="button" data-assistant-question="spending" data-testid="assistant-question-spending">Spending this month</button>
         <button type="button" data-assistant-question="budget" data-testid="assistant-question-budget">Remaining budgets</button>
@@ -550,6 +569,6 @@
   </form>
   <p class="assistant-safety">AI understands the question. Backend code calculates the figures. Asking a question does not authorize a payment.</p>
 </aside>
-<script th:src="@{/app.js(v='20261004-context-v2')}"></script>
+<script th:src="@{/app.js(v='20261004-runway-v1')}"></script>
 </body>
 </html>

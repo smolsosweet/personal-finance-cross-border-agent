@@ -1,4 +1,13 @@
 const translationsVi = new Map(Object.entries({
+  'LIVING_EXPENSE_RUNWAY': 'Thời gian đủ tiền sinh hoạt',
+  'Living-expense scenario updated; estimate only, no payment.': 'Đã cập nhật kịch bản sinh hoạt; chỉ ước tính, chưa thanh toán.',
+  'Living-expense scenario · ESTIMATE': 'Kịch bản sinh hoạt · ƯỚC TÍNH',
+  'Include rent, food, transport and utilities. This input confirms an estimate only; it does not change budgets or authorize payments.': 'Bao gồm tiền thuê nhà, ăn uống, đi lại và tiện ích. Chỉ xác nhận dữ liệu ước tính; không sửa ngân sách hoặc cấp quyền thanh toán.',
+  'Monthly living expense': 'Chi sinh hoạt mỗi tháng',
+  'Confirmed monthly expense': 'Mức chi tháng đã xác nhận',
+  'Confirm estimate input': 'Xác nhận mức chi để ước tính',
+  'Clear monthly assumption': 'Xóa giả định chi hàng tháng',
+  'Previous estimates are historical snapshots. Ask again or confirm the form for current data. VND only; no automatic currency conversion.': 'Ước tính trước là ảnh chụp dữ liệu tại thời điểm trả lời. Hỏi lại hoặc xác nhận form để lấy dữ liệu hiện tại. Chỉ dùng VND; không tự đổi tiền tệ.',
   'Ask FinBridge': 'Hỏi FinBridge',
   'Conversation topic': 'Chủ đề hội thoại',
   'Update conversation context': 'Cập nhật ngữ cảnh hội thoại',
@@ -832,7 +841,7 @@ function handleAssistantClick(event) {
 
 function syncAssistant(nextDocument) {
   // Keep the panel and composer mounted so drafts, focus and pending controls survive tab updates.
-  for (const selector of ['[data-testid="assistant-replies"]', '[data-assistant-plan]', '[data-assistant-policy]', '[data-assistant-context-state]']) {
+  for (const selector of ['[data-testid="assistant-replies"]', '[data-assistant-plan]', '[data-assistant-policy]', '[data-assistant-context-state]', '[data-assistant-runway]']) {
     const current = document.querySelector(selector);
     const next = nextDocument.querySelector(selector);
     if (current && next) current.replaceChildren(...next.childNodes);
@@ -1539,7 +1548,7 @@ async function submitWorkspaceForm(event) {
   event.preventDefault();
   if (form.dataset.billSelected === 'true') return;
   // Emergency Stop must remain available while another request is pending.
-  const changesContext = ['/reset', '/agent/emergency-stop', '/agent/context', '/agent/context/choice', '/student/expenses/select', '/student/source-account', '/student/quotes/refresh'].includes(action.pathname);
+  const changesContext = ['/reset', '/agent/emergency-stop', '/agent/context', '/agent/context/choice', '/agent/runway/monthly-expense', '/student/expenses/select', '/student/source-account', '/student/quotes/refresh'].includes(action.pathname);
   if (pendingUpdate && !changesContext) return;
   if (pendingChatController && changesContext) {
     pendingChatController.abort();
@@ -1551,13 +1560,14 @@ async function submitWorkspaceForm(event) {
   const restoreBillFocus = event.submitter?.matches('.student-bill-select:focus-visible');
   const requestId = ++updateSequence;
   pendingUpdate = requestId;
-  const isContext = action.pathname === '/agent/context' || action.pathname === '/agent/context/choice';
+  const isContext = action.pathname === '/agent/context' || action.pathname === '/agent/context/choice' || action.pathname === '/agent/runway/monthly-expense';
+  const previousReplies = new Set(Array.from(document.querySelectorAll('[data-testid="assistant-replies"] .message.assistant p'), node => node.textContent));
   const isChat = action.pathname === '/agent/message' || isContext;
   const chatController = isChat ? new AbortController() : null;
   if (chatController) pendingChatController = chatController;
   const chatTimer = chatController ? setTimeout(() => chatController.abort(),
     Number(form.dataset.chatTimeout || 70000)) : null;
-  const chatForms = isChat ? Array.from(document.querySelectorAll('[data-chat-form], [data-context-form]')) : [];
+  const chatForms = isChat ? Array.from(document.querySelectorAll('[data-chat-form], [data-context-form]')).filter(composer => !composer.matches('[data-runway-form]') || composer === form) : [];
   const chatControls = chatForms.flatMap((composer) => Array.from(composer.querySelectorAll('button,input'))
     .map((control) => {
       if (!chatControlBaseline.has(control)) chatControlBaseline.set(control, control.disabled);
@@ -1654,7 +1664,9 @@ async function submitWorkspaceForm(event) {
         document.querySelectorAll('.finance-message-list, .message-list, .assistant-message-list').forEach((list) => {
           if (!list.getClientRects().length) return;
           const latestQuestion = Array.from(list.querySelectorAll('.message.user')).at(-1);
-          const reply = latestQuestion?.nextElementSibling;
+          const reply = action.pathname === '/agent/runway/monthly-expense' && list.matches('.assistant-message-list')
+            ? Array.from(list.querySelectorAll('.message.assistant')).find(node => !previousReplies.has(node.querySelector('p')?.textContent)) || list.querySelector('.message.assistant:last-child')
+            : latestQuestion?.nextElementSibling;
           if (reply?.classList.contains('assistant')) {
             // Reveal the beginning of the new reply, including assumptions, without moving the page.
             const scrollRegion = list.closest('.assistant-body') || list;

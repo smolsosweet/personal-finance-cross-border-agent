@@ -12,6 +12,7 @@ public record LlmIntent(Intent intent, ChannelPreference channelPreference,
         EXPLAIN_SPENDING_SUMMARY,
         EXPLAIN_BUDGET_STATUS,
         EXPLAIN_TUITION_AFFORDABILITY,
+        EXPLAIN_LIVING_EXPENSE_RUNWAY,
         NEED_CLARIFICATION,
         UNSAFE_REQUEST,
         UNSUPPORTED_REQUEST

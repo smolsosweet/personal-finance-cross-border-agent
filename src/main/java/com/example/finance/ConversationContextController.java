@@ -10,6 +10,14 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class ConversationContextController {
     private final SessionConversationService conversations;
     public ConversationContextController(SessionConversationService conversations){this.conversations=conversations;}
+    @PostMapping("/agent/runway/monthly-expense")
+    public String monthly(@RequestParam String token,@RequestParam(required=false) String amount,
+                          @RequestParam(required=false) String currency,@RequestParam(defaultValue="false") boolean clear,
+                          @RequestParam(required=false) String language,HttpServletRequest request,RedirectAttributes flash){
+        String answer=conversations.monthlyExpense(request.getSession(),token,amount,currency,clear,"vi".equals(language));
+        flash.addFlashAttribute("message",answer.startsWith("ƯỚC TÍNH")||answer.startsWith("LIVING-EXPENSE")
+                ? "Living-expense scenario updated; estimate only, no payment." : answer);return "redirect:/";
+    }
     @PostMapping({"/agent/context","/agent/context/choice"})
     public String select(@RequestParam String token,@RequestParam(required=false) String language,
                          HttpServletRequest request,RedirectAttributes flash){

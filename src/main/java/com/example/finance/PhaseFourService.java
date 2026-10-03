@@ -236,7 +236,7 @@ public class PhaseFourService {
             case COMPARE_TUITION_CHANNELS -> verifiedChannelComparison(classified.channelPreference());
             case EXPLAIN_CHANNEL_UNAVAILABLE -> explainBankB();
             case CHECK_TUITION_STATUS -> verifiedTuitionStatus();
-            case EXPLAIN_SPENDING_SUMMARY, EXPLAIN_BUDGET_STATUS, EXPLAIN_TUITION_AFFORDABILITY ->
+            case EXPLAIN_SPENDING_SUMMARY, EXPLAIN_BUDGET_STATUS, EXPLAIN_TUITION_AFFORDABILITY, EXPLAIN_LIVING_EXPENSE_RUNWAY ->
                     throw new IllegalArgumentException("Read-only intents must use the insights router");
             case NEED_CLARIFICATION ->
                     "Please clarify whether you want to compare tuition channels, check tuition status, or prepare a tuition-payment plan.";

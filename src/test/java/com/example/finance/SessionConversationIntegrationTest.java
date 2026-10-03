@@ -116,7 +116,7 @@ class SessionConversationIntegrationTest {
         assertEquals(0,payments.sandboxTransactionCount());assertNull(payments.receiptForAction(plan.id()));
         stub(CHECK_TUITION_STATUS);assertTrue(ask("What's its status?").contains(plan.id()));
         assertTrue(ask("Trạng thái thế nào?").contains("AWAITING_APPROVAL"));
-        clearInvocations(llm);assertTrue(ask("Đủ sinh hoạt mấy tháng?").contains("Chưa hỗ trợ"));verify(llm,never()).classify(anyString());
+        stub(EXPLAIN_LIVING_EXPENSE_RUNWAY);assertTrue(ask("Đủ sinh hoạt mấy tháng?").contains("bao nhiêu VND mỗi tháng"));
     }
     @Test void independentConcurrentSessionsDoNotSupersedeOrLeakContextAndDisplay() throws Exception{
         var second=new MockHttpSession();CountDownLatch started=new CountDownLatch(1),release=new CountDownLatch(1);

@@ -4,9 +4,9 @@ import java.util.function.Supplier;
 
 /** Enum-only model input. Object IDs, transcripts and financial facts never enter this boundary. */
 public record ModelConversationContext(Topic topic, Channel channel, LlmIntent.Intent lastIntent, Pending pending) {
-    public enum Topic { NONE, SPENDING, BUDGET, TUITION_AFFORDABILITY, TUITION_CHANNELS, CHANNEL_UNAVAILABLE, TUITION_PLAN, TUITION_STATUS }
+    public enum Topic { NONE, SPENDING, BUDGET, TUITION_AFFORDABILITY, TUITION_CHANNELS, CHANNEL_UNAVAILABLE, TUITION_PLAN, TUITION_STATUS, LIVING_EXPENSE_RUNWAY }
     public enum Channel { NONE, ALIPAY, BANK_A, BANK_B, VCB, TCB, MOMO }
-    public enum Pending { NONE, TOPIC, BILL, ACCOUNT, CHANNEL, PLAN }
+    public enum Pending { NONE, TOPIC, BILL, ACCOUNT, CHANNEL, PLAN, MONTHLY_EXPENSE }
     private static final ThreadLocal<ModelConversationContext> CURRENT = new ThreadLocal<>();
 
     static <T> T with(ModelConversationContext context, Supplier<T> operation) {
@@ -31,7 +31,9 @@ public record ModelConversationContext(Topic topic, Channel channel, LlmIntent.I
             means CHECK_TUITION_STATUS. If scope is NONE or the reference is ambiguous, use NEED_CLARIFICATION.
             A follow-up is read-only by default. CREATE_TUITION_PLAN requires an explicit current request to
             create/prepare a draft. Earlier requests, context, or choosing an object never authorize a draft.
-            Questions about how many months living money will last are UNSUPPORTED_REQUEST; no runway capability exists.
+            Topic LIVING_EXPENSE_RUNWAY plus 'How long will it last?' / 'Vậy đủ mấy tháng?' / 'What if I spend more?'
+            means EXPLAIN_LIVING_EXPENSE_RUNWAY with NONE. Monthly figures are confirmed in a backend form only;
+            they are not part of this enum context. Never calculate them or create a plan for these questions.
             New explicit supported questions may change topic. Preserve the same strict four-field output schema.
             """ + "\nBackend enum context: topic=" + context.topic() + "; channel=" + context.channel()
                 + "; lastIntent=" + (context.lastIntent() == null ? "NONE" : context.lastIntent().name())

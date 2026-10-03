@@ -23,13 +23,15 @@ public class SessionConversationService {
     private final PhaseFourService payments;
     private final CrossBorderService crossBorder;
     private final PersonalFinanceInsights insights;
+    private final LivingExpenseRunwayService runwayService;
     private final JdbcTemplate db;
     private final TransactionTemplate tx;
 
     public SessionConversationService(FinanceChatService chat, PhaseFourService payments, CrossBorderService crossBorder,
-            PersonalFinanceInsights insights, JdbcTemplate db, PlatformTransactionManager manager) {
+            PersonalFinanceInsights insights, LivingExpenseRunwayService runwayService, JdbcTemplate db, PlatformTransactionManager manager) {
         this.chat=chat; this.payments=payments; this.crossBorder=crossBorder; this.insights=insights;
         this.db=db; this.tx=new TransactionTemplate(manager);
+        this.runwayService=runwayService;
     }
 
     record Binding(Integer bill, String version, String account, Channel channel, String plan,
@@ -37,8 +39,9 @@ public class SessionConversationService {
     record Capability(Binding binding, Topic topic, LocalDateTime expires) {}
     record Choice(Capability capability, long revision, String label) {}
     public record ChoiceView(String token, String label) {}
+    public record RunwayView(boolean visible, String token, BigDecimal monthly) {}
     public record View(String studentToken, String planToken, Topic topic, String clarification,
-                       List<ChoiceView> choices, List<PhaseFourService.ConversationMessage> messages) {}
+                       List<ChoiceView> choices, List<PhaseFourService.ConversationMessage> messages, RunwayView runway) {}
 
     static final class State {
         String epoch;
@@ -48,6 +51,12 @@ public class SessionConversationService {
         Pending pending=Pending.NONE;
         Binding binding;
         String clarification="";
+        BigDecimal monthly;
+        Binding monthlyScope;
+        boolean runwayRequested;
+        String scenarioToken;
+        LocalDateTime scenarioExpiry;
+        void clearScenario(){monthly=null;monthlyScope=null;runwayRequested=false;scenarioToken=null;scenarioExpiry=null;}
         final LinkedHashMap<String,Capability> capabilities=new LinkedHashMap<>();
         final LinkedHashMap<String,Choice> choices=new LinkedHashMap<>();
         // Display-only history is private to this session and is never model input or authoritative context.
@@ -55,6 +64,7 @@ public class SessionConversationService {
         void clear(String resetEpoch) {
             epoch=resetEpoch; revision++; topic=Topic.NONE; lastIntent=null; pending=Pending.NONE; binding=null;
             clarification=""; capabilities.clear(); choices.clear(); display.clear();
+            clearScenario();
             display.add(new PhaseFourService.ConversationMessage("WELCOME","ASSISTANT",WELCOME,LocalDateTime.now()));
         }
     }
@@ -78,7 +88,7 @@ public class SessionConversationService {
         if(session==null)return;
         State state=state(session);
         synchronized(state) { state.revision++; state.binding=null; state.topic=Topic.NONE; state.lastIntent=null;
-            state.pending=Pending.NONE; state.choices.clear(); state.clarification=""; }
+            state.pending=Pending.NONE; state.choices.clear(); state.clarification=""; state.clearScenario(); }
     }
     private void lock(){db.queryForObject("SELECT id FROM agent_policy WHERE id=1 FOR UPDATE",Integer.class);}
     private Integer selectedBill(){try{return crossBorder.selectedExpense().id();}catch(RuntimeException ex){return null;}}
@@ -102,10 +112,13 @@ public class SessionConversationService {
     public View view(HttpSession session, CrossBorderService.StudentExpense bill, PhaseFourService.ActionPlan plan) {
         State state=state(session);
         synchronized(state) {
+            if(state.runwayRequested && state.binding!=null && validate(state.binding)!=null){state.clearScenario();state.revision++;}
+            if(state.runwayRequested){state.scenarioToken=UUID.randomUUID().toString();state.scenarioExpiry=LocalDateTime.now().plusMinutes(10);}
             String student=bill==null?null:issue(state,billBinding(bill.id()),Topic.TUITION_AFFORDABILITY);
             String action=plan==null||!"TUITION".equals(plan.actionType())?null:issue(state,planBinding(plan),Topic.TUITION_PLAN);
             return new View(student,action,state.topic,state.clarification,
-                    state.choices.entrySet().stream().map(e->new ChoiceView(e.getKey(),e.getValue().label())).toList(),List.copyOf(state.display));
+                    state.choices.entrySet().stream().map(e->new ChoiceView(e.getKey(),e.getValue().label())).toList(),List.copyOf(state.display),
+                    new RunwayView(state.runwayRequested,state.scenarioToken,state.monthly));
         }
     }
     public String enter(HttpSession session,String token,boolean vi,boolean choice) {
@@ -117,6 +130,7 @@ public class SessionConversationService {
             String error=capability==null||capability.expires().isBefore(LocalDateTime.now())?"INVALID CONTEXT TOKEN":validate(capability.binding());
             if(error!=null){audit("CONTEXT_STALE");return vi?"Lựa chọn không còn hợp lệ cho phiên này. Mở lại màn hình hoặc hỏi rõ chủ đề.":"This selection is invalid or stale for this session. Reopen the screen or clarify the topic.";}
             state.revision++; state.binding=capability.binding(); state.topic=capability.topic();
+            state.clearScenario();
             state.pending=Pending.NONE;state.choices.clear();state.clarification="";
             audit(choice?"CONTEXT_CHOICE_VALIDATED":"CONTEXT_ENTRY_VALIDATED");
             String answer=vi?"Đã cập nhật chủ đề và đối tượng đã xác minh. Bạn có thể hỏi tiếp; chưa tạo kế hoạch hay thanh toán.":"Verified conversation scope updated. You can ask a follow-up; no plan or payment was created.";
@@ -133,6 +147,32 @@ public class SessionConversationService {
             return state.topic==Topic.TUITION_PLAN && state.binding!=null && validate(state.binding)==null
                     ? state.binding.plan() : null;
         }
+    }
+    private static String monthlyPrompt(boolean vi){return vi
+            ?"Bạn dự kiến cần bao nhiêu VND mỗi tháng để sinh hoạt? Xác nhận trong form, gồm tiền thuê nhà, ăn uống, đi lại và tiện ích. Đây chỉ là giả định kịch bản, không phải ngân sách hoặc quyền thanh toán."
+            :"How much VND do you expect to need each month for living expenses? Confirm the form, including rent, food, transport and utilities. This is a scenario assumption, not a budget or payment authorization.";}
+    public String monthlyExpense(HttpSession session,String token,String amount,String currency,boolean clear,boolean vi){
+        State state=state(session);
+        return tx.execute(status->{lock();synchronized(state){
+            if(!state.runwayRequested || token==null || !token.equals(state.scenarioToken)
+                    || state.scenarioExpiry==null || !state.scenarioExpiry.isAfter(LocalDateTime.now())){
+                audit("CONTEXT_STALE");return LivingExpenseRunwayService.error("INVALID_RUNWAY_DATA",vi);
+            }
+            state.revision++;state.scenarioToken=null;
+            String answer;
+            if(clear){state.monthly=null;state.monthlyScope=null;state.pending=Pending.MONTHLY_EXPENSE;
+                audit("RUNWAY_SCENARIO_CLEARED");answer=monthlyPrompt(vi);
+            }else try{
+                BigDecimal monthly=LivingExpenseRunwayService.parseMonthly(amount,currency);
+                if(state.binding==null || validate(state.binding)!=null)throw new IllegalArgumentException("INVALID_RUNWAY_DATA");
+                var input=runwayService.inspect(state.binding.bill(),state.binding.account(),state.binding.channel(),state.binding.plan());
+                state.monthly=monthly;state.monthlyScope=state.binding;state.topic=Topic.LIVING_EXPENSE_RUNWAY;
+                state.pending=Pending.NONE;state.lastIntent=LlmIntent.Intent.EXPLAIN_LIVING_EXPENSE_RUNWAY;
+                state.choices.clear();state.clarification="";
+                audit("RUNWAY_SCENARIO_CONFIRMED");answer=runwayService.render(input,monthly,vi);audit("RUNWAY_RESULT");
+            }catch(IllegalArgumentException ex){audit("RUNWAY_INVALID_DATA");answer=LivingExpenseRunwayService.error(ex.getMessage(),vi);}
+            record(state,"ASSISTANT",answer);return answer;
+        }});
     }
     private String validate(Binding binding) {
         if(binding==null)return null;
@@ -167,7 +207,7 @@ public class SessionConversationService {
     private static boolean matches(String message,String pattern){return Pattern.compile(pattern,Pattern.CASE_INSENSITIVE|Pattern.UNICODE_CASE).matcher(message).find();}
     private static boolean explicitDraft(String message){return !matches(message,"do not|don't|never|without|đừng|không|compare|explain|so sánh|giải thích")&&matches(message,"\\b(create|prepare|draft|make|build|ready)\\b.*\\b(plan|draft|tuition|payment)\\b|\\bget\\b.*\\b(tuition|payment)\\b.*\\bready\\b|(tạo|chuẩn bị|lập|soạn).*?(kế hoạch|bản nháp)");}
     private static boolean personalTopic(String message){return matches(message,"budget|ngân sách|spend|chi tiêu")&&!matches(message,"tuition|học phí|after|sau");}
-    private static boolean runway(String message){return matches(message,"(mấy|bao nhiêu).*tháng|how many months|months.*living|living.*months");}
+    private static boolean runway(String message){return matches(message,"runway|(mấy|bao nhiêu).*tháng|how many months|months.*living|living.*months");}
     private static Channel namedChannel(String message){
         var names=new LinkedHashMap<Channel,String>();
         names.put(Channel.BANK_B,"bank\\s*b|ngân hàng\\s*b");names.put(Channel.BANK_A,"bank\\s*a|ngân hàng\\s*a");
@@ -191,8 +231,7 @@ public class SessionConversationService {
             synchronized(state){revision=++state.revision;resetEpoch=state.epoch;topic=state.topic;lastIntent=state.lastIntent;pending=state.pending;binding=state.binding;}}
         public String begin(){synchronized(state){
             if(revision!=state.revision){reason="CONTEXT_STALE";return vi?"Yêu cầu cũ đã bị thay thế.":"This request has been superseded.";}
-            if(runway(message)){reason="CONTEXT_UNSUPPORTED";return vi?"Chưa hỗ trợ ước tính số tháng sinh hoạt. Không suy đoán ngân sách hay tính công thức mới.":"Living-expense runway is not supported. No monthly baseline or new calculation is inferred.";}
-            if(personalTopic(message)){binding=null;topic=Topic.NONE;}
+            if(personalTopic(message) && (topic!=Topic.LIVING_EXPENSE_RUNWAY || matches(message,"budget|ngân sách|recorded|chi tiêu tháng"))){binding=null;topic=Topic.NONE;}
             String invalid=validate(binding);
             if(invalid!=null){reason="CONTEXT_STALE";return vi?"Ngữ cảnh hoặc báo giá đã thay đổi/hết hạn. Chọn lại đối tượng; làm mới báo giá bằng luồng có hướng dẫn nếu cần.":"Context or quote changed/expired. Choose the object again; refresh quotes through the guided flow if needed.";}
             return null;
@@ -206,7 +245,7 @@ public class SessionConversationService {
             if("UNTRUSTED INSTRUCTION".equals(why)){reason="CONTEXT_UNSAFE_INPUT";return;}
             if("LLM UNAVAILABLE".equals(why)){reason="CONTEXT_PROVIDER_UNAVAILABLE";return;}
             if("CONTEXT_UNSUPPORTED".equals(why))return;
-            if("CONTEXT_STALE".equals(why)){synchronized(state){state.binding=null;state.topic=Topic.NONE;state.lastIntent=null;state.choices.clear();state.pending=Pending.NONE;state.clarification="";}reason="CONTEXT_STALE";return;}
+            if("CONTEXT_STALE".equals(why)){synchronized(state){state.binding=null;state.topic=Topic.NONE;state.lastIntent=null;state.choices.clear();state.pending=Pending.NONE;state.clarification="";state.clearScenario();}reason="CONTEXT_STALE";return;}
             reason="CONTEXT_CLARIFICATION_REQUIRED";
         }
         private String clarify(Pending kind,String explanation,List<Capability> options,List<String> labels){synchronized(state){
@@ -220,27 +259,62 @@ public class SessionConversationService {
                     topics.stream().map(t->new Capability(null,t,LocalDateTime.now().plusMinutes(10))).toList(),
                     vi?List.of("Ngân sách","Chi tiêu","Kênh học phí"):List.of("Budget","Spending","Tuition channels"));
         }
-        private String ensureBill(){
+        private String ensureBill(){return ensureBill(Topic.TUITION_CHANNELS);}
+        private String ensureBill(Topic choiceTopic){
             if(binding!=null&&binding.bill()!=null)return null;
             var bills=crossBorder.expenses().stream().filter(b->b.active()&&!b.executed()&&"TUITION".equals(b.expenseType())&&crossBorder.verifyRecipient(b.id()).verified()).toList();
             if(bills.size()!=1)return clarify(Pending.BILL,vi?"Hãy chọn rõ hóa đơn học phí đã xác minh cần hỏi.":"Choose the verified tuition bill you mean.",
-                    bills.stream().map(b->new Capability(billBinding(b.id()),Topic.TUITION_CHANNELS,LocalDateTime.now().plusMinutes(10))).toList(),
+                    bills.stream().map(b->new Capability(billBinding(b.id()),choiceTopic,LocalDateTime.now().plusMinutes(10))).toList(),
                     bills.stream().map(b->b.title()+" · "+b.paymentReference()).toList());
             binding=billBinding(bills.getFirst().id());return null;
         }
         private Binding quoted(Binding original,List<CrossBorderService.ChannelQuote> quotes){return new Binding(original.bill(),original.version(),original.account(),original.channel(),original.plan(),original.planHash(),original.workspaceBill(),original.workspaceAccount(),quotes.stream().collect(Collectors.toMap(CrossBorderService.ChannelQuote::channelId,CrossBorderService.ChannelQuote::quoteId)));}
-        private String success(Topic next,LlmIntent intent,String answer){synchronized(state){state.topic=next;state.lastIntent=intent.intent();state.binding=binding;state.pending=Pending.NONE;state.choices.clear();state.clarification="";}reason=intent.intent()==LlmIntent.Intent.CREATE_TUITION_PLAN?"CONTEXT_EXPLICIT_DRAFT":"CONTEXTUAL_READ_ONLY";return answer;}
+        private String success(Topic next,LlmIntent intent,String answer){synchronized(state){if(next!=Topic.LIVING_EXPENSE_RUNWAY)state.clearScenario();state.topic=next;state.lastIntent=intent.intent();state.binding=binding;state.pending=Pending.NONE;state.choices.clear();state.clarification="";}reason=intent.intent()==LlmIntent.Intent.CREATE_TUITION_PLAN?"CONTEXT_EXPLICIT_DRAFT":"CONTEXTUAL_READ_ONLY";return answer;}
+        private String runwayResponse(LlmIntent intent){
+            reason="RUNWAY_REQUESTED";audit(reason);
+            if(matches(message,"\\b(another|someone|both|cash)\\b|other accounts|all accounts|tài khoản khác|tất cả tài khoản|tiền mặt|đồng thời"))
+                return clarify(Pending.ACCOUNT,FinanceChatService.clarification(vi),List.of(),List.of());
+            Integer selected=selectedBill();
+            if(selected==null){reason="RUNWAY_INVALID_DATA";return LivingExpenseRunwayService.error("SELECT_UNPAID_BILL",vi);}
+            if(binding==null && crossBorder.expense(selected).executed()){
+                reason="RUNWAY_INVALID_DATA";return LivingExpenseRunwayService.error("TUITION_ALREADY_PAID",vi);
+            }
+            String error=ensureBill(Topic.LIVING_EXPENSE_RUNWAY);if(error!=null)return error;
+            Channel requested=namedChannel(message);
+            if(requested!=Channel.NONE)binding=new Binding(binding.bill(),binding.version(),binding.account(),requested,
+                    binding.plan(),binding.planHash(),binding.workspaceBill(),binding.workspaceAccount(),binding.quotes());
+            try{
+                if(!Objects.equals(binding.bill(),selectedBill()) || !Objects.equals(binding.account(),selectedAccount()))
+                    throw new IllegalArgumentException("SELECT_SOURCE_ACCOUNT");
+                var input=runwayService.inspect(binding.bill(),binding.account(),binding.channel(),binding.plan());
+                binding=new Binding(binding.bill(),binding.version(),binding.account(),channel(input.quote().channelId()),
+                    binding.plan(),binding.planHash(),binding.workspaceBill(),binding.workspaceAccount(),Map.of(input.quote().channelId(),input.quote().quoteId()));
+                if(state.monthlyScope!=null && !state.monthlyScope.equals(binding))state.clearScenario();
+                if(matches(message,"\\b(CNY|USD|AUD|yuan)\\b|nhân dân tệ")){
+                    state.monthly=null;state.monthlyScope=null;
+                    success(Topic.LIVING_EXPENSE_RUNWAY,intent,"");state.runwayRequested=true;state.pending=Pending.MONTHLY_EXPENSE;
+                    reason="RUNWAY_INVALID_DATA";return LivingExpenseRunwayService.error("VND_ONLY",vi);
+                }
+                if(matches(message,"[0-9]")){state.monthly=null;state.monthlyScope=null;}
+                success(Topic.LIVING_EXPENSE_RUNWAY,intent,"");state.runwayRequested=true;
+                if(state.monthly==null){state.pending=Pending.MONTHLY_EXPENSE;reason="RUNWAY_MISSING_BASELINE";return monthlyPrompt(vi);}
+                reason="RUNWAY_RESULT";return runwayService.render(input,state.monthly,vi);
+            }catch(IllegalArgumentException ex){state.clearScenario();reason="RUNWAY_INVALID_DATA";return LivingExpenseRunwayService.error(ex.getMessage(),vi);}
+        }
         public String respond(LlmIntent intent,boolean vietnamese){
             if(intent.intent()==LlmIntent.Intent.UNSAFE_REQUEST){reason="CONTEXT_UNSAFE_INPUT";return payments.renderIntent(intent);}
             if(intent.intent()==LlmIntent.Intent.UNSUPPORTED_REQUEST){reason="CONTEXT_UNSUPPORTED";return vi?"Yêu cầu nằm ngoài các câu hỏi tài chính và học phí hiện được hỗ trợ.":"This request is outside the supported finance and tuition questions.";}
-            if(topic==Topic.NONE&&!personalTopic(message)&&matches(message,"còn bao nhiêu|how much.*left|what about|kênh đó|that channel|trạng thái thế|what'?s its status"))return clarifyTopic();
+            if(intent.intent()==LlmIntent.Intent.EXPLAIN_LIVING_EXPENSE_RUNWAY && topic==Topic.NONE && !matches(message,"tuition|học phí|living|sinh hoạt|monthly|mỗi tháng|runway"))return clarifyTopic();
+            if(intent.intent()!=LlmIntent.Intent.EXPLAIN_LIVING_EXPENSE_RUNWAY && topic==Topic.NONE&&!personalTopic(message)&&matches(message,"còn bao nhiêu|how much.*left|what about|kênh đó|that channel|trạng thái thế|what'?s its status"))return clarifyTopic();
             if(intent.confidence().compareTo(new BigDecimal("0.80"))<0||intent.intent()==LlmIntent.Intent.NEED_CLARIFICATION)return clarifyTopic();
+            if(intent.intent()==LlmIntent.Intent.EXPLAIN_LIVING_EXPENSE_RUNWAY)return runwayResponse(intent);
             if(FinanceChatService.isReadOnly(intent.intent())&&FinanceChatService.scopedQuestion(message))
                 return clarify(Pending.TOPIC,FinanceChatService.clarification(vi),List.of(),List.of());
-            if(intent.intent()==LlmIntent.Intent.CREATE_TUITION_PLAN&&!explicitDraft(message))return clarifyTopic();
+            if(intent.intent()==LlmIntent.Intent.CREATE_TUITION_PLAN&&(!explicitDraft(message)||runway(message)))return clarifyTopic();
             if(intent.intent()==LlmIntent.Intent.CREATE_TUITION_PLAN&&FinanceChatService.scopedQuestion(message))
                 return clarify(Pending.ACCOUNT,vi?"Chỉ hỗ trợ bản nháp cho hóa đơn và nguồn tiền đã xác minh đang chọn. Hãy kiểm tra khoản tiền, tài khoản và kênh trong màn hình du học; không tự thay thế kênh hoặc thông số bạn yêu cầu.":"Drafts support only the selected verified bill and funding source. Review amount, account and channel in Student finance; requested channels or parameters are not silently replaced.",List.of(),List.of());
             if(intent.intent()==LlmIntent.Intent.EXPLAIN_BUDGET_STATUS||intent.intent()==LlmIntent.Intent.EXPLAIN_SPENDING_SUMMARY){
+                state.clearScenario();
                 binding=null;return success(intent.intent()==LlmIntent.Intent.EXPLAIN_BUDGET_STATUS?Topic.BUDGET:Topic.SPENDING,intent,insights.render(intent.intent(),payments,vi));
             }
             String error=ensureBill();if(error!=null)return error;

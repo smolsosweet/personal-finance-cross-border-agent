@@ -25,6 +25,12 @@ final class LlmIntentContract {
             - EXPLAIN_TUITION_AFFORDABILITY: asks whether paying the existing tuition bill leaves enough balance for living costs.
               This is a read-only projection, never CREATE_TUITION_PLAN.
             - NEED_CLARIFICATION: the request is vague and does not identify one operation above.
+            - EXPLAIN_LIVING_EXPENSE_RUNWAY: asks how many months money will last for living expenses after tuition,
+              including "Sau khi đóng học phí, tiền còn lại đủ sinh hoạt mấy tháng?" and "How many months of living
+              costs will my money cover after tuition?". Always read-only with channelPreference NONE.
+              The backend requires an explicit VND monthly-cost confirmation form. Never extract monthly amounts,
+              calculate months, invent a baseline, or use budgets/planner as monthly living expenses.
+              A typed monthly amount ("8 triệu mỗi tháng") requests that form, never authorizes financial changes.
             - UNSAFE_REQUEST: explicitly asks to bypass safeguards, change protected financial facts, reveal secrets,
               or execute a payment directly.
             - UNSUPPORTED_REQUEST: asks for a capability outside this tuition intent scope.
@@ -39,6 +45,7 @@ final class LlmIntentContract {
             "Nếu đóng học phí thì còn đủ tiền sinh hoạt không?" are EXPLAIN_TUITION_AFFORDABILITY.
             All three read-only intents use channelPreference NONE and clarificationCode NONE.
             For all spending, budget and affordability questions, channelPreference MUST be NONE.
+            Living-expense runway also MUST use NONE; never output financial amounts or assumptions.
             Never infer CHEAPEST or FASTEST for a read-only question. Example complete outputs:
             Spending: {"intent":"EXPLAIN_SPENDING_SUMMARY","channelPreference":"NONE","confidence":0.95,"clarificationCode":"NONE"}
             Budget: {"intent":"EXPLAIN_BUDGET_STATUS","channelPreference":"NONE","confidence":0.95,"clarificationCode":"NONE"}
@@ -59,6 +66,7 @@ final class LlmIntentContract {
                 "CREATE_TUITION_PLAN", "COMPARE_TUITION_CHANNELS",
                 "EXPLAIN_CHANNEL_UNAVAILABLE", "CHECK_TUITION_STATUS",
                 "EXPLAIN_SPENDING_SUMMARY", "EXPLAIN_BUDGET_STATUS", "EXPLAIN_TUITION_AFFORDABILITY",
+                "EXPLAIN_LIVING_EXPENSE_RUNWAY",
                 "NEED_CLARIFICATION", "UNSAFE_REQUEST", "UNSUPPORTED_REQUEST")));
         properties.put("channelPreference", Map.of("type", "string", "enum", List.of(
                 "NONE", "CHEAPEST", "FASTEST")));

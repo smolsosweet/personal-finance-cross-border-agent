@@ -160,6 +160,9 @@ header{position:sticky;top:0;z-index:10}.mobile-tabs{top:70px}.payment-demo-entr
 .assistant-plan-summary dt{color:#677790;flex:1}
 .assistant-plan-summary dd{margin:0;text-align:right;font-weight:700;flex:1.2;overflow-wrap:anywhere}
 .assistant-context [data-assistant-review-plan]{margin-top:10px;font-size:12px}
+.runway-scenario{margin:12px 0;padding:12px;border:1px solid #dce3ff;border-radius:12px;background:#f7f9ff}
+.runway-scenario form{display:flex;flex-direction:column;gap:7px;margin:10px 0}
+.runway-scenario input{min-width:0;width:100%;padding:9px;border:1px solid #dce3ff;border-radius:8px}
 .assistant-message-list{display:flex;flex-direction:column;gap:12px}
 .assistant-message-list .message{max-width:100%;margin:0;font-size:14px;line-height:1.6;padding:12px 14px;border-radius:12px}
 .assistant-message-list .message p{margin:6px 0 0}
