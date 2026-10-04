@@ -38,7 +38,7 @@ function Assert-FinBridgePort {
     param([int]$Port)
     $listeners=[System.Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties().GetActiveTcpListeners()
     if ($listeners | Where-Object { $_.Port -eq $Port }) {
-        throw "Port $Port is already occupied. Stop its owner yourself or choose: .\scripts\start-local.ps1 -Port $($Port+1). No process was killed."
+        throw "Port $Port is already occupied. Stop its owner yourself or choose: .\scripts\start-local.cmd -Port $($Port+1). No process was killed."
     }
 }
 

@@ -16,6 +16,38 @@ payments, modify policy, invent rates or fees, or change a recipient after appro
 
 Requirements: Java 21 and Maven 3.9+.
 
+### Chạy từ CMD trên Windows (khuyến nghị)
+
+Model `qwen3:4b` đã tải thì không cần tải lại. Mỗi lần chạy:
+
+1. Mở **Ollama** từ Start Menu và để ứng dụng chạy ở nền.
+2. Nếu FinBridge cũ đang chạy, ở cửa sổ đó nhấn **Ctrl+C**; nếu hỏi `Terminate batch job (Y/N)?`, nhập `Y` rồi Enter.
+3. Mở **Command Prompt (CMD)** và chạy từng dòng:
+
+```bat
+cd /d D:\personal-finance-cross-border-agent
+scripts\start-local.cmd
+```
+
+Không mở file `.ps1` bằng nhấp đúp và không dùng cú pháp `$env:...` trong CMD.
+File `.cmd` tự gọi PowerShell, bật Ollama cho FinBridge, kiểm tra model và làm nóng AI.
+Không cần nhập các biến môi trường hoặc chạy `mvn` riêng. Script không tự mở Ollama.
+
+Chờ dòng `Application ready: http://localhost:8080`, sau đó kết quả `Warmup: PASS`.
+Lượt làm nóng model có thể mất tới 60 giây. Mở **http://localhost:8080** và nhấn **Ctrl+F5** để nạp giao diện mới; giữ CMD mở khi dùng web.
+Nếu `Warmup: FAILED`, web vẫn có thể chạy nhưng chưa xác nhận AI thật sẵn sàng; đọc lỗi phía trên.
+
+| Thông báo | Cách xử lý trong CMD |
+| --- | --- |
+| `Ollama is unavailable` | Mở ứng dụng Ollama rồi chạy lại. Nếu không dùng ứng dụng desktop, chạy `ollama serve` ở một CMD riêng và giữ cửa sổ đó mở. |
+| `Model qwen3:4b is not installed` | Chạy `ollama pull qwen3:4b` một lần, chờ tải xong rồi chạy lại script. |
+| `Port 8080 is already occupied` | Dừng app cũ bằng Ctrl+C, hoặc chạy `scripts\start-local.cmd -Port 8081` và mở http://localhost:8081. |
+| Java/Maven missing | Kiểm tra `java -version` và `mvn -version`; cần JDK 21, Maven 3.9+. Mở CMD mới sau khi sửa PATH. |
+| `address already in use` khi chạy `ollama serve` | Ollama đã có server chạy. Không mở thêm server; chạy script FinBridge. |
+
+Có thể tự kiểm tra model đã tải bằng `ollama list`; cần có `qwen3:4b`.
+Ollama chạy model tại cổng **11434**, còn web FinBridge chạy tại **8080** (hoặc port bạn chọn).
+
 ### One-command local Ollama startup (Windows PowerShell 5.1 / PowerShell 7)
 
 First install **JDK 21**, **Maven 3.9+**, and **Ollama**. Ensure `java -version` and

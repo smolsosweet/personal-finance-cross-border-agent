@@ -166,3 +166,13 @@ trên startup. Reset UI vẫn là thao tác riêng. Nếu dùng H2 memory trong 
 
 Đã dừng toàn bộ app do checkpoint này tạo; app người dùng ở 8080 và Ollama được giữ nguyên.
 Không push hoặc bắt đầu phase tiếp theo.
+# Bổ sung launcher CMD — 04/10/2026
+
+- Từ CMD: `cd /d D:\personal-finance-cross-border-agent`, rồi `scripts\start-local.cmd`.
+- Mở Ollama từ Start Menu trước; model qwen3:4b đã tải thì không cần pull lại. Launcher không tự mở Ollama.
+- File CMD tự gọi Windows PowerShell với execution policy chỉ áp dụng cho process, chuyển tiếp tham số và exit code. Không dùng liên kết mở file .ps1 của Windows nên không mở Notepad.
+- `mvn -Dtest=LocalStartupCmdTest,LocalStartupScriptTest test`: **2/2 đạt**. Test script có 23 kiểm tra nội bộ; test CMD thực thi wrapper, chuyển đúng port, phát hiện port bận trước khi chạy app và trả exit code 1.
+- Chạy thật bằng `cmd.exe /d /c scripts\start-local.cmd -Port 8120`, với `SPRING_DATASOURCE_URL=jdbc:h2:mem:cmd_launcher_verify;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1` chỉ trong môi trường process kiểm chứng.
+- HTTP readiness đạt; local/Ollama/qwen3:4b đúng; warmup qua câu hỏi ngân sách thật **PASS trong 37,687 giây**. Không reset database người dùng hoặc thực hiện thanh toán.
+- Ctrl+C đã dừng listener 8120; CMD hỏi `Terminate batch job (Y/N)?`, nhập Y để kết thúc batch. Ollama 11434 vẫn chạy.
+- Chỉ chỉnh entry point và hướng dẫn chạy; không đổi logic tài chính hoặc tích hợp AI.
