@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"><body>
+<th:block th:fragment="replies(items)">
+  <div th:each="item : ${@conversationPresentation.present(items)}" class="message" th:classappend="${#strings.toLowerCase(item.role)}" th:attr="data-reply-id=${item.id}">
+    <small th:text="${item.role == 'USER' ? 'You' : 'FinBridge'}"></small>
+    <div th:if="${item.rich}" class="response-content" th:attr="data-response-language=${item.language}">
+      <strong class="response-conclusion" data-testid="response-conclusion" th:text="${item.conclusion}"></strong>
+      <span th:if="${item.estimate}" class="response-estimate" data-testid="response-estimate" th:text="${item.estimateLabel}"></span>
+      <div class="response-subtitle" th:text="${item.subtitle}"></div>
+      <div th:each="warning : ${item.warnings}" class="response-warning" data-testid="response-warning" th:text="${warning}"></div>
+      <dl th:if="${!#lists.isEmpty(item.facts)}" class="response-facts"><div th:each="fact : ${item.facts}"><dt th:text="${fact.label}"></dt><dd th:text="${fact.value}"></dd></div></dl>
+      <div th:if="${!#lists.isEmpty(item.rows)}" class="response-table-scroll" tabindex="0"><table class="response-table" data-testid="response-table"><thead><tr><th th:each="column : ${item.columns}" scope="col" th:text="${column}"></th></tr></thead><tbody><tr th:each="row : ${item.rows}"><td th:each="value : ${row}" th:text="${value}"></td></tr></tbody></table></div>
+      <div th:if="${!#lists.isEmpty(item.channels)}" class="response-channels" data-testid="response-channels">
+        <article th:each="channel, index : ${item.channels}" class="response-channel" data-testid="response-channel">
+          <strong th:text="${'#' + (index.index + 1) + ' · ' + channel.name}"></strong>
+          <dl class="response-facts"><div><dt th:text="${item.costLabel}"></dt><dd th:text="${channel.cost}"></dd></div><div><dt th:text="${item.settlementLabel}"></dt><dd th:text="${channel.settlement}"></dd></div></dl>
+          <span class="response-quote" data-response-quote th:attr="data-expiry-epoch=${channel.expiryEpoch},data-language=${item.language}" th:text="${item.expiryLabel + ': ' + channel.expires}"></span>
+        </article>
+      </div>
+      <span th:if="${item.expiryEpoch > 0}" class="response-quote" data-response-quote th:attr="data-expiry-epoch=${item.expiryEpoch},data-language=${item.language}" th:text="${item.expiryLabel}"></span>
+      <small class="response-snapshot" th:if="${item.estimate || !#lists.isEmpty(item.channels)}" th:text="${item.historyLabel}"></small>
+      <details class="response-details" data-testid="response-details"><summary th:text="${item.detailsLabel}"></summary><p data-response-raw th:text="${item.message}"></p></details>
+    </div>
+    <p th:unless="${item.rich}" data-response-raw th:text="${item.message}"></p>
+  </div>
+</th:block>
+</body></html>

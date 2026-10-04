@@ -803,6 +803,7 @@ function setAssistantOpen(open, opener) {
   const launcher = document.querySelector('[data-testid="assistant-launcher"]');
   launcher.hidden = open;
   if (open) {
+    updateAssistantViewport();
     renderAssistantContext();
     const input = panel.querySelector('input[name="message"]');
     (input.disabled ? panel.querySelector('[data-close-assistant]') : input).focus({ preventScroll: true });
@@ -848,6 +849,40 @@ function syncAssistant(nextDocument) {
     if (current && next) current.replaceChildren(...next.childNodes);
   }
   document.querySelectorAll('[data-assistant-panel] .request-error').forEach((notice) => notice.remove());
+}
+
+function updateAssistantViewport() {
+  const panel = document.querySelector('[data-assistant-panel]');
+  if (!panel) return;
+  const mobile = window.matchMedia('(max-width:700px)').matches;
+  const viewport = window.visualViewport;
+  const height = viewport?.height || window.innerHeight;
+  panel.classList.toggle('assistant-compact', mobile && height < 560);
+  panel.classList.toggle('assistant-short', mobile && height < 380);
+  panel.style.setProperty('--assistant-visible-height', height + 'px');
+  if (mobile) {
+    // The visual viewport excludes the on-screen keyboard and follows browser panning.
+    panel.style.top = ((viewport?.offsetTop || 0) + 8) + 'px';
+    panel.style.left = ((viewport?.offsetLeft || 0) + 8) + 'px';
+    panel.style.right = 'auto';
+    panel.style.bottom = 'auto';
+    panel.style.width = Math.max(0, (viewport?.width || window.innerWidth) - 16) + 'px';
+    panel.style.height = Math.max(0, height - 16) + 'px';
+  } else {
+    for (const name of ['top', 'left', 'right', 'bottom', 'width', 'height']) panel.style.removeProperty(name);
+  }
+}
+
+function renderResponseQuotes() {
+  document.querySelectorAll('[data-response-quote]').forEach((badge) => {
+    const vi = badge.dataset.language === 'vi';
+    const remaining = Math.floor((Number(badge.dataset.expiryEpoch) - Date.now()) / 1000);
+    const expired = !Number.isFinite(remaining) || remaining <= 0;
+    badge.classList.toggle('quote-expired', expired);
+    badge.textContent = expired
+      ? (vi ? 'Báo giá đã hết hạn · cần làm mới trước khi tạo hoặc duyệt kế hoạch' : 'Quote expired · refresh before preparing or approving a plan')
+      : (vi ? `Báo giá còn hiệu lực · ${Math.floor(remaining / 60)} phút ${remaining % 60} giây` : `Quote valid · ${Math.floor(remaining / 60)}m ${remaining % 60}s remaining`);
+  });
 }
 
 function activateDashboardView(view, updateLocation = true) {
@@ -1146,7 +1181,7 @@ function initializeStudentExpenseCorridor() {
 function initializeQuoteExpiryStatuses() {
   window.clearInterval(quoteExpiryTimer);
   const cards = Array.from(document.querySelectorAll('[data-quote-expiry]'));
-  if (!cards.length && !document.querySelector('[data-plan-expiry]')) return;
+  if (!cards.length && !document.querySelector('[data-plan-expiry]') && !document.querySelector('[data-response-quote]')) return;
 
   const render = () => {
     const vietnamese = selectedLanguage() === 'vi';
@@ -1186,6 +1221,7 @@ function initializeQuoteExpiryStatuses() {
     });
     if (accountFilterChanged) renderPaymentAccounts();
     renderPaymentWorkflow();
+    renderResponseQuotes();
   };
   renderQuoteExpiryStatuses = render;
   render();
@@ -1288,6 +1324,8 @@ function applyLanguage(language) {
   const nodes = [];
   while (walker.nextNode()) nodes.push(walker.currentNode);
   nodes.forEach((node) => {
+    // A structured answer keeps the language of that turn, including labels and evidence.
+    if (node.parentElement?.closest('[data-response-language]')) return;
     if (!originalText.has(node)) originalText.set(node, node.nodeValue);
     const messageBody = node.parentElement?.closest('.message p');
     const original = originalText.get(node);
@@ -1317,6 +1355,7 @@ function applyLanguage(language) {
   renderQuoteExpiryStatuses();
   renderPaymentWorkflow();
   renderAssistantContext();
+  renderResponseQuotes();
 }
 
 function initializeWorkspaceNotices(root = document) {
@@ -1562,7 +1601,7 @@ async function submitWorkspaceForm(event) {
   const requestId = ++updateSequence;
   pendingUpdate = requestId;
   const isContext = action.pathname === '/agent/context' || action.pathname === '/agent/context/choice' || action.pathname === '/agent/runway/monthly-expense';
-  const previousReplies = new Set(Array.from(document.querySelectorAll('[data-testid="assistant-replies"] .message.assistant p'), node => node.textContent));
+  const previousReplies = new Set(Array.from(document.querySelectorAll('[data-testid="assistant-replies"] .message.assistant [data-response-raw]'), node => node.textContent));
   const isChat = action.pathname === '/agent/message' || isContext;
   const chatController = isChat ? new AbortController() : null;
   if (chatController) pendingChatController = chatController;
@@ -1666,7 +1705,7 @@ async function submitWorkspaceForm(event) {
           if (!list.getClientRects().length) return;
           const latestQuestion = Array.from(list.querySelectorAll('.message.user')).at(-1);
           const reply = action.pathname === '/agent/runway/monthly-expense' && list.matches('.assistant-message-list')
-            ? Array.from(list.querySelectorAll('.message.assistant')).find(node => !previousReplies.has(node.querySelector('p')?.textContent)) || list.querySelector('.message.assistant:last-child')
+            ? Array.from(list.querySelectorAll('.message.assistant')).find(node => !previousReplies.has(node.querySelector('[data-response-raw]')?.textContent)) || list.querySelector('.message.assistant:last-child')
             : latestQuestion?.nextElementSibling;
           if (reply?.classList.contains('assistant')) {
             // Reveal the beginning of the new reply, including assumptions, without moving the page.
@@ -1719,6 +1758,10 @@ async function submitWorkspaceForm(event) {
 
 document.addEventListener('DOMContentLoaded', () => {
   initializeWorkspaceContent();
+  updateAssistantViewport();
+  window.addEventListener('resize', updateAssistantViewport);
+  window.visualViewport?.addEventListener('resize', updateAssistantViewport);
+  window.visualViewport?.addEventListener('scroll', updateAssistantViewport);
 
   document.querySelectorAll('[data-tab]').forEach((button) => {
     button.addEventListener('click', () => activateTab(button.dataset.tab));

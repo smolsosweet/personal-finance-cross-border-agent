@@ -196,9 +196,11 @@ public class SessionConversationService {
     }
     private void record(State state,String role,String text) {
         synchronized(state){
+            // One display ID per reply reunites storage-sized chunks; it is never model context.
+            String displayId="MSG-"+UUID.randomUUID(); int chunk=0;
             for(int offset=0;offset<text.length();){int end=Math.min(offset+990,text.length());
                 if(end<text.length()){int newline=text.lastIndexOf('\n',end);if(newline>offset)end=newline+1;}
-                state.display.add(new PhaseFourService.ConversationMessage("MSG-"+UUID.randomUUID(),role,text.substring(offset,end),LocalDateTime.now()));offset=end;
+                state.display.add(new PhaseFourService.ConversationMessage(displayId+"-"+chunk++,role,text.substring(offset,end),LocalDateTime.now()));offset=end;
             }
             while(state.display.size()>32)state.display.removeFirst();
         }
@@ -348,7 +350,12 @@ public class SessionConversationService {
             if(intent.intent()==LlmIntent.Intent.COMPARE_TUITION_CHANNELS){
                 var comparator=intent.channelPreference()==LlmIntent.ChannelPreference.FASTEST?Comparator.comparingInt(CrossBorderService.ChannelQuote::settlementMaxDays).thenComparing(CrossBorderService.ChannelQuote::landedCost):Comparator.comparing(CrossBorderService.ChannelQuote::landedCost);
                 String options=quotes.stream().sorted(comparator).limit(3).map(q->q.displayName()+": "+q.landedCost().toPlainString()+" VND; "+q.settlementMinDays()+"–"+q.settlementMaxDays()+" "+(vi?"ngày":"days")+"; "+q.quoteId()+"; "+q.quoteSource()+"; "+q.quotedAt()+"; "+q.expiresAt()).collect(Collectors.joining("\n"));
-                return success(Topic.TUITION_CHANNELS,intent,(vi?"So sánh kênh học phí đã xác minh: ":"Verified tuition-channel comparison: ")+crossBorder.expense(binding.bill()).paymentReference()+"\n"+options+"\n"+(vi?"Nguồn: hóa đơn và báo giá backend hiện tại. Chưa tạo kế hoạch hay thanh toán.":"Evidence: current backend bill and quotes. No plan or payment created."));
+                String criterion=intent.channelPreference()==LlmIntent.ChannelPreference.FASTEST
+                        ?(vi?"nhanh nhất (thời gian tối đa, rồi tổng chi phí)":"fastest (maximum settlement time, then total cost)")
+                        :(vi?"tổng chi phí thấp nhất":"lowest total cost");
+                return success(Topic.TUITION_CHANNELS,intent,(vi?"So sánh kênh học phí đã xác minh: ":"Verified tuition-channel comparison: ")+crossBorder.expense(binding.bill()).paymentReference()+"\n"
+                        +(vi?"Hiển thị ":"Showing ")+Math.min(3,quotes.size())+(vi?" kênh đủ điều kiện · ":" eligible channels · ")+criterion+"\n"+options+"\n"
+                        +(vi?"Nguồn: hóa đơn và báo giá backend hiện tại. Chưa tạo kế hoạch hay thanh toán. Học phí luôn cần phê duyệt riêng.":"Evidence: current backend bill and quotes. No plan or payment created. Tuition always requires separate approval."));
             }
             if(binding.account()==null||selectedAccount()==null||!Objects.equals(binding.bill(),selectedBill())||!Objects.equals(binding.account(),selectedAccount()))return clarify(Pending.ACCOUNT,vi?"Chọn rõ một hóa đơn và một tài khoản nguồn trong màn hình du học trước khi tính dự kiến hoặc tạo bản nháp.":"Select exactly one bill and one source account in Student finance before projecting or preparing a draft.",List.of(),List.of());
             if(intent.intent()==LlmIntent.Intent.EXPLAIN_TUITION_AFFORDABILITY)return success(Topic.TUITION_AFFORDABILITY,intent,insights.render(intent.intent(),payments,vi));
