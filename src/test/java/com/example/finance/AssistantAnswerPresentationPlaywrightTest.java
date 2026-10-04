@@ -108,6 +108,21 @@ class AssistantAnswerPresentationPlaywrightTest {
         confirm("9000000");assertThat(reply().getByTestId("response-conclusion")).hasText("Đủ khoảng 2,91 tháng");
         assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));assertNull(payments.latestAction());assertNull(payments.latestReceipt());
     }
+    @Test void completedTuitionAnswerShowsReceiptBalanceAsAnExecutedResult(){
+        var plan=payments.createTuitionPlan("BANK_A");var receipt=payments.approveAndExecute(plan.id());assertNotNull(receipt);
+        db.update("UPDATE fx_quotes SET expires_at=?",LocalDateTime.now().minusMinutes(1));
+        page.getByTestId("assistant-language-vi").click();stub(LlmIntent.Intent.EXPLAIN_TUITION_AFFORDABILITY);
+
+        send("Sau khi đã đóng học phí còn bao nhiêu tiền?");
+
+        assertThat(reply().getByTestId("response-conclusion")).hasText("Số dư sau thanh toán: 29.239.200 VND");
+        assertThat(reply().getByTestId("response-estimate")).hasCount(0);
+        assertThat(reply().getByTestId("response-warning")).containsText("kết quả đã thực thi");
+        assertThat(reply().locator("[data-response-raw]")).containsText(receipt.transactionId());
+        assertThat(reply().locator("[data-response-raw]")).containsText("Không cần báo giá đang hiệu lực");
+        assertEquals(1,payments.sandboxTransactionCount());
+        assertEquals(receipt.transactionId(),payments.receiptForAction(plan.id()).transactionId());
+    }
     @Test void channelCardsExplainActualCountRankingAndExpiryWithoutCreatingPlan(){
         var before=PersonalFinanceAiIntegrationTest.snapshot(db);
         stub(LlmIntent.Intent.COMPARE_TUITION_CHANNELS,LlmIntent.ChannelPreference.CHEAPEST);send("Compare cheapest tuition channels");

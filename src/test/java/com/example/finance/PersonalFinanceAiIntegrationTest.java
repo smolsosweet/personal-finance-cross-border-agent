@@ -95,6 +95,24 @@ class PersonalFinanceAiIntegrationTest {
         assertEquals(before, snapshot(db));
     }
 
+    @Test void completedTuitionUsesImmutableReceiptBalanceInsteadOfAnExpiredQuoteProjection() {
+        var plan=payments.createTuitionPlan("BANK_A");
+        var receipt=payments.approveAndExecute(plan.id());
+        assertNotNull(receipt);
+        db.update("UPDATE fx_quotes SET expires_at=CURRENT_TIMESTAMP-INTERVAL '1' MINUTE");
+        stub(LlmIntent.Intent.EXPLAIN_TUITION_AFFORDABILITY);
+
+        String answer=payments.sendMessage("How much remained after I paid tuition?");
+
+        assertTrue(answer.startsWith("COMPLETED TUITION PAYMENT"));
+        assertTrue(answer.contains("Actual balance immediately after payment: 29239200.00 VND"));
+        assertTrue(answer.contains("Receipt: "+receipt.transactionId()+" · Plan: "+plan.id()));
+        assertTrue(answer.contains("No current quote is required"));
+        assertFalse(answer.contains("estimate, not a payment"));
+        assertEquals(1,payments.sandboxTransactionCount());
+        assertEquals(receipt.transactionId(),payments.receiptForAction(plan.id()).transactionId());
+    }
+
     @Test void missingDataAndBudgetsAreExplainedInsteadOfInvented() {
         db.update("DELETE FROM budgets"); db.update("DELETE FROM transactions");
         stub(LlmIntent.Intent.EXPLAIN_BUDGET_STATUS);

@@ -54,7 +54,7 @@ public class ConversationPresentation {
         if(!value.isEmpty())facts.add(new Fact(label,money(value,vi)));
     }
     private Reply render(String id,String role,String text){
-        boolean vi=text.contains("Kỳ báo cáo:")||text.contains("ƯỚC TÍNH")||text.startsWith("So sánh kênh học phí");
+        boolean vi=text.contains("Kỳ báo cáo:")||text.contains("ƯỚC TÍNH")||text.startsWith("So sánh kênh học phí")||text.startsWith("THANH TOÁN HỌC PHÍ ĐÃ HOÀN TẤT");
         String conclusion="",subtitle=""; boolean estimate=false;
         var facts=new ArrayList<Fact>(); var warnings=new ArrayList<String>();
         List<String> columns=List.of(); var rows=new ArrayList<List<String>>(); var channels=new ArrayList<Channel>();
@@ -69,6 +69,14 @@ public class ConversationPresentation {
                     fact(facts,text,vi?"Tổng học phí gồm phí và phụ phí FX: ":"Total tuition debit including fees and FX markup: ",vi?"Học phí gồm mọi phí":"Tuition including fees",vi);
                     fact(facts,text,vi?"Đệm an toàn: ":"Safety buffer: ",vi?"Đệm an toàn":"Safety buffer",vi);
                     warnings.add(vi?"Kịch bản trước thanh toán; chưa tạo kế hoạch hay thanh toán. Đây không phải quyết định đủ điều kiện thanh toán.":"Before-payment scenario; no plan or payment created. This is not a payment-permission decision.");
+                }
+            }else if(text.startsWith("THANH TOÁN HỌC PHÍ ĐÃ HOÀN TẤT")||text.startsWith("COMPLETED TUITION PAYMENT")){
+                String remaining=find(text,"^(?:Số dư thực tế sau thanh toán|Actual balance immediately after payment): (-?[0-9]+\\.[0-9]+) VND",1);
+                if(!remaining.isEmpty()){
+                    conclusion=(vi?"Số dư sau thanh toán: ":"Balance after payment: ")+money(remaining,vi);
+                    subtitle=vi?"Số dư ghi nhận trong biên nhận Sandbox":"Balance recorded in the Sandbox receipt";
+                    fact(facts,text,vi?"Tổng tiền đã trừ: ":"Total debited: ",vi?"Đã trừ":"Debited",vi);
+                    warnings.add(vi?"Số dư này là kết quả đã thực thi, không phải dự báo và không tạo thanh toán mới.":"This is an executed result, not a projection, and does not create a new payment.");
                 }
             }else if(text.contains("Category budgets: VND.")||text.contains("Ngân sách danh mục: VND.")){
                 String remaining=find(text,"(?:còn lại theo từng danh mục|remaining across categories) ([0-9]+\\.[0-9]+) VND",1);

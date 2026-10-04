@@ -116,6 +116,58 @@ class SessionConversationIntegrationTest {
         assertTrue(answer.contains(first.id()));assertFalse(answer.contains(second.id()));assertTrue(answer.contains("INVALIDATED"));
         assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
     }
+    @Test void completedBillUsesItsBoundReceiptInsteadOfRequiringAnUnpaidBillOrLiveQuote(){
+        var plan=payments.createTuitionPlan("BANK_A");var receipt=payments.approveAndExecute(plan.id());assertNotNull(receipt);
+        db.update("UPDATE fx_quotes SET expires_at=?",LocalDateTime.now().minusMinutes(1));
+        stub(EXPLAIN_TUITION_AFFORDABILITY);
+
+        String answer=ask("Sau khi đã đóng học phí còn bao nhiêu tiền?");
+
+        assertTrue(answer.startsWith("THANH TOÁN HỌC PHÍ ĐÃ HOÀN TẤT"));
+        assertTrue(answer.contains("Số dư thực tế sau thanh toán: 29239200.00 VND"));
+        assertTrue(answer.contains(receipt.transactionId()));
+        assertTrue(answer.contains("Không cần báo giá đang hiệu lực"));
+        assertEquals(ModelConversationContext.Topic.TUITION_AFFORDABILITY,view(session).topic());
+        assertEquals(1,payments.sandboxTransactionCount());
+        assertEquals(receipt.transactionId(),payments.receiptForAction(plan.id()).transactionId());
+    }
+    @Test void projectionContextTransitionsToItsReceiptAfterExplicitPayment(){
+        stub(EXPLAIN_TUITION_AFFORDABILITY);
+        assertTrue(ask("Nếu đóng học phí thì còn bao nhiêu?").contains("ƯỚC TÍNH SAU HỌC PHÍ"));
+        var plan=payments.createTuitionPlan("BANK_A");var receipt=payments.approveAndExecute(plan.id());assertNotNull(receipt);
+        db.update("UPDATE fx_quotes SET expires_at=?",LocalDateTime.now().minusMinutes(1));
+        var before=PersonalFinanceAiIntegrationTest.snapshot(db);
+
+        String answer=ask("Sau khi đã đóng học phí còn bao nhiêu tiền?");
+
+        assertTrue(answer.contains(receipt.transactionId()));
+        assertTrue(answer.contains("Số dư thực tế sau thanh toán: 29239200.00 VND"));
+        assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
+    }
+    @Test void completedPlanContextReadsThatReceiptWhenAnotherBillAndSourceAreSelected(){
+        var bill=crossBorder.selectedExpense();
+        var plan=payments.createTuitionPlan("BANK_A");var receipt=payments.approveAndExecute(plan.id());assertNotNull(receipt);
+        conversation.enter(session,view(session).planToken(),true,false);
+        int second=crossBorder.addExpense("TUITION","Second tuition",bill.institution(),new BigDecimal("100"),bill.destinationCountry(),bill.currency(),bill.recipientName(),bill.recipientBankName(),bill.recipientBankCode(),bill.recipientAccount(),"SECOND",bill.dueDate(),null,null,null);
+        crossBorder.selectExpense(second);payments.selectPaymentSource("VCB_VND");
+        stub(EXPLAIN_TUITION_AFFORDABILITY);
+        var before=PersonalFinanceAiIntegrationTest.snapshot(db);
+
+        String answer=conversation.send(session,"How much remained after I paid tuition?","en");
+
+        assertTrue(answer.startsWith("COMPLETED TUITION PAYMENT"));
+        assertTrue(answer.contains("Actual balance immediately after payment: 29239200.00 VND"));
+        assertTrue(answer.contains(receipt.transactionId()));assertTrue(answer.contains(plan.id()));
+        assertFalse(answer.contains("SECOND"));
+        assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
+    }
+    @Test void affordabilityClassificationDoesNotResolveAnUnscopedBalanceQuestion(){
+        stub(EXPLAIN_TUITION_AFFORDABILITY);
+        String answer=ask("Còn bao nhiêu?");
+        assertTrue(answer.contains("Hãy chọn chủ đề"));
+        assertFalse(answer.contains("Số dư"));
+        assertNull(payments.latestAction());assertEquals(0,payments.sandboxTransactionCount());
+    }
     @Test void missingOrAmbiguousSelectedAccountNeverFallsThroughToFirstAccount(){
         stub(CREATE_TUITION_PLAN);
         db.update("UPDATE payment_source_accounts SET selected=FALSE");

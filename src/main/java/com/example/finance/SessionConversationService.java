@@ -107,6 +107,11 @@ public class SessionConversationService {
         return new Binding(plan.expenseId(),bill==null?null:bill.updatedAt().toString(),plan.sourceAccountId(),channel(plan.channelId()),
                 plan.id(),plan.actionHash(),selectedBill(),selectedAccount(),Map.of());
     }
+    private PhaseFourService.ActionPlan completedPlanForBill(Integer billId) {
+        if (billId == null) return null;
+        var plan=payments.completedPlansByExpense().get(billId);
+        return plan!=null && payments.receiptForAction(plan.id())!=null ? plan : null;
+    }
     private static Channel channel(String value){try{return Channel.valueOf(value);}catch(Exception ex){return Channel.NONE;}}
     private String issue(State state, Binding binding, Topic topic) {
         String token=UUID.randomUUID().toString();
@@ -119,7 +124,8 @@ public class SessionConversationService {
         synchronized(state) {
             if(state.runwayRequested && state.binding!=null && validate(state.binding)!=null){state.clearScenario();state.revision++;}
             if(state.runwayRequested){state.scenarioToken=UUID.randomUUID().toString();state.scenarioExpiry=LocalDateTime.now().plusMinutes(10);}
-            String student=bill==null?null:issue(state,billBinding(bill.id()),Topic.TUITION_AFFORDABILITY);
+            var completed=bill==null?null:completedPlanForBill(bill.id());
+            String student=bill==null?null:issue(state,completed==null?billBinding(bill.id()):planBinding(completed),Topic.TUITION_AFFORDABILITY);
             String action=plan==null||!"TUITION".equals(plan.actionType())?null:issue(state,planBinding(plan),Topic.TUITION_PLAN);
             return new View(student,action,state.topic,state.clarification,
                     state.choices.entrySet().stream().map(e->new ChoiceView(e.getKey(),e.getValue().label())).toList(),List.copyOf(state.display),
@@ -183,6 +189,11 @@ public class SessionConversationService {
     private String validate(Binding binding) {
         if(binding==null)return null;
         try{
+            if(binding.plan()!=null){
+                var plan=payments.action(binding.plan());
+                if("COMPLETED".equals(plan.status())&&payments.receiptForAction(plan.id())!=null)
+                    return plan.actionHash().equals(binding.planHash())?null:"PLAN CHANGED";
+            }
             if(!Objects.equals(binding.workspaceBill(),selectedBill())||!Objects.equals(binding.workspaceAccount(),selectedAccount()))return "WORKSPACE CHANGED";
             if(binding.bill()!=null){var bill=crossBorder.expense(binding.bill());
                 if(!bill.updatedAt().toString().equals(binding.version())||!crossBorder.verifyRecipient(bill.id()).verified())return "BILL CHANGED";
@@ -241,6 +252,13 @@ public class SessionConversationService {
         public String begin(){synchronized(state){
             if(revision!=state.revision){reason="CONTEXT_STALE";return vi?"Yêu cầu cũ đã bị thay thế.":"This request has been superseded.";}
             if(personalTopic(message) && (topic!=Topic.LIVING_EXPENSE_RUNWAY || matches(message,"budget|ngân sách|recorded|chi tiêu tháng"))){binding=null;topic=Topic.NONE;}
+            if(binding!=null&&binding.bill()!=null&&binding.plan()==null
+                    && Objects.equals(binding.workspaceBill(),selectedBill())
+                    && Objects.equals(binding.workspaceAccount(),selectedAccount())){
+                var completed=completedPlanForBill(binding.bill());
+                if(completed!=null&&Objects.equals(binding.account(),completed.sourceAccountId()))
+                    binding=planBinding(completed);
+            }
             String invalid=validate(binding);
             if(invalid!=null){reason="CONTEXT_STALE";return vi?"Ngữ cảnh hoặc báo giá đã thay đổi/hết hạn. Chọn lại đối tượng; làm mới báo giá bằng luồng có hướng dẫn nếu cần.":"Context or quote changed/expired. Choose the object again; refresh quotes through the guided flow if needed.";}
             return null;
@@ -272,6 +290,15 @@ public class SessionConversationService {
         private String ensureBill(){return ensureBill(Topic.TUITION_CHANNELS);}
         private String ensureBill(Topic choiceTopic){
             if(binding!=null&&binding.bill()!=null)return null;
+            Integer selected=selectedBill();
+            if(choiceTopic==Topic.TUITION_AFFORDABILITY&&selected!=null){
+                var selectedBill=crossBorder.expense(selected);
+                if(selectedBill.executed()){
+                    var completed=completedPlanForBill(selected);
+                    if(completed!=null){binding=planBinding(completed);return null;}
+                    return clarify(Pending.BILL,vi?"Không tìm thấy biên nhận Sandbox cho hóa đơn đã thanh toán này.":"No Sandbox receipt was found for this paid bill.",List.of(),List.of());
+                }
+            }
             var bills=crossBorder.expenses().stream().filter(b->b.active()&&!b.executed()&&"TUITION".equals(b.expenseType())&&crossBorder.verifyRecipient(b.id()).verified()).toList();
             if(bills.size()!=1)return clarify(Pending.BILL,vi?"Hãy chọn rõ hóa đơn học phí đã xác minh cần hỏi.":"Choose the verified tuition bill you mean.",
                     bills.stream().map(b->new Capability(billBinding(b.id()),choiceTopic,LocalDateTime.now().plusMinutes(10))).toList(),
@@ -315,7 +342,9 @@ public class SessionConversationService {
             if(intent.intent()==LlmIntent.Intent.UNSAFE_REQUEST){reason="CONTEXT_UNSAFE_INPUT";return payments.renderIntent(intent);}
             if(intent.intent()==LlmIntent.Intent.UNSUPPORTED_REQUEST){reason="CONTEXT_UNSUPPORTED";return vi?"Yêu cầu nằm ngoài các câu hỏi tài chính và học phí hiện được hỗ trợ.":"This request is outside the supported finance and tuition questions.";}
             if(intent.intent()==LlmIntent.Intent.EXPLAIN_LIVING_EXPENSE_RUNWAY && topic==Topic.NONE && !matches(message,"tuition|học phí|living|sinh hoạt|monthly|mỗi tháng|runway"))return clarifyTopic();
-            if(intent.intent()!=LlmIntent.Intent.EXPLAIN_LIVING_EXPENSE_RUNWAY && topic==Topic.NONE&&!personalTopic(message)&&matches(message,"còn bao nhiêu|how much.*left|what about|kênh đó|that channel|trạng thái thế|what'?s its status"))return clarifyTopic();
+            if(intent.intent()!=LlmIntent.Intent.EXPLAIN_LIVING_EXPENSE_RUNWAY
+                    && !(intent.intent()==LlmIntent.Intent.EXPLAIN_TUITION_AFFORDABILITY&&matches(message,"tuition|học phí"))
+                    && topic==Topic.NONE&&!personalTopic(message)&&matches(message,"còn bao nhiêu|how much.*left|what about|kênh đó|that channel|trạng thái thế|what'?s its status"))return clarifyTopic();
             if(intent.confidence().compareTo(new BigDecimal("0.80"))<0||intent.intent()==LlmIntent.Intent.NEED_CLARIFICATION)return clarifyTopic();
             if(intent.intent()==LlmIntent.Intent.EXPLAIN_LIVING_EXPENSE_RUNWAY)return runwayResponse(intent);
             if(FinanceChatService.isReadOnly(intent.intent())&&FinanceChatService.scopedQuestion(message))
@@ -327,8 +356,13 @@ public class SessionConversationService {
                 state.clearScenario();
                 binding=null;return success(intent.intent()==LlmIntent.Intent.EXPLAIN_BUDGET_STATUS?Topic.BUDGET:Topic.SPENDING,intent,insights.render(intent.intent(),payments,vi));
             }
-            String error=ensureBill();if(error!=null)return error;
+            String error=intent.intent()==LlmIntent.Intent.EXPLAIN_TUITION_AFFORDABILITY
+                    ?ensureBill(Topic.TUITION_AFFORDABILITY):ensureBill();
+            if(error!=null)return error;
             String invalid=validate(binding);if(invalid!=null){rejected("CONTEXT_STALE",vi);return vi?"Đối tượng đã thay đổi; hãy chọn lại trước khi hỏi tiếp.":"The referenced object changed; choose it again before continuing.";}
+            if(intent.intent()==LlmIntent.Intent.EXPLAIN_TUITION_AFFORDABILITY&&binding.plan()!=null
+                    && "COMPLETED".equals(payments.action(binding.plan()).status()))
+                return success(Topic.TUITION_AFFORDABILITY,intent,insights.completedTuitionBalance(payments,binding.plan(),vi));
             if(intent.intent()==LlmIntent.Intent.EXPLAIN_CHANNEL_UNAVAILABLE){
                 Channel named=namedChannel(message);
                 Channel requested=named!=Channel.NONE?named:topic==Topic.CHANNEL_UNAVAILABLE?discussedChannel:binding.channel();

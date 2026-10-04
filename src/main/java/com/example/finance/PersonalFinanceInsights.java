@@ -97,7 +97,8 @@ public class PersonalFinanceInsights {
         CrossBorderService.StudentExpense expense;
         try { expense = crossBorder.selectedExpense(); }
         catch (IllegalStateException ex) { return heading + limitation(vi, "Không có hóa đơn đang chọn.", "No selected bill."); }
-        if (!expense.active() || expense.executed() || expense.amount().signum() <= 0 || !"TUITION".equals(expense.expenseType()))
+        if (expense.executed()) return completedAffordability(payments,expense,vi);
+        if (!expense.active() || expense.amount().signum() <= 0 || !"TUITION".equals(expense.expenseType()))
             return heading + limitation(vi, "Cần hóa đơn học phí đang hoạt động, chưa thanh toán.", "An active unpaid tuition bill is required.");
         if (!crossBorder.verifyRecipient(expense.id()).verified())
             return heading + limitation(vi, "Người thụ hưởng chưa khớp registry.", "Recipient does not match the registry.");
@@ -151,6 +152,35 @@ public class PersonalFinanceInsights {
                 .append(vi ? " · hết hạn " : " · expires ").append(quote.expiresAt()).append(".\n")
                 .append(vi ? "Chỉ là mô phỏng; chưa tạo kế hoạch, phê duyệt hay biên nhận." : "Synthetic projection only; no plan, approval or receipt created.");
         return out.toString();
+    }
+
+    private String completedAffordability(PhaseFourService payments, CrossBorderService.StudentExpense expense, boolean vi) {
+        var plan=payments.completedPlansByExpense().get(expense.id());
+        return completedTuitionBalance(payments,plan==null?null:plan.id(),vi);
+    }
+
+    String completedTuitionBalance(PhaseFourService payments, String planId, boolean vi) {
+        var plan=planId==null?null:payments.action(planId);
+        var receipt=plan==null||!"COMPLETED".equals(plan.status())?null:payments.receiptForAction(plan.id());
+        if(receipt==null) return vi
+                ?"Không tìm thấy biên nhận Payment Sandbox cho hóa đơn đã thanh toán này. Không suy đoán số dư và không tạo thanh toán mới."
+                :"No Payment Sandbox receipt was found for this paid bill. No balance is inferred and no new payment is created.";
+        return new StringBuilder(vi
+                ?"THANH TOÁN HỌC PHÍ ĐÃ HOÀN TẤT · VND (Payment Sandbox).\n"
+                :"COMPLETED TUITION PAYMENT · VND (Payment Sandbox).\n")
+                .append(vi?"Số dư thực tế sau thanh toán: ":"Actual balance immediately after payment: ")
+                .append(money(receipt.vndBalanceAfter())).append(" VND.\n")
+                .append(vi?"Biên nhận: ":"Receipt: ").append(receipt.transactionId())
+                .append(vi?" · Kế hoạch: ":" · Plan: ").append(plan.id()).append(".\n")
+                .append(vi?"Tổng tiền đã trừ: ":"Total debited: ").append(money(receipt.vndDebit()))
+                .append(vi?" VND; tiền quy đổi: ":" VND; conversion: ").append(money(receipt.conversionVnd()))
+                .append(vi?" VND; phí: ":" VND; fees: ").append(money(receipt.feeDeductionVnd())).append(" VND.\n")
+                .append(vi?"Người nhận đã ghi có: ":"Recipient credited: ").append(money(receipt.cnyCredit()))
+                .append(' ').append(receipt.destinationCurrency()).append(".\n")
+                .append(vi
+                        ?"Đây là số dư được biên nhận ghi lại ngay sau giao dịch này. Giao dịch Sandbox phát sinh sau đó có thể làm số dư tài khoản hiện tại khác đi. Không cần báo giá đang hiệu lực và không tạo kế hoạch, phê duyệt hoặc thanh toán mới."
+                        :"This is the balance recorded by the receipt immediately after this payment. Later Sandbox transactions can make the current account balance different. No current quote is required and no plan, approval, or payment is created.")
+                .toString();
     }
 
     private String limitation(boolean vi, String vietnamese, String english) {
