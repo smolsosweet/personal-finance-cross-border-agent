@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Atlas · Finance workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261004-answer-ux-v1')}">
+  <title>Atlas · Finance workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261004-shared-demo-v1')}">
 </head>
 <body>
 <div class="shell">
@@ -38,11 +38,15 @@
       <button type="button" data-tab="agent" data-payment-entry th:hidden="${#lists.isEmpty(paymentPlans)}" aria-selected="false">Agent &amp; Payments</button>
     </nav>
     <div class="content">
+      <section th:if="${sharedDemo}" class="shared-demo-banner" role="note" data-testid="shared-demo-notice">
+        <strong>SHARED DEMO · SYNTHETIC DATA</strong>
+        <p>Finance and Payment Sandbox data are shared by the team. Reset affects everyone. Restart restores the seed data. No real money or bank connection.</p>
+      </section>
       <div th:if="${message}" class="notice" role="status" th:text="${message}"></div>
 
       <section id="overview" class="intro dashboard-intro" data-tab-panel="dashboard">
         <div><div class="eyebrow">PERSONAL FINANCE WORKSPACE</div><h1>Your money today, <span th:text="${profile.display_name}">Minh Nguyen</span></h1><p>See what you own, what is already planned and what remains safe to allocate.</p></div>
-        <form method="post" th:action="@{/reset}" data-confirm-en="Reset all synthetic workspace data?" data-confirm-vi="Đặt lại toàn bộ dữ liệu mô phỏng trong không gian làm việc?"><button class="secondary" data-testid="reset-demo">↺ Reset demo data</button></form>
+        <form method="post" th:action="@{/reset}" th:attr="data-confirm-en=${sharedDemo ? 'Reset shared synthetic data for the whole team? This affects everyone.' : 'Reset all synthetic workspace data?'},data-confirm-vi=${sharedDemo ? 'Đặt lại dữ liệu mô phỏng dùng chung của cả team? Thao tác này ảnh hưởng mọi người.' : 'Đặt lại toàn bộ dữ liệu mô phỏng trong không gian làm việc?'}"><button class="secondary" data-testid="reset-demo">↺ Reset demo data</button></form>
       </section>
 
       <nav class="dashboard-view-tabs" data-tab-panel="dashboard" aria-label="Overview views">
@@ -572,6 +576,6 @@
   </form>
   <p class="assistant-safety">AI understands the question. Backend code calculates the figures. Asking a question does not authorize a payment.</p>
 </aside>
-<script th:src="@{/app.js(v='20261004-answer-ux-v1')}"></script>
+<script th:src="@{/app.js(v='20261004-shared-demo-v1')}"></script>
 </body>
 </html>

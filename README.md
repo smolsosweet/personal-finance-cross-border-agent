@@ -2,6 +2,12 @@
 
 The `main` branch implements the deterministic demo through Phase 5 plus an optional guarded intent classifier using OpenAI, local Ollama, or Gemini.
 
+## Shared team demo
+
+Docker/Render setup: [Shared demo deployment](docs/SHARED_DEMO_DEPLOYMENT.md).
+The `hosting` profile uses synthetic, shared in-memory data: Reset affects the whole team and every restart restores seed data. Conversation sessions remain separate. This is a shared demo without user login, not production hosting.
+Actual Gemini and regression evidence: [Gemini verification](docs/GEMINI_VERIFICATION.md).
+
 - Phase 1: synthetic user, bank events, normalization and transaction type detection.
 - Phase 2: merchant categorization, confidence handling, Undo, dashboard, budgets and Proactive Feed.
 - Phase 3: fixed Vietnam to China tuition corridor, School Registry verification, eligible channel comparison and deterministic landed cost.

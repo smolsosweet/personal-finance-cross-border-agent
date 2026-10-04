@@ -29,6 +29,51 @@ class RunwayIntegrationTest {
     String ask(String text){return conversation.send(session,text,"vi");}
     SessionConversationService.View view(){return conversation.view(session,border.selectedExpense(),payments.latestAction());}
     String confirm(String amount){return conversation.monthlyExpense(session,view().runway().token(),amount,"VND",false,true);}
+    @Test void bankBDiscussionAndPronounDoNotReplaceVerifiedRunwayChannel(){
+        ask("Sau học phí tiền đủ sinh hoạt mấy tháng?");confirm("8000000");
+        var before=PersonalFinanceAiIntegrationTest.snapshot(db);
+        stub(EXPLAIN_CHANNEL_UNAVAILABLE);
+        assertTrue(ask("Vì sao Bank B không dùng được?").contains("Không khả dụng"));
+        when(llm.classify(anyString())).thenAnswer(call->{
+            assertTrue(ModelConversationContext.instructions().contains("channel=BANK_B"));
+            return intent(EXPLAIN_CHANNEL_UNAVAILABLE);
+        });
+        assertTrue(ask("Vì sao kênh đó không dùng được?").contains("Bank B"));
+        stub(EXPLAIN_LIVING_EXPENSE_RUNWAY);
+        String answer=ask("Vậy sau học phí đủ sinh hoạt mấy tháng?");
+        assertTrue(answer.contains("Khoảng 3.27 tháng"),answer);
+        assertTrue(answer.contains("Bank A"),answer);
+        assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
+        assertNull(payments.latestAction());assertEquals(0,payments.sandboxTransactionCount());
+    }
+    @Test void channelClarificationChoiceChangesDiscussionOnly(){
+        var scope=view();conversation.enter(session,scope.studentToken(),true,false);
+        stub(EXPLAIN_CHANNEL_UNAVAILABLE);
+        ask("Explain channel eligibility");
+        var choice=view().choices().stream().filter(c->c.label().contains("Bank B")).findFirst().orElseThrow();
+        conversation.enter(session,choice.token(),true,true);
+        assertTrue(ask("Vì sao kênh đó không dùng được?").contains("Bank B"));
+        stub(EXPLAIN_LIVING_EXPENSE_RUNWAY);
+        String answer=ask("Sau học phí đủ sinh hoạt mấy tháng?");
+        assertTrue(answer.contains("bao nhiêu VND mỗi tháng"),answer);
+        assertTrue(confirm("8000000").contains("Khoảng 3.27 tháng"));
+    }
+    @Test void bankBExplanationKeepsExplicitPlanChannelRatherThanInferringFromBankName(){
+        // Fixture models a verified quote using a Bank A funding account but a different channel.
+        db.update("UPDATE payment_channels SET source_account_id='PAYER_VND' WHERE id='ALIPAY'");
+        var quote=border.rankedQuotesForExpense(border.selectedExpense().id()).stream().filter(q->q.channelId().equals("ALIPAY")).findFirst().orElseThrow();
+        var plan=payments.createTuitionPlan("ALIPAY","PAYER_VND");
+        var scope=view();conversation.enter(session,scope.planToken(),true,false);
+        var before=PersonalFinanceAiIntegrationTest.snapshot(db);
+        stub(EXPLAIN_CHANNEL_UNAVAILABLE);ask("Why is Bank B unavailable?");
+        stub(EXPLAIN_LIVING_EXPENSE_RUNWAY);
+        assertTrue(ask("How many months after tuition?").contains("bao nhiêu VND mỗi tháng"));
+        String answer=confirm("8000000");
+        assertTrue(answer.contains("Alipay"),answer);
+        assertTrue(answer.contains(quote.landedCost().toPlainString()),answer);
+        assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
+        assertEquals("AWAITING_APPROVAL",payments.action(plan.id()).status());assertNull(payments.receiptForAction(plan.id()));
+    }
     @Test void bilingualMissingBaselineConfirmationEditingClearingAndFollowupsAreReadonly(){
         var before=PersonalFinanceAiIntegrationTest.snapshot(db);
         assertTrue(ask("Sau khi đóng học phí, tiền còn lại đủ sinh hoạt mấy tháng?").contains("bao nhiêu VND mỗi tháng"));

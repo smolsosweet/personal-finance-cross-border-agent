@@ -27,7 +27,8 @@ public record ModelConversationContext(Topic topic, Channel channel, LlmIntent.I
             Topic TUITION_CHANNELS plus 'What about the fastest option?' / 'Còn kênh nhanh nhất?' means
             COMPARE_TUITION_CHANNELS with FASTEST. It NEVER means CREATE_TUITION_PLAN.
             Topic CHANNEL_UNAVAILABLE plus 'Why can't I use that channel?' / 'Vì sao kênh đó không dùng được?'
-            means EXPLAIN_CHANNEL_UNAVAILABLE. Topic TUITION_PLAN plus 'What's its status?' / 'Trạng thái thế nào?'
+            means EXPLAIN_CHANNEL_UNAVAILABLE. For this topic, channel identifies the discussed channel only,
+            not a payment selection. Topic TUITION_PLAN plus 'What's its status?' / 'Trạng thái thế nào?'
             means CHECK_TUITION_STATUS. If scope is NONE or the reference is ambiguous, use NEED_CLARIFICATION.
             A follow-up is read-only by default. CREATE_TUITION_PLAN requires an explicit current request to
             create/prepare a draft. Earlier requests, context, or choosing an object never authorize a draft.

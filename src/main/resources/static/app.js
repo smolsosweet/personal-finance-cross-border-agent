@@ -1,4 +1,6 @@
 const translationsVi = new Map(Object.entries({
+  'SHARED DEMO · SYNTHETIC DATA': 'DEMO DÙNG CHUNG · DỮ LIỆU MÔ PHỎNG',
+  'Finance and Payment Sandbox data are shared by the team. Reset affects everyone. Restart restores the seed data. No real money or bank connection.': 'Dữ liệu tài chính và Payment Sandbox dùng chung cho cả team. Reset ảnh hưởng mọi người. Restart đưa dữ liệu về seed. Không dùng tiền thật hoặc kết nối ngân hàng.',
   'About this estimate': 'Giải thích về ước tính',
   'LIVING_EXPENSE_RUNWAY': 'Thời gian đủ tiền sinh hoạt',
   'Living-expense scenario updated; estimate only, no payment.': 'Đã cập nhật kịch bản sinh hoạt; chỉ ước tính, chưa thanh toán.',

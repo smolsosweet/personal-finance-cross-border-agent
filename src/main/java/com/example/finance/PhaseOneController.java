@@ -28,11 +28,13 @@ public class PhaseOneController {
     private final FinanceWorkspaceService financeWorkspace;
     private final SessionConversationService conversations;
     private final boolean demoToolsEnabled;
+    private final boolean sharedDemo;
 
     public PhaseOneController(TransactionService transactions, CrossBorderService crossBorder,
                               PhaseFourService phaseFour, DemoDataService demoData,
                               FinanceWorkspaceService financeWorkspace, SessionConversationService conversations,
-                              @Value("${app.demo-tools-enabled:true}") boolean demoToolsEnabled) {
+                              @Value("${app.demo-tools-enabled:true}") boolean demoToolsEnabled,
+                              @Value("${app.shared-demo:false}") boolean sharedDemo) {
         this.transactions = transactions;
         this.crossBorder = crossBorder;
         this.phaseFour = phaseFour;
@@ -40,6 +42,7 @@ public class PhaseOneController {
         this.financeWorkspace = financeWorkspace;
         this.conversations = conversations;
         this.demoToolsEnabled = demoToolsEnabled;
+        this.sharedDemo = sharedDemo;
     }
 
     @Bean
@@ -128,6 +131,7 @@ public class PhaseOneController {
         model.addAttribute("auditEvents", phaseFour.auditEvents(latestAction==null?null:latestAction.id()));
         model.addAttribute("demoAuditEvents", phaseFour.auditEvents());
         model.addAttribute("demoToolsEnabled", demoToolsEnabled);
+        model.addAttribute("sharedDemo", sharedDemo);
         var conversationView=conversations.view(request.getSession(),crossBorder.selectedExpense(),latestAction);
         model.addAttribute("conversation",conversationView.messages());
         model.addAttribute("conversationContext",conversationView);

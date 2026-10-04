@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: finbridge-shared-demo
+    runtime: docker
+    plan: free
+    region: singapore
+    numInstances: 1
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /
+    autoDeployTrigger: off
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: FINBRIDGE_LLM_MODEL
+        value: gemini-3.5-flash-lite
+      - key: FINBRIDGE_LLM_ENABLED
+        value: "true"

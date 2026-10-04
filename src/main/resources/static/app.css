@@ -181,6 +181,7 @@ header{position:sticky;top:0;z-index:10}.mobile-tabs{top:70px}.payment-demo-entr
 .assistant-launcher:focus-visible,.assistant-panel button:focus-visible,.assistant-composer input:focus-visible{outline:3px solid #536bf1;outline-offset:3px}
 .content{padding-bottom:100px}
 /* Backend-owned response values; presentation does not authorize or execute actions. */
+.shared-demo-banner{padding:12px 16px;border:1px solid #e4cf91;background:#fff8e8;color:#775615;border-radius:12px;margin-bottom:18px}.shared-demo-banner strong{font-size:12px}.shared-demo-banner p{margin:6px 0 0;font-size:13px;line-height:1.5}
 .response-content{min-width:0;overflow-wrap:anywhere}
 .response-conclusion{display:block;color:#233d79;font-size:19px;line-height:1.4;margin-top:7px}
 .response-estimate{display:inline-block;margin-top:7px;border-radius:6px;background:#fff0cb;color:#805c08;padding:4px 7px;font-size:11px;font-weight:800}

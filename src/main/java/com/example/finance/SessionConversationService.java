@@ -36,7 +36,9 @@ public class SessionConversationService {
 
     record Binding(Integer bill, String version, String account, Channel channel, String plan,
                    String planHash, Integer workspaceBill, String workspaceAccount, Map<String,String> quotes) {}
-    record Capability(Binding binding, Topic topic, LocalDateTime expires) {}
+    record Capability(Binding binding, Topic topic, LocalDateTime expires, Channel discussedChannel) {
+        Capability(Binding binding, Topic topic, LocalDateTime expires){this(binding,topic,expires,Channel.NONE);}
+    }
     record Choice(Capability capability, long revision, String label) {}
     public record ChoiceView(String token, String label) {}
     public record RunwayView(boolean visible, String token, BigDecimal monthly) {}
@@ -50,6 +52,7 @@ public class SessionConversationService {
         LlmIntent.Intent lastIntent;
         Pending pending=Pending.NONE;
         Binding binding;
+        Channel discussedChannel=Channel.NONE;
         String clarification="";
         BigDecimal monthly;
         Binding monthlyScope;
@@ -63,6 +66,7 @@ public class SessionConversationService {
         final List<PhaseFourService.ConversationMessage> display=new ArrayList<>();
         void clear(String resetEpoch) {
             epoch=resetEpoch; revision++; topic=Topic.NONE; lastIntent=null; pending=Pending.NONE; binding=null;
+            discussedChannel=Channel.NONE;
             clarification=""; capabilities.clear(); choices.clear(); display.clear();
             clearScenario();
             display.add(new PhaseFourService.ConversationMessage("WELCOME","ASSISTANT",WELCOME,LocalDateTime.now()));
@@ -88,6 +92,7 @@ public class SessionConversationService {
         if(session==null)return;
         State state=state(session);
         synchronized(state) { state.revision++; state.binding=null; state.topic=Topic.NONE; state.lastIntent=null;
+            state.discussedChannel=Channel.NONE;
             state.pending=Pending.NONE; state.choices.clear(); state.clarification=""; state.clearScenario(); }
     }
     private void lock(){db.queryForObject("SELECT id FROM agent_policy WHERE id=1 FOR UPDATE",Integer.class);}
@@ -130,7 +135,8 @@ public class SessionConversationService {
             String error=capability==null||capability.expires().isBefore(LocalDateTime.now())?"INVALID CONTEXT TOKEN":validate(capability.binding());
             if(error!=null){audit("CONTEXT_STALE");return vi?"Lựa chọn không còn hợp lệ cho phiên này. Mở lại màn hình hoặc hỏi rõ chủ đề.":"This selection is invalid or stale for this session. Reopen the screen or clarify the topic.";}
             state.revision++; state.binding=capability.binding(); state.topic=capability.topic();
-            state.clearScenario();
+            state.discussedChannel=capability.discussedChannel();
+            if(capability.topic()!=Topic.CHANNEL_UNAVAILABLE)state.clearScenario();
             state.pending=Pending.NONE;state.choices.clear();state.clarification="";
             audit(choice?"CONTEXT_CHOICE_VALIDATED":"CONTEXT_ENTRY_VALIDATED");
             String answer=vi?"Đã cập nhật chủ đề và đối tượng đã xác minh. Bạn có thể hỏi tiếp; chưa tạo kế hoạch hay thanh toán.":"Verified conversation scope updated. You can ask a follow-up; no plan or payment was created.";
@@ -228,9 +234,10 @@ public class SessionConversationService {
         private LlmIntent.Intent lastIntent;
         private Pending pending;
         private Binding binding;
+        private Channel discussedChannel;
         private String reason="CONTEXT_CLARIFICATION_REQUIRED";
         Turn(State state,String message,String language){this.state=state;this.message=message==null?"":message.trim();this.vi="vi".equals(language)||language==null&&matches(this.message,"[À-ỹ]");
-            synchronized(state){revision=++state.revision;resetEpoch=state.epoch;topic=state.topic;lastIntent=state.lastIntent;pending=state.pending;binding=state.binding;}}
+            synchronized(state){revision=++state.revision;resetEpoch=state.epoch;topic=state.topic;lastIntent=state.lastIntent;pending=state.pending;binding=state.binding;discussedChannel=state.discussedChannel;}}
         public String begin(){synchronized(state){
             if(revision!=state.revision){reason="CONTEXT_STALE";return vi?"Yêu cầu cũ đã bị thay thế.":"This request has been superseded.";}
             if(personalTopic(message) && (topic!=Topic.LIVING_EXPENSE_RUNWAY || matches(message,"budget|ngân sách|recorded|chi tiêu tháng"))){binding=null;topic=Topic.NONE;}
@@ -238,7 +245,8 @@ public class SessionConversationService {
             if(invalid!=null){reason="CONTEXT_STALE";return vi?"Ngữ cảnh hoặc báo giá đã thay đổi/hết hạn. Chọn lại đối tượng; làm mới báo giá bằng luồng có hướng dẫn nếu cần.":"Context or quote changed/expired. Choose the object again; refresh quotes through the guided flow if needed.";}
             return null;
         }}
-        public ModelConversationContext summary(){return new ModelConversationContext(topic,binding==null?Channel.NONE:binding.channel(),lastIntent,pending);}
+        public ModelConversationContext summary(){return new ModelConversationContext(topic,
+                topic==Topic.CHANNEL_UNAVAILABLE?discussedChannel:binding==null?Channel.NONE:binding.channel(),lastIntent,pending);}
         public Object monitor(){return state;}
         public boolean current(){synchronized(state){return revision==state.revision&&Objects.equals(resetEpoch,epoch());}}
         public void record(String role,String text){synchronized(state){if(current())SessionConversationService.this.record(state,role,text);}}
@@ -247,7 +255,7 @@ public class SessionConversationService {
             if("UNTRUSTED INSTRUCTION".equals(why)){reason="CONTEXT_UNSAFE_INPUT";return;}
             if("LLM UNAVAILABLE".equals(why)){reason="CONTEXT_PROVIDER_UNAVAILABLE";return;}
             if("CONTEXT_UNSUPPORTED".equals(why))return;
-            if("CONTEXT_STALE".equals(why)){synchronized(state){state.binding=null;state.topic=Topic.NONE;state.lastIntent=null;state.choices.clear();state.pending=Pending.NONE;state.clarification="";state.clearScenario();}reason="CONTEXT_STALE";return;}
+            if("CONTEXT_STALE".equals(why)){synchronized(state){state.binding=null;state.discussedChannel=Channel.NONE;state.topic=Topic.NONE;state.lastIntent=null;state.choices.clear();state.pending=Pending.NONE;state.clarification="";state.clearScenario();}reason="CONTEXT_STALE";return;}
             reason="CONTEXT_CLARIFICATION_REQUIRED";
         }
         private String clarify(Pending kind,String explanation,List<Capability> options,List<String> labels){synchronized(state){
@@ -271,7 +279,7 @@ public class SessionConversationService {
             binding=billBinding(bills.getFirst().id());return null;
         }
         private Binding quoted(Binding original,List<CrossBorderService.ChannelQuote> quotes){return new Binding(original.bill(),original.version(),original.account(),original.channel(),original.plan(),original.planHash(),original.workspaceBill(),original.workspaceAccount(),quotes.stream().collect(Collectors.toMap(CrossBorderService.ChannelQuote::channelId,CrossBorderService.ChannelQuote::quoteId)));}
-        private String success(Topic next,LlmIntent intent,String answer){synchronized(state){if(next!=Topic.LIVING_EXPENSE_RUNWAY)state.clearScenario();state.topic=next;state.lastIntent=intent.intent();state.binding=binding;state.pending=Pending.NONE;state.choices.clear();state.clarification="";}reason=intent.intent()==LlmIntent.Intent.CREATE_TUITION_PLAN?"CONTEXT_EXPLICIT_DRAFT":"CONTEXTUAL_READ_ONLY";return answer;}
+        private String success(Topic next,LlmIntent intent,String answer){synchronized(state){if(next!=Topic.LIVING_EXPENSE_RUNWAY&&next!=Topic.CHANNEL_UNAVAILABLE)state.clearScenario();state.topic=next;state.lastIntent=intent.intent();state.binding=binding;state.discussedChannel=next==Topic.CHANNEL_UNAVAILABLE?discussedChannel:Channel.NONE;state.pending=Pending.NONE;state.choices.clear();state.clarification="";}reason=intent.intent()==LlmIntent.Intent.CREATE_TUITION_PLAN?"CONTEXT_EXPLICIT_DRAFT":"CONTEXTUAL_READ_ONLY";return answer;}
         private String runwayResponse(LlmIntent intent){
             reason="RUNWAY_REQUESTED";audit(reason);
             if(matches(message,"\\b(another|someone|both|cash)\\b|other accounts|all accounts|tài khoản khác|tất cả tài khoản|tiền mặt|đồng thời"))
@@ -323,13 +331,14 @@ public class SessionConversationService {
             String invalid=validate(binding);if(invalid!=null){rejected("CONTEXT_STALE",vi);return vi?"Đối tượng đã thay đổi; hãy chọn lại trước khi hỏi tiếp.":"The referenced object changed; choose it again before continuing.";}
             if(intent.intent()==LlmIntent.Intent.EXPLAIN_CHANNEL_UNAVAILABLE){
                 Channel named=namedChannel(message);
-                Channel requested=named!=Channel.NONE?named:binding.channel();
+                Channel requested=named!=Channel.NONE?named:topic==Topic.CHANNEL_UNAVAILABLE?discussedChannel:binding.channel();
                 var quotes=crossBorder.rankedQuotesForExpense(binding.bill());
                 if(requested==Channel.NONE){return clarify(Pending.CHANNEL,vi?"Bạn đang hỏi kênh nào? Hãy chọn rõ kênh.":"Which channel do you mean? Choose a channel.",
-                    quotes.stream().map(q->new Capability(new Binding(binding.bill(),binding.version(),binding.account(),channel(q.channelId()),null,null,binding.workspaceBill(),binding.workspaceAccount(),Map.of()),Topic.CHANNEL_UNAVAILABLE,LocalDateTime.now().plusMinutes(10))).toList(),quotes.stream().map(CrossBorderService.ChannelQuote::displayName).toList());}
+                    quotes.stream().map(q->new Capability(binding,Topic.CHANNEL_UNAVAILABLE,LocalDateTime.now().plusMinutes(10),channel(q.channelId()))).toList(),quotes.stream().map(CrossBorderService.ChannelQuote::displayName).toList());}
                 var quote=quotes.stream().filter(q->q.channelId().equals(requested.name())).findFirst().orElse(null);
                 if(quote==null)return clarifyTopic();
-                binding=new Binding(binding.bill(),binding.version(),binding.account(),requested,null,null,binding.workspaceBill(),binding.workspaceAccount(),Map.of());
+                // Discussion is not a financial selection: preserve the verified source, plan and quotes.
+                discussedChannel=requested;
                 String answer=(vi?"Kênh ":"Channel ")+quote.displayName()+": "+quote.eligibilityReason()+". "+(quote.eligible()?(vi?"Đủ điều kiện; chưa thực thi.":"Eligible; no execution."):(vi?"Không khả dụng và không thể thực thi.":"Unavailable and cannot be executed."));
                 return success(Topic.CHANNEL_UNAVAILABLE,intent,answer);
             }
