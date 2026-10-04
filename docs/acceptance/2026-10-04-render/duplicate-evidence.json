@@ -1,0 +1,184 @@
+{
+  "observedAt" : "2026-10-04T13:54:43.338249500Z",
+  "data" : {
+    "url" : "https://finbridge-shared-demo.onrender.com/?newTransaction=b1b78e02-2c24-4304-9f2c-a4cc5249ef2e#transactions",
+    "action" : null,
+    "receipt" : null,
+    "review" : null,
+    "audit" : [ "13:54:41SYSTEMDEMO RESET—COMPLETED—Phase 4 policy, Payment Sandbox, conversation and audit data reset" ],
+    "transactions" : [ {
+      "id" : "b1b78e02-2c24-4304-9f2c-a4cc5249ef2e",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Food & Drinks",
+      "amount" : "85000.00",
+      "text" : "\n            Highlands CoffeeJust created04/10/2026 13:54:42 · Simulated Bank EventMerchant rule v1 matched a known cafe\n            Expense\n            Food & Drinks\n            97%\n            AUTO\n            −85,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "c22a714d-98a0-49fb-92ee-f1aaa6c3914d",
+      "type" : "Income",
+      "status" : "AUTO",
+      "category" : "Income",
+      "amount" : "5000000.00",
+      "text" : "\n            Demo Employer03/10/2026 12:19:00 · Synthetic DataTransaction type is incoming income\n            Income\n            Income\n            99%\n            AUTO\n            +5,000,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "72dce5da-2564-4fa7-aafd-3af24aadac1d",
+      "type" : "Refund",
+      "status" : "AUTO",
+      "category" : "Refund",
+      "amount" : "85000.00",
+      "text" : "\n            Highlands Coffee03/10/2026 10:00:00 · Synthetic DataRefund marker found in the normalized description\n            Refund\n            Refund\n            95%\n            AUTO\n            +85,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "fd63c370-b97b-4432-8b0c-e76c96a156ab",
+      "type" : "Expense",
+      "status" : "CONFIRMATION_REQUIRED",
+      "category" : "Shopping",
+      "amount" : "110000.00",
+      "text" : "\n            Campus Store02/10/2026 12:18:00 · Synthetic DataMerchant can represent shopping or groceries\n            Expense\n            Shopping\n            72%\n            CONFIRMATION REQUIRED\n            −110,000 VND\n            \n              Review\n              \n            \n          "
+    }, {
+      "id" : "98dd7b75-0cd7-49e4-b12f-483de057079e",
+      "type" : "Internal Transfer",
+      "status" : "AUTO",
+      "category" : "Transfer",
+      "amount" : "300000.00",
+      "text" : "\n            Own Account02/10/2026 09:00:00 · Synthetic DataBoth accounts belong to the demo profile\n            Internal Transfer\n            Transfer\n            99%\n            AUTO\n            −300,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "02be50db-f2ce-4a72-a771-0bf88e6d1e48",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Utilities",
+      "amount" : "90000.00",
+      "text" : "\n            Electricity Provider01/10/2026 12:17:00 · Synthetic DataMerchant rule v1 matched a utility provider\n            Expense\n            Utilities\n            96%\n            AUTO\n            −90,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "52ae1a5b-0b49-491f-be20-5c6f23cba500",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Transport",
+      "amount" : "70000.00",
+      "text" : "\n            Grab30/09/2026 12:16:00 · Synthetic DataMerchant rule v1 matched transport\n            Expense\n            Transport\n            94%\n            AUTO\n            −70,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "64b50a99-65bf-4a2f-9891-728a27cb8b57",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Food & Drinks",
+      "amount" : "130000.00",
+      "text" : "\n            Highlands Coffee29/09/2026 12:15:00 · Synthetic DataMerchant rule v1 matched a known cafe\n            Expense\n            Food & Drinks\n            97%\n            AUTO\n            −130,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "fca2db97-fb16-4751-b3a8-35fc58496468",
+      "type" : "Income",
+      "status" : "AUTO",
+      "category" : "Income",
+      "amount" : "5000000.00",
+      "text" : "\n            Demo Employer28/09/2026 12:14:00 · Synthetic DataTransaction type is incoming income\n            Income\n            Income\n            99%\n            AUTO\n            +5,000,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "e4214919-387e-4ebd-a958-0f4dcb14587f",
+      "type" : "Expense",
+      "status" : "CONFIRMATION_REQUIRED",
+      "category" : "Shopping",
+      "amount" : "90000.00",
+      "text" : "\n            Campus Store27/09/2026 12:13:00 · Synthetic DataMerchant can represent shopping or groceries\n            Expense\n            Shopping\n            72%\n            CONFIRMATION REQUIRED\n            −90,000 VND\n            \n              Review\n              \n            \n          "
+    }, {
+      "id" : "f85d8cf9-fcad-4f2e-9e47-7f603f9ab68c",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Utilities",
+      "amount" : "70000.00",
+      "text" : "\n            Electricity Provider26/09/2026 12:12:00 · Synthetic DataMerchant rule v1 matched a utility provider\n            Expense\n            Utilities\n            96%\n            AUTO\n            −70,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "5515a2b6-20e5-465b-aab0-da3ad581b71c",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Transport",
+      "amount" : "130000.00",
+      "text" : "\n            Grab25/09/2026 12:11:00 · Synthetic DataMerchant rule v1 matched transport\n            Expense\n            Transport\n            94%\n            AUTO\n            −130,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "a1f0d039-1015-4500-987a-c6b98a49dfde",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Food & Drinks",
+      "amount" : "110000.00",
+      "text" : "\n            Highlands Coffee24/09/2026 12:10:00 · Synthetic DataMerchant rule v1 matched a known cafe\n            Expense\n            Food & Drinks\n            97%\n            AUTO\n            −110,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "43e569a5-6435-4505-93aa-79a1896e4ea4",
+      "type" : "Income",
+      "status" : "AUTO",
+      "category" : "Income",
+      "amount" : "5000000.00",
+      "text" : "\n            Demo Employer23/09/2026 12:09:00 · Synthetic DataTransaction type is incoming income\n            Income\n            Income\n            99%\n            AUTO\n            +5,000,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "3365e4aa-6e31-43aa-9b5b-037d912b0bc8",
+      "type" : "Expense",
+      "status" : "CONFIRMATION_REQUIRED",
+      "category" : "Shopping",
+      "amount" : "70000.00",
+      "text" : "\n            Campus Store22/09/2026 12:08:00 · Synthetic DataMerchant can represent shopping or groceries\n            Expense\n            Shopping\n            72%\n            CONFIRMATION REQUIRED\n            −70,000 VND\n            \n              Review\n              \n            \n          "
+    }, {
+      "id" : "65bac7a7-5b13-4920-95c4-110e78b2d21c",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Utilities",
+      "amount" : "130000.00",
+      "text" : "\n            Electricity Provider21/09/2026 12:07:00 · Synthetic DataMerchant rule v1 matched a utility provider\n            Expense\n            Utilities\n            96%\n            AUTO\n            −130,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "2435f703-91f8-4c89-b787-dfa98fe8d939",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Transport",
+      "amount" : "110000.00",
+      "text" : "\n            Grab20/09/2026 12:06:00 · Synthetic DataMerchant rule v1 matched transport\n            Expense\n            Transport\n            94%\n            AUTO\n            −110,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "3b62eec3-8858-46ec-bd59-8587d094189a",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Food & Drinks",
+      "amount" : "90000.00",
+      "text" : "\n            Highlands Coffee19/09/2026 12:05:00 · Synthetic DataMerchant rule v1 matched a known cafe\n            Expense\n            Food & Drinks\n            97%\n            AUTO\n            −90,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "cf43920c-480a-4cb1-8eb1-32ceb95eb370",
+      "type" : "Income",
+      "status" : "AUTO",
+      "category" : "Income",
+      "amount" : "5000000.00",
+      "text" : "\n            Demo Employer18/09/2026 12:04:00 · Synthetic DataTransaction type is incoming income\n            Income\n            Income\n            99%\n            AUTO\n            +5,000,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "beb8c8de-25b8-4294-ab1c-a1b7b0b09cc7",
+      "type" : "Expense",
+      "status" : "CONFIRMATION_REQUIRED",
+      "category" : "Shopping",
+      "amount" : "130000.00",
+      "text" : "\n            Campus Store17/09/2026 12:03:00 · Synthetic DataMerchant can represent shopping or groceries\n            Expense\n            Shopping\n            72%\n            CONFIRMATION REQUIRED\n            −130,000 VND\n            \n              Review\n              \n            \n          "
+    }, {
+      "id" : "e65fbb38-365e-4752-b61a-690797e0d62a",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Utilities",
+      "amount" : "110000.00",
+      "text" : "\n            Electricity Provider16/09/2026 12:02:00 · Synthetic DataMerchant rule v1 matched a utility provider\n            Expense\n            Utilities\n            96%\n            AUTO\n            −110,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "65121d17-4ce5-4a7d-97ec-cd9a1849fd2b",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Transport",
+      "amount" : "90000.00",
+      "text" : "\n            Grab15/09/2026 12:01:00 · Synthetic DataMerchant rule v1 matched transport\n            Expense\n            Transport\n            94%\n            AUTO\n            −90,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "8aa9dec0-500d-4c0e-befc-1b823552de8a",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Food & Drinks",
+      "amount" : "70000.00",
+      "text" : "\n            Highlands Coffee14/09/2026 12:00:00 · Synthetic DataMerchant rule v1 matched a known cafe\n            Expense\n            Food & Drinks\n            97%\n            AUTO\n            −70,000 VND\n            \n              \n              Undo\n            \n          "
+    } ],
+    "notice" : [ "Simulated Bank Event: Food & Drinks · confidence 97% · AUTO×" ]
+  },
+  "balances" : {
+    "ALIPAY_VND" : "75,000,000.00 VND",
+    "EMERGENCY_VND" : "0.00 VND",
+    "MOMO_VND" : "12,000,000.00 VND",
+    "PAYER_VND" : "100,000,000.00 VND",
+    "SCHOOL_AUD" : "0.00 AUD",
+    "SCHOOL_CNY" : "0.00 CNY",
+    "SCHOOL_USD" : "0.00 USD",
+    "TCB_VND" : "45,000,000.00 VND",
+    "VCB_VND" : "82,000,000.00 VND"
+  }
+}

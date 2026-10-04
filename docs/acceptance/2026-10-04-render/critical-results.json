@@ -1,0 +1,13 @@
+{
+  "results" : [ {
+    "scenario" : "C recipient mismatch blocked after bill edit",
+    "status" : "PASS",
+    "evidence" : "Changing synthetic recipient makes Registry mismatch; old plan ACT-FD74834E-126 INVALIDATED and cannot approve; no payment/balance change"
+  }, {
+    "scenario" : "D explicit tuition approval and concurrent idempotency",
+    "status" : "PASS",
+    "evidence" : "Plan ACT-E334B3BE-9A0 stayed AWAITING_APPROVAL before explicit confirmation; two independent sessions returned same SBOX-BF73034D-297; debit 70760800 once, conversion 70400000, combined fees 360800, CNY credit 20000; payer 29239200; history once; retry/reload unchanged. Browser request overlap=true. Raw server ledger rows are not exposed by UI."
+  } ],
+  "observedProviderAttempts" : 10,
+  "reservedSubmissions" : 12
+}

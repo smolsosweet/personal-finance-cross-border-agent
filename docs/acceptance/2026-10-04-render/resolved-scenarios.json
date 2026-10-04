@@ -1,0 +1,157 @@
+[
+  {
+    "status": "PASS",
+    "evidence": "HTTP 200; first browser navigation 4019 ms; app.js/app.css loaded; three available tabs and reload work",
+    "scenario": "1a HTTPS/assets/reload/tabs"
+  },
+  {
+    "status": "PASS",
+    "evidence": "Chrome mobile emulation 390x844 and reduced viewport 390x500; composer remains reachable; not a physical phone/real keyboard test",
+    "scenario": "1b mobile emulation/assistant/composer"
+  },
+  {
+    "status": "PASS",
+    "evidence": "Same period/numeric values in EN/VI; month expense recomputed from UI rows = 90000.00 VND; finances unchanged",
+    "scenario": "4a spending Vietnamese vs English/current period"
+  },
+  {
+    "status": "PASS",
+    "evidence": "Category limits match configured dashboard; follow-up retains BUDGET and identical backend figures",
+    "scenario": "4b/5a budget plus contextual follow-up"
+  },
+  {
+    "scenario": "4c English budget totals match dashboard",
+    "status": "PASS",
+    "evidence": "English totals match dashboard: limit 6300000.00, spent 90000, remaining 6210000 VND; financial UI unchanged"
+  },
+  {
+    "status": "PASS",
+    "evidence": "Bank B discussion preserves financial state; 8m/10m baseline returns 3.27/2.62; invalid values preserve prior assumption",
+    "scenario": "5b/7 Bank B discussion then runway"
+  },
+  {
+    "status": "PASS",
+    "evidence": "Independent cookie context has no first-session transcript/topic, same finance; ambiguous request asks for topic: Bạn muốn hỏi ngân sách còn lại, chi tiêu hay kênh học phí? Hãy chọn chủ đề.",
+    "scenario": "5c independent session isolation/ambiguity"
+  },
+  {
+    "status": "PASS",
+    "evidence": "20,000 CNY bill, reference/recipient/bank/routing/deadline; synthetic Registry Verified; Bank B has no executable control; 5 quote sums and 20,000 CNY received verified",
+    "scenario": "6a bill/recipient/Bank B/fee arithmetic"
+  },
+  {
+    "status": "BLOCKED",
+    "evidence": "No already-expired quote; no test clock/schema/hosting changes permitted",
+    "scenario": "6b expired quote UI/action suppression"
+  },
+  {
+    "scenario": "6c naturally expired quote UI and read-only backend",
+    "status": "PASS",
+    "evidence": "5 naturally expired quotes; create-plan controls absent; backend comparison refused stale quotes without financial mutation. Forced Sandbox execution not attempted"
+  },
+  {
+    "scenario": "6d channel detail popup/filter/reference saving",
+    "status": "PASS",
+    "evidence": "Bank A detail opens/closes in place; expired filter shows five cards; Bank B reference cost 69769600 < cheapest connected 70760800.00 but has no executable action"
+  },
+  {
+    "scenario": "7 mobile emulation runway form and object change",
+    "status": "PASS",
+    "evidence": "Mobile Chrome emulation 390x844 then 390x500: form confirmation reachable; 8m=3.27 and 10m=2.62; selecting a new verified bill clears prior monthly assumption. Real phone keyboard remains human check."
+  },
+  {
+    "status": "PASS",
+    "evidence": "Expense/Income/Internal Transfer/Refund correct; common history ID/type/category/status/amount/source/date displayed; income +900000, expense +85000, personal total +900000; internal transfer leaves totals unchanged; seed rows=22",
+    "scenario": "A reset seed and normalized four transaction types"
+  },
+  {
+    "status": "PASS",
+    "evidence": "Two synthetic coffee events in the same minute reused transaction b1b78e02-2c24-4304-9f2c-a4cc5249ef2e; row count, balances and totals unchanged. Exact raw-reference replay has no public UI.",
+    "scenario": "B duplicate event fingerprint does not double-count"
+  },
+  {
+    "status": "PASS",
+    "evidence": "97% AUTO with Undo/purpose/reconfirm; 72% requires confirmation; 35% no category guess and requires purpose; statuses and budget reflect saves; totals preserved by Undo; Sandbox balances unchanged",
+    "scenario": "B high medium low confidence and Undo consistency"
+  },
+  {
+    "status": "PASS",
+    "evidence": "Browser offline send shows recoverable connection notice, no automatic resubmit; reload online preserves financial UI. This is offline-before-send, not a mid-flight result test",
+    "scenario": "Browser network offline fallback"
+  },
+  {
+    "status": "PASS",
+    "evidence": "Verified synthetic 20k CNY bill due tomorrow vs Bank A 2-3 days + safety margin shows DEADLINE RISK on ACT-F25F21FC-767; still requires approval",
+    "scenario": "C deadline-risk warning"
+  },
+  {
+    "evidence": "CHEAPER/FASTER/SAFER order follows cost/settlement/safety; TCB 45m cannot fund tuition; crafted synthetic 99m low-risk request blocked by safe balance; no receipt",
+    "status": "PASS",
+    "scenario": "C ranking and source-safe-balance blocking"
+  },
+  {
+    "scenario": "C recipient mismatch blocked after bill edit",
+    "status": "PASS",
+    "evidence": "Changing synthetic recipient makes Registry mismatch; old plan ACT-FD74834E-126 INVALIDATED and cannot approve; no payment/balance change"
+  },
+  {
+    "scenario": "C/D forged unavailable channel and source binding blocked",
+    "status": "PASS",
+    "evidence": "Test-only DOM tampering submitted BANK_B using the available Bank A quote: backend rejected FX quote binding before any draft. Substituting VCB source for Bank A also rejected; zero plan/receipt or balance mutation. BANK_B's own hidden quote ID is not exposed; CHANNEL NOT AVAILABLE branch not directly exercised."
+  },
+  {
+    "evidence": "Quote expired naturally at 2026-10-04T14:22:38Z without reload; approval disabled live; direct POST of saved approval path blocked FX QUOTE EXPIRED; inline refresh creates new ACT-BB920CE9-7EB AWAITING_APPROVAL without moving money",
+    "status": "PASS",
+    "scenario": "C/D natural live expiry and backend stale approval block"
+  },
+  {
+    "evidence": "Alipay tuition ACT-DEA2C30D-092 remains explicit APPROVAL under DELEGATED; 500001 VND synthetic low-risk plan blocked by 500000 per-transaction limit; balances unchanged",
+    "status": "PASS",
+    "scenario": "D delegated mode never bypasses tuition approval; limits"
+  },
+  {
+    "scenario": "D explicit tuition approval and concurrent idempotency",
+    "status": "PASS",
+    "evidence": "Plan ACT-E334B3BE-9A0 stayed AWAITING_APPROVAL before explicit confirmation; two independent sessions returned same SBOX-BF73034D-297; debit 70760800 once, conversion 70400000, combined fees 360800, CNY credit 20000; payer 29239200; history once; retry/reload unchanged. Browser request overlap=true. Raw server ledger rows are not exposed by UI."
+  },
+  {
+    "scenario": "D live Gemini draft and new/old plan identity",
+    "evidence": "Real Gemini explicit draft -> ACT-0378957E-A4F AWAITING_APPROVAL; review/status references exact new plan; selecting old ACT-E929B31E-9ED returns INVALIDATED; zero receipts or balance mutation",
+    "status": "PASS"
+  },
+  {
+    "evidence": "Emergency Stop PAUSED tuition review and blocked new low-risk action with AGENT PAUSED; no balance/receipt change; resume ACTIVE",
+    "status": "PASS",
+    "scenario": "E Emergency Stop blocks immediately and resume recovers"
+  },
+  {
+    "evidence": "Test-only browser interception sent actual Sandbox approval once, then dropped its response. UI showed connection failure; no automatic resubmit; reload shows one completed receipt, payer 29239200, school 20000 CNY, one SANDBOX EXECUTED audit",
+    "status": "PASS",
+    "scenario": "E real approval response lost; reload resolves uncertain result"
+  },
+  {
+    "status": "PASS",
+    "evidence": "Observed CHAT-b0ed530d-458 pending server-side, Reset before response, then CONTEXT_STALE_RESPONSE audit; old result did not restore topic/history or financial state; both sessions NONE and no payment. Real provider attempt counted even though classification was discarded.",
+    "scenario": "E reset while real Gemini request is in flight"
+  },
+  {
+    "status": "PASS",
+    "evidence": "3 consecutive cycles: reset restores seed/ACTIVE/APPROVAL, coffee AUTO, Bank A tuition AWAITING_APPROVAL then explicit approve -> one receipt with exact balances; final Reset leaves clean seed",
+    "scenario": "E three consecutive reset and replay cycles"
+  },
+  {
+    "scenario": "English continuous demo critical path",
+    "status": "PASS",
+    "evidence": "Continuous EN on Render: synthetic coffee -> AUTO/feed -> real Gemini spending/budget -> verified 20000 CNY bill -> real Gemini eligible comparison/cost -> draft ACT-F95CE3FC-E87 -> explicit approval -> Sandbox receipt/audit. Attack/Stop separately verified; not a recorded human presentation."
+  },
+  {
+    "status": "PASS",
+    "evidence": "Untrusted instruction and unsupported period rejected before model; no plan, receipt or balance change",
+    "scenario": "Safety injection/unsupported period"
+  },
+  {
+    "status": "PASS",
+    "evidence": "No provider request/API-key header from browser; no Gemini-key-shaped value in observed HTML/JS/CSS; zero observed JS/resource errors. Server logs/key value not inspected",
+    "scenario": "Secret/client request boundary"
+  }
+]

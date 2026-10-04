@@ -339,7 +339,7 @@ public class SessionConversationService {
                 if(quote==null)return clarifyTopic();
                 // Discussion is not a financial selection: preserve the verified source, plan and quotes.
                 discussedChannel=requested;
-                String answer=(vi?"Kênh ":"Channel ")+quote.displayName()+": "+quote.eligibilityReason()+". "+(quote.eligible()?(vi?"Đủ điều kiện; chưa thực thi.":"Eligible; no execution."):(vi?"Không khả dụng và không thể thực thi.":"Unavailable and cannot be executed."));
+                String answer=(vi?"Kênh ":"Channel ")+quote.displayName()+": "+channelEligibilityReason(quote,vi)+". "+(quote.eligible()?(vi?"Đủ điều kiện; chưa thực thi.":"Eligible; no execution."):(vi?"Không khả dụng và không thể thực thi.":"Unavailable and cannot be executed."));
                 return success(Topic.CHANNEL_UNAVAILABLE,intent,answer);
             }
             if(intent.intent()==LlmIntent.Intent.CHECK_TUITION_STATUS){
@@ -373,5 +373,18 @@ public class SessionConversationService {
             if(plan!=null&&answer.contains(plan.id())){binding=planBinding(plan);return success(Topic.TUITION_PLAN,intent,answer);}
             reason="CONTEXT_CLARIFICATION_REQUIRED";return answer;
         }
+    }
+
+    private String channelEligibilityReason(CrossBorderService.ChannelQuote quote, boolean vi) {
+        if (!vi) return quote.eligibilityReason();
+        return switch (quote.eligibilityReason()) {
+            case "Reference only: no connected Bank B account" ->
+                    "Chỉ để tham khảo: chưa kết nối tài khoản Bank B";
+            case "Unavailable: the student does not have a Bank B account" ->
+                    "Không khả dụng: sinh viên chưa có tài khoản Bank B";
+            default -> quote.eligible()
+                    ? "Hồ sơ đã xác minh đáp ứng điều kiện sử dụng kênh này"
+                    : "Hồ sơ đã xác minh chưa đáp ứng điều kiện sử dụng kênh này";
+        };
     }
 }

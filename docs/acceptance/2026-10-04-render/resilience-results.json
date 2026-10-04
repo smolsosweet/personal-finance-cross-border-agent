@@ -1,0 +1,9 @@
+{
+  "reservedSubmissions" : 21,
+  "observedProviderAttempts" : 19,
+  "results" : [ {
+    "evidence" : "Test-only browser interception sent actual Sandbox approval once, then dropped its response. UI showed connection failure; no automatic resubmit; reload shows one completed receipt, payer 29239200, school 20000 CNY, one SANDBOX EXECUTED audit",
+    "status" : "PASS",
+    "scenario" : "E real approval response lost; reload resolves uncertain result"
+  } ]
+}

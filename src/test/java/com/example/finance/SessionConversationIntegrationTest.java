@@ -57,6 +57,25 @@ class SessionConversationIntegrationTest {
         assertTrue(ask("Vì sao kênh đó không dùng được?").contains("không thể thực thi"));
         assertNull(payments.latestAction());assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
     }
+    @Test void bankBExplanationIsLocalizedWithoutChangingFinancialState(){
+        var before=PersonalFinanceAiIntegrationTest.snapshot(db);
+        stub(EXPLAIN_CHANNEL_UNAVAILABLE);
+
+        String vi=conversation.send(session,"Vì sao không dùng được Bank B?","vi");
+        assertTrue(vi.contains("Chỉ để tham khảo: chưa kết nối tài khoản Bank B"));
+        assertTrue(vi.contains("Không khả dụng và không thể thực thi"));
+        assertFalse(vi.contains("Reference only"));
+
+        var englishSession=new MockHttpSession();
+        String en=conversation.send(englishSession,"Why can't I use Bank B?","en");
+        assertTrue(en.contains("Reference only: no connected Bank B account"));
+        assertTrue(en.contains("Unavailable and cannot be executed"));
+        assertFalse(en.contains("Chỉ để tham khảo"));
+
+        assertNull(payments.latestAction());
+        assertEquals(0,payments.sandboxTransactionCount());
+        assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
+    }
     @Test void confidentModelCannotBroadenExistingPersonalFinanceScope(){
         stub(EXPLAIN_BUDGET_STATUS);ask("Show budgets");
         var before=PersonalFinanceAiIntegrationTest.snapshot(db);

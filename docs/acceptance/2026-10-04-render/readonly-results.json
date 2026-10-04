@@ -1,0 +1,50 @@
+{
+  "results" : [ {
+    "status" : "PASS",
+    "evidence" : "HTTP 200; first browser navigation 4019 ms; app.js/app.css loaded; three available tabs and reload work",
+    "scenario" : "1a HTTPS/assets/reload/tabs"
+  }, {
+    "status" : "PASS",
+    "evidence" : "Chrome mobile emulation 390x844 and reduced viewport 390x500; composer remains reachable; not a physical phone/real keyboard test",
+    "scenario" : "1b mobile emulation/assistant/composer"
+  }, {
+    "status" : "PASS",
+    "evidence" : "20,000 CNY bill, reference/recipient/bank/routing/deadline; synthetic Registry Verified; Bank B has no executable control; 5 quote sums and 20,000 CNY received verified",
+    "scenario" : "6a bill/recipient/Bank B/fee arithmetic"
+  }, {
+    "status" : "BLOCKED",
+    "evidence" : "No already-expired quote; no test clock/schema/hosting changes permitted",
+    "scenario" : "6b expired quote UI/action suppression"
+  }, {
+    "status" : "PASS",
+    "evidence" : "Same period/numeric values in EN/VI; month expense recomputed from UI rows = 90000.00 VND; finances unchanged",
+    "scenario" : "4a spending Vietnamese vs English/current period"
+  }, {
+    "status" : "PASS",
+    "evidence" : "Category limits match configured dashboard; follow-up retains BUDGET and identical backend figures",
+    "scenario" : "4b/5a budget plus contextual follow-up"
+  }, {
+    "status" : "PASS",
+    "evidence" : "Bank B discussion preserves financial state; 8m/10m baseline returns 3.27/2.62; invalid values preserve prior assumption",
+    "scenario" : "5b/7 Bank B discussion then runway"
+  }, {
+    "status" : "PASS",
+    "evidence" : "Independent cookie context has no first-session transcript/topic, same finance; ambiguous request asks for topic: Bạn muốn hỏi ngân sách còn lại, chi tiêu hay kênh học phí? Hãy chọn chủ đề.",
+    "scenario" : "5c independent session isolation/ambiguity"
+  }, {
+    "status" : "PASS",
+    "evidence" : "Untrusted instruction and unsupported period rejected before model; no plan, receipt or balance change",
+    "scenario" : "Safety injection/unsupported period"
+  }, {
+    "status" : "PASS",
+    "evidence" : "Browser offline send shows recoverable connection notice, no automatic resubmit; reload online preserves financial UI. This is offline-before-send, not a mid-flight result test",
+    "scenario" : "Browser network offline fallback"
+  }, {
+    "status" : "PASS",
+    "evidence" : "No provider request/API-key header from browser; no Gemini-key-shaped value in observed HTML/JS/CSS; zero observed JS/resource errors. Server logs/key value not inspected",
+    "scenario" : "Secret/client request boundary"
+  } ],
+  "url" : "https://finbridge-shared-demo.onrender.com",
+  "reservedSubmissions" : 10,
+  "observedProviderAttempts" : 8
+}

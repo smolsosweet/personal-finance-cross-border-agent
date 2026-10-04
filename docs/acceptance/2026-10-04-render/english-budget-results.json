@@ -1,0 +1,9 @@
+{
+  "reservedSubmissions" : 12,
+  "results" : [ {
+    "scenario" : "4c English budget totals match dashboard",
+    "status" : "PASS",
+    "evidence" : "English totals match dashboard: limit 6300000.00, spent 90000, remaining 6210000 VND; financial UI unchanged"
+  } ],
+  "observedProviderAttempts" : 10
+}

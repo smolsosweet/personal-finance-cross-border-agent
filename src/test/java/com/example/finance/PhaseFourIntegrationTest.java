@@ -160,6 +160,39 @@ class PhaseFourIntegrationTest {
     }
 
     @Test
+    void delegatedModeBlocksWhenCompletedAmountWouldExceedDailyLimit() {
+        phaseFour.setMode("DELEGATED");
+        assertEquals("COMPLETED", phaseFour.createLowRiskPlan(new BigDecimal("400000")).status());
+        assertEquals("COMPLETED", phaseFour.createLowRiskPlan(new BigDecimal("400000")).status());
+
+        var blocked = phaseFour.createLowRiskPlan(new BigDecimal("300000"));
+
+        assertEquals("BLOCKED", blocked.status());
+        assertNull(phaseFour.receiptForAction(blocked.id()));
+        assertEquals(2, phaseFour.sandboxTransactionCount());
+        assertMoney("99200000.00", balance(PhaseFourService.PAYER));
+        assertMoney("800000.00", balance("EMERGENCY_VND"));
+        assertAuditReason("LIMIT DAILY");
+    }
+
+    @Test
+    void delegatedModeBlocksWhenCompletedActionCountReachesFrequencyLimit() {
+        phaseFour.setMode("DELEGATED");
+        assertEquals("COMPLETED", phaseFour.createLowRiskPlan(new BigDecimal("250000")).status());
+        assertEquals("COMPLETED", phaseFour.createLowRiskPlan(new BigDecimal("250000")).status());
+        assertEquals("COMPLETED", phaseFour.createLowRiskPlan(new BigDecimal("250000")).status());
+
+        var blocked = phaseFour.createLowRiskPlan(new BigDecimal("250000"));
+
+        assertEquals("BLOCKED", blocked.status());
+        assertNull(phaseFour.receiptForAction(blocked.id()));
+        assertEquals(3, phaseFour.sandboxTransactionCount());
+        assertMoney("99250000.00", balance(PhaseFourService.PAYER));
+        assertMoney("750000.00", balance("EMERGENCY_VND"));
+        assertAuditReason("LIMIT DAILY");
+    }
+
+    @Test
     void approvalModeDoesNotExecuteLowRiskActionBeforeApproval() {
         var plan = phaseFour.createLowRiskPlan(new BigDecimal("250000"));
         assertEquals("APPROVAL", plan.requiredPermission());

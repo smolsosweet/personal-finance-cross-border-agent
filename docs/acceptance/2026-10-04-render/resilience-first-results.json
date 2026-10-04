@@ -1,0 +1,13 @@
+{
+  "results" : [ {
+    "status" : "FAIL",
+    "evidence" : "AssertionFailedError: expected: <true> but was: <false>",
+    "scenario" : "E real approval response lost; reload resolves uncertain result"
+  }, {
+    "status" : "PASS",
+    "evidence" : "Observed CHAT-b0ed530d-458 pending server-side, Reset before response, then CONTEXT_STALE_RESPONSE audit; old result did not restore topic/history or financial state; both sessions NONE and no payment. Real provider attempt counted even though classification was discarded.",
+    "scenario" : "E reset while real Gemini request is in flight"
+  } ],
+  "observedProviderAttempts" : 19,
+  "reservedSubmissions" : 21
+}

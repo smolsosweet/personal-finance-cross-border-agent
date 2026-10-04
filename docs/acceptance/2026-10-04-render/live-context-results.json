@@ -1,0 +1,9 @@
+{
+  "reservedSubmissions" : 20,
+  "observedProviderAttempts" : 18,
+  "results" : [ {
+    "scenario" : "D live Gemini draft and new/old plan identity",
+    "evidence" : "Real Gemini explicit draft -> ACT-0378957E-A4F AWAITING_APPROVAL; review/status references exact new plan; selecting old ACT-E929B31E-9ED returns INVALIDATED; zero receipts or balance mutation",
+    "status" : "PASS"
+  } ]
+}

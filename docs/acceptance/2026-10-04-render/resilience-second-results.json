@@ -1,0 +1,9 @@
+{
+  "reservedSubmissions" : 21,
+  "observedProviderAttempts" : 19,
+  "results" : [ {
+    "scenario" : "E real approval response lost; reload resolves uncertain result",
+    "evidence" : "TimeoutError: Timeout 45000ms exceeded",
+    "status" : "FAIL"
+  } ]
+}

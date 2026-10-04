@@ -1,0 +1,177 @@
+{
+  "data" : {
+    "url" : "https://finbridge-shared-demo.onrender.com/#student-finance",
+    "action" : null,
+    "receipt" : null,
+    "review" : null,
+    "audit" : [ "14:03:20CONVERSATION_CONTEXTCONTEXT LIFECYCLE—HOÀN TẤTCONTEXT_ENTRY_VALIDATEDValidated session context; no prompt, transcript, account or financial payload", "14:03:17CONVERSATION_CONTEXTCONTEXT LIFECYCLE—HOÀN TẤTRUNWAY_RESULTValidated session context; no prompt, transcript, account or financial payload", "14:03:17CONVERSATION_CONTEXTCONTEXT LIFECYCLE—HOÀN TẤTRUNWAY_SCENARIO_ĐÃ XÁC NHẬNValidated session context; no prompt, transcript, account or financial payload", "14:03:17CONVERSATION_CONTEXTCONTEXT LIFECYCLE—HOÀN TẤTRUNWAY_RESULTValidated session context; no prompt, transcript, account or financial payload", "14:03:17CONVERSATION_CONTEXTCONTEXT LIFECYCLE—HOÀN TẤTRUNWAY_SCENARIO_ĐÃ XÁC NHẬNValidated session context; no prompt, transcript, account or financial payload", "14:03:16LLM_INTENTAI REQUEST FINISHEDCHAT-cca9815e-a8fHOÀN TẤTEXPLAIN_Thời gian đủ tiền sinh hoạtRequest finished; response comes from backend templates", "14:03:16CONVERSATION_CONTEXTCONTEXT TURNCHAT-cca9815e-a8fHOÀN TẤTRUNWAY_MISSING_BASELINESession-scoped validated context; no prompt, transcript or financial payload", "14:03:16CONVERSATION_CONTEXTCONTEXT LIFECYCLE—HOÀN TẤTRUNWAY_REQUESTEDValidated session context; no prompt, transcript, account or financial payload", "14:03:16LLM_INTENTINTENT CLASSIFIEDCHAT-cca9815e-a8fHOÀN TẤTEXPLAIN_Thời gian đủ tiền sinh hoạtƯu tiên Chưa chọn; confidence HIGH", "14:03:15LLM_INTENTAI REQUEST STARTEDCHAT-cca9815e-a8fPENDING—Classifier request; no financial payload logged", "14:03:15USERCONVERSATION INPUTCHAT-cca9815e-a8fRECEIVED—Untrusted user message recorded", "14:03:14CONVERSATION_CONTEXTCONTEXT LIFECYCLE—HOÀN TẤTCONTEXT_ENTRY_VALIDATEDValidated session context; no prompt, transcript, account or financial payload", "14:03:12SYSTEMDEMO RESET—HOÀN TẤT—Phase 4 policy, Payment Sandbox, conversation and audit data reset" ],
+    "transactions" : [ {
+      "id" : "84ef85f8-d7b9-4b67-a6e9-0d3044de313b",
+      "type" : "Income",
+      "status" : "AUTO",
+      "category" : "Income",
+      "amount" : "5000000.00",
+      "text" : "\n            Demo Employer03/10/2026 12:19:00 · Synthetic DataTransaction type is incoming income\n            Thu nhập\n            Thu nhập\n            99%\n            TỰ ĐỘNG\n            +5,000,000 VND\n            \n              \n              Hoàn tác\n            \n          "
+    }, {
+      "id" : "52e9663d-7ed5-4007-a61d-ab91cf60a643",
+      "type" : "Refund",
+      "status" : "AUTO",
+      "category" : "Refund",
+      "amount" : "85000.00",
+      "text" : "\n            Highlands Coffee03/10/2026 10:00:00 · Synthetic DataHoàn tiền marker found in the normalized description\n            Hoàn tiền\n            Hoàn tiền\n            95%\n            TỰ ĐỘNG\n            +85,000 VND\n            \n              \n              Hoàn tác\n            \n          "
+    }, {
+      "id" : "609cce31-2848-4abd-a09a-2391e893a368",
+      "type" : "Expense",
+      "status" : "CONFIRMATION_REQUIRED",
+      "category" : "Shopping",
+      "amount" : "110000.00",
+      "text" : "\n            Campus Store02/10/2026 12:18:00 · Synthetic DataMerchant can represent shopping or groceries\n            Chi tiêu\n            Mua sắm\n            72%\n            CẦN XÁC NHẬN\n            −110,000 VND\n            \n              Xem xét\n              \n            \n          "
+    }, {
+      "id" : "ee3bf84d-9681-4856-ac87-5ceb3d89209b",
+      "type" : "Internal Transfer",
+      "status" : "AUTO",
+      "category" : "Transfer",
+      "amount" : "300000.00",
+      "text" : "\n            Own Account02/10/2026 09:00:00 · Synthetic DataBoth accounts belong to the demo profile\n            Chuyển khoản nội bộ\n            Transfer\n            99%\n            TỰ ĐỘNG\n            −300,000 VND\n            \n              \n              Hoàn tác\n            \n          "
+    }, {
+      "id" : "c7ed5c67-f0f5-4a5f-accb-ed56bbe0a8ec",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Utilities",
+      "amount" : "90000.00",
+      "text" : "\n            Electricity Provider01/10/2026 12:17:00 · Synthetic DataMerchant rule v1 matched a utility provider\n            Chi tiêu\n            Tiện ích\n            96%\n            TỰ ĐỘNG\n            −90,000 VND\n            \n              \n              Hoàn tác\n            \n          "
+    }, {
+      "id" : "ecea242d-177b-43ab-88b7-21c40dad5325",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Transport",
+      "amount" : "70000.00",
+      "text" : "\n            Grab30/09/2026 12:16:00 · Synthetic DataMerchant rule v1 matched transport\n            Chi tiêu\n            Di chuyển\n            94%\n            TỰ ĐỘNG\n            −70,000 VND\n            \n              \n              Hoàn tác\n            \n          "
+    }, {
+      "id" : "4b9a3cf4-41a0-4d6f-9a7b-1881a167d42c",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Food & Drinks",
+      "amount" : "130000.00",
+      "text" : "\n            Highlands Coffee29/09/2026 12:15:00 · Synthetic DataMerchant rule v1 matched a known cafe\n            Chi tiêu\n            Ăn uống\n            97%\n            TỰ ĐỘNG\n            −130,000 VND\n            \n              \n              Hoàn tác\n            \n          "
+    }, {
+      "id" : "2591e08e-a6dc-4713-a435-63a48f34bdee",
+      "type" : "Income",
+      "status" : "AUTO",
+      "category" : "Income",
+      "amount" : "5000000.00",
+      "text" : "\n            Demo Employer28/09/2026 12:14:00 · Synthetic DataTransaction type is incoming income\n            Thu nhập\n            Thu nhập\n            99%\n            TỰ ĐỘNG\n            +5,000,000 VND\n            \n              \n              Hoàn tác\n            \n          "
+    }, {
+      "id" : "57e70b05-07c5-41af-b82d-de1a99604dff",
+      "type" : "Expense",
+      "status" : "CONFIRMATION_REQUIRED",
+      "category" : "Shopping",
+      "amount" : "90000.00",
+      "text" : "\n            Campus Store27/09/2026 12:13:00 · Synthetic DataMerchant can represent shopping or groceries\n            Chi tiêu\n            Mua sắm\n            72%\n            CẦN XÁC NHẬN\n            −90,000 VND\n            \n              Xem xét\n              \n            \n          "
+    }, {
+      "id" : "8b8df27b-bcd2-4ec1-86fa-3e0749e9b993",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Utilities",
+      "amount" : "70000.00",
+      "text" : "\n            Electricity Provider26/09/2026 12:12:00 · Synthetic DataMerchant rule v1 matched a utility provider\n            Chi tiêu\n            Tiện ích\n            96%\n            TỰ ĐỘNG\n            −70,000 VND\n            \n              \n              Hoàn tác\n            \n          "
+    }, {
+      "id" : "c2df9c56-4b64-4957-afdb-0544cc34b1d4",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Transport",
+      "amount" : "130000.00",
+      "text" : "\n            Grab25/09/2026 12:11:00 · Synthetic DataMerchant rule v1 matched transport\n            Chi tiêu\n            Di chuyển\n            94%\n            TỰ ĐỘNG\n            −130,000 VND\n            \n              \n              Hoàn tác\n            \n          "
+    }, {
+      "id" : "bac2df3d-cc1b-447b-9adf-a704d0103efd",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Food & Drinks",
+      "amount" : "110000.00",
+      "text" : "\n            Highlands Coffee24/09/2026 12:10:00 · Synthetic DataMerchant rule v1 matched a known cafe\n            Chi tiêu\n            Ăn uống\n            97%\n            TỰ ĐỘNG\n            −110,000 VND\n            \n              \n              Hoàn tác\n            \n          "
+    }, {
+      "id" : "8b51421d-b425-4f2a-be7d-e5918b3ff313",
+      "type" : "Income",
+      "status" : "AUTO",
+      "category" : "Income",
+      "amount" : "5000000.00",
+      "text" : "\n            Demo Employer23/09/2026 12:09:00 · Synthetic DataTransaction type is incoming income\n            Thu nhập\n            Thu nhập\n            99%\n            TỰ ĐỘNG\n            +5,000,000 VND\n            \n              \n              Hoàn tác\n            \n          "
+    }, {
+      "id" : "ecfede5e-a668-4aee-b704-5933ebd058f0",
+      "type" : "Expense",
+      "status" : "CONFIRMATION_REQUIRED",
+      "category" : "Shopping",
+      "amount" : "70000.00",
+      "text" : "\n            Campus Store22/09/2026 12:08:00 · Synthetic DataMerchant can represent shopping or groceries\n            Chi tiêu\n            Mua sắm\n            72%\n            CẦN XÁC NHẬN\n            −70,000 VND\n            \n              Xem xét\n              \n            \n          "
+    }, {
+      "id" : "b960bbb7-2e0d-4d2e-8690-2895defcb9ab",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Utilities",
+      "amount" : "130000.00",
+      "text" : "\n            Electricity Provider21/09/2026 12:07:00 · Synthetic DataMerchant rule v1 matched a utility provider\n            Chi tiêu\n            Tiện ích\n            96%\n            TỰ ĐỘNG\n            −130,000 VND\n            \n              \n              Hoàn tác\n            \n          "
+    }, {
+      "id" : "71e25b08-d32b-4d4d-a4a5-e349314971aa",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Transport",
+      "amount" : "110000.00",
+      "text" : "\n            Grab20/09/2026 12:06:00 · Synthetic DataMerchant rule v1 matched transport\n            Chi tiêu\n            Di chuyển\n            94%\n            TỰ ĐỘNG\n            −110,000 VND\n            \n              \n              Hoàn tác\n            \n          "
+    }, {
+      "id" : "e95defdd-bd7e-417b-9ab4-f251a32cf91c",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Food & Drinks",
+      "amount" : "90000.00",
+      "text" : "\n            Highlands Coffee19/09/2026 12:05:00 · Synthetic DataMerchant rule v1 matched a known cafe\n            Chi tiêu\n            Ăn uống\n            97%\n            TỰ ĐỘNG\n            −90,000 VND\n            \n              \n              Hoàn tác\n            \n          "
+    }, {
+      "id" : "07a1d95c-f15e-4329-bd3d-1a91dcca7c4c",
+      "type" : "Income",
+      "status" : "AUTO",
+      "category" : "Income",
+      "amount" : "5000000.00",
+      "text" : "\n            Demo Employer18/09/2026 12:04:00 · Synthetic DataTransaction type is incoming income\n            Thu nhập\n            Thu nhập\n            99%\n            TỰ ĐỘNG\n            +5,000,000 VND\n            \n              \n              Hoàn tác\n            \n          "
+    }, {
+      "id" : "04c26e62-bd9f-401e-a05d-6b1b9a46c3f3",
+      "type" : "Expense",
+      "status" : "CONFIRMATION_REQUIRED",
+      "category" : "Shopping",
+      "amount" : "130000.00",
+      "text" : "\n            Campus Store17/09/2026 12:03:00 · Synthetic DataMerchant can represent shopping or groceries\n            Chi tiêu\n            Mua sắm\n            72%\n            CẦN XÁC NHẬN\n            −130,000 VND\n            \n              Xem xét\n              \n            \n          "
+    }, {
+      "id" : "839aaffa-7f5c-47d8-a451-dd12649f381b",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Utilities",
+      "amount" : "110000.00",
+      "text" : "\n            Electricity Provider16/09/2026 12:02:00 · Synthetic DataMerchant rule v1 matched a utility provider\n            Chi tiêu\n            Tiện ích\n            96%\n            TỰ ĐỘNG\n            −110,000 VND\n            \n              \n              Hoàn tác\n            \n          "
+    }, {
+      "id" : "bb5f9551-9e00-41fa-85db-1b000695344f",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Transport",
+      "amount" : "90000.00",
+      "text" : "\n            Grab15/09/2026 12:01:00 · Synthetic DataMerchant rule v1 matched transport\n            Chi tiêu\n            Di chuyển\n            94%\n            TỰ ĐỘNG\n            −90,000 VND\n            \n              \n              Hoàn tác\n            \n          "
+    }, {
+      "id" : "4794f91c-0a58-4b70-b90c-f16fb54a0033",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Food & Drinks",
+      "amount" : "70000.00",
+      "text" : "\n            Highlands Coffee14/09/2026 12:00:00 · Synthetic DataMerchant rule v1 matched a known cafe\n            Chi tiêu\n            Ăn uống\n            97%\n            TỰ ĐỘNG\n            −70,000 VND\n            \n              \n              Hoàn tác\n            \n          "
+    } ],
+    "notice" : [ "Đã cập nhật chủ đề và đối tượng đã xác minh. Bạn có thể hỏi tiếp; chưa tạo kế hoạch hay thanh toán.×" ]
+  },
+  "balances" : {
+    "ALIPAY_VND" : "75,000,000.00 VND",
+    "EMERGENCY_VND" : "0.00 VND",
+    "MOMO_VND" : "12,000,000.00 VND",
+    "PAYER_VND" : "100,000,000.00 VND",
+    "SCHOOL_AUD" : "0.00 AUD",
+    "SCHOOL_CNY" : "0.00 CNY",
+    "SCHOOL_USD" : "0.00 USD",
+    "TCB_VND" : "45,000,000.00 VND",
+    "VCB_VND" : "82,000,000.00 VND"
+  },
+  "observedAt" : "2026-10-04T14:03:20.232376500Z"
+}

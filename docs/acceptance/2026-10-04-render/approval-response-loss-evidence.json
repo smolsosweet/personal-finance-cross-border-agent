@@ -1,0 +1,192 @@
+{
+  "data" : {
+    "url" : "https://finbridge-shared-demo.onrender.com/?action=ACT-90EE7684-D0F#agent-workspace",
+    "action" : {
+      "testid" : "latest-action",
+      "actionId" : "ACT-90EE7684-D0F",
+      "status" : "COMPLETED"
+    },
+    "receipt" : {
+      "testid" : "latest-receipt",
+      "transactionId" : "SBOX-090E9E82-1B1",
+      "actionId" : "ACT-90EE7684-D0F"
+    },
+    "review" : "\n            \n              Bill and beneficiary\n              \n                Bill nameTuition fee\n                School or education providerShenzhen Demo University\n                Payment referenceSZDU-2026-MINH\n                Due date2026-10-18\n                Beneficiary legal nameShenzhen Demo University Tuition Office\n                Receiving bank or payment providerShenzhen Demo Education Bank\n                SWIFT/BIC or bank routing codeSZDUCNBSXXX\n                Beneficiary account / provider IDSZDU-TUITION-2026\n              \n              \n            \n            \n              Funding and total cost\n              \n                Funding accountBank A Everyday · Bank A · •••• 2048\n                Payment channelBank A International Transfer\n                Rate3,520.0000 VND/CNY\n                Source amount70,400,000.00 VND\n                Transfer fee220,000.00 VND\n                FX markup140,800.00 VND\n                Total debit70,760,800.00 VND\n                Amount credited in Sandbox20,000.00 CNY\n                Source balance before payment100,000,000.00 VND\n                Source balance after payment29,239,200.00 VND\n                Safety buffer3,000,000.00 VND\n              \n            \n          ",
+    "audit" : [ "14:22:44PAYMENT_SANDBOXPAYMENT RECEIPT CREATEDCOMPLETED—Receipt transaction ID SBOX-090E9E82-1B1; idempotency key IDEMP-ACT-90EE7684-D0F; source account PAYER_VND; channel BANK_A; quote Q-BANK_A-510717CC", "14:22:44TRANSACTION_HISTORYPERSONAL TRANSACTION RECORDEDCOMPLETED—Transaction history row aff31d53-ca97-4235-adf6-d0dac8bf1a34 linked to receipt SBOX-090E9E82-1B1", "14:22:44PAYMENT_SANDBOXSANDBOX EXECUTEDCOMPLETED—Created transaction SBOX-090E9E82-1B1 with VND debit and CNY credit", "14:22:44POLICY_GUARDEXECUTION POLICY CHECKEDALLOWED—All deterministic policy checks passed", "14:22:44USERACTION APPROVEDCOMPLETED—Approval bound to action ID, amount, recipient, quote and five-minute expiry", "14:22:43POLICY_GUARDPOLICY CHECKEDAPPROVAL_REQUIREDAPPROVAL REQUIREDUser approval is required before sandbox execution.", "14:22:43PAYMENT_SOURCESOURCE ACCOUNT SELECTEDSELECTED—Bank A •••• 2048; balance 100000000.00 VND", "14:22:43FX_QUOTE_SERVICEFX QUOTE SELECTEDELIGIBLE—Quote Q-BANK_A-510717CC from Synthetic Bank A treasury quote; quoted at 2026-10-04T14:22:43; expires at 2026-10-04T14:27:43; rate 3520.0000 VND/CNY; transfer fee 220000.00 VND; FX markup 140800.00 VND; landed cost 70760800.00 VND; expected received 20000.00 CNY", "14:22:43CROSS_BORDER_SERVICECHANNEL COMPARISONCOMPLETED—BANK_A=ELIGIBLE, landed cost 70760800.00 VND; TCB=ELIGIBLE, landed cost 70764792.00 VND; VCB=ELIGIBLE, landed cost 70846972.00 VND; ALIPAY=ELIGIBLE, landed cost 71032100.00 VND; MOMO=ELIGIBLE, landed cost 71177940.00 VND; BANK_B=UNAVAILABLE, landed cost 69769600.00 VND", "14:22:43EDUCATION_PROVIDER_REGISTRYRECIPIENT VERIFICATIONVERIFIED—Provider, beneficiary, receiving bank, account, corridor and currency match the trusted demo registry; registry institution Shenzhen Demo University; registry bank Shenzhen Demo Education Bank; bank code SZDUCNBSXXX; registry account SZDU-TUITION-2026", "14:22:43CROSS_BORDER_SERVICETUITION BILL SELECTEDSELECTED—Bill 1; reference SZDU-2026-MINH; institution Shenzhen Demo University; amount 20000.00 CNY; recipient SZDU-TUITION-2026; due 2026-10-18", "14:22:43AGENT_ORCHESTRATORACTION PLANNEDCOMPLETED—Structured action plan created from deterministic application data", "14:22:44PAYMENT_SANDBOXPAYMENT RECEIPT CREATEDACT-90EE7684-D0FCOMPLETED—Receipt transaction ID SBOX-090E9E82-1B1; idempotency key IDEMP-ACT-90EE7684-D0F; source account PAYER_VND; channel BANK_A; quote Q-BANK_A-510717CC", "14:22:44TRANSACTION_HISTORYPERSONAL TRANSACTION RECORDEDACT-90EE7684-D0FCOMPLETED—Transaction history row aff31d53-ca97-4235-adf6-d0dac8bf1a34 linked to receipt SBOX-090E9E82-1B1", "14:22:44PAYMENT_SANDBOXSANDBOX EXECUTEDACT-90EE7684-D0FCOMPLETED—Created transaction SBOX-090E9E82-1B1 with VND debit and CNY credit", "14:22:44POLICY_GUARDEXECUTION POLICY CHECKEDACT-90EE7684-D0FALLOWED—All deterministic policy checks passed", "14:22:44USERACTION APPROVEDACT-90EE7684-D0FCOMPLETED—Approval bound to action ID, amount, recipient, quote and five-minute expiry", "14:22:43POLICY_GUARDPOLICY CHECKEDACT-90EE7684-D0FAPPROVAL_REQUIREDAPPROVAL REQUIREDUser approval is required before sandbox execution.", "14:22:43PAYMENT_SOURCESOURCE ACCOUNT SELECTEDACT-90EE7684-D0FSELECTED—Bank A •••• 2048; balance 100000000.00 VND", "14:22:43FX_QUOTE_SERVICEFX QUOTE SELECTEDACT-90EE7684-D0FELIGIBLE—Quote Q-BANK_A-510717CC from Synthetic Bank A treasury quote; quoted at 2026-10-04T14:22:43; expires at 2026-10-04T14:27:43; rate 3520.0000 VND/CNY; transfer fee 220000.00 VND; FX markup 140800.00 VND; landed cost 70760800.00 VND; expected received 20000.00 CNY", "14:22:43CROSS_BORDER_SERVICECHANNEL COMPARISONACT-90EE7684-D0FCOMPLETED—BANK_A=ELIGIBLE, landed cost 70760800.00 VND; TCB=ELIGIBLE, landed cost 70764792.00 VND; VCB=ELIGIBLE, landed cost 70846972.00 VND; ALIPAY=ELIGIBLE, landed cost 71032100.00 VND; MOMO=ELIGIBLE, landed cost 71177940.00 VND; BANK_B=UNAVAILABLE, landed cost 69769600.00 VND", "14:22:43EDUCATION_PROVIDER_REGISTRYRECIPIENT VERIFICATIONACT-90EE7684-D0FVERIFIED—Provider, beneficiary, receiving bank, account, corridor and currency match the trusted demo registry; registry institution Shenzhen Demo University; registry bank Shenzhen Demo Education Bank; bank code SZDUCNBSXXX; registry account SZDU-TUITION-2026", "14:22:43CROSS_BORDER_SERVICETUITION BILL SELECTEDACT-90EE7684-D0FSELECTED—Bill 1; reference SZDU-2026-MINH; institution Shenzhen Demo University; amount 20000.00 CNY; recipient SZDU-TUITION-2026; due 2026-10-18", "14:22:43AGENT_ORCHESTRATORACTION PLANNEDACT-90EE7684-D0FCOMPLETED—Structured action plan created from deterministic application data", "14:22:43SYSTEMDEMO RESET—COMPLETED—Phase 4 policy, Payment Sandbox, conversation and audit data reset" ],
+    "transactions" : [ {
+      "id" : "aff31d53-ca97-4235-adf6-d0dac8bf1a34",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Education",
+      "amount" : "70760800.00",
+      "text" : "\n            Shenzhen Demo University04/10/2026 14:22:44 · Payment SandboxPayment Sandbox receipt SBOX-090E9E82-1B1 · action ACT-90EE7684-D0F\n            Expense\n            Education\n            99%\n            AUTO\n            −70,760,800 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "e8283579-c1a8-4c54-a1eb-7ed2d60a3a7c",
+      "type" : "Income",
+      "status" : "AUTO",
+      "category" : "Income",
+      "amount" : "5000000.00",
+      "text" : "\n            Demo Employer03/10/2026 12:19:00 · Synthetic DataTransaction type is incoming income\n            Income\n            Income\n            99%\n            AUTO\n            +5,000,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "6f7387cd-495b-415c-9501-6834afe462d8",
+      "type" : "Refund",
+      "status" : "AUTO",
+      "category" : "Refund",
+      "amount" : "85000.00",
+      "text" : "\n            Highlands Coffee03/10/2026 10:00:00 · Synthetic DataRefund marker found in the normalized description\n            Refund\n            Refund\n            95%\n            AUTO\n            +85,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "b6c43adc-9b53-433a-950a-9aaed124db14",
+      "type" : "Expense",
+      "status" : "CONFIRMATION_REQUIRED",
+      "category" : "Shopping",
+      "amount" : "110000.00",
+      "text" : "\n            Campus Store02/10/2026 12:18:00 · Synthetic DataMerchant can represent shopping or groceries\n            Expense\n            Shopping\n            72%\n            CONFIRMATION REQUIRED\n            −110,000 VND\n            \n              Review\n              \n            \n          "
+    }, {
+      "id" : "d995351c-f129-4309-9d15-2662e93fc899",
+      "type" : "Internal Transfer",
+      "status" : "AUTO",
+      "category" : "Transfer",
+      "amount" : "300000.00",
+      "text" : "\n            Own Account02/10/2026 09:00:00 · Synthetic DataBoth accounts belong to the demo profile\n            Internal Transfer\n            Transfer\n            99%\n            AUTO\n            −300,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "fb1b52aa-7936-4c0c-be8e-248ee3e943b8",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Utilities",
+      "amount" : "90000.00",
+      "text" : "\n            Electricity Provider01/10/2026 12:17:00 · Synthetic DataMerchant rule v1 matched a utility provider\n            Expense\n            Utilities\n            96%\n            AUTO\n            −90,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "c71e02ab-7cba-4607-914d-338ce70439b9",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Transport",
+      "amount" : "70000.00",
+      "text" : "\n            Grab30/09/2026 12:16:00 · Synthetic DataMerchant rule v1 matched transport\n            Expense\n            Transport\n            94%\n            AUTO\n            −70,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "7b86e967-6263-4272-989c-a855e4010b50",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Food & Drinks",
+      "amount" : "130000.00",
+      "text" : "\n            Highlands Coffee29/09/2026 12:15:00 · Synthetic DataMerchant rule v1 matched a known cafe\n            Expense\n            Food & Drinks\n            97%\n            AUTO\n            −130,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "447102a9-8b91-4fc2-acc7-4d8069b2cd56",
+      "type" : "Income",
+      "status" : "AUTO",
+      "category" : "Income",
+      "amount" : "5000000.00",
+      "text" : "\n            Demo Employer28/09/2026 12:14:00 · Synthetic DataTransaction type is incoming income\n            Income\n            Income\n            99%\n            AUTO\n            +5,000,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "32bde114-502f-49dd-b383-31061e025679",
+      "type" : "Expense",
+      "status" : "CONFIRMATION_REQUIRED",
+      "category" : "Shopping",
+      "amount" : "90000.00",
+      "text" : "\n            Campus Store27/09/2026 12:13:00 · Synthetic DataMerchant can represent shopping or groceries\n            Expense\n            Shopping\n            72%\n            CONFIRMATION REQUIRED\n            −90,000 VND\n            \n              Review\n              \n            \n          "
+    }, {
+      "id" : "1581231d-1ddb-4d7f-858a-9aafb7d584a9",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Utilities",
+      "amount" : "70000.00",
+      "text" : "\n            Electricity Provider26/09/2026 12:12:00 · Synthetic DataMerchant rule v1 matched a utility provider\n            Expense\n            Utilities\n            96%\n            AUTO\n            −70,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "da8f0d1a-d67d-43f3-a4f2-50294de51b12",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Transport",
+      "amount" : "130000.00",
+      "text" : "\n            Grab25/09/2026 12:11:00 · Synthetic DataMerchant rule v1 matched transport\n            Expense\n            Transport\n            94%\n            AUTO\n            −130,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "1722b261-ecbe-4b0d-beb9-05d3c6a6db77",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Food & Drinks",
+      "amount" : "110000.00",
+      "text" : "\n            Highlands Coffee24/09/2026 12:10:00 · Synthetic DataMerchant rule v1 matched a known cafe\n            Expense\n            Food & Drinks\n            97%\n            AUTO\n            −110,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "209f5074-c105-4fbe-bb57-2edb935212cb",
+      "type" : "Income",
+      "status" : "AUTO",
+      "category" : "Income",
+      "amount" : "5000000.00",
+      "text" : "\n            Demo Employer23/09/2026 12:09:00 · Synthetic DataTransaction type is incoming income\n            Income\n            Income\n            99%\n            AUTO\n            +5,000,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "12ebc0be-0945-4fee-a2da-9a3a63abdbed",
+      "type" : "Expense",
+      "status" : "CONFIRMATION_REQUIRED",
+      "category" : "Shopping",
+      "amount" : "70000.00",
+      "text" : "\n            Campus Store22/09/2026 12:08:00 · Synthetic DataMerchant can represent shopping or groceries\n            Expense\n            Shopping\n            72%\n            CONFIRMATION REQUIRED\n            −70,000 VND\n            \n              Review\n              \n            \n          "
+    }, {
+      "id" : "43add70a-3f43-4459-b41c-a5ada8186375",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Utilities",
+      "amount" : "130000.00",
+      "text" : "\n            Electricity Provider21/09/2026 12:07:00 · Synthetic DataMerchant rule v1 matched a utility provider\n            Expense\n            Utilities\n            96%\n            AUTO\n            −130,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "a7e22fdc-9e48-40b5-8fa0-562063183914",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Transport",
+      "amount" : "110000.00",
+      "text" : "\n            Grab20/09/2026 12:06:00 · Synthetic DataMerchant rule v1 matched transport\n            Expense\n            Transport\n            94%\n            AUTO\n            −110,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "e6b8958b-aa69-4f24-bff4-0319ab671ea5",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Food & Drinks",
+      "amount" : "90000.00",
+      "text" : "\n            Highlands Coffee19/09/2026 12:05:00 · Synthetic DataMerchant rule v1 matched a known cafe\n            Expense\n            Food & Drinks\n            97%\n            AUTO\n            −90,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "d10e8582-5a15-4627-b3b9-128dedcfecd5",
+      "type" : "Income",
+      "status" : "AUTO",
+      "category" : "Income",
+      "amount" : "5000000.00",
+      "text" : "\n            Demo Employer18/09/2026 12:04:00 · Synthetic DataTransaction type is incoming income\n            Income\n            Income\n            99%\n            AUTO\n            +5,000,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "661588b5-9891-4b06-a282-a402d0241eca",
+      "type" : "Expense",
+      "status" : "CONFIRMATION_REQUIRED",
+      "category" : "Shopping",
+      "amount" : "130000.00",
+      "text" : "\n            Campus Store17/09/2026 12:03:00 · Synthetic DataMerchant can represent shopping or groceries\n            Expense\n            Shopping\n            72%\n            CONFIRMATION REQUIRED\n            −130,000 VND\n            \n              Review\n              \n            \n          "
+    }, {
+      "id" : "e31635da-84a4-4c41-ab3b-10b315d6f8a5",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Utilities",
+      "amount" : "110000.00",
+      "text" : "\n            Electricity Provider16/09/2026 12:02:00 · Synthetic DataMerchant rule v1 matched a utility provider\n            Expense\n            Utilities\n            96%\n            AUTO\n            −110,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "156ba540-334d-47dc-81f3-dbc600479c16",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Transport",
+      "amount" : "90000.00",
+      "text" : "\n            Grab15/09/2026 12:01:00 · Synthetic DataMerchant rule v1 matched transport\n            Expense\n            Transport\n            94%\n            AUTO\n            −90,000 VND\n            \n              \n              Undo\n            \n          "
+    }, {
+      "id" : "8a58b618-4de6-42ce-afe9-8a696134a9f9",
+      "type" : "Expense",
+      "status" : "AUTO",
+      "category" : "Food & Drinks",
+      "amount" : "70000.00",
+      "text" : "\n            Highlands Coffee14/09/2026 12:00:00 · Synthetic DataMerchant rule v1 matched a known cafe\n            Expense\n            Food & Drinks\n            97%\n            AUTO\n            −70,000 VND\n            \n              \n              Undo\n            \n          "
+    } ],
+    "notice" : [ ]
+  },
+  "observedAt" : "2026-10-04T14:22:44.145531100Z",
+  "balances" : {
+    "ALIPAY_VND" : "75,000,000.00 VND",
+    "EMERGENCY_VND" : "0.00 VND",
+    "MOMO_VND" : "12,000,000.00 VND",
+    "PAYER_VND" : "29,239,200.00 VND",
+    "SCHOOL_AUD" : "0.00 AUD",
+    "SCHOOL_CNY" : "20,000.00 CNY",
+    "SCHOOL_USD" : "0.00 USD",
+    "TCB_VND" : "45,000,000.00 VND",
+    "VCB_VND" : "82,000,000.00 VND"
+  }
+}

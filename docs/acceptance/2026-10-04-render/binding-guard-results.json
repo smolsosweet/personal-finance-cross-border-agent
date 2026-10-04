@@ -1,0 +1,9 @@
+{
+  "reservedSubmissions" : 21,
+  "results" : [ {
+    "scenario" : "C/D forged unavailable channel and source binding blocked",
+    "status" : "PASS",
+    "evidence" : "Test-only DOM tampering submitted BANK_B using the available Bank A quote: backend rejected FX quote binding before any draft. Substituting VCB source for Bank A also rejected; zero plan/receipt or balance mutation. BANK_B's own hidden quote ID is not exposed; CHANNEL NOT AVAILABLE branch not directly exercised."
+  } ],
+  "observedProviderAttempts" : 19
+}

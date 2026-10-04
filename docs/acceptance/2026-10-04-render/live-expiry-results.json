@@ -1,0 +1,9 @@
+{
+  "reservedSubmissions" : 21,
+  "observedProviderAttempts" : 19,
+  "results" : [ {
+    "evidence" : "Quote expired naturally at 2026-10-04T14:22:38Z without reload; approval disabled live; direct POST of saved approval path blocked FX QUOTE EXPIRED; inline refresh creates new ACT-BB920CE9-7EB AWAITING_APPROVAL without moving money",
+    "status" : "PASS",
+    "scenario" : "C/D natural live expiry and backend stale approval block"
+  } ]
+}

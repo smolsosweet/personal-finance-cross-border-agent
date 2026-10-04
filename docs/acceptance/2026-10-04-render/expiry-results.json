@@ -1,0 +1,13 @@
+{
+  "reservedSubmissions" : 11,
+  "results" : [ {
+    "scenario" : "6c naturally expired quote UI and read-only backend",
+    "status" : "PASS",
+    "evidence" : "5 naturally expired quotes; create-plan controls absent; backend comparison refused stale quotes without financial mutation. Forced Sandbox execution not attempted"
+  }, {
+    "scenario" : "6d channel detail popup/filter/reference saving",
+    "status" : "PASS",
+    "evidence" : "Bank A detail opens/closes in place; expired filter shows five cards; Bank B reference cost 69769600 < cheapest connected 70760800.00 but has no executable action"
+  } ],
+  "observedProviderAttempts" : 9
+}

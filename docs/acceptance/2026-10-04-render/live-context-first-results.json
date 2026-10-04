@@ -1,0 +1,17 @@
+{
+  "reservedSubmissions" : 17,
+  "results" : [ {
+    "scenario" : "D live Gemini draft and new/old plan identity",
+    "status" : "FAIL",
+    "evidence" : "TimeoutError: Timeout 45000ms exceeded"
+  }, {
+    "scenario" : "7 mobile emulation runway form and object change",
+    "status" : "PASS",
+    "evidence" : "Mobile Chrome emulation 390x844 then 390x500: form confirmation reachable; 8m=3.27 and 10m=2.62; selecting a new verified bill clears prior monthly assumption. Real phone keyboard remains human check."
+  }, {
+    "scenario" : "English continuous demo critical path",
+    "status" : "PASS",
+    "evidence" : "Continuous EN on Render: synthetic coffee -> AUTO/feed -> real Gemini spending/budget -> verified 20000 CNY bill -> real Gemini eligible comparison/cost -> draft ACT-F95CE3FC-E87 -> explicit approval -> Sandbox receipt/audit. Attack/Stop separately verified; not a recorded human presentation."
+  } ],
+  "observedProviderAttempts" : 15
+}

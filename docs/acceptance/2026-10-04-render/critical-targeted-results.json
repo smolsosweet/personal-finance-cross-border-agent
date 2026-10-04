@@ -1,0 +1,25 @@
+{
+  "observedProviderAttempts" : 10,
+  "results" : [ {
+    "evidence" : "CHEAPER/FASTER/SAFER order follows cost/settlement/safety; TCB 45m cannot fund tuition; crafted synthetic 99m low-risk request blocked by safe balance; no receipt",
+    "status" : "PASS",
+    "scenario" : "C ranking and source-safe-balance blocking"
+  }, {
+    "evidence" : "AssertionFailedError: expected: not <null>",
+    "status" : "FAIL",
+    "scenario" : "C recipient mismatch blocked after bill edit"
+  }, {
+    "evidence" : "TimeoutError: Error {\n  message='Timeout 45000ms exceeded.\n  name='TimeoutError\n  stack='TimeoutError: Timeout 45000ms exceeded.\n    at _ProgressController.run (C:\\Users\\ADMIN\\AppData\\Local\\Temp\\playwright-java-16617048005308911679\\package\\lib\\coreBundle.js:12360:32)\n    at DispatcherConnection.dispatch (C:\\Users\\ADMIN\\AppData\\Local\\Temp\\playwright-java-16617048005308911679\\package\\lib\\coreBundle.js:19135:44)\n}\nCall log:\n-   - waiting for locator(\"form[action$='/retry'] button\")\n-     - locator resolved to <button class=\"secondary\">Retry with same idempotency key</button>\n-   - attempting click action\n-     2 × waiting for element to be visible, enabled and stable\n-       - element is not visible\n-     - retrying click action\n-     - waiting 20ms\n-     2 × waiting for element to be visible, enabled and stable\n-       - element is not visible\n-     - retrying click action\n-       - waiting 100ms\n-     88 × waiting for element to be visible, enabled and stable\n-        - element is not visible\n-      - retrying click action\n-        - waiting 500ms\n",
+    "status" : "FAIL",
+    "scenario" : "D explicit tuition approval and concurrent idempotency"
+  }, {
+    "evidence" : "Alipay tuition ACT-DEA2C30D-092 remains explicit APPROVAL under DELEGATED; 500001 VND synthetic low-risk plan blocked by 500000 per-transaction limit; balances unchanged",
+    "status" : "PASS",
+    "scenario" : "D delegated mode never bypasses tuition approval; limits"
+  }, {
+    "evidence" : "Emergency Stop PAUSED tuition review and blocked new low-risk action with AGENT PAUSED; no balance/receipt change; resume ACTIVE",
+    "status" : "PASS",
+    "scenario" : "E Emergency Stop blocks immediately and resume recovers"
+  } ],
+  "reservedSubmissions" : 12
+}
