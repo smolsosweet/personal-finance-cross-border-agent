@@ -160,9 +160,15 @@ header{position:sticky;top:0;z-index:10}.mobile-tabs{top:70px}.payment-demo-entr
 .assistant-plan-summary dt{color:#677790;flex:1}
 .assistant-plan-summary dd{margin:0;text-align:right;font-weight:700;flex:1.2;overflow-wrap:anywhere}
 .assistant-context [data-assistant-review-plan]{margin-top:10px;font-size:12px}
-.runway-scenario{margin:12px 0;padding:12px;border:1px solid #dce3ff;border-radius:12px;background:#f7f9ff}
-.runway-scenario form{display:flex;flex-direction:column;gap:7px;margin:10px 0}
-.runway-scenario input{min-width:0;width:100%;padding:9px;border:1px solid #dce3ff;border-radius:8px}
+[data-assistant-runway]{flex:none;min-height:0}
+.runway-scenario{margin:0;padding:10px 20px;border-top:1px solid #dce3ff;background:#f7f9ff;max-height:35dvh;overflow:auto;font-size:12px}
+.runway-scenario>strong{font-size:13px}.runway-scenario p{font-size:11px;line-height:1.5;margin:6px 0}
+.runway-scenario form{display:grid;grid-template-columns:minmax(0,1fr) 74px;gap:5px 8px;margin:7px 0}
+.runway-scenario label[for=runway-monthly]{grid-column:1;grid-row:1}.runway-scenario #runway-monthly{grid-column:1;grid-row:2}
+.runway-scenario label[for=runway-currency]{grid-column:2;grid-row:1}.runway-scenario #runway-currency{grid-column:2;grid-row:2}
+.runway-scenario form button{grid-column:1/-1;font-size:12px;padding:8px 10px}
+.runway-scenario input{min-width:0;width:100%;padding:8px;border:1px solid #dce3ff;border-radius:8px;font-size:14px}
+.runway-explanation summary{font-size:11px;color:#465b7e;cursor:pointer}
 .assistant-message-list{display:flex;flex-direction:column;gap:12px}
 .assistant-message-list .message{max-width:100%;margin:0;font-size:14px;line-height:1.6;padding:12px 14px;border-radius:12px}
 .assistant-message-list .message p{margin:6px 0 0}

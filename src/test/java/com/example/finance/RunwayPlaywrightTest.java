@@ -49,4 +49,21 @@ class RunwayPlaywrightTest {
         assertThat(page.getByTestId("runway-confirmed-monthly")).hasText("10000000.00 VND");assertThat(page.getByTestId("assistant-replies")).containsText("2.62 tháng");assertThat(page.getByTestId("assistant-send-message")).isEnabled();
         assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
     }
+    @Test void monthlyFormStaysWithinReachAfterLongHistoryOnDesktopAndMobile(){
+        var before=PersonalFinanceAiIntegrationTest.snapshot(db);
+        send("Sau khi đóng học phí, tiền còn lại đủ sinh hoạt mấy tháng?");confirm("8000000");
+        for(int i=0;i<8;i++)send("Vậy đủ mấy tháng?");
+        for(int width:new int[]{1440,390}){
+            page.setViewportSize(width,844);
+            page.locator(".assistant-body").evaluate("body => body.scrollTop = body.scrollHeight");
+            assertTrue((Boolean)page.getByTestId("runway-monthly-amount").evaluate("input => { const r=input.getBoundingClientRect(); const panel=input.closest('[data-assistant-panel]').getBoundingClientRect(); return r.top>=panel.top && r.bottom<=panel.bottom && !input.closest('.assistant-body'); }"));
+            assertTrue((Boolean)page.getByTestId("runway-confirm").evaluate("button => { const r=button.getBoundingClientRect(); const dock=button.closest('[data-assistant-runway]').getBoundingClientRect(); return r.top>=dock.top && r.bottom<=dock.bottom; }"));
+            assertThat(page.getByTestId("assistant-send-message")).isVisible();
+            send("Nếu chi 9000000 VND mỗi tháng thì sao?");
+            assertThat(page.getByTestId("runway-monthly-amount")).hasValue("");
+            confirm("9000000");assertThat(page.getByTestId("runway-confirmed-monthly")).hasText("9000000.00 VND");
+        }
+        page.screenshot(new Page.ScreenshotOptions().setPath(java.nio.file.Path.of("target/runway-docked-mobile.png")));
+        assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
+    }
 }

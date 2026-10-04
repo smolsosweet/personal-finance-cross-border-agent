@@ -1,4 +1,5 @@
 const translationsVi = new Map(Object.entries({
+  'About this estimate': 'Giải thích về ước tính',
   'LIVING_EXPENSE_RUNWAY': 'Thời gian đủ tiền sinh hoạt',
   'Living-expense scenario updated; estimate only, no payment.': 'Đã cập nhật kịch bản sinh hoạt; chỉ ước tính, chưa thanh toán.',
   'Living-expense scenario · ESTIMATE': 'Kịch bản sinh hoạt · ƯỚC TÍNH',
