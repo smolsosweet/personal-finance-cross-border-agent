@@ -16,6 +16,92 @@ payments, modify policy, invent rates or fees, or change a recipient after appro
 
 Requirements: Java 21 and Maven 3.9+.
 
+### One-command local Ollama startup (Windows PowerShell 5.1 / PowerShell 7)
+
+First install **JDK 21**, **Maven 3.9+**, and **Ollama**. Ensure `java -version` and
+`mvn -version` work in a new PowerShell terminal. If `JAVA_HOME` is set, it must point to
+the JDK folder, not `bin`. This checkout currently has no Maven wrapper; the launcher
+prefers `mvnw.cmd` if one is present, otherwise it uses installed `mvn.cmd`.
+Start the Ollama app, then download the model once:
+
+```powershell
+ollama pull qwen3:4b
+```
+
+From the project folder, use one command for subsequent runs:
+
+```powershell
+.\scripts\start-local.ps1
+```
+
+The launcher checks prerequisites and port 8080, starts profile `local` with
+`ollama / qwen3:4b / http://localhost:11434`, waits up to 120 seconds for the existing home
+endpoint, then warms the **actual FinBridge intent path** with a read-only budget question.
+Connect timeout is 3 seconds and model request timeout is 60 seconds.
+Application logs remain visible. It does not create a payment plan, approve, pay, or reset demo data.
+When successful, it prints the URL and live warmup result. **Ctrl+C** stops only the
+Maven/application process tree created by this launcher; Ollama and other app instances remain running.
+The launcher stays attached until the application stops. It never installs tools or downloads models.
+
+Parameters:
+
+| Parameter | Behavior |
+| --- | --- |
+| `-Port 8081` | Choose another application port; default 8080. |
+| `-SkipWarmup` | Skip the budget request, but still check Ollama and the installed model. AI readiness is unverified. |
+| `-OpenBrowser` | Open the local application after readiness; no browser opens by default. |
+| `-StartupTimeoutSeconds 180` | Change the bounded readiness timeout (10–600 seconds). |
+
+```powershell
+.\scripts\start-local.ps1 -Port 8081 -OpenBrowser
+.\scripts\start-local.ps1 -SkipWarmup
+# From another directory:
+& 'D:\personal-finance-cross-border-agent\scripts\start-local.ps1' -Port 8081
+```
+
+If PowerShell blocks unsigned local scripts, a process-only alternative is:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\start-local.ps1
+```
+
+Troubleshooting:
+
+- **Ollama unavailable:** open the Ollama desktop app, or run `ollama serve` in a separate
+  terminal when no Ollama server is running. Keep port 11434 local.
+- **Model missing:** run `ollama pull qwen3:4b`, then retry the launcher.
+- **Port occupied:** stop the owner yourself or use `-Port 8081`; the launcher never kills its owner.
+- **Warmup FAILED:** the application stays available, but AI may be in fallback or need clarification.
+  Inspect the assistant/Audit Log; do not treat the application URL alone as proof of live AI readiness.
+- **Warmup PASS:** the fresh warmup session received the validated budget template through the real
+  application classifier. It is a readiness check, not a guarantee for every prompt. Cold requests can
+  be much slower than warm requests; timeout/fallback remain enabled.
+- **Startup failure/timeout:** inspect the visible logs. Only this launcher's process tree is cleaned up.
+
+The script sets configuration only in its child process and uses explicit Spring command-line
+properties. Inherited LLM settings or `SPRING_APPLICATION_JSON` cannot silently disable AI or select
+another provider. Caller environment and working directory remain unchanged. The `local` profile
+alone supports the existing `FINBRIDGE_LLM_*` overrides; the launcher intentionally fixes the local
+provider/model above. Neither activates globally or changes the default/test/cloud profile.
+
+**Database:** the default is persistent H2 at `finance-phase1` under the project root, including when
+launched from another folder. The script adds no reset or database configuration. Existing startup
+initialization seeds empty tables, repairs incompatible demo fixtures, refreshes expired quotes, and
+updates policy runtime mode; this existing behavior is unchanged. Reset demo is destructive to
+synthetic demo changes and remains a separate user action. If an existing test/override selects
+`jdbc:h2:mem:...`, those records are lost when that JVM stops. HTTP conversation/scenario state is
+session-scoped and is not a permanent financial profile.
+Changing `-Port` does not create a separate database: instances using the default H2 file share data.
+Stop the previous instance for a normal single-instance demo run.
+
+**IntelliJ:** activate Spring profile `local` in the run configuration, or add
+`--spring.profiles.active=local` to program arguments. Start Ollama separately. For the same warmup
+on the running app, use `.\scripts\prepare-demo.ps1 -FinBridgeUrl http://localhost:8080`.
+This configuration is for development/demo; a cloud deployment cannot reach your laptop's
+Ollama by using its own `localhost:11434`.
+
+### Default guided mode
+
 ```powershell
 mvn test
 mvn spring-boot:run
@@ -159,7 +245,10 @@ See [the Vietnamese verification report](docs/AI_PERSONAL_FINANCE_VERIFICATION.m
 
 ## Demo preparation and full-story rehearsal
 
-Run `./scripts/prepare-demo.ps1`, then ask one read-only budget question through FinBridge before presenting.
+`scripts/start-local.ps1` includes a read-only application warmup. For an already running app, use
+`./scripts/prepare-demo.ps1 -FinBridgeUrl http://localhost:8080`. The original
+`./scripts/prepare-demo.ps1` without this argument still warms model weights only; also ask one
+read-only budget question through FinBridge before presenting in that case.
 Reset synthetic application data if needed and begin the demo promptly; warming model weights alone does not
 guarantee the first classifier request is fast. Keep the existing 60-second timeout and fallback.
 
