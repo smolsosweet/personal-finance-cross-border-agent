@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
 import java.net.http.HttpClient;
+import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
@@ -66,6 +67,8 @@ public final class GeminiIntentClient implements LlmIntentClient {
             try { return parser.parse(extractContent(mapper.readTree(response.body()))); }
             catch (GeminiProviderException ex) { throw ex; }
             catch (Exception ex) { throw new GeminiProviderException(INVALID_OUTPUT); }
+        } catch (HttpConnectTimeoutException ex) {
+            throw new GeminiProviderException(CONNECT_TIMEOUT);
         } catch (HttpTimeoutException ex) {
             throw new GeminiProviderException(TIMEOUT);
         } catch (InterruptedException ex) {

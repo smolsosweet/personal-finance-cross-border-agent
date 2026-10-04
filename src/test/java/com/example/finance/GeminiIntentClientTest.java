@@ -1,10 +1,16 @@
 package com.example.finance;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpServer;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpConnectTimeoutException;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
@@ -92,6 +98,27 @@ class GeminiIntentClientTest {
         try(var stub=new Stub()) {
             var client=client(stub,Duration.ofMillis(300),true);stub.close();
             assertEquals("GEMINI_SERVICE_UNAVAILABLE",assertThrows(GeminiProviderException.class,()->client.classify("budget")).reasonCode());
+        }
+    }
+
+    @ParameterizedTest @ValueSource(strings={"CONNECT_TIMEOUT","TIMEOUT"})
+    void transportTimeoutStageIsSanitizedWithoutRetry(String stage) throws Exception {
+        var transport=mock(HttpClient.class);
+        var builder=mock(HttpClient.Builder.class,RETURNS_SELF);
+        when(builder.build()).thenReturn(transport);
+        var failure="CONNECT_TIMEOUT".equals(stage)
+                ? new HttpConnectTimeoutException("synthetic-sensitive-key-and-url")
+                : new HttpTimeoutException("synthetic-sensitive-key-and-url");
+        when(transport.send(any(HttpRequest.class),org.mockito.ArgumentMatchers.<HttpResponse.BodyHandler<String>>any())).thenThrow(failure);
+        try(var factory=mockStatic(HttpClient.class);var stub=new Stub()) {
+            factory.when(HttpClient::newBuilder).thenReturn(builder);
+            var ex=assertThrows(GeminiProviderException.class,()->client(stub,Duration.ofSeconds(2),true).classify("budget"));
+            assertEquals("GEMINI_"+stage,ex.reasonCode());assertNull(ex.getCause());
+            assertFalse(ex.getMessage().contains("synthetic-sensitive"));
+            assertFalse(ex.help(true).contains("synthetic-sensitive"));assertFalse(ex.help(false).contains("synthetic-sensitive"));
+            assertTrue(ex.help(true).contains("CONNECT_TIMEOUT".equals(stage)?"chưa kết nối":"chưa trả lời"));
+            verify(transport,times(1)).send(any(HttpRequest.class),org.mockito.ArgumentMatchers.<HttpResponse.BodyHandler<String>>any());
+            assertEquals(0,stub.calls.get());
         }
     }
 

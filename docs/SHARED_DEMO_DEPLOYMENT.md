@@ -17,6 +17,18 @@
 5. Deploy, đối chiếu commit ID trong Events và chờ service Live. Không khai báo `SPRING_DATASOURCE_URL`, không override profile hosting.
 6. Lấy URL HTTPS do Render cấp để smoke test. `autoDeployTrigger: off` giúp chỉ deploy bản đã test qua thao tác Manual Deploy.
 
+### Cập nhật bản sửa lỗi kết nối Gemini
+
+Render Dashboard → service `finbridge-shared-demo` → Manual Deploy → Deploy latest commit, rồi chờ Live và đối chiếu commit. Chỉ push Git không cập nhật service vì auto deploy đang tắt. Redeploy khởi động lại JVM và đưa workspace tài chính dùng chung về seed.
+
+Profile hosting mặc định `FINBRIDGE_LLM_CONNECT_TIMEOUT=10s` và `FINBRIDGE_LLM_REQUEST_TIMEOUT=30s`; Blueprint cũng khai báo hai giá trị này. Nếu đã có override trong Environment, kiểm tra chúng khớp trước khi deploy. Không cần nhập lại hoặc chia sẻ API key.
+
+- `GEMINI_CONNECT_TIMEOUT`: server chưa kết nối được tới Gemini trong thời gian cho phép.
+- `GEMINI_TIMEOUT`: yêu cầu đã vượt thời gian chờ; chưa có câu trả lời hợp lệ để xử lý.
+- `GEMINI_AUTHENTICATION` và `GEMINI_QUOTA_EXHAUSTED`: lỗi quyền API và quota riêng, không suy ra từ timeout.
+
+Hai giới hạn là thời gian tối đa, không phải mọi câu hỏi sẽ chờ đủ 10/30 giây. Không tự retry hay gọi model lúc startup. Nếu lỗi còn xuất hiện, ghi mã lý do và thời điểm từ Audit Log; không gửi key hoặc toàn bộ cấu hình secrets. Hỏi thử câu chi tiêu/ngân sách chỉ đọc; không Reset, refresh quote hay tạo kế hoạch để chẩn đoán kết nối.
+
 Render Free có thể ngủ sau 15 phút không có lưu lượng; mở lại cần cold start khoảng một phút. Với profile này, lần khởi động đó trở về seed. Free không có persistent disk. Xem [Free](https://render.com/docs/free), [Docker](https://render.com/docs/docker), [Blueprint](https://render.com/docs/blueprint-spec).
 
 ## Kiểm chứng container local (không gọi model)

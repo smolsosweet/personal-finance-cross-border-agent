@@ -24,6 +24,8 @@ class HostingDemoPlaywrightTest {
     @Test void hostingUsesEphemeralDatabaseAndShowsBilingualSharedNotice(){
         assertTrue(environment.getProperty("spring.datasource.url").startsWith("jdbc:h2:mem:"));
         assertEquals("gemini",environment.getProperty("finbridge.llm.provider"));
+        assertEquals("10s",environment.getProperty("finbridge.llm.connect-timeout"));
+        assertEquals("30s",environment.getProperty("finbridge.llm.request-timeout"));
         try(Playwright pw=Playwright.create();Browser browser=pw.chromium().launch(new BrowserType.LaunchOptions().setChannel("chrome").setHeadless(true))){
             Page page=browser.newPage();page.navigate("http://localhost:8124");
             page.getByTestId("language-en").click();

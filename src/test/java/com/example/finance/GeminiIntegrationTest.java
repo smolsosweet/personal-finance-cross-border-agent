@@ -25,7 +25,18 @@ class GeminiIntegrationTest {
     @Autowired DemoDataService demo;
     @Autowired PhaseFourService payments;
     @Autowired JdbcTemplate db;
-    @BeforeEach void reset() throws Exception {demo.resetAll();stub.status=200;stub.response=GeminiIntentClientTest.envelope(GeminiIntentClientTest.VALID,"STOP");stub.calls.set(0);}
+    @BeforeEach void reset() throws Exception {demo.resetAll();stub.status=200;stub.delay=0;stub.response=GeminiIntentClientTest.envelope(GeminiIntentClientTest.VALID,"STOP");stub.calls.set(0);}
+
+    @Test void slowProviderFallsBackWithoutChangingExistingPendingPlan() throws Exception {
+        var draft=payments.createTuitionPlan("BANK_A");
+        var before=PersonalFinanceAiIntegrationTest.snapshot(db);
+        stub.delay=2500;
+        String answer=payments.sendMessage("Tháng này tôi chi nhiều nhất vào đâu?");
+        assertTrue(answer.contains("Gemini chưa trả lời"));
+        assertEquals(1,stub.calls.get());assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
+        assertEquals(draft.id(),payments.latestAction().id());assertEquals("AWAITING_APPROVAL",payments.latestAction().status());noPayment();
+        assertEquals(1,db.queryForObject("SELECT COUNT(*) FROM audit_log WHERE event_type='INTENT_PROVIDER_UNAVAILABLE' AND reason_code='GEMINI_TIMEOUT'",Integer.class));
+    }
 
     @Test void sanitizedProviderFailuresNeverCreateKeywordPlanAndGuidedFlowRemainsAvailable() throws Exception {
         var before=PersonalFinanceAiIntegrationTest.snapshot(db);

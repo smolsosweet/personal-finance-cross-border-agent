@@ -243,3 +243,36 @@ mvn "-Dtest=HostedDemoSmokeIT" "-Dhosted.demo.url=https://finbridge-shared-demo.
 - Chỉ thêm artifact test và tài liệu ở lượt kiểm chứng cloud; không sửa production source/config. Không chạy lại full suite vì các file sản phẩm vẫn đúng bản 259/259 đã đạt tại 23158c7. Default Maven suite không chạy class *IT tự động; smoke cloud là opt-in riêng.
 
 **Gate deployment + smoke URL thật: đạt cho bản demo dùng chung, với timeout ban đầu là hạn chế đã ghi nhận.** Không phải chứng nhận production hardening, không mở AI phase mới. Commit triển khai vẫn là 23158c7; commit lưu kết quả smoke chỉ thêm test/docs và không tự redeploy vì Blueprint tắt autoDeploy.
+
+## 9. Lỗi timeout Render được người dùng tái hiện — 2026-10-04
+
+Người dùng hỏi “Tháng này tôi chi nhiều nhất vào đâu?” và nhận fallback Gemini. HTTP GET public URL trả 200. Audit Log public xác nhận `AI_REQUEST_STARTED` lúc 12:23:38 và `GEMINI_TIMEOUT` lúc 12:23:44 (giờ server), không có classification hợp lệ cho request đó. Không đọc logs hosting có secret hoặc API key.
+
+Trước bản sửa, catch `HttpTimeoutException` bao gồm cả subtype `HttpConnectTimeoutException`, nên mã cũ không xác định được giai đoạn lỗi. Profile hosting của bản đã deploy chỉ cho kết nối 3 giây, request 30 giây. Lỗi khoảng 6 giây gợi ý việc thiết lập kết nối là điểm cần kiểm tra; **chưa đủ chứng minh nguyên nhân mạng, TLS hay tài nguyên Render**. [Java HTTP connect timeout](https://docs.oracle.com/en/java/javase/21/docs/api/java.net.http/java/net/http/HttpClient.Builder.html#connectTimeout(java.time.Duration)), [connect exception subtype](https://docs.oracle.com/en/java/javase/21/docs/api/java.net.http/java/net/http/HttpConnectTimeoutException.html).
+
+### Kiểm chứng trên bản Render hiện tại, trước khi deploy sửa
+
+```bat
+mvn "-Dtest=HostedChatReadOnlyIT" "-Dhosted.demo.url=https://finbridge-shared-demo.onrender.com" "-Dhosted.chat.cases=1" test
+```
+
+**1/1 pass**, BUILD SUCCESS, 15,387 giây. Chrome và Gemini thật, không mock. Cùng câu hỏi tiếng Việt có intent `EXPLAIN_SPENDING_SUMMARY`, audit strict parser cùng correlation ID, độ trễ UI **3,355 giây**. Số dư UI, các ID/trạng thái plan và receipt giữ nguyên. Bản test ban đầu chưa lấy snapshot các hàng giao dịch; phần đó được bổ sung cho lượt sau deploy. Có receipt Sandbox từ thao tác người dùng trước phép thử; test không tạo receipt và không tuyên bố workspace chưa từng thanh toán. Không Reset, làm mới quote, tạo draft, approve hoặc dừng khẩn cấp. Kết quả thành công sau timeout xác nhận lỗi không ổn định; không coi đó là đã sửa.
+
+### Thay đổi có giới hạn
+
+- Gemini adapter phân biệt `GEMINI_CONNECT_TIMEOUT` và `GEMINI_TIMEOUT`, thông báo cố định Anh/Việt, không đưa cause/URL/header/provider body vào câu trả lời hoặc audit.
+- Hosting dùng connect timeout mặc định 10 giây, request vẫn 30 giây; có thể cấu hình qua biến server. Không retry tự động, đổi model hoặc gọi Gemini lúc startup.
+- Giữ nguyên schema, confidence, injection protection, Policy Guard, quyền phê duyệt và các phép tính tài chính.
+- `HostedChatReadOnlyIT` là test cloud opt-in, không chạy trong default suite. Dùng được cả khi workspace đã có pending/completed plan hoặc receipt; snapshot UI có số dư, plan, receipt và hàng giao dịch. Budget riêng cho điều tra này: tối đa 6 submissions, được lưu trong `target/hosted-chat-timeout-requests.txt`; đã dùng 1, chưa reset bộ đếm của đợt cloud cũ.
+
+### Test liên quan trên code sửa
+
+```bat
+mvn "-Dtest=GeminiIntentClientTest,GeminiIntegrationTest,HostingDemoPlaywrightTest" test
+```
+
+**44/44 pass**, 0 failure/error/skipped, BUILD SUCCESS, 28,266 giây: GeminiIntentClientTest 38, GeminiIntegrationTest 4, HostingDemoPlaywrightTest 2. HTTP model responses/transport được stub hoặc mock, hosting browser tắt AI; đây không phải live Gemini. Test mới kiểm tra phân biệt hai loại timeout, không lộ cause, chỉ một send, response timeout không thay snapshot database tài chính/pending plan, không payment/ledger/receipt; hosting xác nhận timeout 10s/30s. Không chạy lại full suite không liên quan.
+
+### Trạng thái nghiệm thu
+
+Code sửa và test liên quan đã đạt. **Chưa deploy bản sửa hoặc kiểm chứng bản sửa bằng Gemini thật trên Render tại thời điểm ghi phần này.** Cần Manual Deploy latest commit vì auto deploy tắt, rồi chạy hai câu chỉ đọc Việt/Anh trên URL thật. Redeploy đưa dữ liệu dùng chung về seed. Không kết luận đã hết timeout hoặc ổn định dài hạn trước khi kiểm chứng.
