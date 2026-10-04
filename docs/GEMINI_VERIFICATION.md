@@ -192,3 +192,54 @@ Gate sửa context và chuẩn bị Docker/profile: **đạt**. `git diff` so v�
 Deploy cloud và smoke URL thật: **chưa xác minh tại thời điểm ghi báo cáo**. Công cụ browser Dashboard lỗi hai lần ngay lúc khởi tạo: `windows sandbox failed: helper_unknown_error: setup refresh had errors` / `node_repl kernel exited unexpectedly`. Playwright kiểm chứng local hoạt động; công cụ thao tác phiên Render đã đăng nhập không hoạt động. Cần người dùng tạo Blueprint/nhập secret trực tiếp trong Render rồi cung cấp URL HTTPS; không yêu cầu gửi key vào chat. Xem các bước trong SHARED_DEMO_DEPLOYMENT.md. Không gọi việc build container thành công là deploy cloud thành công.
 
 Giới hạn demo: chưa có login hoặc chống lạm dụng quota theo người dùng; các thay đổi tài chính/Reset dùng chung. Render Free có cold start và có thể ngủ, kéo theo trở về seed khi JVM restart. Báo giá mô phỏng hết hạn sau 5 phút vẫn phải làm mới và xác minh lại; không kéo dài expiry để test pass. Key ở server, synthetic data và một instance là điều kiện cho bản demo, chưa phải production hardening.
+## 8. Smoke URL Render thật — 2026-10-04, 18:21 (UTC+7)
+
+**URL:** https://finbridge-shared-demo.onrender.com
+
+Ảnh Dashboard do người dùng cung cấp xác nhận Docker, Free, branch main, commit `23158c7`, trạng thái Live. HTTP GET thật từ workspace trả 200. Công cụ web đọc trang báo không truy cập được, nhưng HTTP và Playwright Chrome truy cập thành công; không coi lỗi của công cụ web là ứng dụng lỗi.
+
+### Lệnh và kết quả
+
+```bat
+mvn "-Dtest=HostedDemoSmokeIT" "-Dhosted.demo.url=https://finbridge-shared-demo.onrender.com" test
+```
+
+- Lần 1: dừng ở câu ngân sách do `GEMINI_TIMEOUT`; không có strict-parser success. Backend fallback, không tạo draft/thanh toán. Một submission.
+- Lần 2: model đã trả response hợp lệ; test dừng ở câu Bank B do mã audit trên UI bị dịch một phần sang tiếng Việt. Đây là assertion test-only đọc nhãn đã dịch thay vì enum gốc. Hai submissions.
+- Đã sửa test đọc enum từ HTML response gốc của server, cùng correlation ID của `AI REQUEST FINISHED`/`INTENT CLASSIFIED`. Chỉ so sánh giá trị tiền và ID tài khoản, không so nhãn tiếng Việt/Anh.
+- Lần cuối: **HostedDemoSmokeIT 1/1 pass**, 0 failure/error/skipped, BUILD SUCCESS (28,703 giây), Chrome thật và API Gemini backend thật, không mock. Tổng budget cloud giữ đủ 10 submissions (1 + 2 + 7), không xóa bộ đếm hoặc retry tự động trong app.
+
+| Bước trong lượt liên tục cuối | Intent mong đợi = thực tế | Bằng chứng strict parser | Độ trễ UI |
+|---|---|---|---:|
+| Ngân sách tiếng Anh | EXPLAIN_BUDGET_STATUS | INTENT_CLASSIFIED cùng request ID | 2,408 s |
+| Vì sao Bank B không dùng được? | EXPLAIN_CHANNEL_UNAVAILABLE | Như trên | 1,867 s |
+| Vì sao kênh đó không dùng được? | EXPLAIN_CHANNEL_UNAVAILABLE | Như trên | 1,937 s |
+| Tiền sau học phí đủ sinh hoạt mấy tháng? | EXPLAIN_LIVING_EXPENSE_RUNWAY | Như trên | 2,040 s |
+| Xác nhận form 8.000.000 VND/tháng | Không gọi model | Không phát sinh classification mới | Không đo |
+| So sánh kênh rẻ nhất | COMPARE_TUITION_CHANNELS | Như trên | 2,423 s |
+| Chuẩn bị kế hoạch học phí rẻ nhất | CREATE_TUITION_PLAN | Như trên | 2,751 s |
+| Trạng thái thế nào? | CHECK_TUITION_STATUS | Như trên | 1,815 s |
+
+7/7 đúng intent; độ trễ 1,815–2,751 giây, trung bình 2,177 giây. Sau Bank B, runway vẫn dùng kênh Bank A và trả khoảng 3,27 tháng với baseline đã xác nhận. Không rebind hay reset giữa các câu.
+
+### Các kiểm tra đã đạt
+
+- Notice demo dùng chung tiếng Việt và Anh hiển thị đúng.
+- Bank B hiển thị tham khảo và không có button, form hoặc link để thực thi.
+- Số dư Sandbox hiển thị, `data-balance` của tài khoản/kênh và tổng số dư cá nhân giữ nguyên trước/sau các câu chỉ đọc, form baseline và tạo draft.
+- Draft `ACT-7A5B1C6D-D8A` dừng ở `AWAITING_APPROVAL`, chưa receipt. Test không bấm Approve, không thực thi payment.
+- Câu hỏi trạng thái tham chiếu đúng draft đó.
+- Injection đã thử bị `INPUT BLOCKED / UNTRUSTED INSTRUCTION`, không phát sinh classification mới, số dư và trạng thái plan không đổi. Không tuyên bố chống mọi injection.
+- Cửa sổ browser thứ hai thấy cùng draft và số dư tài chính nhưng không thấy tin nhắn Bank B của phiên đầu; chủ đề NONE và không có form runway của phiên đầu.
+- Không JavaScript error ở lượt cuối. Screenshots local tạm trong target: render-smoke-runway.png, render-smoke-awaiting-approval.png; đây không phải artifact giữ qua mvn clean.
+
+### Giới hạn của bằng chứng và điểm còn lưu ý
+
+- Cloud smoke kiểm chứng trạng thái quan sát qua UI và audit response; không truy cập database Render, không tuyên bố đã chụp toàn bộ bảng tài chính/ledger như test local. Bằng chứng database đầy đủ trước approval ở phần 7 vẫn là local integration/live verification.
+- Provider Gemini được cấu hình trong profile hosting và Blueprint của commit đã deploy; test quan sát strict-parser audit thành công. Không đọc key, billing console hoặc raw model response.
+- Một timeout đầu tiên đã xảy ra thật. Lượt sau thành công, nhưng chưa xác định chắc nguyên nhân timeout hoặc chứng minh độ ổn định dài hạn. Không đổi timeout, schema, confidence, injection protection hay Policy Guard để ép pass.
+- Cloud test không Reset, restart service, Emergency Stop hoặc phê duyệt, vì workspace dùng chung. Restart khôi phục seed đã được kiểm chứng bằng Docker thật ở phần 7, chưa chủ động restart Render trong smoke này.
+- Test để lại đúng một draft chưa duyệt như trên. Có thể hủy draft bằng UI nếu muốn dọn buổi demo; không có payment hoặc receipt cần hoàn tác.
+- Chỉ thêm artifact test và tài liệu ở lượt kiểm chứng cloud; không sửa production source/config. Không chạy lại full suite vì các file sản phẩm vẫn đúng bản 259/259 đã đạt tại 23158c7. Default Maven suite không chạy class *IT tự động; smoke cloud là opt-in riêng.
+
+**Gate deployment + smoke URL thật: đạt cho bản demo dùng chung, với timeout ban đầu là hạn chế đã ghi nhận.** Không phải chứng nhận production hardening, không mở AI phase mới. Commit triển khai vẫn là 23158c7; commit lưu kết quả smoke chỉ thêm test/docs và không tự redeploy vì Blueprint tắt autoDeploy.
