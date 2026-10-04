@@ -275,4 +275,25 @@ mvn "-Dtest=GeminiIntentClientTest,GeminiIntegrationTest,HostingDemoPlaywrightTe
 
 ### Trạng thái nghiệm thu
 
-Code sửa và test liên quan đã đạt. **Chưa deploy bản sửa hoặc kiểm chứng bản sửa bằng Gemini thật trên Render tại thời điểm ghi phần này.** Cần Manual Deploy latest commit vì auto deploy tắt, rồi chạy hai câu chỉ đọc Việt/Anh trên URL thật. Redeploy đưa dữ liệu dùng chung về seed. Không kết luận đã hết timeout hoặc ổn định dài hạn trước khi kiểm chứng.
+Code sửa và test liên quan đã đạt. Tại thời điểm ghi ban đầu, chưa deploy hoặc kiểm chứng bản sửa bằng Gemini thật trên Render. Kết quả sau deploy được bổ sung ngay dưới đây.
+
+### Kiểm chứng sau deploy `d6a68a6` — 19:44 ngày 2026-10-04 (UTC+7)
+
+Người dùng cung cấp lịch sử Render xác nhận commit `d6a68a6` Deployed qua Blueprint và Manual Deploy. Không chủ động restart/reset service hoặc truy cập Dashboard secrets trong phép thử. URL vẫn là https://finbridge-shared-demo.onrender.com.
+
+```bat
+mvn "-Dtest=HostedChatReadOnlyIT" "-Dhosted.demo.url=https://finbridge-shared-demo.onrender.com" test
+```
+
+**HostedChatReadOnlyIT 1/1 pass**, 0 failure/error/skipped, BUILD SUCCESS, 25,052 giây. Hai câu hỏi trong cùng phiên browser Chrome thật gọi Gemini thật qua backend Render, không mock:
+
+| Câu hỏi | Intent mong đợi = thực tế | Strict parser/audit cùng request ID | Độ trễ UI | Trạng thái tài chính quan sát |
+|---|---|---|---:|---|
+| Tháng này tôi chi nhiều nhất vào đâu? | EXPLAIN_SPENDING_SUMMARY | Hợp lệ | 9,918 s | Giữ nguyên |
+| Show my configured budgets for this month. | EXPLAIN_BUDGET_STATUS | Hợp lệ | 2,977 s | Giữ nguyên |
+
+Sau từng lượt, test so sánh số dư Sandbox, số dư tài khoản/kênh, tổng số dư cá nhân, ID/trạng thái các kế hoạch, ID receipt và các thuộc tính ID/loại/danh mục/số tiền/trạng thái xử lý của hàng giao dịch. Snapshot UI giữ nguyên; không có JavaScript error. Không Reset, refresh quote, tạo draft, approve hoặc payment. Đây là bằng chứng UI/audit của hai câu chỉ đọc, không phải snapshot database Render hoặc kiểm chứng lại toàn bộ các phase.
+
+Budget riêng điều tra timeout đã dùng **3/6 submissions** (1 trước deploy, 2 sau deploy), không xóa bộ đếm và không có retry tự động. Test hồi quy mock/local 44/44 trước deploy vẫn là bằng chứng riêng; không chạy lại test không liên quan trong lượt này.
+
+**Gate kiểm chứng hai câu hỏi chỉ đọc trên bản sửa Render: đạt.** Chưa quan sát timeout trong lượt sau deploy. Câu đầu vẫn mất gần 10 giây; hai lần thành công chưa chứng minh ổn định dài hạn hoặc xác định nguyên nhân timeout trước đó. Nếu lỗi tái diễn, Audit Log mới phân biệt `GEMINI_CONNECT_TIMEOUT` và `GEMINI_TIMEOUT` để điều tra đúng giai đoạn. Không kết luận nâng timeout bảo đảm mọi yêu cầu sẽ thành công.
