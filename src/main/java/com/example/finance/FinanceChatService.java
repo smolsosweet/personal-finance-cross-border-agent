@@ -88,6 +88,10 @@ public class FinanceChatService {
                         ? "AI tạm thời không khả dụng hoặc đã hết thời gian chờ. Chưa tạo kế hoạch hay thanh toán. Bạn có thể xem tổng quan hoặc dùng luồng học phí có hướng dẫn."
                         : "AI is temporarily unavailable or timed out. No plan or payment was created. View the overview or use the guided tuition flow.";
                 outcome = "FALLBACK"; reason = "LLM UNAVAILABLE";
+                if (ex instanceof GeminiProviderException gemini) {
+                    early += " " + gemini.help(vi);
+                    reason = gemini.reasonCode();
+                }
             }
         }
         LlmIntent classified = intent;
@@ -102,10 +106,12 @@ public class FinanceChatService {
             String answer;
             if (response != null) {
                 answer = response;
-                if (turn != null) turn.rejected(finalReason, vi);
+                if (turn != null) turn.rejected(finalReason != null && finalReason.startsWith("GEMINI_")
+                        ? "LLM UNAVAILABLE" : finalReason, vi);
                 audit(finalReason != null && finalReason.equals("UNTRUSTED INSTRUCTION") ? "POLICY_GUARD" : "LLM_INTENT",
                         "UNTRUSTED INSTRUCTION".equals(finalReason) ? "INPUT_BLOCKED"
-                                : "LLM UNAVAILABLE".equals(finalReason) ? "INTENT_PROVIDER_UNAVAILABLE" : "AI_REQUEST_CLARIFICATION",
+                                : ("LLM UNAVAILABLE".equals(finalReason) || (finalReason != null && finalReason.startsWith("GEMINI_")))
+                                  ? "INTENT_PROVIDER_UNAVAILABLE" : "AI_REQUEST_CLARIFICATION",
                         requestId, finalOutcome, finalReason, "Backend-generated safe response; no financial action");
             } else {
                 audit("LLM_INTENT", "INTENT_CLASSIFIED", requestId, "COMPLETED", classified.intent().name(),

@@ -1,6 +1,6 @@
 # Personal Finance Cross Border Agent — Guarded AI Intent Providers
 
-The `main` branch implements the deterministic demo through Phase 5 plus an optional guarded intent classifier using OpenAI or local Ollama.
+The `main` branch implements the deterministic demo through Phase 5 plus an optional guarded intent classifier using OpenAI, local Ollama, or Gemini.
 
 - Phase 1: synthetic user, bank events, normalization and transaction type detection.
 - Phase 2: merchant categorization, confidence handling, Undo, dashboard, budgets and Proactive Feed.
@@ -15,6 +15,116 @@ payments, modify policy, invent rates or fees, or change a recipient after appro
 ## Run
 
 Requirements: Java 21 and Maven 3.9+.
+
+### Gemini API trên Windows — không cần Ollama
+
+Nếu `GEMINI_API_KEY` đã có trong terminal, không nhập lại key. Từ folder project,
+chạy một lệnh (dùng được trong CMD và PowerShell, kể cả khi Windows chặn `.ps1`):
+
+```bat
+scripts\start-gemini.cmd
+```
+
+Trong PowerShell cho phép script, lệnh tương đương là ` .\scripts\start-gemini.ps1`.
+Không mở `.ps1` bằng nhấp đúp. File `.cmd` gọi PowerShell với ExecutionPolicy Bypass
+chỉ cho tiến trình con; không thay đổi chính sách toàn máy.
+
+Nếu chưa có key trong terminal, mở PowerShell và nhập kín ở máy của bạn:
+
+```powershell
+cd D:\personal-finance-cross-border-agent
+$geminiInput = Read-Host 'Gemini API key (nhap kin, khong gui vao chat)' -AsSecureString
+$env:GEMINI_API_KEY = [System.Net.NetworkCredential]::new('', $geminiInput).Password
+Remove-Variable geminiInput
+.\scripts\start-gemini.cmd
+```
+
+Key chỉ tồn tại trong môi trường của terminal và các tiến trình con. Một cửa sổ CMD
+mở riêng từ Start Menu không kế thừa biến `$env:` của PowerShell đang chạy. Có thể
+chạy `.cmd` ngay trong PowerShell như trên hoặc mở `cmd.exe` từ PowerShell đó.
+Không đặt key trong source, README, `.properties`, URL, frontend, Git hoặc tham số CLI.
+
+Chờ `Application ready: http://localhost:8080` rồi mở URL, giữ terminal mở.
+**Khởi động gửi 0 yêu cầu model**, nên `AI readiness: NOT VERIFIED` là bình thường.
+Gửi một câu hỏi được hỗ trợ mới gọi Gemini; hệ thống không warmup, retry hoặc đổi provider.
+Ctrl+C dừng cây tiến trình Maven/app do launcher tạo, không dừng ứng dụng khác.
+Port đang dùng sẽ bị từ chối, không tự kill process.
+
+```bat
+scripts\start-gemini.cmd -Port 8081 -OpenBrowser
+scripts\start-gemini.cmd -Model gemini-3.5-flash-lite -ConnectTimeoutSeconds 3 -RequestTimeoutSeconds 30
+```
+
+Launcher chọn rõ `gemini` / profile `gemini` / model `gemini-3.5-flash-lite`, ghi đè
+cấu hình provider/model cũ chỉ trong tiến trình con. Có thể dùng `-StartupTimeoutSeconds 180`.
+Nó chỉ cần Java 21 và Maven 3.9+, không kiểm tra/cài/tải Ollama, không reset dữ liệu.
+Chạy trực tiếp qua Maven có thể dùng profile `gemini`, `FINBRIDGE_LLM_ENABLED`,
+`FINBRIDGE_LLM_MODEL`, `FINBRIDGE_LLM_CONNECT_TIMEOUT`, `FINBRIDGE_LLM_REQUEST_TIMEOUT`.
+`GEMINI_API_KEY` được bind vào `finbridge.llm.gemini-api-key`, tách khỏi `OPENAI_API_KEY`.
+
+**Model và tài liệu Google kiểm tra ngày 2026-10-04:**
+
+- [Gemini 3.5 Flash-Lite](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite): stable, structured outputs supported.
+- [Pricing](https://ai.google.dev/gemini-api/docs/pricing): standard input/output có free tier; quota/quyền truy cập phụ thuộc project/key và có thể đổi.
+- [generateContent REST](https://ai.google.dev/api/generate-content): POST `/v1beta/models/{model}:generateContent`, `systemInstruction`, `contents`, `generationConfig.responseMimeType=application/json` và `responseJsonSchema` dùng schema chung đóng bốn trường.
+- [API key header](https://ai.google.dev/gemini-api/docs/api-key): `x-goog-api-key`, không dùng query parameter.
+- [Structured output](https://ai.google.dev/gemini-api/docs/structured-output): vẫn kiểm tra JSON lại bằng `StrictLlmIntentParser`; không tin output model chỉ vì có schema.
+
+FinBridge không bật billing, mua credits, dùng grounding/tools trả phí hoặc tự chọn model khác.
+Model có free tier không chứng minh key/project của bạn còn quota hay đang ở tier miễn phí;
+cần xác nhận tier trong AI Studio của bạn. Chỉ dùng dữ liệu tổng hợp cho đợt kiểm chứng.
+Backend gửi câu hỏi hiện tại và ngữ cảnh enum tối thiểu, không gửi lịch sử, số tài khoản,
+số dư hay bill/quote từ database. Câu trả lời và các phép tính vẫn do backend dựng.
+
+Key/model thiếu làm startup thất bại với thông báo cấu hình. Lỗi 401/403, 404, 429,
+timeout, 5xx, blocked/truncated/invalid output trả fallback an toàn kèm mã `GEMINI_*`
+trong Audit Log. Không tạo plan từ keyword fallback, không thanh toán, không retry.
+Luồng học phí có hướng dẫn vẫn dùng được; học phí luôn cần phê duyệt riêng.
+Thông báo không chứa raw provider body/header/key. Deployment tương lai phải dùng
+**server-side environment secrets**; phase này chưa deploy hay thêm authentication.
+
+Quay lại Ollama: dừng app bằng Ctrl+C, rồi chạy `scripts\start-local.cmd` với Ollama
+đã mở và `qwen3:4b` đã tải. `application-local.properties` và launcher cũ được giữ nguyên.
+
+#### Test Gemini (mock và live tách riêng)
+
+```bat
+mvn "-Dtest=GeminiIntentClientTest,GeminiIntegrationTest,LlmProviderConfigurationTest,GeminiStartupScriptTest" test
+mvn test
+```
+
+Các test mặc định dùng HTTP stub (và Chrome thật ở `GeminiIntegrationTest`), không tiêu quota.
+Live test chỉ chạy khi được chọn rõ, cần Chrome có sẵn và app Gemini đang chạy bằng
+database tổng hợp riêng; không dùng database demo thường:
+
+```powershell
+# Terminal có key; khởi động app riêng, không gửi chat thủ công trong lúc smoke chạy:
+$env:SPRING_DATASOURCE_URL='jdbc:h2:file:./target/gemini-live-check;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;AUTO_SERVER=TRUE'
+.\scripts\start-gemini.cmd -Port 8122
+```
+
+Ở terminal khác trong project:
+
+```bat
+mvn "-Dtest=GeminiLiveIT" test
+```
+
+Live test đọc snapshot database synthetic, kiểm tra provider/model qua metadata tiến trình,
+chạy Chrome thật, EN/VI, follow-up, Bank B, runway có xác nhận, ambiguity, injection
+prefilter và draft `AWAITING_APPROVAL`. Không phê duyệt/thực thi/reset.
+Tối đa 20 submission qua bộ đếm `target/gemini-live-generation-count.txt` (tính cả lỗi,
+không tự xóa khi chạy lại); injection bị prefilter không được tính là model trả đúng.
+Test fail/blocked phải được báo riêng; startup thành công hay test mock không chứng minh Gemini thật hoạt động.
+Nếu Windows không cho đọc command line của terminal khác, cần log khởi động **đã quan sát**
+chứa `PID=...`, dòng `Application ready: ...` và `Profile: gemini | Provider: gemini | Model: gemini-3.5-flash-lite`
+trong `target/gemini-live-startup-evidence.txt` (không chứa key). Test đối chiếu PID với port
+đang listen và ghi rõ dùng log thay vì command-line metadata. Không tự mặc định provider.
+Nếu đã chạy thành công các intent đầu rồi dừng trước xác nhận runway, có thể chọn riêng phần
+còn lại bằng `mvn "-Dtest=GeminiLiveIT" "-Dgemini.live.resume=true" test`; bộ đếm vẫn giữ nguyên.
+Hỏi Bank B sẽ giữ ngữ cảnh kênh không khả dụng; chọn lại hóa đơn/kênh hợp lệ trong UI trước
+khi chạy runway. Test dùng thao tác UI này, không bỏ kiểm tra eligibility.
+Sau smoke, dừng terminal app. Bỏ `SPRING_DATASOURCE_URL` kiểm chứng ở terminal đó trước
+khi quay lại demo thường: `Remove-Item Env:SPRING_DATASOURCE_URL`. Không cần bỏ key.
 
 ### Chạy từ CMD trên Windows (khuyến nghị)
 

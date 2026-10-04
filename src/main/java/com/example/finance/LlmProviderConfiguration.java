@@ -14,6 +14,7 @@ public class LlmProviderConfiguration {
             @Value("${finbridge.llm.enabled:false}") boolean enabled,
             @Value("${finbridge.llm.provider:openai}") String configuredProvider,
             @Value("${finbridge.llm.api-key:}") String apiKey,
+            @Value("${finbridge.llm.gemini-api-key:}") String geminiApiKey,
             @Value("${finbridge.llm.model:}") String configuredModel,
             @Value("${finbridge.llm.base-url:http://localhost:11434}") String baseUrl,
             @Value("${finbridge.llm.connect-timeout:3s}") Duration connectTimeout,
@@ -27,9 +28,11 @@ public class LlmProviderConfiguration {
             case "ollama" -> new OllamaIntentClient(
                     mapper, parser, enabled, baseUrl,
                     model.isBlank() ? "qwen3:4b" : model, connectTimeout, requestTimeout);
+            case "gemini" -> new GeminiIntentClient(
+                    mapper, parser, enabled, geminiApiKey, model, connectTimeout, requestTimeout);
             default -> throw new IllegalStateException(
                     "Unknown FINBRIDGE_LLM_PROVIDER '" + configuredProvider
-                            + "'; expected ollama, openai, or disabled");
+                            + "'; expected ollama, gemini, openai, or disabled");
         };
     }
 

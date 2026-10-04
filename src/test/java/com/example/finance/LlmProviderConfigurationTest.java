@@ -33,12 +33,20 @@ class LlmProviderConfigurationTest {
         assertThrows(LlmIntentException.class, () -> openai.classify("Check tuition"));
 
         IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> select(false, "gemini", "", "", "http://localhost:11434"));
-        assertTrue(error.getMessage().contains("expected ollama, openai, or disabled"));
+                () -> select(false, "unknown", "", "", "http://localhost:11434"));
+        assertTrue(error.getMessage().contains("expected ollama, gemini, openai, or disabled"));
     }
 
     private LlmIntentClient select(boolean enabled, String provider, String key, String model, String baseUrl) {
-        return configuration.llmIntentClient(mapper, parser, enabled, provider, key, model, baseUrl,
+        return configuration.llmIntentClient(mapper, parser, enabled, provider, key, "", model, baseUrl,
                 Duration.ofSeconds(1), Duration.ofSeconds(2));
+    }
+
+    @Test void geminiRequiresItsOwnKeyAndExplicitModelOnlyWhenEnabled() {
+        assertThrows(IllegalStateException.class, () -> select(true,"gemini","openai-only","gemini-3.5-flash-lite","http://localhost:11434"));
+        assertThrows(IllegalStateException.class, () -> configuration.llmIntentClient(mapper,parser,true,"gemini","","synthetic-key","","",Duration.ofSeconds(1),Duration.ofSeconds(2)));
+        var client=configuration.llmIntentClient(mapper,parser,true,"gemini","","synthetic-key","gemini-3.5-flash-lite","http://localhost:11434",Duration.ofSeconds(1),Duration.ofSeconds(2));
+        assertInstanceOf(GeminiIntentClient.class,client);assertTrue(client.enabled());
+        assertFalse(select(false,"gemini","","","http://localhost:11434").enabled());
     }
 }
