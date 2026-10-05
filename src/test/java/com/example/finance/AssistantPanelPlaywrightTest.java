@@ -154,7 +154,7 @@ class AssistantPanelPlaywrightTest {
         assertEquals("APPROVAL", plan.requiredPermission());
         assertEquals(0, payments.sandboxTransactionCount());
         assertNull(payments.receiptForAction(plan.id()));
-        assertThat(page.getByTestId("tab-student")).hasAttribute("aria-selected", "true");
+        assertThat(page.getByTestId("tab-student")).hasAttribute("aria-pressed", "true");
         assertThat(page.getByTestId("assistant-review-plan")).isVisible();
         page.getByTestId("assistant-review-plan").click();
         assertThat(panel()).isHidden();
@@ -340,7 +340,7 @@ class AssistantPanelPlaywrightTest {
         assertThat(panel()).isHidden();
         page.waitForCondition(() -> (Boolean) page.getByTestId("latest-receipt").evaluate("node => {const r=node.getBoundingClientRect();return r.top>=0 && r.top<innerHeight;}"));
         assertThat(page.getByTestId("latest-receipt")).hasAttribute("data-transaction-id", receipt.transactionId());
-        assertThat(page.getByTestId("tab-agent")).hasAttribute("aria-selected", "true");
+        assertThat(page.getByTestId("tab-agent")).hasAttribute("aria-pressed", "true");
         assertTrue((Boolean) page.getByTestId("latest-receipt").evaluate("node => {const r=node.getBoundingClientRect();return r.top>=0 && r.top<innerHeight;}"));
         assertEquals(beforeNavigation, PersonalFinanceAiIntegrationTest.snapshot(db));
         assertEquals(1, payments.sandboxTransactionCount());

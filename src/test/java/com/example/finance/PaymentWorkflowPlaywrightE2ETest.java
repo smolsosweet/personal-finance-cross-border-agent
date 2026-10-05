@@ -68,7 +68,7 @@ class PaymentWorkflowPlaywrightE2ETest {
             page.getByTestId("plan-ALIPAY").click();
 
             assertThat(page.locator("#agent-workspace")).isVisible();
-            assertThat(page.locator(".mobile-tabs [data-tab='agent']")).hasAttribute("aria-selected", "true");
+            assertThat(page.locator(".mobile-tabs [data-tab='agent']")).hasAttribute("aria-pressed", "true");
             assertThat(page.getByTestId("latest-action")).hasAttribute("data-status", "AWAITING_APPROVAL");
             assertThat(page.getByTestId("payment-review")).containsText("SZDU-2026-MINH");
             assertThat(page.getByTestId("review-channel")).containsText("Alipay");

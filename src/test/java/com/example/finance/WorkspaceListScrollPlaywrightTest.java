@@ -64,13 +64,16 @@ class WorkspaceListScrollPlaywrightTest {
   budget.evaluate("e=>e.replaceChildren(document.createElement('div'))");assertThat(button).isHidden();
   assertTrue(height(budget)<50);accountView();page.locator("[data-dashboard-view=summary]").click();assertThat(button).isHidden();
  }
- @Test void transactionHistoryAlsoSupportsWheelAndButtonOnMobile(){
+ @Test void transactionHistoryUsesOnlyPaginationOnMobile(){
   navigate();page.setViewportSize(390,844);page.locator("[data-tab=transactions]:visible").click();page.getByTestId("transaction-view-history").click();
-  var list=page.locator("#transactions .table-scroll");var button=page.locator("#transactions .table-scroll + .list-scroll-down");
-  assertTrue(overflow(list));list.scrollIntoViewIfNeeded();list.hover();page.mouse().wheel(0,220);
-  page.waitForFunction("()=>document.querySelector('#transactions .table-scroll').scrollTop>30");
-  list.evaluate("e=>e.scrollTop=0");assertThat(button).isEnabled();button.click();
-  page.waitForFunction("()=>document.querySelector('#transactions .table-scroll').scrollTop>100");
+  var list=page.locator("#transactions .table-scroll");
+  assertFalse(overflow(list));assertThat(list).not().hasClass(java.util.regex.Pattern.compile(".*bounded-list.*"));
+  assertThat(page.locator("#transactions .table-scroll + .list-scroll-down")).hasCount(0);
+  assertThat(page.locator("[data-testid=transaction-next]")).isEnabled();
+  String first=page.locator("[data-testid=transaction-row]:visible").first().innerText();
+  page.locator("[data-testid=transaction-next]").click();
+  assertNotEquals(first,page.locator("[data-testid=transaction-row]:visible").first().innerText());
+  assertTrue(page.locator("[data-testid=transaction-row]:visible").count()<=5);
  }
  @Test void overviewCardsArePairedWithoutOneCardSpanningTwoRows()throws Exception{
   navigate();var before=PersonalFinanceAiIntegrationTest.snapshot(db);

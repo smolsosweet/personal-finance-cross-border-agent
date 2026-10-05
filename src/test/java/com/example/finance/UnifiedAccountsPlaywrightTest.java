@@ -72,7 +72,8 @@ class UnifiedAccountsPlaywrightTest {
         assertTrue(((Number)page.getByTestId("audit-log").locator(".table-scroll").evaluate("e=>e.clientHeight")).intValue()<=320);
         page.getByTestId("tab-transactions").click();
         page.getByTestId("transaction-view-history").click();
-        assertTrue(((Number)page.locator("#transactions .table-scroll").evaluate("e=>e.clientHeight")).intValue()<=480);
+        assertFalse((Boolean)page.locator("#transactions .table-scroll").evaluate("e=>e.scrollHeight>e.clientHeight+2"));
+        assertThat(page.locator("#transactions .table-scroll + .list-scroll-down")).hasCount(0);
         assertThat(page.locator("#transactions")).containsText("Bank A Everyday");
         page.getByTestId("tab-dashboard").click();assertThat(page.getByTestId("total-personal-balance")).containsText("244,239,200");
         assertThat(page.locator(".current-account-grid")).containsText("29,239,200");

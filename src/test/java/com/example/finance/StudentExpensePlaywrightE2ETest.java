@@ -301,7 +301,7 @@ class StudentExpensePlaywrightE2ETest {
                     .evaluate("element => element.scrollLeft")).doubleValue(), 2);
             assertEquals(previousChannelX, ((Number) page.getByTestId("payment-account-list")
                     .evaluate("element => element.scrollLeft")).doubleValue(), 2);
-            assertThat(page.getByTestId("tab-student")).hasAttribute("aria-selected", "true");
+            assertThat(page.getByTestId("tab-student")).hasAttribute("aria-pressed", "true");
             assertTrue(previousBillX > 0 && previousChannelX > 0, "Fixture must exercise both horizontal lists");
             assertTrue(Long.parseLong(page.getByTestId("channel-BANK_A").getAttribute("data-quote-expiry"))
                     >= Long.parseLong(previousExpiry));
@@ -355,7 +355,7 @@ class StudentExpensePlaywrightE2ETest {
             assertEquals(1, crossBorder.selectedExpense().id());
             assertEquals("", page.getByTestId("student-bill-search").inputValue());
             assertEquals("due-asc", page.getByTestId("student-bill-sort").inputValue());
-            assertThat(page.getByTestId("tab-student")).hasAttribute("aria-selected", "true");
+            assertThat(page.getByTestId("tab-student")).hasAttribute("aria-pressed", "true");
             page.waitForFunction("value => Math.abs(window.scrollY - value) <= 2", previousY);
 
             String selectedBillBeforeFailure = page.getByTestId("tuition-bill").innerText();
@@ -398,7 +398,7 @@ class StudentExpensePlaywrightE2ETest {
             });
 
             page.getByTestId("plan-BANK_A").click();
-            assertThat(page.getByTestId("tab-agent")).hasAttribute("aria-selected", "true");
+            assertThat(page.getByTestId("tab-agent")).hasAttribute("aria-pressed", "true");
             assertThat(page.getByTestId("latest-action")).hasAttribute("data-status", "AWAITING_APPROVAL");
             assertThat(page.getByTestId("review-channel")).containsText("Bank A");
             assertThat(page.getByTestId("latest-receipt")).hasCount(0);

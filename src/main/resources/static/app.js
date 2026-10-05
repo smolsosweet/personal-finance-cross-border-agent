@@ -863,6 +863,30 @@ translationsVi.set('Compare payment options →','So sánh phương án thanh to
 translationsVi.set('Locked payment summary','Tóm tắt thanh toán đã khóa');
 translationsVi.set('Quote details','Chi tiết báo giá');
 translationsVi.set('Reference only. This channel cannot create or execute a payment.','Chỉ để tham khảo. Kênh này không thể tạo hoặc thực thi thanh toán.');
+Object.entries({
+  "Action exceeds the delegated per-transaction limit.": "Tác vụ vượt hạn mức mỗi giao dịch được ủy quyền.",
+  "Action exceeds the delegated daily amount or frequency limit.": "Tác vụ vượt hạn mức tiền hoặc số lần được ủy quyền trong ngày.",
+  "Recipient is not on the allowlist for this action.": "Người nhận không nằm trong danh sách được phép của tác vụ này.",
+  "User approval is required before sandbox execution.": "Cần người dùng phê duyệt trước khi thực thi trong Sandbox.",
+  "Approval is missing, expired, or no longer matches the action.": "Phê duyệt còn thiếu, đã hết hạn hoặc không còn khớp tác vụ.",
+  "This legacy plan has no locked bill and quote snapshot; create and approve a new plan before payment.": "Kế hoạch cũ không có bản ghi hóa đơn và báo giá đã khóa; hãy tạo và phê duyệt kế hoạch mới trước khi thanh toán.",
+  "This unexecuted plan was canceled; no payment will be made.": "Kế hoạch chưa thực thi này đã bị hủy; sẽ không có thanh toán.",
+  "This student bill already has a completed payment; another payment is blocked.": "Hóa đơn du học này đã có thanh toán hoàn tất; thanh toán khác bị chặn.",
+  "The linked student bill changed, was archived, or was cancelled; create a new plan.": "Hóa đơn du học liên quan đã thay đổi, được lưu trữ hoặc bị hủy; hãy tạo kế hoạch mới.",
+  "Emergency Stop is active, so new actions are blocked.": "Dừng khẩn cấp đang bật, nên các tác vụ mới bị chặn.",
+  "Action would reduce the VND balance below the safety buffer.": "Tác vụ sẽ làm số dư VND xuống dưới đệm an toàn.",
+  "Untrusted input cannot modify policy, recipient, rates, fees or approval.": "Dữ liệu không đáng tin không thể sửa chính sách, người nhận, tỷ giá, phí hoặc phê duyệt.",
+  "The idempotency key has already produced a receipt.": "Khóa chống thực thi trùng đã tạo biên nhận.",
+  "The selected payment channel is unavailable to the user.": "Kênh thanh toán được chọn không khả dụng với người dùng.",
+  "The stored FX quote is expired or no longer matches the action.": "Báo giá tỷ giá đã lưu đã hết hạn hoặc không còn khớp tác vụ.",
+  "The beneficiary profile does not match the trusted education-provider registry.": "Hồ sơ người thụ hưởng không khớp danh bạ nhà cung cấp giáo dục đáng tin cậy.",
+  "The selected student-payment corridor has no configured deterministic quote data.": "Hành lang thanh toán du học được chọn chưa có dữ liệu báo giá theo quy tắc đã cấu hình.",
+  "The plan currencies must match the selected expense and corridor.": "Tiền tệ của kế hoạch phải khớp khoản phí và hành lang đã chọn.",
+  "The source account is not connected, verified, or enabled for this corridor.": "Tài khoản nguồn chưa được kết nối, xác minh hoặc bật cho hành lang này.",
+  "The selected source account does not belong to this payment channel.": "Tài khoản nguồn được chọn không thuộc kênh thanh toán này.",
+  "Settlement time plus the one-day safety margin may miss the tuition due date.": "Thời gian quyết toán cộng thêm một ngày dự phòng có thể vượt hạn học phí.",
+  "Processing…": "Đang xử lý…"
+}).forEach(([key,value]) => translationsVi.set(key,value));
 const originalText = new WeakMap();
 const originalPlaceholder = new WeakMap();
 const englishDisplayLabels = new Map(Object.entries({
@@ -929,7 +953,7 @@ const workspaceFilterSelectors = [
 ];
 const workspaceScrollSelectors = [
   '[data-testid="student-expense-list"]', '[data-testid="payment-account-list"]',
-  '#transactions .table-scroll', '.current-account-grid', '.money-source-grid', '.plan-list',
+  '.current-account-grid', '.money-source-grid', '.plan-list',
   '.budget-snapshot-list', '.transaction-review-list', '.custom-category-list', '.payment-history-list',
   '.insight-list', '.attention-list', '.budget-edit-list', '.payment-audit .table-scroll'
 ];
@@ -949,7 +973,7 @@ function activateTab(tab, updateLocation = true) {
     panel.hidden = panel.dataset.tabPanel !== activeTab;
   });
   document.querySelectorAll('[data-tab]').forEach((button) => {
-    button.setAttribute('aria-selected', String(button.dataset.tab === activeTab));
+    button.setAttribute('aria-pressed', String(button.dataset.tab === activeTab));
   });
   if (activeTab === 'transactions') {
     activateTransactionView(updateLocation ? 'history' : initialTransactionView(), false);
@@ -1162,7 +1186,7 @@ function activateDashboardView(view, updateLocation = true) {
     panel.hidden = panel.dataset.dashboardViewPanel !== activeDashboardView;
   });
   document.querySelectorAll('[data-dashboard-view]').forEach((button) => {
-    button.setAttribute('aria-selected', String(button.dataset.dashboardView === activeDashboardView));
+    button.setAttribute('aria-pressed', String(button.dataset.dashboardView === activeDashboardView));
   });
   renderIntroduction();
   if (updateLocation) {
@@ -1193,7 +1217,7 @@ function activateTransactionView(view, updateLocation = true) {
     panel.hidden = panel.dataset.transactionViewPanel !== requested;
   });
   document.querySelectorAll('[data-transaction-view]').forEach((button) => {
-    button.setAttribute('aria-selected', String(button.dataset.transactionView === requested));
+    button.setAttribute('aria-pressed', String(button.dataset.transactionView === requested));
   });
   if (updateLocation) {
     const hashes = { review: '#transaction-review', history: '#transactions',
@@ -1704,27 +1728,9 @@ function captureWorkspaceState() {
 const paymentStatusLabels = {
   AWAITING_APPROVAL: ['Awaiting your approval', 'Chờ bạn phê duyệt'], APPROVED: ['Approved', 'Đã phê duyệt'],
   POLICY_ALLOWED: ['Allowed by policy', 'Đủ điều kiện theo chính sách'], COMPLETED: ['Completed', 'Hoàn tất'],
+  ALLOWED: ['Allowed by policy', 'Đủ điều kiện theo chính sách'], APPROVAL_REQUIRED: ['Awaiting your approval', 'Chờ bạn phê duyệt'],
+  VERIFIED: ['Verified', 'Đã xác minh'], SELECTED: ['Selected', 'Đang chọn'], DEADLINE_RISK: ['Deadline risk', 'Rủi ro trễ hạn'],
   BLOCKED: ['Blocked', 'Bị chặn'], INVALIDATED: ['No longer valid', 'Không còn hiệu lực'], CANCELED: ['Canceled', 'Đã hủy']
-};
-const paymentReasonLabels = {
-  'AGENT PAUSED': ['Emergency Stop is active. Resume the agent, then explicitly approve this plan again.', 'Dừng khẩn cấp đang bật. Bấm Tiếp tục tác vụ, sau đó phê duyệt lại kế hoạch.'],
-  'FX QUOTE EXPIRED': ['The quote expired or was replaced. Return to comparison and create a plan with a new quote.', 'Báo giá đã hết hạn hoặc bị thay thế. Quay lại so sánh và tạo kế hoạch bằng báo giá mới.'],
-  'INSUFFICIENT SAFE BALANCE': ['This account cannot cover the payment while preserving the safety buffer. Choose another account.', 'Tài khoản không đủ tiền thanh toán và giữ số dư an toàn. Hãy chọn tài khoản khác.'],
-  'RECIPIENT MISMATCH': ['The bill beneficiary does not match the verified registry. Correct and verify the bill before creating another plan.', 'Người thụ hưởng không khớp danh bạ đã xác minh. Hãy sửa và xác minh hóa đơn trước khi tạo kế hoạch khác.'],
-  'CHANNEL NOT AVAILABLE': ['This channel is unavailable for this payment. Choose an eligible connected channel.', 'Kênh này không khả dụng cho khoản thanh toán. Hãy chọn kênh đã kết nối và đủ điều kiện.'],
-  'ACTION INVALIDATED': ['The bill or payment details changed. This plan and its old approval are no longer valid.', 'Hóa đơn hoặc thông tin thanh toán đã thay đổi. Kế hoạch và phê duyệt cũ không còn hiệu lực.'],
-  'ACTION CANCELED': ['You canceled this plan. No payment was executed. You may create a new plan from the bill.', 'Bạn đã hủy kế hoạch này. Chưa thực thi thanh toán. Bạn có thể tạo kế hoạch mới từ hóa đơn.'],
-  'PLAN SNAPSHOT MISSING': ['This old plan has no locked snapshot. Create and approve a new plan from the bill.', 'Kế hoạch cũ chưa có snapshot đã khóa. Hãy tạo và phê duyệt kế hoạch mới từ hóa đơn.'],
-  'BILL ALREADY PAID': ['This bill was already paid. Open its existing receipt instead of paying again.', 'Hóa đơn đã thanh toán. Hãy mở biên nhận hiện có thay vì thanh toán lại.'],
-  'BILL NOT ACTIVE': ['The bill is archived or canceled and cannot be paid.', 'Hóa đơn đã lưu trữ hoặc hủy, không thể thanh toán.'],
-  'APPROVAL EXPIRED': ['The approved details are no longer valid. Review a new plan and approve it again.', 'Thông tin đã phê duyệt không còn hiệu lực. Hãy kiểm tra và phê duyệt kế hoạch mới.'],
-  'SOURCE ACCOUNT NOT ELIGIBLE': ['The funding account is no longer eligible. Choose another connected account.', 'Tài khoản nguồn không còn hợp lệ. Hãy chọn tài khoản đã kết nối khác.'],
-  'SOURCE ACCOUNT CHANNEL MISMATCH': ['The funding account does not belong to this channel. Return to comparison.', 'Tài khoản nguồn không thuộc kênh này. Hãy quay lại so sánh.'],
-  'RECIPIENT NOT ALLOWED': ['This recipient is not authorized for this payment.', 'Người nhận chưa được cho phép đối với khoản thanh toán này.'],
-  'CORRIDOR NOT ALLOWED': ['This payment corridor is not supported.', 'Hành lang thanh toán này chưa được hỗ trợ.'],
-  'CURRENCY NOT ALLOWED': ['The payment currencies do not match the supported corridor.', 'Tiền tệ thanh toán không khớp hành lang được hỗ trợ.'],
-  'LIMIT PER TX': ['The action exceeds the per-transaction limit.', 'Tác vụ vượt hạn mức mỗi giao dịch.'],
-  'LIMIT DAILY': ['The action exceeds the daily amount or frequency limit.', 'Tác vụ vượt hạn mức tiền hoặc số lần trong ngày.']
 };
 function renderPaymentWorkflow() {
   const vietnamese = selectedLanguage() === 'vi';
@@ -1734,8 +1740,8 @@ function renderPaymentWorkflow() {
     if (text) label.textContent = text[index];
   });
   document.querySelectorAll('[data-payment-reason]').forEach((label) => {
-    const text = paymentReasonLabels[label.dataset.reason];
-    if (text) label.textContent = text[index];
+    const original=label.dataset.backendExplanation || label.textContent;
+    label.textContent=vietnamese ? translationsVi.get(original) || original : original;
   });
   document.querySelectorAll('[data-plan-expiry]').forEach((quote) => {
     const seconds = Math.floor((Number(quote.dataset.planExpiry) - Date.now()) / 1000);
@@ -1806,7 +1812,7 @@ async function openPaymentPlan(event) {
 }
 // Bound growing lists while keeping headers and primary actions outside their scroll area.
 function initializeBoundedLists() {
-  const selectors='.current-account-grid,.money-source-grid,.plan-list,.budget-snapshot-list,.transaction-review-list,.custom-category-list,.payment-history-list,.insight-list,.attention-list,.budget-edit-list,.payment-audit .table-scroll,#transactions .table-scroll';
+  const selectors='.current-account-grid,.money-source-grid,.plan-list,.budget-snapshot-list,.transaction-review-list,.custom-category-list,.payment-history-list,.insight-list,.attention-list,.budget-edit-list,.payment-audit .table-scroll';
   document.querySelectorAll(selectors).forEach((region,index) => {
     if(region.dataset.boundedList)return;
     region.dataset.boundedList='true';
@@ -1971,6 +1977,12 @@ async function submitWorkspaceForm(event) {
   const buttons = Array.from(form.querySelectorAll('button[type="submit"], button:not([type])'))
     .map((button) => ({ button, disabled: isChat ? (chatControls.find(item => item.control === button)?.disabled ?? button.disabled) : button.disabled }));
   buttons.forEach(({ button }) => { button.disabled = true; });
+  let requestStatus=null;
+  if(!isChat && !(processing && action.pathname.endsWith('/approve'))){
+    requestStatus=document.createElement('span');requestStatus.className='request-processing';
+    requestStatus.setAttribute('role','status');requestStatus.textContent=translateValue('Processing…',selectedLanguage());
+    form.append(requestStatus);
+  }
   form.setAttribute('aria-busy', 'true');
   document.querySelector('.content')?.setAttribute('aria-busy', 'true');
 
@@ -2087,6 +2099,7 @@ async function submitWorkspaceForm(event) {
     buttons.forEach(({ button, disabled }) => { if (button.isConnected && (pendingUpdate === requestId || !pendingUpdate)) button.disabled = disabled; });
     if (form.isConnected) form.removeAttribute('aria-busy');
     if (processing?.isConnected) processing.hidden = true;
+    requestStatus?.remove();
     if (pendingUpdate === requestId) {
       pendingUpdate = 0;
       document.querySelector('.content')?.removeAttribute('aria-busy');

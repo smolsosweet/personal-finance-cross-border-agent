@@ -70,7 +70,7 @@ class FinanceOverviewPlaywrightE2ETest {
 
         assertThat(page.locator(".money-source-grid h3").filter(
                 new com.microsoft.playwright.Locator.FilterOptions().setHasText("Cash wallet"))).isVisible();
-        assertThat(page.locator("[data-dashboard-view='accounts']")).hasAttribute("aria-selected", "true");
+        assertThat(page.locator("[data-dashboard-view='accounts']")).hasAttribute("aria-pressed", "true");
 
         page.locator("[data-dashboard-view='planning']").click();
         page.getByText("+ Add plan", new Page.GetByTextOptions().setExact(true)).click();
@@ -86,7 +86,7 @@ class FinanceOverviewPlaywrightE2ETest {
 
         assertThat(page.locator(".plan-list > .finance-plan-row h3").filter(
                 new com.microsoft.playwright.Locator.FilterOptions().setHasText("Weekly groceries"))).isVisible();
-        assertThat(page.locator("[data-dashboard-view='planning']")).hasAttribute("aria-selected", "true");
+        assertThat(page.locator("[data-dashboard-view='planning']")).hasAttribute("aria-pressed", "true");
         page.getByText("+ Add budget", new Page.GetByTextOptions().setExact(true)).click();
         page.locator("#add-budget select[name='category']").selectOption("Groceries");
         page.locator("#add-budget input[name='monthlyLimit']").fill("1800000");

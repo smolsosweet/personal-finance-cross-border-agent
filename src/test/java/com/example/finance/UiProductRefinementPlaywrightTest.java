@@ -161,7 +161,7 @@ class UiProductRefinementPlaywrightTest {
         assertThat(page.getByTestId("assistant-conversation-input")).hasValue("Active Budget Tuition — nguyên văn");
         page.locator("[data-assistant-navigation]").selectOption("agent");
         assertThat(page.getByTestId("assistant-panel")).isHidden();
-        assertThat(page.getByTestId("tab-agent")).hasAttribute("aria-selected","true");
+        assertThat(page.getByTestId("tab-agent")).hasAttribute("aria-pressed","true");
         page.getByTestId("assistant-launcher").click();
         assertThat(page.getByTestId("assistant-conversation-input")).hasValue("Active Budget Tuition — nguyên văn");
         for(int width:new int[]{360,390,768,1440}) {
