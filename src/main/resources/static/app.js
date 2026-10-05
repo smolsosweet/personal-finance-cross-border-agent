@@ -709,6 +709,13 @@ Object.entries({
   'Create a synthetic low-risk example to explore demo permission settings. Education payments start from Student finance and always require approval.': 'Tạo ví dụ mô phỏng rủi ro thấp để thử thiết lập quyền hạn demo. Thanh toán giáo dục bắt đầu từ Tài chính du học và luôn cần phê duyệt.'
 }).forEach(([key, value]) => translationsVi.set(key, value));
 Object.entries({
+  "Skip to main content": "Chuyển đến nội dung chính",
+  "Personal planning sources": "Nguồn tiền lập kế hoạch cá nhân",
+  "Separate records for everyday spending and manual cash. Payment account balances above are not included.": "Các bản ghi riêng cho chi tiêu hằng ngày và tiền mặt nhập thủ công. Không bao gồm số dư tài khoản thanh toán ở trên.",
+  "Transaction history": "Lịch sử giao dịch",
+  "All time": "Tất cả thời gian",
+  "Filters narrow the recorded history, not the monthly spending report.": "Bộ lọc thu hẹp lịch sử đã ghi nhận, không thay đổi báo cáo chi tiêu tháng.",
+  "Block new payments immediately. Completed payments are not reversed.": "Chặn thanh toán mới ngay. Không hoàn tác các khoản đã hoàn tất.",
   "Your financial workspace": "Không gian tài chính của bạn",
   "Simulation environment": "Môi trường mô phỏng",
   "Payments & history": "Thanh toán & Lịch sử",
@@ -855,6 +862,7 @@ englishDisplayLabels.forEach((display,key) => {
   if(!translationsVi.has(key)) translationsVi.set(key,translationsVi.get(display) || display);
 });
 const originalAria = new WeakMap();
+const originalTitles = new WeakMap();
 const dialogOpeners = new WeakMap();
 const tabLabels = {
   dashboard: { en: 'Overview', vi: 'Tổng quan' },
@@ -988,6 +996,35 @@ function restoreAssistantPosition() {
   }
 }
 
+let assistantBackgroundInert = null;
+function syncAssistantAccessibility() {
+  const panel = document.querySelector('[data-assistant-panel]');
+  const shell = document.querySelector('.shell');
+  const modal = !!panel && !panel.hidden && window.matchMedia('(max-width:700px)').matches;
+  panel?.setAttribute('aria-modal', String(modal));
+  const backdrop = document.querySelector('[data-assistant-backdrop]');
+  if (backdrop) backdrop.hidden = !modal;
+  if (shell) {
+    if (modal) {
+      if (assistantBackgroundInert === null) assistantBackgroundInert = shell.inert;
+      shell.inert = true;
+    } else if (assistantBackgroundInert !== null) {
+      shell.inert = assistantBackgroundInert;
+      assistantBackgroundInert = null;
+    }
+  }
+  // A resize can turn a nonmodal desktop panel into a mobile dialog.
+  if (modal && !panel.contains(document.activeElement)) {
+    const input = panel.querySelector('input[name="message"]');
+    (input && !input.disabled ? input : panel.querySelector('[data-close-assistant]'))?.focus({preventScroll:true});
+  }
+}
+
+function assistantFocusables(panel) {
+  return Array.from(panel.querySelectorAll('button, a[href], input, select, textarea, [tabindex]'))
+    .filter(element => !element.disabled && element.tabIndex >= 0 && !element.closest('[inert]') && element.getClientRects().length);
+}
+
 function setAssistantOpen(open, opener) {
   const panel = document.querySelector('[data-assistant-panel]');
   if (!panel) return;
@@ -1000,6 +1037,7 @@ function setAssistantOpen(open, opener) {
   });
   const launcher = document.querySelector('[data-testid="assistant-launcher"]');
   launcher.hidden = open;
+  syncAssistantAccessibility();
   if (open) {
     updateAssistantViewport();
     renderAssistantContext();
@@ -1057,6 +1095,7 @@ function syncAssistant(nextDocument, resetPosition = false) {
   }
   restoreAssistantPosition();
   document.querySelectorAll('[data-assistant-panel] .request-error').forEach((notice) => notice.remove());
+  syncAssistantAccessibility();
 }
 
 function updateAssistantViewport() {
@@ -1079,6 +1118,7 @@ function updateAssistantViewport() {
   } else {
     for (const name of ['top', 'left', 'right', 'bottom', 'width', 'height']) panel.style.removeProperty(name);
   }
+  syncAssistantAccessibility();
 }
 
 function renderResponseQuotes() {
@@ -1572,6 +1612,10 @@ function applyLanguage(language) {
   document.querySelectorAll('[aria-label]').forEach(element => {
     if (!originalAria.has(element)) originalAria.set(element,element.getAttribute('aria-label'));
     element.setAttribute('aria-label',translateValue(originalAria.get(element),selected));
+  });
+  document.querySelectorAll('[title]').forEach(element => {
+    if (!originalTitles.has(element)) originalTitles.set(element,element.getAttribute('title'));
+    element.setAttribute('title',translateValue(originalTitles.get(element),selected));
   });
   document.querySelectorAll('#transactions tbody tr').forEach(row => {
     const labels=Array.from(document.querySelectorAll('#transactions thead th')).map(th => th.textContent.trim());
@@ -2082,6 +2126,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
   document.addEventListener('keydown', (event) => {
+    const panel = document.querySelector('[data-assistant-panel]');
+    if (event.key === 'Tab' && panel?.getAttribute('aria-modal') === 'true' && !document.querySelector('dialog[open]')) {
+      const controls = assistantFocusables(panel);
+      const first = controls[0], last = controls.at(-1);
+      if (!controls.length) return;
+      if (!panel.contains(document.activeElement) || (event.shiftKey && document.activeElement === first) || (!event.shiftKey && document.activeElement === last)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus({preventScroll:true});
+      }
+    }
     if (event.key === 'Escape') {
       if (!document.querySelector('dialog[open]') && !document.querySelector('[data-assistant-panel]').hidden) setAssistantOpen(false);
       document.querySelectorAll('.category-row-actions details[open]').forEach((details) => {
