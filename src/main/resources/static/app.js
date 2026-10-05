@@ -737,6 +737,7 @@ let updateSequence = 0;
 let pendingChatController = null;
 const chatControlBaseline = new WeakMap();
 let assistantOpener = null;
+let assistantScrollPosition = null;
 const assistantQuestions = {
   spending: { en: 'Where did I spend the most this month?', vi: 'Tháng này tôi chi nhiều nhất vào đâu?' },
   budget: { en: 'How much budget do I have left this month?', vi: 'Ngân sách tháng này của tôi còn bao nhiêu?' },
@@ -807,9 +808,46 @@ function renderAssistantContext() {
   panel.querySelector('[role="group"]').setAttribute('aria-label', selectedLanguage() === 'vi' ? 'Ngôn ngữ' : 'Language');
 }
 
+function rememberAssistantPosition() {
+  const panel = document.querySelector('[data-assistant-panel]');
+  const body = panel?.querySelector('.assistant-body');
+  if (!body || panel.hidden) return;
+  const bounds = body.getBoundingClientRect();
+  const reply = Array.from(body.querySelectorAll('[data-reply-id]')).find((node) => {
+    const rect = node.getBoundingClientRect();
+    return rect.bottom > bounds.top && rect.top < bounds.bottom;
+  });
+  assistantScrollPosition = {
+    top: body.scrollTop,
+    atEnd: body.scrollHeight - body.clientHeight - body.scrollTop <= 2,
+    replyId: reply?.dataset.replyId,
+    offset: reply ? reply.getBoundingClientRect().top - bounds.top : 0
+  };
+}
+
+function restoreAssistantPosition() {
+  const panel = document.querySelector('[data-assistant-panel]');
+  const body = panel?.querySelector('.assistant-body');
+  if (!body || panel.hidden) return;
+  if (assistantScrollPosition?.atEnd) {
+    body.scrollTop = body.scrollHeight;
+    return;
+  }
+  const reply = assistantScrollPosition?.replyId
+    ? body.querySelector('[data-reply-id="' + CSS.escape(assistantScrollPosition.replyId) + '"]')
+    : !assistantScrollPosition ? body.querySelector('.message.assistant:last-child') : null;
+  if (reply) {
+    body.scrollTop += reply.getBoundingClientRect().top - body.getBoundingClientRect().top - (assistantScrollPosition?.offset ?? 8);
+  } else {
+    body.scrollTop = assistantScrollPosition?.top ?? 0;
+  }
+}
+
 function setAssistantOpen(open, opener) {
   const panel = document.querySelector('[data-assistant-panel]');
   if (!panel) return;
+  const wasOpen = !panel.hidden;
+  if (!open) rememberAssistantPosition();
   if (open && opener) assistantOpener = opener;
   panel.hidden = !open;
   document.querySelectorAll('[data-open-assistant]').forEach((button) => {
@@ -822,6 +860,7 @@ function setAssistantOpen(open, opener) {
     renderAssistantContext();
     const input = panel.querySelector('input[name="message"]');
     (input.disabled ? panel.querySelector('[data-close-assistant]') : input).focus({ preventScroll: true });
+    if (!wasOpen) restoreAssistantPosition();
   } else {
     const returnTarget = assistantOpener?.isConnected ? assistantOpener : assistantOpener?.dataset.testid ? document.querySelector('[data-testid="' + CSS.escape(assistantOpener.dataset.testid) + '"]') : null;
     (returnTarget?.getClientRects().length ? returnTarget : launcher).focus({ preventScroll: true });
@@ -833,7 +872,6 @@ function handleAssistantClick(event) {
   const question = event.target.closest('[data-assistant-question]');
   if (opener) {
     setAssistantOpen(true, opener);
-    document.querySelector('.assistant-body').scrollTop = 0;
   }
   if (question && !pendingUpdate) {
     const input = document.querySelector('[data-testid="assistant-conversation-input"]');
@@ -852,17 +890,27 @@ function handleAssistantClick(event) {
   if (event.target.closest('[data-close-assistant]')) setAssistantOpen(false);
   if (event.target.closest('[data-assistant-review-plan]')) {
     setAssistantOpen(false);
-    activateTab('agent');
   }
 }
 
-function syncAssistant(nextDocument) {
+function syncAssistant(nextDocument, resetPosition = false) {
   // Keep the panel and composer mounted so drafts, focus and pending controls survive tab updates.
-  for (const selector of ['[data-testid="assistant-replies"]', '[data-assistant-plan]', '[data-assistant-policy]', '[data-assistant-context-state]', '[data-assistant-runway]']) {
+  const panel = document.querySelector('[data-assistant-panel]');
+  const previousReplyId = panel?.querySelector('.message:last-child')?.dataset.replyId;
+  rememberAssistantPosition();
+  for (const selector of ['[data-testid="assistant-replies"]', '[data-assistant-plan]', '[data-assistant-policy]', '[data-assistant-context-state]', '[data-assistant-runway]', '[data-assistant-actions]']) {
     const current = document.querySelector(selector);
     const next = nextDocument.querySelector(selector);
     if (current && next) current.replaceChildren(...next.childNodes);
   }
+  const latestReply = panel?.querySelector('.message.assistant:last-child');
+  if (resetPosition) {
+    assistantScrollPosition = null;
+  } else if (panel?.hidden && latestReply && latestReply.dataset.replyId !== previousReplyId) {
+    // A response arriving while closed must be visible on the next open.
+    assistantScrollPosition = { top: 0, atEnd: false, replyId: latestReply.dataset.replyId, offset: 8 };
+  }
+  restoreAssistantPosition();
   document.querySelectorAll('[data-assistant-panel] .request-error').forEach((notice) => notice.remove());
 }
 
@@ -1506,7 +1554,16 @@ async function openPaymentPlan(event) {
     syncAssistant(nextDocument);
     history.replaceState(null, '', url.pathname + url.search + '#agent-workspace');
     initializeWorkspaceContent({ ...state, tab: 'agent' });
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    restoreAssistantPosition();
+    const receipt = link.hasAttribute('data-assistant-review-receipt') ? document.querySelector('[data-testid="latest-receipt"]') : null;
+    if (receipt) {
+      const card = receipt.closest('.receipt-card') || receipt;
+      card.scrollIntoView({ block: 'start', behavior: 'instant' });
+      const headerBottom = Math.max(0, ...Array.from(document.querySelectorAll('main > header, .mobile-tabs'))
+        .filter(node => node.getClientRects().length)
+        .map(node => node.getBoundingClientRect().bottom));
+      window.scrollBy({ top: card.getBoundingClientRect().top - headerBottom - 12, behavior: 'instant' });
+    } else window.scrollTo({ top: 0, behavior: 'instant' });
   } catch (error) {
     if (requestId === updateSequence) showWorkspaceUpdateError(link);
   } finally {
@@ -1702,10 +1759,11 @@ async function submitWorkspaceForm(event) {
     }
     content.replaceChildren(...nextContent.childNodes);
     syncPaymentNavigation(nextDocument);
-    syncAssistant(nextDocument);
+    syncAssistant(nextDocument, action.pathname === '/reset');
     if (action.pathname === '/agent/message' && form.closest('[data-assistant-panel]')) form.reset();
     content.querySelector('.notice')?.classList.add('in-place-notice');
     initializeWorkspaceContent({ ...state, tab: destinationTab });
+    restoreAssistantPosition();
 
     const restorePosition = () => {
       state.scrolls.forEach((position, selector) => {
@@ -1728,6 +1786,7 @@ async function submitWorkspaceForm(event) {
             scrollRegion.scrollTop += reply.getBoundingClientRect().top - scrollRegion.getBoundingClientRect().top - 8;
           }
         });
+        rememberAssistantPosition();
       }
       if (focusTestId) {
         document.querySelector('[data-testid="' + CSS.escape(focusTestId) + '"]')

@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Atlas · Finance workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261004-shared-demo-v1')}">
+  <title>Atlas · Finance workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261005-assistant-navigation')}">
 </head>
 <body>
 <div class="shell">
@@ -550,7 +550,6 @@
             </div>
           </details>
         </div>
-        <button th:if="${latestAction != null}" type="button" class="secondary" data-assistant-review-plan data-testid="assistant-review-plan">View payment plan</button>
       </div>
     </section>
     <div class="assistant-message-list" data-testid="assistant-replies" role="log" aria-live="polite" aria-relevant="additions text"><th:block th:replace="~{fragments/conversation :: replies(${conversation})}"></th:block></div>
@@ -577,6 +576,12 @@
         </div>
       </section>
   <form th:action="@{/agent/context}" method="post" data-assistant-context-form data-context-form data-chat-timeout="10000" hidden><input type="hidden" name="token"><button type="submit">Update conversation context</button></form>
+  <div class="assistant-actions" data-assistant-actions data-testid="assistant-actions">
+    <th:block th:if="${latestAction != null}">
+      <small th:text="${latestAction.id}"></small>
+      <a class="secondary link-button" th:href="@{/(action=${latestAction.id})} + '#agent-workspace'" data-open-payment-plan data-assistant-review-plan data-testid="assistant-review-plan" th:attr="data-action-id=${latestAction.id},data-assistant-review-receipt=${latestReceipt != null ? 'true' : null}" th:text="${latestReceipt != null ? 'View receipt' : 'View payment plan'}"></a>
+    </th:block>
+  </div>
   <form class="composer assistant-composer" th:action="@{/agent/message}" method="post" data-chat-form th:attr="data-chat-timeout=${chatTimeoutMillis}" data-chat-unavailable-en="The request timed out or the connection failed. No automatic retry was sent. Reload to check the current state before retrying." data-chat-unavailable-vi="Yêu cầu hết thời gian chờ hoặc mất kết nối. Chưa tự động gửi lại. Hãy tải lại để kiểm tra trạng thái trước khi thử lại.">
     <label class="visually-hidden" for="assistant-question">Your question</label><input id="assistant-question" name="message" data-testid="assistant-conversation-input" maxlength="500" required placeholder="Ask about spending, budgets or tuition">
     <button type="submit" class="primary-button" data-testid="assistant-send-message">Send</button>
@@ -584,6 +589,6 @@
   </form>
   <p class="assistant-safety">AI understands the question. Backend code calculates the figures. Asking a question does not authorize a payment.</p>
 </aside>
-<script th:src="@{/app.js(v='20261004-shared-demo-v1')}"></script>
+<script th:src="@{/app.js(v='20261005-assistant-navigation')}"></script>
 </body>
 </html>

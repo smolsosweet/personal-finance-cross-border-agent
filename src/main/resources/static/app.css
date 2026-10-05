@@ -159,7 +159,10 @@ header{position:sticky;top:0;z-index:10}.mobile-tabs{top:70px}.payment-demo-entr
 .assistant-plan-summary dl>div{display:flex;justify-content:space-between;gap:16px;border-top:1px solid #e4e9f3;padding:8px 0;font-size:12px;line-height:1.5}
 .assistant-plan-summary dt{color:#677790;flex:1}
 .assistant-plan-summary dd{margin:0;text-align:right;font-weight:700;flex:1.2;overflow-wrap:anywhere}
-.assistant-context [data-assistant-review-plan]{margin-top:10px;font-size:12px}
+.assistant-actions{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 20px;border-top:1px solid var(--line);background:#f7f9ff}
+.assistant-actions:not(:has([data-assistant-review-plan])){display:none}
+.assistant-actions small{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#63738d;font-size:11px}
+.assistant-actions [data-assistant-review-plan]{flex:none;font-size:12px;padding:8px 12px}
 [data-assistant-runway]{flex:none;min-height:0}
 .runway-scenario{margin:0;padding:10px 20px;border-top:1px solid #dce3ff;background:#f7f9ff;max-height:35dvh;overflow:auto;font-size:12px}
 .runway-scenario>strong{font-size:13px}.runway-scenario p{font-size:11px;line-height:1.5;margin:6px 0}
@@ -194,6 +197,7 @@ header{position:sticky;top:0;z-index:10}.mobile-tabs{top:70px}.payment-demo-entr
 .response-snapshot{display:block;color:#6d7c92;line-height:1.5;margin:10px 0}
 .response-details{border-top:1px solid #dce3f1;margin-top:10px;padding-top:8px}.response-details summary{cursor:pointer;color:#425aa1;font-size:12px;font-weight:700}.response-details p{font-size:12px;color:#53647b;line-height:1.65}
 .assistant-compact [data-assistant-runway]{flex:0 1 auto;overflow:auto}.assistant-short .runway-scenario>p{display:none}
+.assistant-short .assistant-actions{padding:4px 12px}.assistant-short .assistant-actions small{display:none}
 @media(max-width:700px){.runway-scenario input{font-size:16px}}
 @media(max-width:700px){.runway-scenario{max-height:calc(var(--assistant-visible-height,100dvh)*.42)}.assistant-compact .assistant-heading{padding:8px 12px}.assistant-compact .assistant-heading small{display:none}.assistant-compact .assistant-heading h2{font-size:17px;margin:0}.assistant-compact .assistant-close{height:32px;width:32px}.assistant-compact .assistant-toolbar{padding:0 12px 8px}.assistant-compact .assistant-body{padding:8px 12px}.assistant-compact .runway-scenario{padding:7px 12px;max-height:calc(var(--assistant-visible-height,100dvh)*.55)}.assistant-compact .runway-scenario form{margin:4px 0}.assistant-compact .runway-scenario input{padding:5px;font-size:16px}.assistant-compact .runway-scenario form button{padding:6px}.assistant-compact .assistant-composer{padding:8px 12px 5px}.assistant-compact .assistant-composer input{padding:8px}.assistant-compact .assistant-safety{padding:2px 12px 6px;font-size:10px}.response-conclusion{font-size:18px}}
 @media(max-width:700px){.section-help-actions{justify-content:flex-start}.assistant-launcher{right:16px;bottom:16px;padding:12px 16px}.assistant-panel{inset:8px;width:calc(100vw - 16px);max-height:calc(100dvh - 16px);border-radius:14px}.assistant-heading{padding:14px 16px 10px}.assistant-toolbar{padding:0 16px 10px}.assistant-body{padding:14px 16px}.assistant-panel .assistant-composer{padding:12px 16px 8px}.assistant-composer input{font-size:16px}.assistant-safety{padding:4px 16px 12px}.assistant-heading h2{font-size:19px}}

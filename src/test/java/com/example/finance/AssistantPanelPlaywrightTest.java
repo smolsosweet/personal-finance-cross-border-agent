@@ -243,6 +243,111 @@ class AssistantPanelPlaywrightTest {
         assertEquals(0, payments.sandboxTransactionCount());
     }
 
+
+    @Test void reopeningLongChatRestoresTheLastReadPositionAndDraftAcrossTabs() {
+        var before = PersonalFinanceAiIntegrationTest.snapshot(db);
+        when(llm.classify(anyString())).thenReturn(intent(LlmIntent.Intent.EXPLAIN_BUDGET_STATUS));
+        page.getByTestId("assistant-launcher").click();
+        for (int i = 0; i < 8; i++) {
+            send("Show remaining budgets this month.");
+            idle();
+        }
+        Locator body = panel().locator(".assistant-body");
+        for (double fraction : new double[]{1.0, 0.45, 0.0}) {
+            body.evaluate("(node, fraction) => node.scrollTop=(node.scrollHeight-node.clientHeight)*fraction", fraction);
+            double beforeClose = ((Number) body.evaluate("node => node.scrollTop")).doubleValue();
+            input().fill("Unsent question");
+            page.getByTestId("assistant-close").click();
+            page.getByTestId("assistant-launcher").click();
+            assertEquals(beforeClose, ((Number) body.evaluate("node => node.scrollTop")).doubleValue(), 2);
+            assertThat(input()).hasValue("Unsent question");
+        }
+        body.evaluate("node => node.scrollTop=node.scrollHeight*0.45");
+        String anchor = (String) body.evaluate("""
+            node => Array.from(node.querySelectorAll('[data-reply-id]'))
+              .find(reply => reply.getBoundingClientRect().bottom>node.getBoundingClientRect().top)?.dataset.replyId
+            """);
+        Locator anchoredReply = body.locator("[data-reply-id=\"" + anchor + "\"]");
+        double offset = ((Number) anchoredReply.evaluate("node => node.getBoundingClientRect().top-node.closest('.assistant-body').getBoundingClientRect().top")).doubleValue();
+        page.getByTestId("assistant-close").click();
+        page.getByTestId("tab-student").click();
+        page.getByTestId("assistant-launcher").click();
+        assertEquals(offset, ((Number) anchoredReply.evaluate("node => node.getBoundingClientRect().top-node.closest('.assistant-body').getBoundingClientRect().top")).doubleValue(), 2);
+        assertEquals(before, PersonalFinanceAiIntegrationTest.snapshot(db));
+        assertNull(payments.latestAction());
+        panel().screenshot(new Locator.ScreenshotOptions().setPath(Path.of("target/assistant-scroll-restored.png")));
+    }
+
+    @Test void aReplyArrivingWhileChatIsClosedIsVisibleWhenReopened() {
+        var before = PersonalFinanceAiIntegrationTest.snapshot(db);
+        when(llm.classify(anyString())).thenReturn(intent(LlmIntent.Intent.EXPLAIN_BUDGET_STATUS));
+        page.getByTestId("assistant-launcher").click();
+        for (int i = 0; i < 5; i++) {
+            send("Show remaining budgets this month.");
+            idle();
+        }
+        CountDownLatch release = new CountDownLatch(1);
+        AtomicInteger calls = new AtomicInteger();
+        when(llm.classify(anyString())).thenAnswer(invocation -> {
+            calls.incrementAndGet();
+            assertTrue(release.await(8, TimeUnit.SECONDS));
+            return intent(LlmIntent.Intent.EXPLAIN_SPENDING_SUMMARY);
+        });
+        panel().locator(".assistant-body").evaluate("node => node.scrollTop=0");
+        send("Where did I spend the most this month?");
+        page.waitForCondition(() -> calls.get() == 1);
+        page.getByTestId("assistant-close").click();
+        release.countDown();
+        idle();
+        page.getByTestId("assistant-launcher").click();
+        Locator lastReply = page.getByTestId("assistant-replies").locator(".message.assistant").last();
+        assertThat(lastReply.getByTestId("response-conclusion")).containsText("Spent");
+        assertTrue((Boolean) lastReply.evaluate("node => {const r=node.getBoundingClientRect(),b=node.closest('.assistant-body').getBoundingClientRect();return r.top>=b.top-1 && r.top<b.bottom;}"));
+        assertEquals(before, PersonalFinanceAiIntegrationTest.snapshot(db));
+    }
+
+    @Test void receiptShortcutStaysVisibleAndOpensTheDisplayedReceiptWithoutExecution() {
+        var completedPlan = payments.createTuitionPlan("BANK_A");
+        var receipt = payments.approveAndExecute(completedPlan.id());
+        assertNotNull(receipt);
+        var newerPlan = payments.createLowRiskPlan(new BigDecimal("10000"));
+        assertEquals("AWAITING_APPROVAL", newerPlan.status());
+        page.navigate("http://localhost:8101/?action=" + completedPlan.id() + "#agent-workspace");
+        page.getByTestId("assistant-launcher").click();
+        page.getByTestId("assistant-language-vi").click();
+        when(llm.classify(anyString())).thenReturn(intent(LlmIntent.Intent.EXPLAIN_BUDGET_STATUS));
+        for (int i = 0; i < 6; i++) {
+            send("Show remaining budgets this month.");
+            idle();
+        }
+        var beforeNavigation = PersonalFinanceAiIntegrationTest.snapshot(db);
+        for (int width : new int[]{1440, 390}) {
+            page.setViewportSize(width, width == 390 ? 844 : 1000);
+            panel().locator(".assistant-body").evaluate("node => node.scrollTop=node.scrollHeight");
+            Locator shortcut = page.getByTestId("assistant-review-plan");
+            assertThat(shortcut).hasText("Xem biên nhận");
+            assertThat(shortcut).hasAttribute("data-action-id", completedPlan.id());
+            assertTrue((Boolean) shortcut.evaluate("""
+                node => {const r=node.getBoundingClientRect(),p=node.closest('[data-assistant-panel]').getBoundingClientRect();
+                  const hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);
+                  return !node.closest('.assistant-body') && r.top>=p.top && r.bottom<=p.bottom && r.right<=innerWidth && (hit===node || node.contains(hit));}
+                """));
+            panel().screenshot(new Locator.ScreenshotOptions().setPath(Path.of("target/assistant-receipt-shortcut-" + width + ".png")));
+        }
+        page.getByTestId("assistant-language-en").click();
+        assertThat(page.getByTestId("assistant-review-plan")).hasText("View receipt");
+        page.getByTestId("assistant-review-plan").click();
+        assertThat(panel()).isHidden();
+        page.waitForCondition(() -> (Boolean) page.getByTestId("latest-receipt").evaluate("node => {const r=node.getBoundingClientRect();return r.top>=0 && r.top<innerHeight;}"));
+        assertThat(page.getByTestId("latest-receipt")).hasAttribute("data-transaction-id", receipt.transactionId());
+        assertThat(page.getByTestId("tab-agent")).hasAttribute("aria-selected", "true");
+        assertTrue((Boolean) page.getByTestId("latest-receipt").evaluate("node => {const r=node.getBoundingClientRect();return r.top>=0 && r.top<innerHeight;}"));
+        assertEquals(beforeNavigation, PersonalFinanceAiIntegrationTest.snapshot(db));
+        assertEquals(1, payments.sandboxTransactionCount());
+        assertNull(payments.receiptForAction(newerPlan.id()));
+        assertEquals("AWAITING_APPROVAL", payments.action(newerPlan.id()).status());
+    }
+
     private Locator panel() { return page.getByTestId("assistant-panel"); }
     private Locator input() { return page.getByTestId("assistant-conversation-input"); }
     private void send(String question) {
