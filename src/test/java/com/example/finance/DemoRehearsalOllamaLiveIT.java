@@ -43,7 +43,7 @@ class DemoRehearsalOllamaLiveIT {
             long preflightStart = System.nanoTime();
             chat(page, "Ngân sách tháng này của tôi còn bao nhiêu?");
             assertEquals("EXPLAIN_BUDGET_STATUS", db.queryForObject("SELECT reason_code FROM audit_log WHERE event_type='INTENT_CLASSIFIED' ORDER BY occurred_at DESC FETCH FIRST 1 ROW ONLY", String.class));
-            assertThat(page.getByTestId("finance-replies")).containsText("Nguồn: ngân sách cấu hình");
+            assertThat(page.getByTestId("assistant-replies")).containsText("Nguồn: ngân sách cấu hình");
             assertEquals(preflightBefore, PersonalFinanceAiIntegrationTest.snapshot(db));
             System.out.printf("REHEARSAL preflight_budget_ms=%d financial_unchanged=true%n", (System.nanoTime() - preflightStart) / 1_000_000);
             page.onceDialog(Dialog::accept);
@@ -61,16 +61,16 @@ class DemoRehearsalOllamaLiveIT {
 
             page.getByTestId("tab-dashboard").click();
             readonly(page, "Tháng này tôi chi nhiều nhất vào đâu?", LlmIntent.Intent.EXPLAIN_SPENDING_SUMMARY);
-            assertThat(page.getByTestId("finance-replies")).containsText("85000.00");
+            assertThat(page.getByTestId("assistant-replies")).containsText("85000.00");
             readonly(page, "Ngân sách tháng này của tôi còn bao nhiêu?", LlmIntent.Intent.EXPLAIN_BUDGET_STATUS);
             readonly(page, "Nếu đóng học phí thì còn đủ tiền sinh hoạt không?", LlmIntent.Intent.EXPLAIN_TUITION_AFFORDABILITY);
-            assertThat(page.getByTestId("finance-replies")).containsText("ƯỚC TÍNH SAU HỌC PHÍ");
-            assertThat(page.getByTestId("finance-replies")).containsText("chưa ánh xạ với nhau");
-            assertThat(page.getByTestId("finance-replies")).containsText("chưa thể kết luận đủ tiền sinh hoạt");
-            Locator projectionReply = page.getByTestId("finance-replies").locator(".message.assistant")
+            assertThat(page.getByTestId("assistant-replies")).containsText("ƯỚC TÍNH SAU HỌC PHÍ");
+            assertThat(page.getByTestId("assistant-replies")).containsText("số dư tài khoản chung");
+            assertThat(page.getByTestId("assistant-replies")).containsText("không thể bảo đảm đủ sinh hoạt");
+            Locator projectionReply = page.getByTestId("assistant-replies").locator(".message.assistant")
                     .filter(new Locator.FilterOptions().setHasText("ƯỚC TÍNH SAU HỌC PHÍ")).last();
             assertTrue((Boolean) projectionReply.evaluate("node => { const r=node.getBoundingClientRect(); const p=node.parentElement.getBoundingClientRect(); return r.top>=p.top && r.top<p.bottom; }"));
-            page.getByTestId("finance-chat").screenshot(new Locator.ScreenshotOptions().setPath(Path.of("target/demo-rehearsal-estimate-vi.png")));
+            page.getByTestId("assistant-panel").screenshot(new Locator.ScreenshotOptions().setPath(Path.of("target/demo-rehearsal-estimate-vi.png")));
 
             page.getByTestId("tab-student").click();
             assertThat(page.getByTestId("tuition-bill")).containsText("20,000");
@@ -155,15 +155,16 @@ class DemoRehearsalOllamaLiveIT {
     }
 
     private void chat(Page page, String question) {
+        if(!page.getByTestId("assistant-panel").isVisible())page.getByTestId("assistant-launcher").click();
         long start = System.nanoTime();
-        page.getByTestId("finance-conversation-input").fill(question);
-        page.getByTestId("finance-send-message").click();
+        page.getByTestId("assistant-conversation-input").fill(question);
+        page.getByTestId("assistant-send-message").click();
         if (!question.startsWith("Ignore all policy")) {
-            assertThat(page.getByTestId("finance-chat").locator("[data-chat-processing]")).isVisible();
-            assertThat(page.getByTestId("finance-send-message")).isDisabled();
+            assertThat(page.getByTestId("assistant-panel").locator("[data-chat-processing]")).isVisible();
+            assertThat(page.getByTestId("assistant-send-message")).isDisabled();
         }
         page.waitForFunction("() => !document.querySelector('.content').hasAttribute('aria-busy')");
-        assertThat(page.getByTestId("finance-send-message")).isEnabled();
+        assertThat(page.getByTestId("assistant-send-message")).isEnabled();
         System.out.printf("REHEARSAL chat_ms=%d question=%s%n", (System.nanoTime() - start) / 1_000_000, question);
     }
 

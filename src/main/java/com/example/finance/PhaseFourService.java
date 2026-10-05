@@ -30,14 +30,16 @@ public class PhaseFourService {
     public static final String EMERGENCY = "EMERGENCY-FUND";
 
     private final JdbcTemplate db;
+    private final AccountLedgerService ledger;
     private final CrossBorderService crossBorder;
     private final TransactionService transactions;
     private final LlmIntentClient llmIntentClient;
     private final FinanceChatService chat;
 
     public PhaseFourService(JdbcTemplate db, CrossBorderService crossBorder, TransactionService transactions,
-                            LlmIntentClient llmIntentClient, FinanceChatService chat) {
+                            LlmIntentClient llmIntentClient, FinanceChatService chat, AccountLedgerService ledger) {
         this.db = db;
+        this.ledger = ledger;
         this.crossBorder = crossBorder;
         this.transactions = transactions;
         this.llmIntentClient = llmIntentClient;
@@ -91,6 +93,9 @@ public class PhaseFourService {
     public record ConversationMessage(String id, String role, String message, LocalDateTime createdAt) {}
 
     @Transactional
+    public void lockAccountReset() { lockPaymentWorkflow(); }
+
+    @Transactional
     public void reset() {
         lockPaymentWorkflow();
         db.update("DELETE FROM audit_log");
@@ -103,7 +108,7 @@ public class PhaseFourService {
         db.update("DELETE FROM recipient_allowlist");
         db.update("DELETE FROM agent_policy");
         db.update("DELETE FROM payment_source_accounts");
-        db.update("DELETE FROM sandbox_accounts");
+        db.update("DELETE FROM financial_accounts WHERE account_scope='SYSTEM'");
         db.update("""
                 INSERT INTO agent_policy
                 (id,mode,agent_state,runtime_mode,per_transaction_limit,daily_limit,frequency_limit,safety_buffer)
@@ -128,10 +133,10 @@ public class PhaseFourService {
                 new BigDecimal("12000000.00"),"CONNECTED","VERIFIED",true,false,4);
         insertPaymentAccount("ALIPAY_VND","Alipay Education Wallet","Alipay","Education wallet","•••• 8890",
                 new BigDecimal("75000000.00"),"CONNECTED","VERIFIED",true,false,5);
-        db.update("INSERT INTO sandbox_accounts VALUES ('SCHOOL_CNY','Shenzhen Demo University','CNY',0.00)");
-        db.update("INSERT INTO sandbox_accounts VALUES ('SCHOOL_USD','Pacific Demo College','USD',0.00)");
-        db.update("INSERT INTO sandbox_accounts VALUES ('SCHOOL_AUD','Sydney Demo Institute','AUD',0.00)");
-        db.update("INSERT INTO sandbox_accounts VALUES ('EMERGENCY_VND','Emergency Fund sandbox recipient','VND',0.00)");
+        ledger.seed("SCHOOL_CNY","Shenzhen Demo University","CNY",BigDecimal.ZERO,"Sandbox recipient","RECIPIENT","—","SYSTEM");
+        ledger.seed("SCHOOL_USD","Pacific Demo College","USD",BigDecimal.ZERO,"Sandbox recipient","RECIPIENT","—","SYSTEM");
+        ledger.seed("SCHOOL_AUD","Sydney Demo Institute","AUD",BigDecimal.ZERO,"Sandbox recipient","RECIPIENT","—","SYSTEM");
+        // Internal savings transfers credit the same owned SAVINGS account.
         addMessage("ASSISTANT", "I can explain the tuition bill, create a structured payment plan, or prepare a low-risk Emergency Fund transfer. Every amount comes from deterministic demo data.");
         audit("SYSTEM", "DEMO_RESET", null, "COMPLETED", null,
                 "Phase 4 policy, Payment Sandbox, conversation and audit data reset");
@@ -152,8 +157,7 @@ public class PhaseFourService {
                 SELECT COUNT(*) FROM sandbox_accounts WHERE id IN ('SCHOOL_CNY','SCHOOL_USD','SCHOOL_AUD')
                 """, Integer.class);
         if (sources == null || sources != 5 || destinationAccounts == null || destinationAccounts != 3) {
-            reset();
-            return;
+            throw new IllegalStateException("Incomplete account ledger: inspect existing data or explicitly reset the synthetic demo; startup will not erase payment history");
         }
         db.update("UPDATE agent_policy SET runtime_mode=? WHERE id=1",
                 llmIntentClient.enabled() ? "ONLINE" : "OFFLINE");
@@ -162,14 +166,15 @@ public class PhaseFourService {
     private void insertPaymentAccount(String id, String displayName, String institution,
             String accountType, String maskedNumber, BigDecimal balance, String connectionStatus,
             String verificationStatus, boolean crossBorderEnabled, boolean selected, int order) {
-        db.update("INSERT INTO sandbox_accounts VALUES (?,?,?,?)",id,displayName,"VND",balance);
+        BigDecimal current=ledger.personalVnd(id)?ledger.balance(id):balance;
+        ledger.seed(ledger.canonicalId(id),displayName,"VND",current,institution,AccountLedgerService.accountType(accountType),maskedNumber,"PERSONAL");
         db.update("""
                 INSERT INTO payment_source_accounts
                 (account_id,institution,account_type,masked_number,connection_status,
-                 verification_status,cross_border_enabled,selected,display_order)
-                VALUES (?,?,?,?,?,?,?,?,?)
+                 verification_status,cross_border_enabled,selected,display_order,financial_account_id)
+                VALUES (?,?,?,?,?,?,?,?,?,?)
                 """,id,institution,accountType,maskedNumber,connectionStatus,verificationStatus,
-                crossBorderEnabled,selected,order);
+                crossBorderEnabled,selected,order,ledger.canonicalId(id));
     }
 
     public Policy policy() {
@@ -691,6 +696,12 @@ public class PhaseFourService {
             return prior.getFirst();
         }
         PolicyDecision check=evaluate(plan,true);
+        if(!"BLOCKED".equals(check.decision())) {
+            ledger.lock(plan.sourceAccountId(),"TUITION".equals(plan.actionType())
+                    ?destinationSandboxAccount(plan.destinationCurrency()):"EMERGENCY_VND");
+            // Recheck after acquiring the balance lock shared with bank-event ingestion.
+            check=evaluate(plan,true);
+        }
         audit("POLICY_GUARD","EXECUTION_POLICY_CHECKED",plan.id(),check.decision(),
                 check.reasonCode(),check.explanation());
         if("BLOCKED".equals(check.decision())) { block(plan,check); return null; }
@@ -708,8 +719,8 @@ public class PhaseFourService {
                 : BigDecimal.ONE.setScale(4);
         String txId=newId("SBOX");
         LocalDateTime now=LocalDateTime.now();
-        db.update("UPDATE sandbox_accounts SET balance=? WHERE id=?",payerAfter,plan.sourceAccountId());
-        db.update("UPDATE sandbox_accounts SET balance=? WHERE id=?",targetAfter,target);
+        ledger.setBalance(plan.sourceAccountId(),payerAfter);
+        ledger.setBalance(target,targetAfter);
         db.update("""
                 INSERT INTO sandbox_transactions
                 (id,action_id,idempotency_key,channel_id,quote_id,recipient,source_account_id,vnd_balance_before,
@@ -794,7 +805,7 @@ public class PhaseFourService {
     }
 
     private BigDecimal accountBalance(String id) {
-        return db.queryForObject("SELECT balance FROM sandbox_accounts WHERE id=?",BigDecimal.class,id);
+        return ledger.balance(id);
     }
 
     public ActionPlan action(String id) {
@@ -1017,14 +1028,16 @@ public class PhaseFourService {
         return selectedPaymentSource().balance();
     }
 
+    private static final String SOURCE_QUERY="""
+            SELECT COALESCE(p.account_id,a.id),a.account_name,a.institution,a.account_type,a.masked_number,
+                   a.currency,a.balance,a.connection_status,COALESCE(p.verification_status,'NOT_VERIFIED'),
+                   COALESCE(p.cross_border_enabled,FALSE),COALESCE(p.selected,FALSE)
+            FROM financial_accounts a LEFT JOIN payment_source_accounts p ON p.financial_account_id=a.id
+            WHERE a.account_scope='PERSONAL' AND a.owner_profile_id=1 AND a.archived=FALSE
+            """;
+
     public List<PaymentSourceAccount> paymentSourceAccounts() {
-        return db.query("""
-                SELECT p.account_id,a.display_name,p.institution,p.account_type,p.masked_number,
-                       a.currency,a.balance,p.connection_status,p.verification_status,
-                       p.cross_border_enabled,p.selected
-                FROM payment_source_accounts p JOIN sandbox_accounts a ON a.id=p.account_id
-                ORDER BY p.display_order
-                """,(rs,n)->mapPaymentSource(rs));
+        return db.query(SOURCE_QUERY+" ORDER BY COALESCE(p.display_order,100),a.account_name",(rs,n)->mapPaymentSource(rs));
     }
 
     public PaymentSourceAccount selectedPaymentSource() {
@@ -1033,20 +1046,20 @@ public class PhaseFourService {
     }
 
     public PaymentSourceAccount paymentSource(String id) {
-        return db.queryForObject("""
-                SELECT p.account_id,a.display_name,p.institution,p.account_type,p.masked_number,
-                       a.currency,a.balance,p.connection_status,p.verification_status,
-                       p.cross_border_enabled,p.selected
-                FROM payment_source_accounts p JOIN sandbox_accounts a ON a.id=p.account_id
-                WHERE p.account_id=?
-                """,(rs,n)->mapPaymentSource(rs),id);
+        return db.queryForObject(SOURCE_QUERY+" AND a.id=?",(rs,n)->mapPaymentSource(rs),ledger.canonicalId(id));
     }
 
     private PaymentSourceAccount mapPaymentSource(java.sql.ResultSet rs) throws java.sql.SQLException {
         boolean enabled=rs.getBoolean(10);
-        String reason=enabled ? "Ready for eligible cross-border channels"
-                : ("E-wallet".equals(rs.getString(4)) ? "This corridor is not supported by the wallet"
-                : "Savings account excluded from cross-border payments");
+        String connection=rs.getString(8),type=rs.getString(4);
+        String reason=!"CONNECTED".equals(connection)
+                ? "MANUAL".equals(connection)?"Manual money source: no connected payment channel":"Account disconnected: unavailable for payments"
+                : !"VERIFIED".equals(rs.getString(9)) ? "No verified payment channel connected"
+                : !"VND".equals(rs.getString(6)) ? "Source currency is not supported for this payment corridor"
+                : enabled ? "Ready for eligible cross-border channels"
+                : "EWALLET".equals(type) ? "This corridor is not supported by the wallet"
+                : "SAVINGS".equals(type) ? "Savings account excluded from cross-border payments"
+                : "Cross-border payments are not enabled for this source";
         return new PaymentSourceAccount(rs.getString(1),rs.getString(2),rs.getString(3),rs.getString(4),
                 rs.getString(5),rs.getString(6),rs.getBigDecimal(7),rs.getString(8),rs.getString(9),
                 enabled,rs.getBoolean(11),reason);

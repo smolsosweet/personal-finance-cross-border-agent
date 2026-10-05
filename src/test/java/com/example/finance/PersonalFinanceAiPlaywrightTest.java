@@ -36,6 +36,7 @@ class PersonalFinanceAiPlaywrightTest {
         page.setDefaultTimeout(10000);
         page.onDialog(Dialog::accept);
         page.navigate("http://localhost:8092");
+        page.getByTestId("assistant-launcher").click();
     }
     @AfterEach void close() { if(browser!=null)browser.close(); if(playwright!=null)playwright.close(); }
 
@@ -47,21 +48,21 @@ class PersonalFinanceAiPlaywrightTest {
             return intent(LlmIntent.Intent.EXPLAIN_BUDGET_STATUS);
         });
         page.locator("[data-language='vi']").click();
-        page.getByTestId("finance-conversation-input").fill("Ngân sách tháng này còn bao nhiêu?");
-        page.getByTestId("finance-send-message").click();
-        assertThat(page.getByTestId("finance-chat").locator("[data-chat-processing]")).isVisible();
-        assertThat(page.getByTestId("finance-send-message")).isDisabled();
-        assertThat(page.getByTestId("finance-conversation-input")).isDisabled();
+        page.getByTestId("assistant-conversation-input").fill("Ngân sách tháng này còn bao nhiêu?");
+        page.getByTestId("assistant-send-message").click();
+        assertThat(page.getByTestId("assistant-panel").locator("[data-chat-processing]")).isVisible();
+        assertThat(page.getByTestId("assistant-send-message")).isDisabled();
+        assertThat(page.getByTestId("assistant-conversation-input")).isDisabled();
         page.evaluate("""
-            () => { const f=document.querySelector('[data-testid="finance-chat"] form');
+            () => { const f=document.querySelector('[data-testid="assistant-panel"] form[data-chat-form]');
               f.requestSubmit(); f.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));
-              document.querySelector('[data-testid="finance-conversation-input"]').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true})); }
+              document.querySelector('[data-testid="assistant-conversation-input"]').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true})); }
             """);
         idle();
-        assertThat(page.getByTestId("finance-send-message")).isEnabled();
-        assertThat(page.getByTestId("finance-chat").locator("[data-chat-processing]")).isHidden();
-        assertThat(page.getByTestId("finance-replies")).containsText("Nguồn: ngân sách cấu hình");
-        assertThat(page.getByTestId("finance-replies")).containsText("VND");
+        assertThat(page.getByTestId("assistant-send-message")).isEnabled();
+        assertThat(page.getByTestId("assistant-panel").locator("[data-chat-processing]")).isHidden();
+        assertThat(page.getByTestId("assistant-replies")).containsText("Nguồn: ngân sách cấu hình");
+        assertThat(page.getByTestId("assistant-replies")).containsText("VND");
         assertEquals(1,calls.get());
         assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
     }
@@ -74,15 +75,16 @@ class PersonalFinanceAiPlaywrightTest {
         when(llm.classify(anyString())).thenReturn(intent(LlmIntent.Intent.EXPLAIN_TUITION_AFFORDABILITY));
         page.reload();
         page.getByTestId("language-vi").click();
-        page.getByTestId("finance-conversation-input").fill("Nếu đóng học phí thì còn đủ tiền sinh hoạt không?");
+        page.getByTestId("assistant-launcher").click();
+        page.getByTestId("assistant-conversation-input").fill("Nếu đóng học phí thì còn đủ tiền sinh hoạt không?");
         // Establish the baseline after Playwright brings the submit button into view.
-        page.getByTestId("finance-send-message").scrollIntoViewIfNeeded();
+        page.getByTestId("assistant-send-message").scrollIntoViewIfNeeded();
         double topBefore = ((Number) page.evaluate("() => window.scrollY")).doubleValue();
-        page.getByTestId("finance-send-message").click();
+        page.getByTestId("assistant-send-message").click();
         idle();
-        var reply = page.getByTestId("finance-replies").locator(".message.assistant")
+        var reply = page.getByTestId("assistant-replies").locator(".message.assistant")
                 .filter(new com.microsoft.playwright.Locator.FilterOptions().setHasText("ƯỚC TÍNH SAU HỌC PHÍ")).last();
-        assertThat(reply).containsText("chưa ánh xạ với nhau");
+        assertThat(reply).containsText("số dư tài khoản chung");
         assertTrue((Boolean) reply.evaluate("node => { const r=node.getBoundingClientRect(); const p=node.parentElement.getBoundingClientRect(); return r.top>=p.top && r.top<p.bottom; }"),
                 "The beginning of the latest reply must be inside the chat's visible scroll region");
         assertEquals(topBefore, ((Number) page.evaluate("() => window.scrollY")).doubleValue(), 1.0);
@@ -93,26 +95,26 @@ class PersonalFinanceAiPlaywrightTest {
         page.route("**/agent/message", route -> route.abort());
         send("Show spending");
         idle();
-        assertThat(page.getByTestId("finance-send-message")).isEnabled();
+        assertThat(page.getByTestId("assistant-send-message")).isEnabled();
         assertThat(page.locator(".request-error")).containsText("No automatic retry");
         verify(llm,never()).classify(anyString());
         page.unroute("**/agent/message");
         // An unresolved intercepted request exercises the configured client timeout recovery.
         page.route("**/agent/message", route -> {});
-        page.getByTestId("finance-chat").locator("form").evaluate("f => f.dataset.chatTimeout='250'");
+        page.getByTestId("assistant-panel").locator("form[data-chat-form]").evaluate("f => f.dataset.chatTimeout='250'");
         send("Show spending");
         idle();
-        assertThat(page.getByTestId("finance-send-message")).isEnabled();
+        assertThat(page.getByTestId("assistant-send-message")).isEnabled();
         page.unroute("**/agent/message");
         doThrow(new LlmIntentException("provider timeout")).when(llm).classify(anyString());
         send("Show spending");
         idle();
-        assertThat(page.getByTestId("finance-replies")).containsText("AI is temporarily unavailable or timed out");
-        assertThat(page.getByTestId("finance-send-message")).isEnabled();
+        assertThat(page.getByTestId("assistant-replies")).containsText("AI is temporarily unavailable or timed out");
+        assertThat(page.getByTestId("assistant-send-message")).isEnabled();
         doReturn(intent(LlmIntent.Intent.EXPLAIN_SPENDING_SUMMARY)).when(llm).classify(anyString());
         send("Show spending");
         idle();
-        assertThat(page.getByTestId("finance-replies")).containsText("Evidence: recorded transactions");
+        assertThat(page.getByTestId("assistant-replies")).containsText("Evidence: recorded transactions");
         assertNull(payments.latestAction());
     }
 
@@ -128,12 +130,13 @@ class PersonalFinanceAiPlaywrightTest {
         idle();
         page.waitForTimeout(2200);
         assertNull(payments.latestAction());
-        assertThat(page.getByTestId("finance-replies")).not().containsText("Prepared tuition-payment plan");
+        assertThat(page.getByTestId("assistant-replies")).not().containsText("Prepared tuition-payment plan");
         doReturn(intent(LlmIntent.Intent.CREATE_TUITION_PLAN)).when(llm).classify(anyString());
         send("Prepare tuition draft");
         idle();
         assertEquals("AWAITING_APPROVAL",payments.latestAction().status());
         assertEquals(0,payments.sandboxTransactionCount());
+        page.getByTestId("assistant-close").click();
         page.getByTestId("tab-agent").click();
         assertThat(page.getByTestId("latest-action")).hasAttribute("data-status","AWAITING_APPROVAL");
         assertThat(page.getByTestId("latest-receipt")).hasCount(0);
@@ -141,8 +144,8 @@ class PersonalFinanceAiPlaywrightTest {
     }
 
     private void send(String question) {
-        page.getByTestId("finance-conversation-input").fill(question);
-        page.getByTestId("finance-send-message").click();
+        page.getByTestId("assistant-conversation-input").fill(question);
+        page.getByTestId("assistant-send-message").click();
     }
     private void idle() { page.waitForFunction("() => !document.querySelector('.content').hasAttribute('aria-busy')"); }
     private LlmIntent intent(LlmIntent.Intent value) {

@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>FinBridge · Financial workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261005-review-followup')}">
+  <title>FinBridge · Financial workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261005-unified-accounts')}">
 </head>
 <body>
 <a class="skip-link" href="#workspace-content">Skip to main content</a>
@@ -64,11 +64,11 @@
       </nav>
 
       <section class="card account-snapshot" data-tab-panel="dashboard" data-dashboard-view-panel="summary" data-testid="current-account-balances">
-        <div class="section-title"><div><div class="eyebrow">PAYMENT ACCOUNTS</div><h2>Current account balances</h2><p>Latest balances for simulated payment accounts. Currencies remain separate.</p></div><a class="text-action" href="#student-finance">Compare payment options →</a></div>
-        <div class="current-account-grid"><article th:each="account : ${paymentAccounts}" th:if="${account.connectionStatus == 'CONNECTED' and account.verificationStatus == 'VERIFIED'}">
-          <small th:text="${account.displayName}" data-user-authored></small><strong th:text="${@conversationPresentation.money(account.balance) + ' ' + account.currency}"></strong><span th:text="${account.maskedNumber}"></span>
+        <div class="section-title"><div><div class="eyebrow">YOUR MONEY SOURCES</div><h2>Current account balances</h2><p>The same account balances are used across Overview, planning, chat and payments. Currencies remain separate.</p></div><a class="text-action" href="#student-finance">Compare payment options →</a></div>
+        <div class="current-account-grid"><article th:each="account : ${paymentAccounts}">
+          <small th:text="${account.displayName}" data-user-authored></small><strong th:text="${@conversationPresentation.money(account.balance) + ' ' + account.currency}"></strong><span th:text="${account.maskedNumber}"></span><span th:if="${account.connectionStatus == 'MANUAL'}">Manually maintained</span><span th:if="${account.connectionStatus != 'CONNECTED' and account.connectionStatus != 'MANUAL'}" th:text="${account.connectionStatus}"></span>
         </article></div>
-        <p class="source-disclosure">Planning accounts below and payment accounts use separate records in this simulation. They are not added together.</p>
+        <p class="source-disclosure">Each source is counted once. Recipient accounts are excluded; manual cash is labelled and cannot execute online payments.</p>
       </section>
       <section class="finance-month-snapshot" data-tab-panel="dashboard" data-dashboard-view-panel="summary" data-testid="monthly-finance-snapshot">
         <article class="card monthly-spending"><div><small>Monthly spending</small><strong th:text="${@conversationPresentation.money(financeSummary.monthlySpent) + ' VND'}"></strong><span><span>Reporting period</span> · <span th:text="${#temporals.format(#temporals.createNow(),'MM/yyyy')}"></span></span><p>Confirmed and automatically categorized expenses. Refunds are shown separately.</p></div><a class="text-action" href="#transactions">View transactions →</a></article>
@@ -76,26 +76,14 @@
       </section>
 
       <section class="planning-source-heading" data-tab-panel="dashboard" data-dashboard-view-panel="summary">
-        <h2 data-testid="planning-source-heading">Personal planning sources</h2>
-        <p>Separate records for everyday spending and manual cash. Payment account balances above are not included.</p>
+        <h2 data-testid="planning-source-heading">Money available for planning</h2>
+        <p>Planning uses the same accounts shown above, including manually maintained cash. Reservations do not move money.</p>
       </section>
       <section class="stats overview-stats" data-tab-panel="dashboard" data-dashboard-view-panel="summary">
-        <article data-testid="total-personal-balance"><span class="icon blue">◫</span><small>Planning balance</small><strong th:text="${@conversationPresentation.money(financeSummary.totalBalance)}"></strong><p>Planning accounts · VND</p></article>
+        <article data-testid="total-personal-balance"><span class="icon blue">◫</span><small>Total balance · VND</small><strong th:text="${@conversationPresentation.money(financeSummary.totalBalance)}"></strong><p>All active personal sources · VND</p></article>
         <article data-testid="reserved-next-30"><span class="icon orange">⌛</span><small>Reserved for next 30 days</small><strong th:text="${@conversationPresentation.money(financeSummary.reservedNext30Days)}"></strong><p>Recurring and one-time plans</p></article>
-        <article data-testid="available-to-allocate"><span class="icon green">✓</span><small>Unreserved planning balance</small><strong th:classappend="${financeSummary.availableToAllocate.signum() < 0 ? ' negative-money' : ''}" th:text="${@conversationPresentation.money(financeSummary.availableToAllocate)}"></strong><p>Planning estimate after reservations and safety buffer</p></article>
+        <article data-testid="available-to-allocate"><span class="icon green">✓</span><small>Available after reservations</small><strong th:classappend="${financeSummary.availableToAllocate.signum() < 0 ? ' negative-money' : ''}" th:text="${@conversationPresentation.money(financeSummary.availableToAllocate)}"></strong><p>Planning estimate after reservations and safety buffer</p></article>
         <article><span class="icon violet">?</span><small>Needs review</small><strong th:text="${dashboard.pendingReview}"></strong><p>Transactions waiting for your input</p></article>
-      </section>
-
-      <section class="card conversation-panel finance-chat" data-tab-panel="dashboard" data-dashboard-view-panel="summary" data-testid="finance-chat">
-        <div class="section-title"><div><div class="eyebrow">YOUR ASSISTANT</div><h2>Ask FinBridge</h2><p>Ask about balances, spending, budgets or education payments from any screen.</p></div></div>
-        <details class="inline-chat-history"><summary>Recent answers</summary><div class="finance-message-list" data-testid="finance-replies"><th:block th:replace="~{fragments/conversation :: replies(${conversation})}"></th:block></div></details>
-        <button th:if="${!#lists.isEmpty(conversationContext.choices)}" type="button" class="secondary" data-open-assistant data-testid="finance-clarification-help">Choose the topic in the assistant</button>
-        <form class="composer" th:action="@{/agent/message}" method="post" data-chat-form th:attr="data-chat-timeout=${chatTimeoutMillis}" data-chat-unavailable-en="The request timed out or the connection failed. No automatic retry was sent. Reload to check the current state before retrying." data-chat-unavailable-vi="Yêu cầu hết thời gian chờ hoặc mất kết nối. Chưa tự động gửi lại. Hãy tải lại để kiểm tra trạng thái trước khi thử lại.">
-          <input name="message" data-testid="finance-conversation-input" maxlength="500" required placeholder="Where did I spend the most this month?">
-          <button class="primary-button" data-testid="finance-send-message">Send</button>
-          <span class="chat-processing" data-chat-processing aria-live="polite" aria-atomic="true" hidden>Processing your question…</span>
-        </form>
-        <p class="fine">AI helps understand your question. Asking does not authorize a payment.</p>
       </section>
 
       <section class="intro" data-tab-panel="transactions" hidden><div><div class="eyebrow">YOUR ACTIVITY</div><h1>Transactions</h1><p>Review incoming activity, confirm categories and find past payments.</p></div><button type="button" class="primary-button" data-open-assistant>Ask about spending</button></section>
@@ -136,18 +124,20 @@
         <section class="card attention-center" data-testid="attention-center">
           <div class="section-title"><div><div class="eyebrow">ACTION CENTER</div><h2>What needs your attention</h2><p>Each item opens the workspace where you can resolve it.</p></div><span class="pill" th:text="${#lists.size(attentionItems) + ' item(s)'}"></span></div>
           <div th:if="${#lists.isEmpty(attentionItems)}" class="empty-state">Nothing urgent. Your current plans and transactions are in order.</div>
-          <a class="attention-item" th:each="item : ${attentionItems}" th:href="${item.href}">
+          <div class="attention-list"><a class="attention-item" th:each="item : ${attentionItems}" th:href="${item.href}">
             <span class="priority" th:classappend="${#strings.toLowerCase(item.priority)}" th:text="${item.priority}"></span>
             <div><strong th:text="${item.title}"></strong><p th:text="${item.message}"></p></div><b th:text="${item.action + ' →'}"></b>
           </a>
           <a class="attention-item workflow-link" href="#student-finance"><span class="priority opportunity">STUDENT</span><div><strong>Education payments</strong><p>Verify a provider bill and compare eligible payment channels.</p></div><b>Open student finance →</b></a>
           <a th:if="${!#lists.isEmpty(paymentPlans)}" class="attention-item workflow-link" href="#agent-workspace"><span class="priority medium">PAYMENT</span><div><strong>Controlled payment plans</strong><p>Review approvals, Sandbox receipts and the Audit Log.</p></div><b>Open payments →</b></a>
+          </div>
         </section>
         <section class="card" id="feed" data-testid="proactive-feed">
           <div class="section-title"><div><div class="eyebrow">PROACTIVE FEED</div><h2>Worth your attention</h2><p>See what changed, why it matters and what you can do next.</p></div><span class="pill" th:text="${#lists.size(insights) + ' insights'}"></span></div>
-          <div class="insight" th:each="insight : ${insights}">
+          <div class="insight-list"><div class="insight" th:each="insight : ${insights}">
             <span class="priority" th:classappend="${#strings.toLowerCase(insight.priority)}" th:text="${insight.priority}"></span>
             <div><strong th:text="${insight.title}"></strong><p th:text="${insight.message}"></p><p class="insight-why" th:text="${insight.title == 'Transactions need your input' ? 'Confirming a category keeps your spending report accurate.' : (insight.title == 'Budget progress' ? 'Check category limits before your next expense.' : (insight.title == 'Safety buffer protected' ? 'This insight applies the safety buffer to the recorded checking balance.' : 'Verify the bill and available channels before preparing a payment.'))}"></p><a class="text-action" th:href="${insight.title == 'Transactions need your input' ? '#transaction-review' : (insight.title == 'Budget progress' ? '#planning' : (insight.title == 'Safety buffer protected' ? '#accounts' : '#student-finance'))}" th:text="${insight.title == 'Transactions need your input' ? 'Review transactions →' : (insight.title == 'Budget progress' ? 'Review budgets →' : (insight.title == 'Safety buffer protected' ? 'Review planning accounts →' : 'Review education bill →'))}"></a><details class="source-details"><summary>Sources and assumptions</summary><small th:text="${'Evidence: ' + insight.evidence}"></small></details></div>
+          </div>
           </div>
         </section>
         <section class="card cashflow-snapshot">
@@ -160,10 +150,10 @@
 
       <section class="card money-sources" id="accounts" data-tab-panel="dashboard" data-dashboard-view-panel="accounts" hidden>
         <div class="section-title"><div><div class="eyebrow">PERSONAL MONEY SOURCES</div><h2>Accounts and cash</h2><p>Connected balances follow incoming bank events. You control balances entered manually, including cash.</p></div><button class="primary-button" type="button" data-open-dialog="add-money-source">+ Add money source</button></div>
-        <div class="source-ledger-note"><strong>Personal ledger</strong><span>These balances drive the Overview. Payment Sandbox balances remain separate so the same money is never counted twice.</span></div>
+        <div class="source-ledger-note"><strong>Shared account ledger</strong><span>One account ledger powers Overview, planning, chat and Payment Sandbox. Bank events and approved payments update these balances.</span></div>
         <div class="money-source-grid">
           <article class="money-source-card" th:each="account : ${accounts}" th:attr="data-testid=${'money-source-' + account.id}">
-            <div class="money-source-top"><span class="source-type" th:classappend="${#strings.toLowerCase(account.source_type)}" th:text="${account.source_type}"></span><span class="connection-state" th:text="${account.connection_status}"></span></div>
+            <div class="money-source-top"><span class="source-type" th:classappend="${#strings.toLowerCase(account.source_type)}" th:text="${account.source_type == 'CONNECTED' ? account.connection_status : account.source_type}"></span><span th:if="${account.source_type != 'CONNECTED'}" class="connection-state">Manually maintained</span></div>
             <h3 data-user-authored th:text="${account.account_name}"></h3><p><span data-user-authored th:text="${account.institution}"></span> · <span th:text="${account.account_type}"></span> · <span th:text="${account.masked_number}"></span></p>
             <strong th:text="${@conversationPresentation.money(account.balance) + ' ' + account.currency}"></strong>
             <small th:text="${'Updated ' + #dates.format(account.balance_updated_at,'dd MMM yyyy HH:mm')}"></small>
@@ -171,7 +161,7 @@
               <button class="secondary" type="button" th:attr="data-open-dialog=${'edit-money-source-' + account.id}">Edit balance</button>
               <form th:action="@{'/finance/accounts/' + ${account.id} + '/archive'}" method="post" data-confirm-en="Archive this manual money source?" data-confirm-vi="Lưu trữ nguồn tiền nhập thủ công này?"><button class="text-action" type="submit">Archive</button></form>
             </div>
-            <div class="source-actions" th:if="${account.source_type == 'CONNECTED'}"><span>Read-only · updated by bank events</span></div>
+            <div class="source-actions" th:if="${account.source_type == 'CONNECTED'}"><span>Read-only · updated by bank events and approved payments</span></div>
           </article>
         </div>
         <dialog id="add-money-source" class="finance-dialog"><div class="dialog-heading"><div><small>NEW MONEY SOURCE</small><h3>Add an account or cash</h3></div><button type="button" data-close-dialog aria-label="Close">×</button></div><p>Use manual entry for cash or a source that is not connected. It is included in your personal total and marked as manually maintained.</p>
@@ -196,7 +186,8 @@
             </article>
           </div>
           <section class="budget-editor" id="budget"><div class="subsection-heading budget-heading"><div><h3>Monthly category budgets</h3><p>Weekly guidance is derived from monthly limits, preventing conflicting targets.</p></div><button class="secondary" type="button" data-open-dialog="add-budget">+ Add budget</button></div>
-            <div class="budget-row" th:each="budget : ${budgets}"><div class="budget-head"><strong th:text="${budget.category}"></strong><span th:text="${@conversationPresentation.money(budget.spent) + ' / ' + @conversationPresentation.money(budget.monthly_limit) + ' VND'}"></span></div><div class="progress"><span th:style="|width: ${budget.percent}%|"></span></div><small th:text="${@conversationPresentation.money(budget.remaining) + ' VND remaining'}"></small><form th:action="@{/finance/budgets}" method="post" class="budget-edit-form"><input type="hidden" name="category" th:value="${budget.category}"><label><span>Monthly limit</span><input name="monthlyLimit" type="number" min="1" step="1" required th:value="${budget.monthly_limit}"></label><button class="secondary" type="submit">Update</button></form></div>
+            <div class="budget-edit-list"><div class="budget-row" th:each="budget : ${budgets}"><div class="budget-head"><strong th:text="${budget.category}"></strong><span th:text="${@conversationPresentation.money(budget.spent) + ' / ' + @conversationPresentation.money(budget.monthly_limit) + ' VND'}"></span></div><div class="progress"><span th:style="|width: ${budget.percent}%|"></span></div><small th:text="${@conversationPresentation.money(budget.remaining) + ' VND remaining'}"></small><form th:action="@{/finance/budgets}" method="post" class="budget-edit-form"><input type="hidden" name="category" th:value="${budget.category}"><label><span>Monthly limit</span><input name="monthlyLimit" type="number" min="1" step="1" required th:value="${budget.monthly_limit}"></label><button class="secondary" type="submit">Update</button></form></div>
+          </div>
           </section>
         <dialog id="add-budget" class="finance-dialog"><div class="dialog-heading"><div><small>NEW CATEGORY BUDGET</small><h3>Add a monthly budget</h3></div><button type="button" data-close-dialog aria-label="Close">×</button></div><p>Choose an active spending category. A category can have one monthly budget; update that budget instead of creating a duplicate.</p>
           <form th:action="@{/finance/budgets/new}" method="post" class="finance-form"><label class="wide"><span>Category</span><select name="category" required><option value="">Choose a category</option><option th:each="category : ${budgetCategories}" th:value="${category}" th:text="${category}"></option></select></label><label class="wide"><span>Monthly limit (VND)</span><input name="monthlyLimit" type="number" min="1" step="1" required></label><button class="primary-button wide" type="submit">Add budget</button></form>
@@ -518,7 +509,7 @@
         <div class="table-scroll"><table>
           <thead><tr><th>Merchant and date</th><th>Type</th><th>Category</th><th>Confidence</th><th>Status</th><th class="right">Amount</th><th>Action</th></tr></thead>
           <tbody data-testid="transaction-table-body"><tr th:each="tx : ${transactions}" data-testid="transaction-row" th:classappend="${newTransaction == tx.id ? ' newly-created' : ''}" th:attr="data-transaction-id=${tx.id},data-review-status=${tx.review_status},data-type=${tx.type},data-category=${tx.category ?: ''},data-search=${tx.merchant + ' ' + tx.description + ' ' + (tx.purpose ?: '') + ' ' + tx.categorization_evidence},data-amount=${tx.amount},data-new-transaction=${newTransaction == tx.id}">
-            <td><strong data-user-authored th:text="${tx.merchant}"></strong><span th:if="${newTransaction == tx.id}" class="new-transaction-badge">Just created</span><small><span th:text="${#dates.format(tx.occurred_at,'dd/MM/yyyy HH:mm:ss')}"></span> · <span th:text="${tx.source_label}"></span></small><small th:if="${tx.purpose != null}" th:text="${'Purpose: ' + tx.purpose}"></small><details class="transaction-evidence"><summary>Why this category?</summary><small th:text="${tx.categorization_evidence}"></small></details></td>
+            <td><strong data-user-authored th:text="${tx.merchant}"></strong><span th:if="${newTransaction == tx.id}" class="new-transaction-badge">Just created</span><small><span th:text="${#dates.format(tx.occurred_at,'dd/MM/yyyy HH:mm:ss')}"></span> · <span th:text="${tx.source_label}"></span></small><small th:if="${tx.source_account_name != null}"><span>Source account</span> · <span data-user-authored th:text="${tx.source_account_name}"></span> · <span th:text="${tx.source_masked_number}"></span></small><small th:if="${tx.purpose != null}" th:text="${'Purpose: ' + tx.purpose}"></small><details class="transaction-evidence"><summary>Why this category?</summary><small th:text="${tx.categorization_evidence}"></small></details></td>
             <td><span class="type" th:text="${tx.type}"></span></td>
             <td th:text="${tx.category ?: 'Purpose required'}"></td>
             <td><span class="confidence" th:classappend="${tx.confidence >= 90 ? ' high' : (tx.confidence >= 60 ? ' medium' : ' low')}" th:text="${tx.confidence + '%'}"></span></td>
@@ -642,6 +633,6 @@
   </form>
   <p class="assistant-safety">AI helps understand your question. Asking does not authorize a payment.</p>
 </aside>
-<script th:src="@{/app.js(v='20261005-review-followup')}"></script>
+<script th:src="@{/app.js(v='20261005-unified-accounts')}"></script>
 </body>
 </html>

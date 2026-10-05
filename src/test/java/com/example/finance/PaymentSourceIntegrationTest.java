@@ -25,9 +25,9 @@ class PaymentSourceIntegrationTest {
     void allPersonalAccountsAreExposedAndSeparatedByEligibility() {
         var accounts = phaseFour.paymentSourceAccounts();
 
-        assertEquals(5, accounts.size());
+        assertEquals(6, accounts.size());
         assertEquals(5, accounts.stream().filter(PhaseFourService.PaymentSourceAccount::ready).count());
-        assertEquals(0, accounts.stream().filter(account -> !account.ready()).count());
+        assertEquals(1, accounts.stream().filter(account -> !account.ready()).count());
         assertEquals(3, accounts.stream().filter(account -> account.canFund(
                 new BigDecimal("70760800.00"), PhaseFourService.SAFETY_BUFFER)).count());
         assertEquals(PhaseFourService.PAYER, phaseFour.selectedPaymentSource().accountId());

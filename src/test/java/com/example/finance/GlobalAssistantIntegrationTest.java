@@ -46,13 +46,13 @@ class GlobalAssistantIntegrationTest {
         assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
     }
     @Test void ambiguousBankNameHasSessionChoicesWithoutChangingSharedSelections(){
-        db.update("INSERT INTO sandbox_accounts VALUES ('BANK_A_EXTRA','Bank A Savings','VND',50000000)");
-        db.update("INSERT INTO payment_source_accounts SELECT 'BANK_A_EXTRA','Bank A','Savings','•••• 7715','CONNECTED','VERIFIED',FALSE,FALSE,9 FROM payment_source_accounts WHERE account_id='PAYER_VND'");
+        db.update("INSERT INTO financial_accounts(id,owner_profile_id,institution,masked_number,account_name,currency,balance) VALUES ('BANK_A_EXTRA',1,'Bank A','•••• 7722','Bank A Savings','VND',50000000)");
+        db.update("INSERT INTO payment_source_accounts SELECT 'BANK_A_EXTRA','Bank A','Savings','•••• 7722','CONNECTED','VERIFIED',FALSE,FALSE,9,'BANK_A_EXTRA' FROM payment_source_accounts WHERE account_id='PAYER_VND'");
         var before=PersonalFinanceAiIntegrationTest.snapshot(db);
         assertTrue(ask("Hiện Bank A còn bao nhiêu?",EXPLAIN_CURRENT_BALANCE).contains("Chọn rõ một tài khoản"));
         assertEquals(ModelConversationContext.Topic.CURRENT_BALANCE,view().topic());
         assertEquals(ModelConversationContext.Pending.ACCOUNT,view().pending());
-        assertEquals(2,view().choices().size());
+        assertEquals(3,view().choices().size());
         var choice=view().choices().stream().filter(c->c.label().contains("Savings")).findFirst().orElseThrow();
         assertTrue(chat.enter(new MockHttpSession(),choice.token(),true,true).contains("không còn hợp lệ"));
         chat.enter(session,choice.token(),true,true);
@@ -76,11 +76,11 @@ class GlobalAssistantIntegrationTest {
         assertNull(payments.latestAction());assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
     }
     @Test void totalsSeparateCurrenciesAndExcludeRecipientFeeAndPlannerViews(){
-        db.update("INSERT INTO sandbox_accounts VALUES ('OWN_CNY','Own CNY wallet','CNY',100)");
-        db.update("INSERT INTO payment_source_accounts SELECT 'OWN_CNY','Own bank','Wallet','•••• 9999','CONNECTED','VERIFIED',FALSE,FALSE,9 FROM payment_source_accounts WHERE account_id='PAYER_VND'");
-        db.update("UPDATE sandbox_accounts SET balance=90000000 WHERE id='SCHOOL_CNY'");
+        db.update("INSERT INTO financial_accounts(id,owner_profile_id,institution,account_name,currency,balance) VALUES ('OWN_CNY',1,'Own bank','Own CNY wallet','CNY',100)");
+        db.update("INSERT INTO payment_source_accounts SELECT 'OWN_CNY','Own bank','Wallet','•••• 9999','CONNECTED','VERIFIED',FALSE,FALSE,9,'OWN_CNY' FROM payment_source_accounts WHERE account_id='PAYER_VND'");
+        db.update("UPDATE financial_accounts SET balance=90000000 WHERE id='SCHOOL_CNY'");
         String result=ask("Tổng số dư tất cả tài khoản",EXPLAIN_CURRENT_BALANCE);
-        assertTrue(result.contains("Tổng VND: 314000000.00"),result);
+        assertTrue(result.contains("Tổng VND: 315000000.00"),result);
         assertTrue(result.contains("Tổng CNY: 100.00"));assertFalse(result.contains("90000000.00"));
     }
     @Test void independentSessionsKeepDifferentAccountsAndResetInvalidatesChoices(){

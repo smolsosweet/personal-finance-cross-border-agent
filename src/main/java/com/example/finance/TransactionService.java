@@ -21,10 +21,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class TransactionService {
     private static final BigDecimal SAFETY_BUFFER = new BigDecimal("3000000.00");
     private final JdbcTemplate db;
+    private final AccountLedgerService ledger;
     private final CategorizationService categorization;
 
-    public TransactionService(JdbcTemplate db, CategorizationService categorization) {
+    public TransactionService(JdbcTemplate db, CategorizationService categorization, AccountLedgerService ledger) {
         this.db = db;
+        this.ledger=ledger;
         this.categorization = categorization;
     }
 
@@ -64,12 +66,12 @@ public class TransactionService {
         db.update("""
                 INSERT INTO financial_accounts
                 (id,owner_profile_id,account_name,currency,balance,institution,account_type,masked_number,source_type,connection_status,balance_updated_at,archived)
-                VALUES ('CHECKING',1,'Everyday account','VND',100000000.00,'Demo Bank','CHECKING','•••• 1106','CONNECTED','CONNECTED',CURRENT_TIMESTAMP,FALSE)
+                VALUES ('CHECKING',1,'Bank A Everyday','VND',100000000.00,'Bank A','CHECKING','•••• 2048','CONNECTED','CONNECTED',CURRENT_TIMESTAMP,FALSE)
                 """);
         db.update("""
                 INSERT INTO financial_accounts
                 (id,owner_profile_id,account_name,currency,balance,institution,account_type,masked_number,source_type,connection_status,balance_updated_at,archived)
-                VALUES ('SAVINGS',1,'Emergency fund','VND',1000000.00,'Demo Bank','SAVINGS','•••• 7715','CONNECTED','CONNECTED',CURRENT_TIMESTAMP,FALSE)
+                VALUES ('SAVINGS',1,'Emergency fund','VND',1000000.00,'Bank A','SAVINGS','•••• 7715','CONNECTED','CONNECTED',CURRENT_TIMESTAMP,FALSE)
                 """);
         seedCategories();
         seedBudgets();
@@ -145,11 +147,18 @@ public class TransactionService {
     @Transactional
     public String ingest(BankEvent event) {
         Normalized tx = normalize(event);
+        String accountId=ledger.canonicalId(event.sourceAccount()==null?"CHECKING":event.sourceAccount());
+        if(!ledger.personalVnd(accountId))throw new IllegalArgumentException("Bank event requires an owned VND account");
+        String destination=event.destinationAccount()==null?null:ledger.canonicalId(event.destinationAccount());
+        boolean internal=destination!=null && !accountId.equals(destination) && ledger.personalVnd(destination);
+        if(internal && !"OUT".equals(tx.direction()))throw new IllegalArgumentException("Internal transfer requires the outgoing event");
+        if(internal)tx=new Normalized(tx.merchant(),tx.description(),tx.amount(),tx.currency(),tx.direction(),"Internal Transfer",tx.occurredAt());
+        ledger.lock(internal?new String[]{accountId,destination}:new String[]{accountId});
         if (event.reference() == null || event.reference().isBlank()) throw new IllegalArgumentException("Event reference is required");
         List<String> byReference = db.query("SELECT id FROM bank_events WHERE raw_reference=?", (rs,n) -> rs.getString(1), event.reference());
         if (!byReference.isEmpty()) return db.queryForObject("SELECT id FROM transactions WHERE event_id=?", String.class, byReference.getFirst());
 
-        String fingerprint = sha256("CHECKING|" + tx.direction() + "|" + tx.amount() + "|" + tx.merchant().toLowerCase() + "|" + tx.occurredAt().truncatedTo(ChronoUnit.MINUTES));
+        String fingerprint = sha256(accountId+"|" + tx.direction() + "|" + tx.amount() + "|" + tx.merchant().toLowerCase() + "|" + tx.occurredAt().truncatedTo(ChronoUnit.MINUTES));
         List<String> duplicate = db.query("SELECT id FROM transactions WHERE fingerprint=?", (rs,n) -> rs.getString(1), fingerprint);
         if (!duplicate.isEmpty()) return duplicate.getFirst();
 
@@ -165,15 +174,15 @@ public class TransactionService {
                  category,previous_category,confidence,review_status,categorization_evidence)
                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,NULL,?,?,?)
                 """,
-                transactionId, eventId, fingerprint, "CHECKING", tx.occurredAt(), tx.merchant(), tx.description(),
+                transactionId, eventId, fingerprint, accountId, tx.occurredAt(), tx.merchant(), tx.description(),
                 tx.amount(), tx.currency(), tx.direction(), tx.type(), source, suggestion.category(),
                 suggestion.confidence(), suggestion.reviewStatus(), suggestion.evidence());
 
         if ("Simulated Bank Event".equals(source)) {
             BigDecimal delta = tx.direction().equals("IN") ? tx.amount() : tx.amount().negate();
-            db.update("UPDATE financial_accounts SET balance=balance+? WHERE id='CHECKING'", delta);
+            ledger.setBalance(accountId,ledger.balance(accountId).add(delta));
             if (tx.type().equals("Internal Transfer")) {
-                db.update("UPDATE financial_accounts SET balance=balance+? WHERE id='SAVINGS'", tx.amount());
+                ledger.setBalance(destination,ledger.balance(destination).add(tx.amount()));
             }
         }
         return transactionId;
@@ -181,7 +190,7 @@ public class TransactionService {
 
     /**
      * Records a completed Payment Sandbox debit in the personal transaction history.
-     * This is intentionally separate from bank-event ingestion: sandbox balances are
+     * This records history only: the unified account balances are
      * maintained by PhaseFourService, while this immutable history row is only a
      * receipt link for the user's ledger.
      */
@@ -386,20 +395,22 @@ public class TransactionService {
     }
 
     public Map<String,Object> profile() { return db.queryForMap("SELECT * FROM demo_profile WHERE id=1"); }
-    public List<Map<String,Object>> accounts() { return db.queryForList("SELECT * FROM financial_accounts WHERE archived=FALSE ORDER BY source_type,account_name"); }
+    public List<Map<String,Object>> accounts() { return db.queryForList("SELECT * FROM financial_accounts WHERE archived=FALSE AND owner_profile_id=1 AND account_scope='PERSONAL' ORDER BY source_type,account_name"); }
     public List<Map<String,Object>> transactions() {
         return db.queryForList("""
-                SELECT t.*
+                SELECT t.*,a.account_name AS source_account_name,a.masked_number AS source_masked_number
                 FROM transactions t
                 JOIN bank_events e ON e.id=t.event_id
+                LEFT JOIN financial_accounts a ON a.id=CASE WHEN t.account_id='PAYER_VND' THEN 'CHECKING' ELSE t.account_id END
                 ORDER BY t.occurred_at DESC, e.received_at DESC
                 """);
     }
     public List<Map<String,Object>> pendingTransactions() {
         return db.queryForList("""
-                SELECT t.*
+                SELECT t.*,a.account_name AS source_account_name,a.masked_number AS source_masked_number
                 FROM transactions t
                 JOIN bank_events e ON e.id=t.event_id
+                LEFT JOIN financial_accounts a ON a.id=CASE WHEN t.account_id='PAYER_VND' THEN 'CHECKING' ELSE t.account_id END
                 WHERE t.review_status IN ('CONFIRMATION_REQUIRED','PURPOSE_REQUIRED')
                 ORDER BY t.occurred_at DESC, e.received_at DESC
                 """);

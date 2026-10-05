@@ -70,14 +70,14 @@ class GlobalAssistantPlaywrightTest {
         assertEquals(receipt,payments.receiptForAction(plan.id()));
     }
     @Test void pendingAccountChoiceIsVisibleAndBoundOnlyToThisSession(){
-        db.update("INSERT INTO sandbox_accounts VALUES ('BANK_A_EXTRA','Bank A Savings','VND',50000000)");
-        db.update("INSERT INTO payment_source_accounts SELECT 'BANK_A_EXTRA','Bank A','Savings','•••• 7715','CONNECTED','VERIFIED',FALSE,FALSE,9 FROM payment_source_accounts WHERE account_id='PAYER_VND'");
+        db.update("INSERT INTO financial_accounts(id,owner_profile_id,institution,masked_number,account_name,currency,balance) VALUES ('BANK_A_EXTRA',1,'Bank A','•••• 7722','Bank A Savings','VND',50000000)");
+        db.update("INSERT INTO payment_source_accounts SELECT 'BANK_A_EXTRA','Bank A','Savings','•••• 7722','CONNECTED','VERIFIED',FALSE,FALSE,9,'BANK_A_EXTRA' FROM payment_source_accounts WHERE account_id='PAYER_VND'");
         var before=PersonalFinanceAiIntegrationTest.snapshot(db);
         send("Hiện Bank A còn bao nhiêu?",LlmIntent.Intent.EXPLAIN_CURRENT_BALANCE,"vi");
         assertThat(page.getByTestId("assistant-context-state")).containsText("Số dư tài khoản hiện tại");
         assertThat(page.getByTestId("assistant-pending")).containsText("Chọn tài khoản");
-        assertThat(page.getByTestId("assistant-context-choice")).hasCount(2);
-        page.getByTestId("assistant-context-choice").filter(new Locator.FilterOptions().setHasText("7715")).click();idle();
+        assertThat(page.getByTestId("assistant-context-choice")).hasCount(3);
+        page.getByTestId("assistant-context-choice").filter(new Locator.FilterOptions().setHasText("7722")).click();idle();
         assertTrue(send("Bây giờ còn bao nhiêu?",LlmIntent.Intent.EXPLAIN_CURRENT_BALANCE,"vi").contains("50000000.00"));
         try(BrowserContext other=browser.newContext()){
             Page fresh=other.newPage();fresh.navigate("http://localhost:8131");fresh.getByTestId("assistant-launcher").click();

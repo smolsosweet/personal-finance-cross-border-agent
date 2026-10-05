@@ -105,7 +105,7 @@ class RunwayIntegrationTest {
     }
     @Test void insufficientBalanceOrBufferProducesShortfallAndZeroMonths(){
         for(String balance:new String[]{"70000000","72000000","73760800"}){
-            conversation.invalidate(session);db.update("UPDATE sandbox_accounts SET balance=? WHERE id='PAYER_VND'",new BigDecimal(balance));
+            conversation.invalidate(session);db.update("UPDATE financial_accounts SET balance=? WHERE id='CHECKING'",new BigDecimal(balance));
             var before=PersonalFinanceAiIntegrationTest.snapshot(db);ask("How many months after tuition?");String answer=confirm("8000000");
             assertTrue(answer.contains("Khoảng 0.00 tháng"),answer);assertFalse(answer.contains("Khoảng -"));
             if(!balance.equals("73760800"))assertTrue(answer.contains("THIẾU TIỀN"));
@@ -117,7 +117,7 @@ class RunwayIntegrationTest {
         db.update("UPDATE finance_plans SET amount=999999999 WHERE reserve_funds=TRUE");
         var before=PersonalFinanceAiIntegrationTest.snapshot(db);assertTrue(ask("Vậy đủ mấy tháng?").contains("3.27 tháng"));
         assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
-        db.update("UPDATE sandbox_accounts SET balance=90000000 WHERE id='PAYER_VND'");
+        db.update("UPDATE financial_accounts SET balance=90000000 WHERE id='CHECKING'");
         before=PersonalFinanceAiIntegrationTest.snapshot(db);assertTrue(ask("Vậy đủ mấy tháng?").contains("2.02 tháng"));
         assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
     }

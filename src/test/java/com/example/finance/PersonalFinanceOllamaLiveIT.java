@@ -69,23 +69,24 @@ class PersonalFinanceOllamaLiveIT {
             Browser browser=playwright.chromium().launch(new BrowserType.LaunchOptions().setChannel("chrome").setHeadless(true));
             Page page=browser.newPage(); page.setDefaultTimeout(90000);
             page.navigate("http://localhost:8091");
-            page.getByTestId("finance-conversation-input").fill("How much of my monthly budget is left?");
+            page.getByTestId("assistant-launcher").click();
+            page.getByTestId("assistant-conversation-input").fill("How much of my monthly budget is left?");
             long started=System.nanoTime();
-            page.getByTestId("finance-send-message").click();
-            assertThat(page.getByTestId("finance-chat").locator("[data-chat-processing]")).isVisible();
-            assertThat(page.getByTestId("finance-send-message")).isDisabled();
-            page.evaluate("() => document.querySelector('[data-testid=\"finance-chat\"] form').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}))");
+            page.getByTestId("assistant-send-message").click();
+            assertThat(page.getByTestId("assistant-panel").locator("[data-chat-processing]")).isVisible();
+            assertThat(page.getByTestId("assistant-send-message")).isDisabled();
+            page.evaluate("() => document.querySelector('[data-testid=\"assistant-panel\"] form[data-chat-form]').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}))");
             page.waitForFunction("() => !document.querySelector('.content').hasAttribute('aria-busy')");
-            assertThat(page.getByTestId("finance-replies")).containsText("Evidence: configured budgets");
-            assertThat(page.getByTestId("finance-send-message")).isEnabled();
+            assertThat(page.getByTestId("assistant-replies")).containsText("Evidence: configured budgets");
+            assertThat(page.getByTestId("assistant-send-message")).isEnabled();
             assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
-            page.getByTestId("finance-chat").screenshot(new Locator.ScreenshotOptions()
+            page.getByTestId("assistant-panel").screenshot(new Locator.ScreenshotOptions()
                     .setPath(java.nio.file.Path.of("target/personal-finance-ai-live.png")));
             assertEquals(1,db.queryForObject("SELECT COUNT(*) FROM audit_log WHERE event_type='INTENT_CLASSIFIED'",Integer.class));
             System.out.printf("LIVE_BROWSER budget latency_ms=%d financial_unchanged=true duplicate_calls=1%n",(System.nanoTime()-started)/1_000_000);
             crossBorder.refreshQuotes();
-            page.getByTestId("finance-conversation-input").fill("Prepare the cheapest tuition payment draft.");
-            page.getByTestId("finance-send-message").click();
+            page.getByTestId("assistant-conversation-input").fill("Prepare the cheapest tuition payment draft.");
+            page.getByTestId("assistant-send-message").click();
             page.waitForFunction("() => !document.querySelector('.content').hasAttribute('aria-busy')");
             assertEquals("AWAITING_APPROVAL",payments.latestAction().status());
             assertEquals(0,payments.sandboxTransactionCount());

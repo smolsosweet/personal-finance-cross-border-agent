@@ -69,11 +69,11 @@ public class ConversationPresentation {
                 conclusion=vi?"Số dư tài khoản hiện tại":"Current account balances";
                 subtitle=line(text,vi?"Quan sát lúc: ":"Observed at: ");
                 columns=vi?List.of("Tài khoản","Số dư","Tiền tệ"):List.of("Account","Balance","Currency");
-                var m=Pattern.compile("^(.+ · .+): (-?[0-9]+\\.[0-9]+) ([A-Z]{3})\\.$",Pattern.MULTILINE).matcher(text);
-                while(m.find())rows.add(List.of(m.group(1),number(m.group(2),vi),m.group(3)));
+                var m=Pattern.compile("^(.+ · .+): (-?[0-9]+\\.[0-9]+) ([A-Z]{3})(?: · (nhập thủ công|manually maintained))?\\.$",Pattern.MULTILINE).matcher(text);
+                while(m.find())rows.add(List.of(m.group(1)+(m.group(4)==null?"":" · "+m.group(4)),number(m.group(2),vi),m.group(3)));
                 m=Pattern.compile("^(?:Tổng|Total) ([A-Z]{3}): (-?[0-9]+\\.[0-9]+)\\.$",Pattern.MULTILINE).matcher(text);
                 while(m.find())facts.add(new Fact((vi?"Tổng ":"Total ")+m.group(1),number(m.group(2),vi)+" "+m.group(1)));
-                warnings.add(vi?"Số dư Sandbox mới nhất; tách tiền tệ, không cộng planner và không trừ đệm an toàn.":"Latest Sandbox balances; currencies separate, planner excluded, no safety buffer deduction.");
+                warnings.add(vi?"Số dư từ sổ tài khoản chung; tách tiền tệ, mỗi tài khoản tính một lần; chưa trừ đệm an toàn.":"Unified account balances; currencies separate, each source counted once; no safety buffer deduction.");
             }else if(text.startsWith("ƯỚC TÍNH THỜI GIAN SINH HOẠT")||text.startsWith("LIVING-EXPENSE RUNWAY ESTIMATE")){
                 String months=find(text,"^(?:Khoảng|Approximately) ([0-9]+\\.[0-9]+) (?:tháng|months)",1);
                 if(!months.isEmpty()){
@@ -115,7 +115,7 @@ public class ConversationPresentation {
                     String after=find(text,"(?:còn sau đệm|after buffer) (-?[0-9]+\\.[0-9]+) VND",1);
                     if(!after.isEmpty())facts.add(new Fact(vi?"Sau đệm an toàn":"After safety buffer",money(after,vi)));
                     fact(facts,text,vi?"Nếu giữ thêm toàn bộ khoản planner trên: ":"If all these planner commitments are also earmarked: ",vi?"Nếu giữ thêm các khoản planner":"If planner funds are also reserved",vi);
-                    warnings.add(line(text,vi?"Giới hạn: ":"Limitation: "));
+                    warnings.add(vi?"Dùng số dư chung và khoản giữ trước của tài khoản nguồn. Chưa tính thu nhập tương lai hoặc chi phí phát sinh.":"Uses the shared balance and this source’s reservations. Future income and unexpected costs are excluded.");
                     warnings.add(vi?"Chỉ là dự báo; chưa tạo kế hoạch. Học phí luôn cần phê duyệt riêng.":"Projection only; no plan created. Tuition always requires separate approval.");
                 }
             }else if(text.startsWith("So sánh kênh học phí đã xác minh:")||text.startsWith("Verified tuition-channel comparison:")){

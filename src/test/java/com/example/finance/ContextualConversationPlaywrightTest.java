@@ -101,7 +101,7 @@ class ContextualConversationPlaywrightTest {
         String question="Show budgets. Expense, Refund, Category.";send(question);
         send("How much is left?");page.getByTestId("assistant-language-vi").click();
         assertThat(page.getByTestId("assistant-replies")).containsText("Category budgets: VND.");
-        assertThat(page.getByTestId("finance-replies")).containsText("Category budgets: VND.");
+        assertThat(page.getByTestId("assistant-replies")).containsText("Category budgets: VND.");
         assertThat(page.getByTestId("assistant-replies")).not().containsText("Danh mục budgets");
         assertThat(page.getByTestId("assistant-replies").locator(".message.user").first().locator("p")).hasText(question);
         send("Ngân sách tháng này còn bao nhiêu?");

@@ -399,7 +399,7 @@ public class SessionConversationService {
             var candidates=queries.accounts();
             var named=queries.namedAccounts(message);
             if(matches(message,"other person|someone|của (bạn|người)|tiền mặt|cash|convert|quy đổi"))
-                return clarify(Pending.ACCOUNT,vi?"Chỉ hỗ trợ số dư tài khoản đã kết nối của hồ sơ demo, tách theo tiền tệ.":"Only connected demo-profile balances, separately by currency, are supported.",List.of(),List.of());
+                return clarify(Pending.ACCOUNT,vi?"Chỉ hỗ trợ nguồn tiền trong sổ tài khoản của hồ sơ demo, tách theo tiền tệ.":"Only sources in the demo profile’s account ledger, separately by currency, are supported.",List.of(),List.of());
             if(allAccounts()){
                 if(!named.isEmpty())return accountChoices(named,Topic.CURRENT_BALANCE);
                 binding=null;state.balanceScope=null;
@@ -407,7 +407,7 @@ public class SessionConversationService {
             }
             if(!named.isEmpty())candidates=named;
             else if(namedChannel(message)!=Channel.NONE || matches(message,"\\bbank\\s+[a-z]\\b|(?-i)\\b(?!VND\\b|CNY\\b|USD\\b|AUD\\b)[A-Z]{2,}\\b")){
-                return clarify(Pending.ACCOUNT,vi?"Không có tài khoản đã kết nối/xác minh khớp tên đó. Hãy chọn tài khoản có thật.":"No connected, verified account matches that name. Choose an existing account.",
+                return clarify(Pending.ACCOUNT,vi?"Không có tài khoản hoặc nguồn tiền đang hoạt động khớp tên đó. Hãy chọn tài khoản có thật.":"No active money source matches that name. Choose an existing account.",
                         queries.accounts().stream().map(a->new Capability(accountBinding(a.accountId()),Topic.CURRENT_BALANCE,LocalDateTime.now().plusMinutes(10))).toList(),
                         queries.accounts().stream().map(PhaseFourService.PaymentSourceAccount::displayName).toList());
             } else {

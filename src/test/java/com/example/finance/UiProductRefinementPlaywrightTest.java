@@ -63,11 +63,11 @@ class UiProductRefinementPlaywrightTest {
     @Test void balancesBudgetsAndTransactionAmountsKeepSourcesAndCurrenciesDistinct() {
         String id=db.queryForObject("SELECT id FROM transactions ORDER BY id FETCH FIRST 1 ROW ONLY",String.class);
         db.update("UPDATE transactions SET amount=42.25,currency='USD' WHERE id=?",id);
-        db.update("UPDATE sandbox_accounts SET currency='CNY',balance=82.25 WHERE id='VCB_VND'");
+        db.update("UPDATE financial_accounts SET currency='CNY',balance=82.25 WHERE id='VCB_VND'");
         page.reload();
         var before=PersonalFinanceAiIntegrationTest.snapshot(db);
         assertThat(page.getByTestId("current-account-balances")).containsText("82.25 CNY");
-        assertThat(page.getByTestId("current-account-balances")).containsText("separate records");
+        assertThat(page.getByTestId("current-account-balances")).containsText("Each source is counted once");
         assertThat(page.getByTestId("monthly-finance-snapshot")).containsText("Reporting period");
         assertThat(page.getByTestId("monthly-finance-snapshot")).containsText("Budget limits are not money");
         assertThat(page.locator(".cashflow-snapshot")).containsText("no combined total");

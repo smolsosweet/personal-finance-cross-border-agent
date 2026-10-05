@@ -95,7 +95,7 @@ class PhaseThreeIntegrationTest {
     }
 
     @Test void comparisonExplainsWhenThePaymentBalanceIsInsufficient() throws Exception {
-        db.update("UPDATE sandbox_accounts SET balance=29239200.00 WHERE id='PAYER_VND'");
+        db.update("UPDATE financial_accounts SET balance=29239200.00 WHERE id='CHECKING'");
 
         String html = mvc.perform(get("/"))
                 .andExpect(status().isOk())

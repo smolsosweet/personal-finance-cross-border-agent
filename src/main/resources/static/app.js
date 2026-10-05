@@ -115,6 +115,21 @@ const translationsVi = new Map(Object.entries({
   'Connected balances follow incoming bank events. You control balances entered manually, including cash.': 'Số dư đã kết nối cập nhật theo sự kiện ngân hàng. Bạn tự quản lý số dư nhập thủ công, gồm cả tiền mặt.',
   '+ Add money source': '+ Thêm nguồn tiền',
   'Personal ledger': 'Sổ tài chính cá nhân',
+  "YOUR MONEY SOURCES": "NGUỒN TIỀN CỦA BẠN",
+  "The same account balances are used across Overview, planning, chat and payments. Currencies remain separate.": "Tổng quan, kế hoạch, chat và thanh toán dùng chung số dư tài khoản. Hiển thị riêng từng tiền tệ.",
+  "Each source is counted once. Recipient accounts are excluded; manual cash is labelled and cannot execute online payments.": "Mỗi nguồn tiền chỉ được tính một lần. Không cộng tài khoản người nhận; tiền mặt nhập tay được ghi rõ và không dùng để thanh toán trực tuyến.",
+  "Money available for planning": "Tiền dành cho kế hoạch",
+  "Planning uses the same accounts shown above, including manually maintained cash. Reservations do not move money.": "Kế hoạch dùng cùng các tài khoản phía trên, gồm tiền mặt nhập tay. Khoản giữ trước không phải giao dịch chuyển tiền.",
+  "Total balance · VND": "Tổng số dư · VND",
+  "All active personal sources · VND": "Các nguồn tiền cá nhân đang hoạt động · VND",
+  "Available after reservations": "Còn lại sau khoản giữ trước",
+  "Shared account ledger": "Sổ tài khoản chung",
+  "One account ledger powers Overview, planning, chat and Payment Sandbox. Bank events and approved payments update these balances.": "Tổng quan, kế hoạch, chat và Payment Sandbox dùng một sổ tài khoản. Sự kiện ngân hàng và thanh toán đã phê duyệt cập nhật các số dư này.",
+  "Manually maintained": "Nhập và cập nhật thủ công",
+  "Read-only · updated by bank events and approved payments": "Chỉ đọc · cập nhật bởi sự kiện ngân hàng và thanh toán đã phê duyệt",
+  "Scroll down": "Cuộn xuống",
+  "Manual money source: no connected payment channel": "Nguồn nhập tay: chưa có kênh thanh toán kết nối",
+  "No verified payment channel connected": "Chưa kết nối kênh thanh toán đã xác minh",
   'These balances drive the Overview. Payment Sandbox balances remain separate so the same money is never counted twice.': 'Các số dư này dùng cho Tổng quan. Số dư Payment Sandbox được tách riêng để không cộng trùng tiền.',
   'Read-only · updated by bank events': 'Chỉ đọc · cập nhật bởi sự kiện ngân hàng',
   'Edit balance': 'Sửa số dư',
@@ -637,6 +652,12 @@ const translationsVi = new Map(Object.entries({
   'than the cheapest currently eligible option': 'so với lựa chọn hợp lệ rẻ nhất hiện tại',
   'Reference only · no payment action': 'Chỉ tham khảo · không có thao tác thanh toán',
   'Source account': 'Tài khoản nguồn',
+  'DISCONNECTED': 'Mất kết nối',
+  'Account disconnected: unavailable for payments': 'Tài khoản mất kết nối: không thể dùng để thanh toán',
+  'Source currency is not supported for this payment corridor': 'Tiền tệ của tài khoản không hỗ trợ hành lang thanh toán này',
+  'Cross-border payments are not enabled for this source': 'Nguồn tiền này chưa được phép thanh toán xuyên biên giới',
+  'EWALLET': 'Ví điện tử',
+  'Manual entry': 'Nhập thủ công',
   'Ready to pay now': 'Sẵn sàng thanh toán ngay',
   'Insufficient balance': 'Không đủ số dư',
   'Unavailable for this corridor': 'Không khả dụng cho hành lang này',
@@ -851,10 +872,10 @@ const englishDisplayLabels = new Map(Object.entries({
  TUITION_STATUS:'Payment status', LIVING_EXPENSE_RUNWAY:'Living-expense estimate',
  ACCOUNT:'Choose account', BILL:'Choose bill', PLAN:'Choose plan', CHANNEL:'Choose channel',
  TOPIC:'Choose topic', MONTHLY_EXPENSE:'Confirm monthly expense',
- PAUSED:'Stopped', CHECKING:'Checking account', SAVINGS:'Savings account', WALLET:'Wallet', ACTIVE:'Active', ARCHIVED:'Archived', CANCELLED:'Canceled', PAID:'Paid', COMPLETED:'Completed',
+ PAUSED:'Stopped', CHECKING:'Checking account', SAVINGS:'Savings account', WALLET:'Wallet', EWALLET:'E-wallet', ACTIVE:'Active', ARCHIVED:'Archived', CANCELLED:'Canceled', PAID:'Paid', COMPLETED:'Completed',
  TUITION:'Tuition', DORMITORY:'Dormitory', INSURANCE:'Insurance', VISA:'Visa fee', LIVING:'Provider living costs', OTHER:'Other education fee',
  ONCE:'Once', WEEKLY:'Weekly', MONTHLY:'Monthly', CHEAPER:'Cheaper', FASTER:'Faster', SAFER:'Safer',
- CONNECTED:'Connected', VERIFIED:'Verified', MANUAL:'Manual', CASH:'Cash', LINKED:'Linked',
+ CONNECTED:'Connected', DISCONNECTED:'Disconnected', VERIFIED:'Verified', MANUAL:'Manual', CASH:'Cash', LINKED:'Linked',
  AUTO:'Automatically categorized', CONFIRMED:'Confirmed by you', 'CONFIRMATION REQUIRED':'Needs confirmation',
  'PURPOSE REQUIRED':'Needs purpose', 'AWAITING APPROVAL':'Awaiting approval'
 }));
@@ -908,7 +929,9 @@ const workspaceFilterSelectors = [
 ];
 const workspaceScrollSelectors = [
   '[data-testid="student-expense-list"]', '[data-testid="payment-account-list"]',
-  '#transactions .table-scroll'
+  '#transactions .table-scroll', '.current-account-grid', '.money-source-grid', '.plan-list',
+  '.budget-snapshot-list', '.transaction-review-list', '.custom-category-list', '.payment-history-list',
+  '.insight-list', '.attention-list', '.budget-edit-list', '.payment-audit .table-scroll'
 ];
 
 function selectedLanguage() {
@@ -1781,7 +1804,32 @@ async function openPaymentPlan(event) {
     renderPaymentWorkflow();
   }
 }
+// Bound growing lists while keeping headers and primary actions outside their scroll area.
+function initializeBoundedLists() {
+  const selectors='.current-account-grid,.money-source-grid,.plan-list,.budget-snapshot-list,.transaction-review-list,.custom-category-list,.payment-history-list,.insight-list,.attention-list,.budget-edit-list,.payment-audit .table-scroll,#transactions .table-scroll';
+  document.querySelectorAll(selectors).forEach((region,index) => {
+    if(region.dataset.boundedList)return;
+    region.dataset.boundedList='true';
+    region.classList.add('bounded-list');
+    region.tabIndex=0;
+    region.setAttribute('role','region');
+    const heading=region.closest('section')?.querySelector('h2,h3');
+    if(heading){ if(!heading.id)heading.id='list-heading-'+index; region.setAttribute('aria-labelledby',heading.id); }
+    region.id ||= 'bounded-list-'+index;
+    const button=document.createElement('button');
+    button.type='button';button.className='text-action list-scroll-down';
+    button.textContent='Scroll down';button.setAttribute('aria-controls',region.id);
+    button.addEventListener('click',()=>region.scrollBy({top:Math.max(120,region.clientHeight*.75),behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'}));
+    region.after(button);
+    const update=()=>{button.disabled=region.scrollHeight-region.clientHeight-region.scrollTop<2;};
+    region.addEventListener('scroll',update,{passive:true});
+    const observer=new ResizeObserver(update);observer.observe(region);
+    update();
+  });
+}
+
 function initializeWorkspaceContent(state) {
+  initializeBoundedLists();
   renderTransactionList = () => {};
   renderStudentBillList = () => {};
   renderPaymentAccounts = () => {};

@@ -93,9 +93,9 @@ class FinanceOverviewPlaywrightE2ETest {
         page.locator("#add-budget button[type='submit']").click();
         assertThat(page.locator(".budget-editor")).containsText("Groceries");
         page.locator("[data-dashboard-view='summary']").click();
-        assertThat(page.getByTestId("total-personal-balance")).containsText("103,000,000");
+        assertThat(page.getByTestId("total-personal-balance")).containsText("317,000,000");
         assertThat(page.getByTestId("reserved-next-30")).containsText("13,300,000");
-        assertThat(page.getByTestId("available-to-allocate")).containsText("86,700,000");
+        assertThat(page.getByTestId("available-to-allocate")).containsText("300,700,000");
 
         page.getByTestId("language-vi").click();
         assertThat(page.getByText("Tài khoản & tiền mặt", new Page.GetByTextOptions().setExact(true))).isVisible();

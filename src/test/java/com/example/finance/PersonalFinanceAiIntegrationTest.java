@@ -82,14 +82,14 @@ class PersonalFinanceAiIntegrationTest {
         var before = snapshot(db);
         String answer = payments.sendMessage("Can I afford living costs after tuition?");
         assertTrue(answer.contains("estimate, not a payment"));
-        assertTrue(answer.indexOf("accounts are not mapped to each other") < answer.indexOf("Selected source "),
-                "The account-mapping limitation must precede the financial projection figures");
+        assertTrue(answer.indexOf("unified account balance") < answer.indexOf("Selected source "),
+                "The projection assumptions must precede the financial figures");
         assertTrue(answer.contains("total cost 70760800.00 VND"));
         assertTrue(answer.contains("Projected balance after tuition: 29239200.00 VND"));
         assertTrue(answer.contains("after buffer 26239200.00 VND"));
         assertTrue(answer.contains("Known reserved planner commitments for 30 days: 8300000.00 VND"));
         assertTrue(answer.contains("17939200.00 VND"));
-        assertTrue(answer.contains("not yet mapped"));
+        assertTrue(answer.contains("only reservations assigned to the selected source"));
         assertTrue(answer.contains("future spending"));
         assertTrue(answer.contains("quote Q-"));
         assertEquals(before, snapshot(db));
@@ -142,7 +142,7 @@ class PersonalFinanceAiIntegrationTest {
 
     @Test void selectedSourceAndInsufficientBufferAreProjectedWithoutCreatingPlan() {
         stub(LlmIntent.Intent.EXPLAIN_TUITION_AFFORDABILITY);
-        db.update("UPDATE sandbox_accounts SET balance=71000000 WHERE id='PAYER_VND'");
+        db.update("UPDATE financial_accounts SET balance=71000000 WHERE id='CHECKING'");
         String answer = payments.sendMessage("Can I afford tuition?");
         assertTrue(answer.contains("Projected balance after tuition: 239200.00"));
         assertTrue(answer.contains("safety buffer is not covered"));

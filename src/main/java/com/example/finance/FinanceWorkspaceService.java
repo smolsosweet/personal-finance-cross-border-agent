@@ -31,7 +31,6 @@ public class FinanceWorkspaceService {
 
     @Transactional
     public void seedIfEmpty() {
-        normalizeSeedAccountMetadata();
         Integer count = db.queryForObject("SELECT COUNT(*) FROM finance_plans", Integer.class);
         if (count != null && count == 0) seedPlans();
     }
@@ -39,19 +38,6 @@ public class FinanceWorkspaceService {
     @Transactional
     public void clear() {
         db.update("DELETE FROM finance_plans");
-    }
-
-    private void normalizeSeedAccountMetadata() {
-        db.update("""
-                UPDATE financial_accounts SET institution='Demo Bank',account_type='CHECKING',
-                masked_number='•••• 1106',source_type='CONNECTED',connection_status='CONNECTED',
-                archived=FALSE WHERE id='CHECKING'
-                """);
-        db.update("""
-                UPDATE financial_accounts SET institution='Demo Bank',account_type='SAVINGS',
-                masked_number='•••• 7715',source_type='CONNECTED',connection_status='CONNECTED',
-                archived=FALSE WHERE id='SAVINGS'
-                """);
     }
 
     private void seedPlans() {
@@ -80,7 +66,7 @@ public class FinanceWorkspaceService {
     public List<Map<String,Object>> accounts() {
         return db.queryForList("""
                 SELECT * FROM financial_accounts
-                WHERE archived=FALSE
+                WHERE archived=FALSE AND account_scope='PERSONAL' AND owner_profile_id=1
                 ORDER BY CASE source_type WHEN 'CONNECTED' THEN 0 WHEN 'MANUAL' THEN 1 ELSE 2 END,
                          balance DESC,account_name
                 """);
@@ -110,7 +96,7 @@ public class FinanceWorkspaceService {
     public FinanceSummary summary() {
         BigDecimal total = scalarMoney("""
                 SELECT COALESCE(SUM(balance),0) FROM financial_accounts
-                WHERE archived=FALSE AND currency='VND'
+                WHERE archived=FALSE AND account_scope='PERSONAL' AND owner_profile_id=1 AND currency='VND'
                 """);
         BigDecimal reserved = BigDecimal.ZERO;
         LocalDate today = LocalDate.now();
@@ -123,7 +109,7 @@ public class FinanceWorkspaceService {
         LocalDate monthStart = today.withDayOfMonth(1);
         BigDecimal monthlySpent = scalarMoney("""
                 SELECT COALESCE(SUM(amount),0) FROM transactions
-                WHERE type='Expense' AND review_status IN ('AUTO','CONFIRMED')
+                WHERE currency='VND' AND type='Expense' AND review_status IN ('AUTO','CONFIRMED')
                   AND occurred_at>=? AND occurred_at<?
                 """, monthStart.atStartOfDay(), monthStart.plusMonths(1).atStartOfDay());
         BigDecimal available = total.subtract(reserved).subtract(SAFETY_BUFFER);
@@ -187,6 +173,7 @@ public class FinanceWorkspaceService {
     @Transactional
     public void updateManualAccount(String id, String name, String institution, String accountType,
                                     String maskedNumber, BigDecimal balance) {
+        db.queryForList("SELECT id FROM financial_accounts WHERE id=? FOR UPDATE",id);
         Map<String,Object> account = account(id);
         if ("CONNECTED".equals(account.get("source_type"))) {
             throw new IllegalStateException("Connected account balances can only be changed by bank events");
@@ -206,6 +193,7 @@ public class FinanceWorkspaceService {
 
     @Transactional
     public void archiveManualAccount(String id) {
+        db.queryForList("SELECT id FROM financial_accounts WHERE id=? FOR UPDATE",id);
         Map<String,Object> account = account(id);
         if ("CONNECTED".equals(account.get("source_type"))) {
             throw new IllegalStateException("Connected accounts cannot be archived from this workspace");
@@ -221,7 +209,7 @@ public class FinanceWorkspaceService {
     }
 
     private Map<String,Object> account(String id) {
-        List<Map<String,Object>> rows = db.queryForList("SELECT * FROM financial_accounts WHERE id=? AND archived=FALSE", id);
+        List<Map<String,Object>> rows = db.queryForList("SELECT * FROM financial_accounts WHERE id=? AND archived=FALSE AND account_scope='PERSONAL' AND owner_profile_id=1", id);
         if (rows.isEmpty()) throw new IllegalArgumentException("Money source not found");
         return rows.getFirst();
     }
@@ -254,7 +242,8 @@ public class FinanceWorkspaceService {
         if (nextDueDate == null) throw new IllegalArgumentException("Next due date is required");
         if (amount == null || amount.signum() <= 0) throw new IllegalArgumentException("Amount must be positive");
         String accountId = fundingAccountId == null || fundingAccountId.isBlank() ? null : fundingAccountId;
-        if (accountId != null) account(accountId);
+        if (accountId != null && !"VND".equals(account(accountId).get("currency")))
+            throw new IllegalArgumentException("VND plans require a VND funding account");
         String safeNotes = notes == null ? null : notes.trim();
         if (safeNotes != null && safeNotes.length() > 255) throw new IllegalArgumentException("Notes must be 255 characters or fewer");
         if (update) {

@@ -27,7 +27,7 @@ class ProductionUiIntegrationTest {
                 .andExpect(content().string(containsString("All transactions")))
                 .andExpect(content().string(containsString("Needs your review")))
                 .andExpect(content().string(containsString("Your transaction categories")))
-                .andExpect(content().string(containsString("Recent transactions")))
+                .andExpect(content().string(containsString("data-testid=\"transaction-history-scope\"")))
                 .andExpect(content().string(not(containsString("Demo bank feed"))))
                 .andExpect(content().string(not(containsString("data-testid=\"payment-demo-tools\""))))
                 .andExpect(content().string(not(containsString("data-testid=\"simulate-high\""))));

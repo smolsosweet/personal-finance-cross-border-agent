@@ -326,3 +326,17 @@ dialog{max-width:calc(100vw - 24px);max-height:calc(100dvh - 32px);overflow:auto
   header .assistant-launcher{position:static;width:44px;height:44px;min-height:44px;border-radius:10px;box-shadow:none;flex:none}
   .student-bill-pagination,.transaction-pagination{padding-inline-end:0}
 }
+
+/* Lists keep a predictable footprint; controls remain reachable outside the scroll area. */
+.bounded-list{height:320px;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;scrollbar-gutter:stable;padding-right:8px;align-content:start;scrollbar-color:#aebbd1 #f0f3f8}
+.bounded-list:focus-visible{outline:2px solid #5269ee;outline-offset:3px;border-radius:8px}
+.current-account-grid.bounded-list{height:240px}
+.money-source-grid.bounded-list,.plan-list.bounded-list{height:480px;grid-auto-rows:max-content}
+.budget-snapshot-list.bounded-list{height:200px}
+.list-scroll-down{display:block;margin:10px auto 0;padding:8px 16px;min-height:40px}
+.list-scroll-down:disabled{opacity:.4;cursor:default}
+@media(max-width:760px){.money-source-grid.bounded-list,.plan-list.bounded-list{height:420px}.bounded-list{height:300px}}
+
+.table-scroll.bounded-list{overflow-x:auto}
+#transactions .table-scroll.bounded-list{height:480px}
+@media(max-width:760px){#transactions .table-scroll.bounded-list{height:420px}}

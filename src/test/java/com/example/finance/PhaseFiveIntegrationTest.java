@@ -84,7 +84,7 @@ class PhaseFiveIntegrationTest {
 
         demoData.resetAll();
         phaseFour.setMode("DELEGATED");
-        db.update("UPDATE sandbox_accounts SET balance=3100000.00 WHERE id='PAYER_VND'");
+        db.update("UPDATE financial_accounts SET balance=3100000.00 WHERE id='CHECKING'");
         var unsafe = phaseFour.createLowRiskPlan(new BigDecimal("250000"));
         assertEquals("BLOCKED", unsafe.status());
         assertReason("INSUFFICIENT SAFE BALANCE");

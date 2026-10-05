@@ -94,7 +94,7 @@ class AssistantPanelPlaywrightTest {
         page.getByTestId("assistant-launcher").click();
         send("Ngân sách tháng này của tôi còn bao nhiêu?");
         assertThat(input()).isDisabled();
-        assertThat(page.getByTestId("finance-send-message")).isDisabled();
+        assertThat(page.getByTestId("assistant-send-message")).isDisabled();
         assertThat(panel().locator("[data-chat-processing]")).containsText("Đang xử lý");
         page.evaluate("""
             () => { const f=document.querySelector('[data-assistant-panel] form[data-chat-form]');
@@ -106,7 +106,7 @@ class AssistantPanelPlaywrightTest {
         page.getByTestId("assistant-launcher").click();
         idle();
         assertThat(page.getByTestId("assistant-replies")).containsText("Nguồn: ngân sách cấu hình");
-        assertThat(page.getByTestId("finance-replies")).containsText("Nguồn: ngân sách cấu hình");
+        assertThat(page.getByTestId("assistant-replies")).containsText("Nguồn: ngân sách cấu hình");
         assertThat(page.getByTestId("assistant-screen")).hasText("Giao dịch");
         assertThat(input()).isEnabled();
         assertThat(input()).hasValue("");

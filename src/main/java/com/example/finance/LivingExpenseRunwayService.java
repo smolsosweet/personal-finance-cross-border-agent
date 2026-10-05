@@ -80,10 +80,10 @@ public class LivingExpenseRunwayService {
             +(c.safeShortfall().signum()>0 ? (vi?"THIẾU TIỀN: thiếu cho học phí ":"SHORTFALL: tuition shortfall ")+money(c.tuitionShortfall())
                 +(vi?" VND; thiếu để đủ học phí và đệm ":" VND; tuition-plus-buffer shortfall ")+money(c.safeShortfall())
                 +(vi?" VND. Không đủ tiền an toàn cho kịch bản học phí.":" VND. This scenario cannot safely cover tuition.")+"\n" : "")
-            +(vi?"Giả định: chi hàng tháng ổn định, chỉ một tài khoản nguồn; không tính thu nhập tương lai, chi phí phát sinh, tài khoản khác hoặc chuyển đổi tiền tệ. Không trừ planner lần nữa: mức chi đã gồm tiền thuê nhà, ăn uống, đi lại và tiện ích; planner và Sandbox chưa ánh xạ.\n"
-                :"Assumptions: stable monthly spending, one source account; future income, unexpected costs, other accounts and currency conversion excluded. Planner is not subtracted again: the baseline includes rent, food, transport and utilities; planner and Sandbox accounts are not mapped.\n")
-            +(vi?"Số dư lấy từ Sandbox tại thời điểm quan sát, không phải timestamp đồng bộ ngân hàng. Kết quả là kịch bản trước thanh toán, không phải quyết định quyền thanh toán. Chưa tạo kế hoạch, phê duyệt, thanh toán hay biên nhận."
-                :"Balance observed from Sandbox, not a bank synchronization timestamp. This is a before-payment scenario, not a payment-permission decision. No plan, approval, payment or receipt was created.");
+            +(vi?"Giả định: chi hàng tháng ổn định, chỉ một tài khoản nguồn; không tính thu nhập tương lai, chi phí phát sinh, tài khoản khác hoặc chuyển đổi tiền tệ. Không trừ planner lần nữa: mức chi đã gồm tiền thuê nhà, ăn uống, đi lại và tiện ích; kế hoạch và thanh toán dùng cùng sổ tài khoản.\n"
+                :"Assumptions: stable monthly spending, one source account; future income, unexpected costs, other accounts and currency conversion excluded. Planner is not subtracted again: the baseline includes rent, food, transport and utilities; planning and payments share one account ledger.\n")
+            +(vi?"Số dư lấy từ sổ tài khoản chung tại thời điểm quan sát, không phải timestamp đồng bộ ngân hàng. Kết quả là kịch bản trước thanh toán, không phải quyết định quyền thanh toán. Chưa tạo kế hoạch, phê duyệt, thanh toán hay biên nhận."
+                :"Balance observed from the unified account ledger, not a bank synchronization timestamp. This is a before-payment scenario, not a payment-permission decision. No plan, approval, payment or receipt was created.");
     }
     private static String money(BigDecimal amount){return amount.setScale(2).toPlainString();}
     public static String error(String reason, boolean vi) {

@@ -25,34 +25,34 @@ class FinanceWorkspaceIntegrationTest {
     }
 
     @Test
-    void summarySeparatesPersonalLedgerAndReservesOnlyActivePlans() {
+    void summaryUsesUnifiedLedgerAndReservesOnlyActivePlans() {
         var summary = workspace.summary();
 
-        assertMoney("101000000.00", summary.totalBalance());
+        assertMoney("315000000.00", summary.totalBalance());
         assertMoney("8300000.00", summary.reservedNext30Days());
-        assertMoney("89700000.00", summary.availableToAllocate());
+        assertMoney("303700000.00", summary.availableToAllocate());
         assertEquals(3, summary.activePlanCount());
 
         workspace.completePlan("PLAN-RENT");
         assertMoney("300000.00", workspace.summary().reservedNext30Days());
-        assertMoney("97700000.00", workspace.summary().availableToAllocate());
+        assertMoney("311700000.00", workspace.summary().availableToAllocate());
 
         workspace.reopenPlan("PLAN-RENT");
         assertMoney("8300000.00", workspace.summary().reservedNext30Days());
-        assertMoney("89700000.00", workspace.summary().availableToAllocate());
+        assertMoney("303700000.00", workspace.summary().availableToAllocate());
     }
 
     @Test
     void manualMoneySourcesAreEditableWhileConnectedBalancesStayReadOnly() {
         String id = workspace.addManualAccount("Cash wallet", "Cash", "CASH", null,
                 new BigDecimal("2000000"));
-        assertMoney("103000000.00", workspace.summary().totalBalance());
+        assertMoney("317000000.00", workspace.summary().totalBalance());
         assertEquals("CASH", db.queryForObject(
                 "SELECT source_type FROM financial_accounts WHERE id=?", String.class, id));
 
         workspace.updateManualAccount(id, "Travel cash", "Cash", "CASH", null,
                 new BigDecimal("1500000"));
-        assertMoney("102500000.00", workspace.summary().totalBalance());
+        assertMoney("316500000.00", workspace.summary().totalBalance());
 
         var error = assertThrows(IllegalStateException.class, () ->
                 workspace.updateManualAccount("CHECKING", "Changed", "Demo Bank", "CHECKING",

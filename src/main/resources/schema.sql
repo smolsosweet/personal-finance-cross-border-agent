@@ -20,6 +20,7 @@ ALTER TABLE financial_accounts ADD COLUMN IF NOT EXISTS source_type VARCHAR(20) 
 ALTER TABLE financial_accounts ADD COLUMN IF NOT EXISTS connection_status VARCHAR(20) NOT NULL DEFAULT 'CONNECTED';
 ALTER TABLE financial_accounts ADD COLUMN IF NOT EXISTS balance_updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
 ALTER TABLE financial_accounts ADD COLUMN IF NOT EXISTS archived BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE financial_accounts ADD COLUMN IF NOT EXISTS account_scope VARCHAR(20) NOT NULL DEFAULT 'PERSONAL';
 CREATE TABLE IF NOT EXISTS bank_events (
   id VARCHAR(40) PRIMARY KEY,
   source_label VARCHAR(50) NOT NULL,
@@ -301,6 +302,8 @@ CREATE TABLE IF NOT EXISTS payment_source_accounts (
   selected BOOLEAN NOT NULL DEFAULT FALSE,
   display_order INTEGER NOT NULL
 );
+ALTER TABLE payment_source_accounts ADD COLUMN IF NOT EXISTS financial_account_id VARCHAR(40);
+CREATE UNIQUE INDEX IF NOT EXISTS payment_source_canonical_account ON payment_source_accounts(financial_account_id);
 CREATE TABLE IF NOT EXISTS sandbox_transactions (
   id VARCHAR(40) PRIMARY KEY,
   action_id VARCHAR(40) NOT NULL UNIQUE,

@@ -156,7 +156,7 @@ class PhaseFourIntegrationTest {
         assertEquals("COMPLETED", plan.status());
         assertEquals(1, phaseFour.sandboxTransactionCount());
         assertMoney("99750000.00", balance(PhaseFourService.PAYER));
-        assertMoney("250000.00", balance("EMERGENCY_VND"));
+        assertMoney("1250000.00", balance("EMERGENCY_VND"));
     }
 
     @Test
@@ -171,7 +171,7 @@ class PhaseFourIntegrationTest {
         assertNull(phaseFour.receiptForAction(blocked.id()));
         assertEquals(2, phaseFour.sandboxTransactionCount());
         assertMoney("99200000.00", balance(PhaseFourService.PAYER));
-        assertMoney("800000.00", balance("EMERGENCY_VND"));
+        assertMoney("1800000.00", balance("EMERGENCY_VND"));
         assertAuditReason("LIMIT DAILY");
     }
 
@@ -188,7 +188,7 @@ class PhaseFourIntegrationTest {
         assertNull(phaseFour.receiptForAction(blocked.id()));
         assertEquals(3, phaseFour.sandboxTransactionCount());
         assertMoney("99250000.00", balance(PhaseFourService.PAYER));
-        assertMoney("750000.00", balance("EMERGENCY_VND"));
+        assertMoney("1750000.00", balance("EMERGENCY_VND"));
         assertAuditReason("LIMIT DAILY");
     }
 

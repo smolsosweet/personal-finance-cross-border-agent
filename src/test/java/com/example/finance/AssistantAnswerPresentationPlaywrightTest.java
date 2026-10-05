@@ -87,7 +87,7 @@ class AssistantAnswerPresentationPlaywrightTest {
         assertThat(reply().getByTestId("response-conclusion")).hasText("Đủ khoảng 3,27 tháng");
         assertThat(reply().getByTestId("response-estimate")).hasText("ƯỚC TÍNH");
         assertThat(reply().locator(".response-facts")).containsText("26.239.200 VND");
-        assertThat(reply().locator("[data-response-raw]")).containsText("planner và Sandbox chưa ánh xạ");
+        assertThat(reply().locator("[data-response-raw]")).containsText("kế hoạch và thanh toán dùng cùng sổ tài khoản");
         assertThat(reply().locator("[data-response-raw]")).isHidden();
         // Adjacent structured confirmations are separate replies, even without a user chat message.
         confirm("10000000");assertThat(reply().getByTestId("response-conclusion")).hasText("Đủ khoảng 2,62 tháng");
@@ -142,11 +142,11 @@ class AssistantAnswerPresentationPlaywrightTest {
         assertThat(reply().locator("[data-response-quote]").first()).containsText("Báo giá đã hết hạn");
         assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));assertNull(payments.latestAction());assertEquals(0,payments.sandboxTransactionCount());
     }
-    @Test void shortfallAndProjectionMappingLimitRemainVisibleOutsideDetails(){
-        db.update("UPDATE sandbox_accounts SET balance=10000000 WHERE id='PAYER_VND'");var before=PersonalFinanceAiIntegrationTest.snapshot(db);
+    @Test void shortfallAndUnifiedProjectionAssumptionsRemainVisibleOutsideDetails(){
+        db.update("UPDATE financial_accounts SET balance=10000000 WHERE id='CHECKING'");var before=PersonalFinanceAiIntegrationTest.snapshot(db);
         page.getByTestId("assistant-language-vi").click();stub(LlmIntent.Intent.EXPLAIN_TUITION_AFFORDABILITY);send("Nếu đóng học phí thì còn đủ tiền sinh hoạt không?");
         assertThat(reply().getByTestId("response-estimate")).isVisible();
-        assertThat(reply().getByTestId("response-warning").filter(new Locator.FilterOptions().setHasText("chưa ánh xạ"))).isVisible();
+        assertThat(reply().getByTestId("response-warning").filter(new Locator.FilterOptions().setHasText("số dư chung"))).isVisible();
         assertThat(reply().getByTestId("response-warning").filter(new Locator.FilterOptions().setHasText("không đủ đệm an toàn"))).isVisible();
         stub(LlmIntent.Intent.EXPLAIN_LIVING_EXPENSE_RUNWAY);send("Sau học phí đủ sinh hoạt mấy tháng?");confirm("8000000");
         assertThat(reply().getByTestId("response-warning").filter(new Locator.FilterOptions().setHasText("THIẾU TIỀN"))).isVisible();

@@ -115,8 +115,8 @@ class UiReviewFollowupPlaywrightTest {
         page.reload();
         for(String language:new String[]{"vi","en"}) {
             page.getByTestId("language-"+language).click();tab("dashboard");
-            assertThat(page.getByTestId("current-account-balances")).containsText(language.equals("vi")?"Không cộng":"not added");
-            assertThat(page.getByTestId("planning-source-heading")).hasText(language.equals("vi")?"Nguồn tiền lập kế hoạch cá nhân":"Personal planning sources");
+            assertThat(page.getByTestId("current-account-balances")).containsText(language.equals("vi")?"Mỗi nguồn tiền chỉ được tính một lần":"Each source is counted once");
+            assertThat(page.getByTestId("planning-source-heading")).hasText(language.equals("vi")?"Tiền dành cho kế hoạch":"Money available for planning");
             assertThat(page.getByTestId("environment-label")).hasText(language.equals("vi")?"Môi trường mô phỏng":"Simulation environment");
             tab("transactions");
             assertThat(page.getByTestId("transaction-history-scope")).containsText(language.equals("vi")?"Tất cả thời gian":"All time");

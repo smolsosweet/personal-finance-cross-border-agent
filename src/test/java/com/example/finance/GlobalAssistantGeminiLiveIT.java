@@ -47,11 +47,11 @@ class GlobalAssistantGeminiLiveIT {
             page.getByTestId("tab-transactions").click();
             read("Hiện Vietcombank còn bao nhiêu tiền?","vi","EXPLAIN_CURRENT_BALANCE","82000000.00");
             page.getByTestId("tab-student").click();
-            read("Show all my account balances","en","EXPLAIN_CURRENT_BALANCE","314000000.00");
-            db.update("INSERT INTO sandbox_accounts VALUES ('BANK_A_EXTRA','Bank A Savings','VND',50000000)");
-            db.update("INSERT INTO payment_source_accounts SELECT 'BANK_A_EXTRA','Bank A','Savings','•••• 7715','CONNECTED','VERIFIED',FALSE,FALSE,9 FROM payment_source_accounts WHERE account_id='PAYER_VND'");
+            read("Show all my account balances","en","EXPLAIN_CURRENT_BALANCE","315000000.00");
+            db.update("INSERT INTO financial_accounts(id,owner_profile_id,institution,masked_number,account_name,currency,balance) VALUES ('BANK_A_EXTRA',1,'Bank A','•••• 7722','Bank A Savings','VND',50000000)");
+            db.update("INSERT INTO payment_source_accounts SELECT 'BANK_A_EXTRA','Bank A','Savings','•••• 7722','CONNECTED','VERIFIED',FALSE,FALSE,9,'BANK_A_EXTRA' FROM payment_source_accounts WHERE account_id='PAYER_VND'");
             read("Hiện Bank A còn bao nhiêu tiền?","vi","EXPLAIN_CURRENT_BALANCE","Chọn rõ một tài khoản");
-            assertThat(page.getByTestId("assistant-context-choice")).hasCount(2);
+            assertThat(page.getByTestId("assistant-context-choice")).hasCount(3);
             page.getByTestId("assistant-context-choice").filter(new Locator.FilterOptions().setHasText("2048")).click();idle();
             read("How much is there now?","en","EXPLAIN_CURRENT_BALANCE","100000000.00");
             read("Show my remaining budgets this month","en","EXPLAIN_BUDGET_STATUS","Budget remaining is not an account balance");

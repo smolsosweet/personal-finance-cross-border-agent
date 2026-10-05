@@ -7,7 +7,7 @@ import java.util.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
-/** Read-only catalog for this synthetic profile. Planner accounts are a separate, unmapped source. */
+/** Read-only catalog for this synthetic profile. All owned sources use the unified current-balance ledger. */
 @Service
 public class GlobalAssistantQueries {
     private final PhaseFourService payments;
@@ -16,8 +16,7 @@ public class GlobalAssistantQueries {
         this.payments=payments; this.db=db;
     }
     public List<PhaseFourService.PaymentSourceAccount> accounts() {
-        return payments.paymentSourceAccounts().stream()
-                .filter(a->"CONNECTED".equals(a.connectionStatus())&&"VERIFIED".equals(a.verificationStatus())).toList();
+        return payments.paymentSourceAccounts();
     }
     static String normalized(String text) {
         return Normalizer.normalize(text==null?"":text,Normalizer.Form.NFD)
@@ -45,15 +44,16 @@ public class GlobalAssistantQueries {
         var totals=new TreeMap<String,BigDecimal>();
         for(var a:accounts) {
             out.append(a.displayName()).append(" · ").append(a.maskedNumber()).append(": ")
-                    .append(a.balance().setScale(2).toPlainString()).append(' ').append(a.currency()).append(".\n");
+                    .append(a.balance().setScale(2).toPlainString()).append(' ').append(a.currency())
+                    .append(!"CONNECTED".equals(a.connectionStatus())?(vi?" · nhập thủ công":" · manually maintained"):"").append(".\n");
             totals.merge(a.currency(),a.balance(),BigDecimal::add);
         }
         totals.forEach((currency,total)->out.append(vi?"Tổng ":"Total ").append(currency).append(": ")
                 .append(total.setScale(2).toPlainString()).append(".\n"));
         return out.append(vi?"Quan sát lúc: ":"Observed at: ").append(LocalDateTime.now()).append(".\n")
                 .append(vi
-                    ?"Nguồn: tài khoản đã kết nối/xác minh trong payment_source_accounts, số dư mới nhất từ sandbox_accounts. Không cộng tài khoản planner, tài khoản người nhận hoặc tài khoản phí. Không cộng các tiền tệ; không trừ đệm an toàn. Dữ liệu mô phỏng, không phải số dư ngân hàng thật."
-                    :"Source: connected/verified payment_source_accounts with latest sandbox_accounts balances. Planner, recipient and fee accounts are excluded. Currencies are not added; safety buffer is not deducted. Synthetic data, not a live bank balance.")
+                    ?"Nguồn: sổ tài khoản chung financial_accounts, dùng cho Tổng quan, kế hoạch và Payment Sandbox. Nguồn nhập tay/tiền mặt được ghi rõ. Không cộng tài khoản người nhận hoặc tài khoản phí. Không cộng các tiền tệ; không trừ đệm an toàn. Dữ liệu mô phỏng, không phải số dư ngân hàng thật."
+                    :"Source: unified financial_accounts ledger shared by Overview, planning and Payment Sandbox. Manual/cash sources are labelled. Recipient and fee accounts are excluded. Currencies are not added; safety buffer is not deducted. Synthetic data, not a live bank balance.")
                 .toString();
     }
 }

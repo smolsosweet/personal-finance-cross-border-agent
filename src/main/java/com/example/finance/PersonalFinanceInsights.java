@@ -95,8 +95,8 @@ public class PersonalFinanceInsights {
     }
     String tuitionProjection(PhaseFourService payments,Integer billId,String accountId,ModelConversationContext.Channel channel,boolean vi) {
         String heading = period(vi) + (vi ? "ƯỚC TÍNH SAU HỌC PHÍ · VND (không phải thanh toán).\n" : "TUITION PROJECTION · VND (estimate, not a payment).\n")
-                + (vi ? "Giới hạn: planner và tài khoản Sandbox chưa ánh xạ với nhau. Các con số dưới đây là ước tính; chưa thể kết luận đủ tiền sinh hoạt.\n"
-                      : "Limitation: planner and Sandbox accounts are not mapped to each other. Figures below are estimates; sufficient living funds cannot be confirmed.\n");
+                + (vi ? "Ước tính từ số dư tài khoản chung và các khoản giữ trước gắn với tài khoản nguồn. Chưa tính thu nhập tương lai hoặc chi phí phát sinh.\n"
+                      : "Estimate from the unified account balance and reservations assigned to this source. Future income and unexpected costs are excluded.\n");
         CrossBorderService.StudentExpense expense;
         try { expense = billId==null?crossBorder.selectedExpense():crossBorder.expense(billId); }
         catch (IllegalStateException ex) { return heading + limitation(vi, "Không có hóa đơn đang chọn.", "No selected bill."); }
@@ -121,7 +121,8 @@ public class PersonalFinanceInsights {
         BigDecimal buffer = payments.policy().safetyBuffer();
         var commitments = workspace.plans().stream()
                 .filter(p -> "ACTIVE".equals(p.get("status")) && Boolean.TRUE.equals(p.get("reserve_funds"))
-                        && !"SAVINGS_GOAL".equals(p.get("plan_type")) && "VND".equals(p.get("currency")))
+                        && !"SAVINGS_GOAL".equals(p.get("plan_type")) && "VND".equals(p.get("currency"))
+                        && ("PAYER_VND".equals(source.accountId())?"CHECKING":source.accountId()).equals(p.get("funding_account_id")))
                 .toList();
         BigDecimal known = commitments.stream().map(p -> (BigDecimal) p.get("projected_30_day_amount"))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -148,9 +149,9 @@ public class PersonalFinanceInsights {
         out.append(vi ? "Nếu giữ thêm toàn bộ khoản planner trên: " : "If all these planner commitments are also earmarked: ")
                 .append(money(conservative)).append(" VND.\n")
                 .append(vi
-                        ? "Giả định bảo thủ: planner và tài khoản thanh toán là các nguồn riêng, chưa ánh xạ tài khoản; không cộng số dư. Khoản chưa giữ trước và chi tiêu tương lai chưa biết; không thể bảo đảm đủ sinh hoạt.\n"
-                        : "Conservative assumption: planner and payment accounts are separate sources, not yet mapped; balances are not summed. Unreserved commitments and future spending are unknown; living-cost sufficiency is not guaranteed.\n")
-                .append(vi ? "Nguồn: registry hóa đơn; tài khoản sandbox đang chọn; policy safety buffer; planner; báo giá " : "Evidence: bill registry; selected sandbox account; policy safety buffer; planner; quote ")
+                        ? "Giả định bảo thủ: chỉ giữ trước các khoản gắn với tài khoản nguồn đã chọn; không cộng số dư. Khoản chưa giữ trước và chi tiêu tương lai chưa biết; không thể bảo đảm đủ sinh hoạt.\n"
+                        : "Conservative assumption: only reservations assigned to the selected source are included; each balance is counted once. Unreserved commitments and future spending are unknown; living-cost sufficiency is not guaranteed.\n")
+                .append(vi ? "Nguồn: registry hóa đơn; sổ tài khoản chung đang chọn; policy safety buffer; planner; báo giá " : "Evidence: bill registry; selected unified account; policy safety buffer; planner; quote ")
                 .append(quote.quoteId()).append(" · ").append(quote.quoteSource()).append(" · ").append(quote.quotedAt())
                 .append(vi ? " · hết hạn " : " · expires ").append(quote.expiresAt()).append(".\n")
                 .append(vi ? "Chỉ là mô phỏng; chưa tạo kế hoạch, phê duyệt hay biên nhận." : "Synthetic projection only; no plan, approval or receipt created.");
@@ -183,8 +184,8 @@ public class PersonalFinanceInsights {
                 .append(vi?"Người nhận đã ghi có: ":"Recipient credited: ").append(money(receipt.cnyCredit()))
                 .append(' ').append(receipt.destinationCurrency()).append(".\n")
                 .append(vi
-                        ?"Đây là số dư được biên nhận ghi lại ngay sau giao dịch này. Giao dịch Sandbox phát sinh sau đó có thể làm số dư tài khoản hiện tại khác đi. Không cần báo giá đang hiệu lực và không tạo kế hoạch, phê duyệt hoặc thanh toán mới."
-                        :"This is the balance recorded by the receipt immediately after this payment. Later Sandbox transactions can make the current account balance different. No current quote is required and no plan, approval, or payment is created.")
+                        ?"Đây là số dư được biên nhận ghi lại ngay sau giao dịch này. Sự kiện ngân hàng hoặc giao dịch phát sinh sau đó có thể làm số dư tài khoản hiện tại khác đi. Không cần báo giá đang hiệu lực và không tạo kế hoạch, phê duyệt hoặc thanh toán mới."
+                        :"This is the balance recorded by the receipt immediately after this payment. Later bank events or transactions can make the current account balance different. No current quote is required and no plan, approval, or payment is created.")
                 .toString();
     }
 
