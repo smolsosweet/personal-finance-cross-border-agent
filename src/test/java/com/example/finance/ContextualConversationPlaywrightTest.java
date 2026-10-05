@@ -54,7 +54,7 @@ class ContextualConversationPlaywrightTest {
         try(BrowserContext other=browser.newContext()){
             Page second=other.newPage();second.navigate("http://localhost:8103");second.getByTestId("assistant-launcher").click();
             assertThat(second.getByTestId("assistant-replies")).not().containsText("Còn bao nhiêu?");
-            assertThat(second.getByTestId("assistant-context-state")).containsText("NONE");
+            assertThat(second.getByTestId("assistant-context-state")).containsText("Not selected");
         }
         assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
         page.screenshot(new Page.ScreenshotOptions().setPath(Path.of("target/context-choices-browser-vi.png")));
@@ -123,7 +123,7 @@ class ContextualConversationPlaywrightTest {
         CountDownLatch draftRelease=new CountDownLatch(1);
         when(llm.classify("Prepare tuition draft")).thenAnswer(call->{started.incrementAndGet();assertTrue(draftRelease.await(8,TimeUnit.SECONDS));finished.incrementAndGet();return intent(LlmIntent.Intent.CREATE_TUITION_PLAN);});
         page.getByTestId("assistant-conversation-input").fill("Prepare tuition draft");page.getByTestId("assistant-send-message").click();page.waitForCondition(()->started.get()==2);
-        page.getByTestId("assistant-close").click();page.getByTestId("tab-dashboard").click();page.getByTestId("reset-demo").click();idle();
+        page.getByTestId("assistant-close").click();page.getByTestId("tab-dashboard").click();page.getByTestId("environment-tools").evaluate("e=>e.open=true");page.getByTestId("reset-demo").click();idle();
         draftRelease.countDown();page.waitForCondition(()->finished.get()==2);page.waitForTimeout(250);page.getByTestId("assistant-launcher").click();
         assertThat(page.getByTestId("assistant-context-state")).containsText("Chưa chọn");assertThat(page.getByTestId("assistant-context-choice")).hasCount(0);
         assertThat(page.getByTestId("assistant-conversation-input")).isEnabled();assertThat(page.getByTestId("assistant-replies")).not().containsText("Prepared tuition-payment plan");

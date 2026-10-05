@@ -62,7 +62,7 @@ class PaymentWorkflowPlaywrightE2ETest {
             var errors = new ArrayList<String>();
             page.onPageError(errors::add);
             page.navigate(BASE_URL);
-            assertThat(page.getByTestId("tab-agent")).isHidden();
+            assertThat(page.locator(".mobile-tabs [data-tab='agent']")).isVisible();
             page.getByTestId("language-vi").click();
             page.locator(".mobile-tabs [data-tab='student']").click();
             page.getByTestId("plan-ALIPAY").click();
@@ -245,13 +245,13 @@ class PaymentWorkflowPlaywrightE2ETest {
             assertEquals(0, page.getByTestId("payment-demo-tools").getByTestId("emergency-stop").count(),
                     "Emergency Stop must remain outside collapsed demo tools");
             page.getByTestId("emergency-stop").click();
-            assertThat(page.getByTestId("agent-state")).containsText("PAUSED");
+            assertThat(page.getByTestId("agent-state")).containsText("Stopped");
             assertThat(page.getByTestId("approve-action")).hasCount(0);
             assertEquals(0, phaseFour.sandboxTransactionCount());
             assertThat(page.getByTestId("latest-receipt")).hasCount(0);
 
             page.getByTestId("emergency-resume").click();
-            assertThat(page.getByTestId("agent-state")).containsText("ACTIVE");
+            assertThat(page.getByTestId("agent-state")).containsText("Active");
             assertThat(page.getByTestId("latest-action")).hasAttribute("data-action-id", actionId);
             assertThat(page.getByTestId("approve-action")).isEnabled();
             page.onceDialog(dialog -> dialog.accept());

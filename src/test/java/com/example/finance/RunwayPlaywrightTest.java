@@ -35,9 +35,9 @@ class RunwayPlaywrightTest {
         verify(llm,times(1)).classify(anyString());send("Vậy đủ mấy tháng?");confirm("10000000");
         assertThat(page.getByTestId("assistant-replies")).containsText("Khoảng 2.62 tháng");
         assertThat(page.getByTestId("runway-confirmed-monthly")).hasText("10000000.00 VND");
-        page.getByTestId("runway-clear").click();idle();assertThat(page.getByTestId("runway-confirmed-monthly")).hasCount(0);
+        page.locator("[data-assistant-runway] .runway-explanation > summary").click();page.getByTestId("runway-clear").click();idle();assertThat(page.getByTestId("runway-confirmed-monthly")).hasCount(0);
         assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
-        page.getByTestId("assistant-close").click();page.setViewportSize(1440,1000);page.getByTestId("tab-dashboard").click();page.getByTestId("reset-demo").click();idle();page.getByTestId("assistant-launcher").click();
+        page.getByTestId("assistant-close").click();page.setViewportSize(1440,1000);page.getByTestId("tab-dashboard").click();page.getByTestId("environment-tools").evaluate("e=>e.open=true");page.getByTestId("reset-demo").click();idle();page.getByTestId("assistant-launcher").click();
         assertThat(page.getByTestId("runway-monthly-amount")).hasCount(0);assertThat(page.getByTestId("assistant-replies")).not().containsText("3.27 tháng");
     }
     @Test void editingWhileModelWaitsCancelsOldResponseAndKeepsNewAssumption() throws Exception{

@@ -31,10 +31,10 @@ class HostingDemoPlaywrightTest {
         try(Playwright pw=Playwright.create();Browser browser=pw.chromium().launch(new BrowserType.LaunchOptions().setChannel("chrome").setHeadless(true))){
             Page page=browser.newPage();page.navigate("http://localhost:"+port);
             page.getByTestId("language-en").click();
-            assertThat(page.getByTestId("shared-demo-notice")).containsText("Reset affects everyone. Restart restores the seed data.");
+            assertThat(page.getByTestId("shared-demo-notice")).containsText("Reset affects everyone; a server restart restores the starting data.");
             assertThat(page.getByTestId("reset-demo").locator("..")).hasAttribute("data-confirm-en","Reset shared synthetic data for the whole team? This affects everyone.");
             page.getByTestId("language-vi").click();
-            assertThat(page.getByTestId("shared-demo-notice")).containsText("Reset ảnh hưởng mọi người. Restart đưa dữ liệu về seed.");
+            assertThat(page.getByTestId("shared-demo-notice")).containsText("Đặt lại ảnh hưởng mọi người; khởi động lại máy chủ sẽ khôi phục dữ liệu ban đầu.");
         }
     }
 
@@ -49,10 +49,10 @@ class HostingDemoPlaywrightTest {
             a.getByTestId("assistant-launcher").click();a.getByTestId("assistant-conversation-input").fill("Show my budgets");a.getByTestId("assistant-send-message").click();
             a.waitForFunction("() => !document.querySelector('.content').hasAttribute('aria-busy')");
             b.getByTestId("assistant-launcher").click();assertThat(b.getByTestId("assistant-replies")).not().containsText("Show my budgets");
-            a.getByTestId("assistant-close").click();a.getByTestId("tab-dashboard").click();a.onDialog(Dialog::accept);a.getByTestId("reset-demo").click();
+            a.getByTestId("assistant-close").click();a.getByTestId("tab-dashboard").click();a.onDialog(Dialog::accept);a.getByTestId("environment-tools").evaluate("e=>e.open=true");a.getByTestId("reset-demo").click();
             a.waitForFunction("() => !document.querySelector('.content').hasAttribute('aria-busy')");b.reload();
             assertEquals(0,db.queryForObject("SELECT COUNT(*) FROM action_plans",Integer.class));
-            assertThat(b.getByTestId("tab-agent")).isHidden();assertEquals(0,payments.sandboxTransactionCount());
+            assertThat(b.getByTestId("tab-agent")).isVisible();assertEquals(0,payments.sandboxTransactionCount());
         }
     }
 }

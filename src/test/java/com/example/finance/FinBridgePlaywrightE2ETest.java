@@ -152,7 +152,7 @@ class FinBridgePlaywrightE2ETest {
 
         page.getByTestId("transaction-view-demo").click();
         assertThat(page.locator("#transaction-tools")).isVisible();
-        assertThat(page.locator("#transaction-tools")).containsText("NGUỒN SỰ KIỆN NGÂN HÀNG DEMO");
+        assertThat(page.locator("#transaction-tools")).containsText("SỰ KIỆN NGÂN HÀNG MÔ PHỎNG");
         page.getByTestId("simulate-high").click();
         assertThat(page.locator("html")).hasAttribute("lang", "vi");
         assertThat(page.getByTestId("language-vi")).hasAttribute("aria-pressed", "true");
@@ -162,7 +162,7 @@ class FinBridgePlaywrightE2ETest {
         page.getByTestId("language-en").click();
         assertEquals("en", page.locator("html").getAttribute("lang"));
         assertThat(page.getByTestId("language-en")).hasAttribute("aria-pressed", "true");
-        assertThat(page.locator(".sidebar-tabs")).containsText("Dashboard");
+        assertThat(page.locator(".sidebar-tabs")).containsText("Overview");
         assertThat(page.getByTestId("transaction-row").first()).containsText("Food & Drinks");
     }
 
@@ -315,7 +315,7 @@ class FinBridgePlaywrightE2ETest {
         assertThat(page.getByTestId("review-beneficiary")).hasText(originalBeneficiary);
 
         page.getByTestId("emergency-stop").click();
-        assertThat(page.getByTestId("agent-state")).containsText("PAUSED");
+        assertThat(page.getByTestId("agent-state")).containsText("Stopped");
         openPaymentDemoTools();
         page.getByTestId("create-low-risk").click();
         assertThat(page.getByTestId("latest-action")).hasAttribute("data-status", "BLOCKED");
@@ -324,9 +324,9 @@ class FinBridgePlaywrightE2ETest {
 
         openTab("dashboard");
         page.onceDialog(dialog -> dialog.accept());
-        page.getByTestId("reset-demo").click();
-        assertThat(page.getByTestId("agent-state")).containsText("ACTIVE");
-        assertThat(page.getByTestId("tab-agent")).isHidden();
+        page.getByTestId("environment-tools").evaluate("e=>e.open=true");        page.getByTestId("reset-demo").click();
+        assertThat(page.getByTestId("agent-state")).containsText("Active");
+        assertThat(page.getByTestId("tab-agent")).isVisible();
         assertThat(page.getByTestId("latest-action")).hasCount(0);
         assertThat(page.getByTestId("latest-receipt")).hasCount(0);
         assertEquals("APPROVAL", db.queryForObject("SELECT mode FROM agent_policy WHERE id=1", String.class));

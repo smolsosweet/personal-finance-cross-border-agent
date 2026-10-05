@@ -124,7 +124,7 @@ class PersonalFinanceAiPlaywrightTest {
         });
         send("Prepare tuition draft");
         page.waitForCondition(() -> calls.get()==1);
-        page.getByTestId("reset-demo").click();
+        page.getByTestId("environment-tools").evaluate("e=>e.open=true");        page.getByTestId("reset-demo").click();
         idle();
         page.waitForTimeout(2200);
         assertNull(payments.latestAction());

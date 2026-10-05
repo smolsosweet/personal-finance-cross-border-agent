@@ -420,7 +420,7 @@ class StudentExpensePlaywrightE2ETest {
             assertTrue(transactionId != null && !transactionId.isBlank());
 
             page.getByTestId("emergency-stop").click();
-            assertThat(page.getByTestId("agent-state")).containsText("PAUSED");
+            assertThat(page.getByTestId("agent-state")).containsText("Stopped");
             assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM audit_log WHERE event_type='EMERGENCY_STOP'", Integer.class));
             page.getByTestId("payment-demo-tools").locator(":scope > summary").click();
             page.getByTestId("create-low-risk").click();
@@ -462,7 +462,7 @@ class StudentExpensePlaywrightE2ETest {
             assertTrue(Math.abs(secondChannel.y - firstChannel.y) < 5);
             page.locator(".channel-list-row").first().getByRole(AriaRole.BUTTON,
                     new com.microsoft.playwright.Locator.GetByRoleOptions().setName("Details")).click();
-            assertThat(page.locator("dialog[open]")).containsText("SIMULATED QUOTE DETAIL");
+            assertThat(page.locator("dialog[open]")).containsText("QUOTE DETAILS · SIMULATION");
             assertThat(page.locator("dialog[open]")).containsText("VND/CNY");
             page.locator("dialog[open] [data-close-dialog]").click();
             assertEquals(0,page.locator("dialog[open]").count());
@@ -549,7 +549,7 @@ class StudentExpensePlaywrightE2ETest {
             page.onceDialog(confirm -> confirm.accept());
             page.getByTestId("expense-2").getByRole(AriaRole.BUTTON,
                     new com.microsoft.playwright.Locator.GetByRoleOptions().setName("Archive")).click();
-            assertThat(page.getByTestId("expense-2")).containsText("ARCHIVED");
+            assertThat(page.getByTestId("expense-2")).containsText("Archived");
             assertThat(page.locator(".student-expense-card.selected")).containsText("Tuition fee");
             page.getByTestId("student-bill-status-filter").selectOption("ARCHIVED");
             assertEquals(1,page.locator("[data-bill-row]:visible").count());
@@ -558,7 +558,7 @@ class StudentExpensePlaywrightE2ETest {
             page.getByTestId("expense-2").getByRole(AriaRole.BUTTON,
                     new com.microsoft.playwright.Locator.GetByRoleOptions().setName("Restore")).click();
             page.waitForLoadState(LoadState.LOAD);
-            assertThat(page.getByTestId("expense-2")).containsText("ACTIVE");
+            assertThat(page.getByTestId("expense-2")).containsText("Active");
 
             page.getByTestId("language-vi").click();
             String languageState = (String) page.evaluate("""

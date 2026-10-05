@@ -708,15 +708,159 @@ Object.entries({
   'Payment Sandbox demo': 'Demo Payment Sandbox', 'Create low-risk demo plan': 'Tạo kế hoạch demo rủi ro thấp',
   'Create a synthetic low-risk example to explore demo permission settings. Education payments start from Student finance and always require approval.': 'Tạo ví dụ mô phỏng rủi ro thấp để thử thiết lập quyền hạn demo. Thanh toán giáo dục bắt đầu từ Tài chính du học và luôn cần phê duyệt.'
 }).forEach(([key, value]) => translationsVi.set(key, value));
+Object.entries({
+  "Your financial workspace": "Không gian tài chính của bạn",
+  "Simulation environment": "Môi trường mô phỏng",
+  "Payments & history": "Thanh toán & Lịch sử",
+  "PAYMENTS & HISTORY": "THANH TOÁN & LỊCH SỬ",
+  "No real money is transferred.": "Không có tiền thật được chuyển.",
+  "Simulation environment · No real money is transferred.": "Môi trường mô phỏng · Không có tiền thật được chuyển.",
+  "Shared financial workspace": "Không gian tài chính dùng chung",
+  "Financial data is shared with your team. Reset affects everyone; a server restart restores the starting data. No real bank is connected.": "Dữ liệu tài chính dùng chung cho team. Đặt lại ảnh hưởng mọi người; khởi động lại máy chủ sẽ khôi phục dữ liệu ban đầu. Không kết nối ngân hàng thật.",
+  "A clearer view of your money": "Hiểu rõ hơn về tài chính của bạn",
+  "Review finances, ask FinBridge, or prepare an education payment. You stay in control of every payment.": "Xem tài chính, hỏi FinBridge hoặc chuẩn bị thanh toán giáo dục. Bạn quyết định mọi khoản thanh toán.",
+  "View accounts": "Xem tài khoản",
+  "Ask a question": "Đặt câu hỏi",
+  "Plan tuition": "Lập kế hoạch học phí",
+  "Check your balances, review spending and plan your next payment.": "Xem số dư, kiểm tra chi tiêu và lập kế hoạch thanh toán tiếp theo.",
+  "Overview for": "Tổng quan của",
+  "YOUR FINANCES": "TÀI CHÍNH CỦA BẠN",
+  "PAYMENT ACCOUNTS": "TÀI KHOẢN THANH TOÁN",
+  "Current account balances": "Số dư tài khoản hiện tại",
+  "Latest balances for simulated payment accounts. Currencies remain separate.": "Số dư mới nhất của các tài khoản thanh toán mô phỏng. Hiển thị riêng từng tiền tệ.",
+  "Planning accounts below and payment accounts use separate records in this simulation. They are not added together.": "Tài khoản lập kế hoạch bên dưới và tài khoản thanh toán dùng các bản ghi riêng trong môi trường mô phỏng. Không cộng chung các nguồn này.",
+  "Monthly spending": "Chi tiêu tháng này",
+  "Reporting period": "Kỳ báo cáo",
+  "Confirmed and automatically categorized expenses. Refunds are shown separately.": "Khoản chi đã xác nhận hoặc tự phân loại. Hoàn tiền được hiển thị riêng.",
+  "Category budget remaining": "Ngân sách danh mục còn lại",
+  "Budget limits are not money in your account.": "Hạn mức ngân sách không phải tiền trong tài khoản.",
+  "Manage budgets →": "Quản lý ngân sách →",
+  "View transactions →": "Xem giao dịch →",
+  "Planning balance": "Số dư lập kế hoạch",
+  "Planning accounts · VND": "Tài khoản lập kế hoạch · VND",
+  "Unreserved planning balance": "Số dư lập kế hoạch chưa giữ trước",
+  "Planning estimate after reservations and safety buffer": "Ước tính lập kế hoạch sau khoản giữ trước và đệm an toàn",
+  "YOUR ASSISTANT": "TRỢ LÝ CỦA BẠN",
+  "Ask about balances, spending, budgets or education payments from any screen.": "Hỏi về số dư, chi tiêu, ngân sách hoặc thanh toán giáo dục từ mọi màn hình.",
+  "Recent answers": "Câu trả lời gần đây",
+  "See what changed, why it matters and what you can do next.": "Xem điều gì thay đổi, tác động và bước tiếp theo.",
+  "Sources and assumptions": "Nguồn dữ liệu và giả định",
+  "ALL RECORDED TRANSACTIONS": "TẤT CẢ GIAO DỊCH ĐÃ GHI NHẬN",
+  "Recorded money movement": "Các khoản tiền đã ghi nhận",
+  "Totals for all recorded transactions. Internal transfers are excluded; refunds remain separate.": "Tổng giao dịch đã ghi nhận. Không tính chuyển khoản nội bộ; hoàn tiền được tách riêng.",
+  "Expenses": "Chi tiêu",
+  "Refunds": "Hoàn tiền",
+  "These records contain different currencies. Ask FinBridge for separate currency totals; no combined total is shown here.": "Các bản ghi có nhiều tiền tệ. Hỏi FinBridge để xem tổng theo từng loại; không hiển thị tổng cộng gộp.",
+  "A plan is a forecast. It never executes a payment. Payment approval remains in Payments & history.": "Kế hoạch là dự báo, không thực thi thanh toán. Phê duyệt thanh toán nằm trong Thanh toán & Lịch sử.",
+  "Add budget": "Thêm ngân sách",
+  "Monthly limit (VND)": "Hạn mức tháng (VND)",
+  "Environment tools: payment examples": "Công cụ môi trường: ví dụ thanh toán",
+  "These examples use synthetic data. Education payments always require your approval.": "Các ví dụ dùng dữ liệu mô phỏng. Thanh toán giáo dục luôn cần bạn phê duyệt.",
+  "Create a simulated low-risk plan": "Tạo kế hoạch mô phỏng rủi ro thấp",
+  "EDUCATION PAYMENTS": "THANH TOÁN GIÁO DỤC",
+  "Select a school or education-provider bill, verify its beneficiary and compare payment options before preparing a plan.": "Chọn hóa đơn trường hoặc nhà cung cấp giáo dục, xác minh người thụ hưởng và so sánh kênh trước khi tạo kế hoạch.",
+  "Select bill": "Chọn hóa đơn",
+  "Verify beneficiary": "Xác minh người nhận",
+  "Compare channels": "So sánh kênh",
+  "Approve": "Phê duyệt",
+  "BENEFICIARY VERIFICATION": "XÁC MINH NGƯỜI THỤ HƯỞNG",
+  "Compare total cost and delivery time for the selected bill. Open details to see the quote source and full breakdown.": "So sánh tổng chi phí và thời gian nhận tiền cho hóa đơn đang chọn. Mở chi tiết để xem nguồn báo giá và từng khoản phí.",
+  "Total cost": "Tổng chi phí",
+  "Current balance": "Số dư hiện tại",
+  "Estimated balance after payment": "Số dư dự kiến sau thanh toán",
+  "Balance immediately after this payment": "Số dư ngay sau thanh toán này",
+  "↻ Refresh quotes": "↻ Làm mới báo giá",
+  "Refresh expired quote": "Làm mới báo giá hết hạn",
+  "Refresh is manual. Review the new cost before creating a plan.": "Báo giá chỉ làm mới khi bạn bấm nút. Kiểm tra chi phí mới trước khi tạo kế hoạch.",
+  "This account cannot cover the total cost and safety buffer. Choose another account.": "Tài khoản không đủ tổng chi phí và đệm an toàn. Hãy chọn tài khoản khác.",
+  "Verify the bill beneficiary before creating a plan.": "Xác minh người thụ hưởng trên hóa đơn trước khi tạo kế hoạch.",
+  "QUOTE DETAILS · SIMULATION": "CHI TIẾT BÁO GIÁ · MÔ PHỎNG",
+  "PAYMENT PLAN": "KẾ HOẠCH THANH TOÁN",
+  "PAYMENT RECEIPT": "BIÊN NHẬN THANH TOÁN",
+  "This plan is no longer valid": "Kế hoạch không còn hiệu lực",
+  "The bill or payment details changed. Review the updated bill and create a new plan; the previous approval cannot be reused.": "Hóa đơn hoặc thông tin thanh toán đã thay đổi. Kiểm tra hóa đơn mới và tạo kế hoạch mới; không dùng lại phê duyệt cũ.",
+  "Review bill and create a new plan": "Kiểm tra hóa đơn và tạo kế hoạch mới",
+  "Plan canceled": "Kế hoạch đã hủy",
+  "No payment was made. You can create a new plan for an active bill.": "Chưa thanh toán. Bạn có thể tạo kế hoạch mới cho hóa đơn đang hoạt động.",
+  "Review payment details": "Kiểm tra chi tiết thanh toán",
+  "Payment details and quote used": "Chi tiết thanh toán và báo giá đã dùng",
+  "Before payment, the system rechecks the bill, beneficiary, quote, account, limits, safety buffer and Emergency Stop.": "Trước khi thanh toán, hệ thống kiểm tra lại hóa đơn, người nhận, báo giá, tài khoản, hạn mức, đệm an toàn và Dừng khẩn cấp.",
+  "This receipt belongs to the displayed plan. No real money is transferred.": "Biên nhận thuộc kế hoạch đang hiển thị. Không có tiền thật được chuyển.",
+  "This is a historical receipt balance, not necessarily the latest account balance.": "Đây là số dư lịch sử trên biên nhận, không nhất thiết là số dư tài khoản mới nhất.",
+  "Plan references": "Mã tham chiếu kế hoạch",
+  "Receipt and Audit Log are immutable": "Biên nhận và nhật ký kiểm toán không thể chỉnh sửa",
+  "Environment tools and policy settings": "Công cụ môi trường và thiết lập chính sách",
+  "These controls change synthetic workspace settings. Education payments always require approval.": "Các công cụ thay đổi thiết lập của môi trường mô phỏng. Thanh toán giáo dục luôn cần phê duyệt.",
+  "YOUR ACTIVITY": "HOẠT ĐỘNG CỦA BẠN",
+  "Review incoming activity, confirm categories and find past payments.": "Kiểm tra giao dịch mới, xác nhận danh mục và tìm khoản thanh toán trước đó.",
+  "Ask about spending": "Hỏi về chi tiêu",
+  "Merchant and date": "Đơn vị và ngày giao dịch",
+  "Why this category?": "Vì sao chọn danh mục này?",
+  "Environment tools": "Công cụ môi trường",
+  "SIMULATED BANK EVENTS": "SỰ KIỆN NGÂN HÀNG MÔ PHỎNG",
+  "Generate a synthetic event to explore how transactions arrive and are categorized. No real bank is connected.": "Tạo sự kiện mô phỏng để xem giao dịch được nhận và phân loại. Không kết nối ngân hàng thật.",
+  "Reset environment data": "Đặt lại dữ liệu môi trường",
+  "These controls change shared synthetic data used by the team. They are not restricted administrator controls.": "Các công cụ thay đổi dữ liệu mô phỏng dùng chung của team. Đây không phải khu vực có phân quyền quản trị.",
+  "↻ Refresh quote and create replacement plan": "↻ Làm mới báo giá và tạo kế hoạch thay thế",
+  "Review the new amount, beneficiary, source account and expiry before approving again.": "Kiểm tra số tiền, người nhận, tài khoản nguồn và hạn báo giá mới trước khi phê duyệt.",
+  "PAYMENT": "THANH TOÁN",
+  "STUDENT": "SINH VIÊN",
+  "Current balances": "Số dư hiện tại",
+  "Screen is a hint; you can ask about any supported topic.": "Màn hình chỉ gợi ý ngữ cảnh; bạn có thể hỏi mọi chủ đề được hỗ trợ.",
+  "Conversation choices apply to this chat, not the shared bill selection.": "Lựa chọn hội thoại áp dụng cho phiên chat này, không thay đổi hóa đơn chung đang chọn.",
+  "Open workspace screen": "Mở màn hình làm việc",
+  "Close introduction": "Đóng hướng dẫn",
+  "Enter a valid value to continue.": "Nhập giá trị hợp lệ để tiếp tục.",
+  "Fill in this field.": "Vui lòng điền trường này.",
+  "Choose one of the available options.": "Chọn một lựa chọn trong danh sách.",
+  "Enter a value within the displayed limits.": "Nhập giá trị trong giới hạn hiển thị.",
+  "Use the requested format.": "Nhập đúng định dạng được yêu cầu.",
+  "AI helps understand your question. Asking does not authorize a payment.": "AI giúp hiểu câu hỏi của bạn. Đặt câu hỏi không cấp quyền thanh toán.",
+  "Transactions awaiting review are excluded from confirmed expense and budget figures.": "Giao dịch đang chờ xem xét chưa được tính vào chi tiêu và ngân sách đã xác nhận.",
+  "Budget remaining is a spending limit, not a bank balance.": "Ngân sách còn lại là hạn mức chi tiêu, không phải số dư ngân hàng.",
+  "This insight applies the safety buffer to the recorded checking balance.": "Thông tin này áp dụng đệm an toàn cho số dư tài khoản thanh toán đã ghi nhận.",
+  "Verify the bill and available channels before preparing a payment.": "Xác minh hóa đơn và kênh khả dụng trước khi lập kế hoạch thanh toán.",
+  "Review transactions →": "Xem xét giao dịch →",
+  "Review budgets →": "Xem ngân sách →",
+  "Review planning accounts →": "Xem tài khoản lập kế hoạch →",
+  "Review education bill →": "Xem hóa đơn giáo dục →",
+  "Transactions need your input": "Giao dịch cần bạn xem xét",
+  "Budget progress": "Tiến độ ngân sách",
+  "Safety buffer protected": "Đệm an toàn được giữ",
+  "Tuition payment needs a controlled plan": "Học phí cần kế hoạch có kiểm soát"
+}).forEach(([key,value]) => translationsVi.set(key,value));
+Object.entries({"Provider, beneficiary, receiving bank, account, corridor and currency match the trusted demo registry": "Nhà cung cấp, người nhận, ngân hàng, tài khoản, hành lang và tiền tệ khớp danh bạ mô phỏng.", "One or more beneficiary fields do not match the trusted education-provider registry": "Có thông tin người thụ hưởng không khớp danh bạ nhà cung cấp giáo dục.", "Food & Drinks": "Ăn uống", "Shopping": "Mua sắm", "Housing": "Nhà ở", "Utilities": "Tiện ích", "Education": "Giáo dục", "Travel": "Du lịch", "Transport": "Đi lại", "Entertainment": "Giải trí", "PAUSED": "Đã dừng", "CONFIRMED": "Đã xác nhận", "CONFIRMATION REQUIRED": "Cần xác nhận", "PURPOSE REQUIRED": "Cần mục đích", "AUTO": "Tự động phân loại", "LINKED": "Đã liên kết", "OPPORTUNITY": "Gợi ý", "HIGH": "Ưu tiên cao", "MEDIUM": "Ưu tiên vừa", "TUITION": "Học phí", "DORMITORY": "Ký túc xá", "INSURANCE": "Bảo hiểm", "VISA": "Phí thị thực", "LIVING": "Chi phí nhà cung cấp", "OTHER": "Phí giáo dục khác", "Education payment progress": "Tiến trình thanh toán giáo dục", "Dismiss introduction": "Đóng hướng dẫn", "Main sections": "Các mục chính", "Overview views": "Các phần tổng quan", "Transaction views": "Các phần giao dịch", "Education bill pages": "Trang hóa đơn giáo dục", "Transaction pages": "Trang giao dịch", "Payment progress": "Tiến trình thanh toán", "Close": "Đóng", "Language": "Ngôn ngữ", "Confidence rules: medium and low confidence": "Quy tắc độ tin cậy: mức vừa và thấp", "Confirmed and auto-categorized expenses": "Khoản chi đã xác nhận và tự phân loại", "Demo checking balance minus configured buffer": "Số dư thanh toán mô phỏng trừ đệm an toàn đã cấu hình"}).forEach(([key,value]) => translationsVi.set(key,value));
+Object.entries({"CHECKING": "Tài khoản thanh toán", "SAVINGS": "Tài khoản tiết kiệm", "WALLET": "Ví điện tử", "ACCOUNT": "Chọn tài khoản", "PAUSED": "Đã dừng", "Transaction type is incoming income": "Loại giao dịch là khoản thu vào.", "Both accounts belong to the demo profile": "Hai tài khoản cùng thuộc hồ sơ mô phỏng.", "Refund marker found in the normalized description": "Mô tả giao dịch có dấu hiệu hoàn tiền.", "Merchant rule v1 matched a known cafe": "Đơn vị bán hàng khớp quy tắc cho quán cà phê.", "Merchant rule v1 matched transport": "Đơn vị bán hàng khớp quy tắc đi lại.", "Merchant rule v1 matched a utility provider": "Đơn vị bán hàng khớp quy tắc dịch vụ tiện ích.", "Merchant can represent shopping or groceries": "Đơn vị bán hàng có thể thuộc mua sắm hoặc thực phẩm.", "No deterministic merchant rule matched": "Chưa có quy tắc xác định đơn vị bán hàng; cần bạn bổ sung mục đích.", "User reviewed bank transaction": "Bạn đã xem xét giao dịch ngân hàng.", "Category change undone by user": "Bạn đã hoàn tác thay đổi danh mục.", "Bank A supports this Vietnam to China payment": "Bank A hỗ trợ thanh toán Việt Nam → Trung Quốc.", "Vietcombank supports this Vietnam to China payment": "Vietcombank hỗ trợ thanh toán Việt Nam → Trung Quốc.", "Techcombank supports this Vietnam to China payment": "Techcombank hỗ trợ thanh toán Việt Nam → Trung Quốc.", "MoMo supports this synthetic education corridor": "MoMo hỗ trợ hành lang giáo dục mô phỏng này.", "Reference only: no connected Bank B account": "Chỉ để tham khảo: chưa kết nối tài khoản Bank B.", "Alipay Education Wallet is not configured for this demo corridor": "Ví giáo dục Alipay chưa hỗ trợ hành lang mô phỏng này.", "MoMo Wallet is not configured for this demo corridor": "Ví MoMo chưa hỗ trợ hành lang mô phỏng này.", "Bank A supports this configured student-payment corridor": "Bank A hỗ trợ hành lang du học đang chọn.", "Vietcombank supports this configured student-payment corridor": "Vietcombank hỗ trợ hành lang du học đang chọn.", "Techcombank supports this configured student-payment corridor": "Techcombank hỗ trợ hành lang du học đang chọn.", "Alipay education profile is eligible": "Hồ sơ giáo dục Alipay đủ điều kiện.", "Simulated Bank Event": "Sự kiện ngân hàng mô phỏng", "Payment Sandbox": "Thanh toán Sandbox", "Synthetic Alipay education quote feed": "Nguồn báo giá giáo dục Alipay mô phỏng", "Synthetic Bank A treasury quote": "Nguồn báo giá Bank A mô phỏng", "Synthetic Vietcombank treasury quote": "Nguồn báo giá Vietcombank mô phỏng", "Synthetic Techcombank treasury quote": "Nguồn báo giá Techcombank mô phỏng", "Synthetic MoMo education quote feed": "Nguồn báo giá giáo dục MoMo mô phỏng", "Synthetic Bank B promotional quote": "Nguồn báo giá ưu đãi Bank B mô phỏng", "Synthetic Alipay reference quote": "Báo giá tham khảo Alipay mô phỏng", "Synthetic MoMo reference quote": "Báo giá tham khảo MoMo mô phỏng", "Resume Agent": "Tiếp tục tác vụ", "Plan blocked. Review the policy reason before continuing.": "Kế hoạch bị chặn. Kiểm tra lý do an toàn trước khi tiếp tục.", "Plan invalidated. Review the changed bill or quote before creating a new draft.": "Kế hoạch đã vô hiệu. Kiểm tra hóa đơn hoặc báo giá đã thay đổi trước khi tạo bản nháp mới.", "Close assistant": "Đóng trợ lý"}).forEach(([key,value]) => translationsVi.set(key,value));
+translationsVi.set('Compare payment options →','So sánh phương án thanh toán →');
+translationsVi.set('Locked payment summary','Tóm tắt thanh toán đã khóa');
+translationsVi.set('Quote details','Chi tiết báo giá');
+translationsVi.set('Reference only. This channel cannot create or execute a payment.','Chỉ để tham khảo. Kênh này không thể tạo hoặc thực thi thanh toán.');
 const originalText = new WeakMap();
 const originalPlaceholder = new WeakMap();
-const translationFragments = [...translationsVi.entries()]
-  .sort(([left], [right]) => right.length - left.length);
+const englishDisplayLabels = new Map(Object.entries({
+ NONE:'Not selected', SPENDING:'Spending', BUDGET:'Budgets', CURRENT_BALANCE:'Current account balance',
+ RECEIPT_BALANCE:'Historical receipt balance', TUITION_AFFORDABILITY:'Estimated tuition impact',
+ TUITION_CHANNELS:'Tuition channels', CHANNEL_UNAVAILABLE:'Channel eligibility', TUITION_PLAN:'Tuition plan',
+ TUITION_STATUS:'Payment status', LIVING_EXPENSE_RUNWAY:'Living-expense estimate',
+ ACCOUNT:'Choose account', BILL:'Choose bill', PLAN:'Choose plan', CHANNEL:'Choose channel',
+ TOPIC:'Choose topic', MONTHLY_EXPENSE:'Confirm monthly expense',
+ PAUSED:'Stopped', CHECKING:'Checking account', SAVINGS:'Savings account', WALLET:'Wallet', ACTIVE:'Active', ARCHIVED:'Archived', CANCELLED:'Canceled', PAID:'Paid', COMPLETED:'Completed',
+ TUITION:'Tuition', DORMITORY:'Dormitory', INSURANCE:'Insurance', VISA:'Visa fee', LIVING:'Provider living costs', OTHER:'Other education fee',
+ ONCE:'Once', WEEKLY:'Weekly', MONTHLY:'Monthly', CHEAPER:'Cheaper', FASTER:'Faster', SAFER:'Safer',
+ CONNECTED:'Connected', VERIFIED:'Verified', MANUAL:'Manual', CASH:'Cash', LINKED:'Linked',
+ AUTO:'Automatically categorized', CONFIRMED:'Confirmed by you', 'CONFIRMATION REQUIRED':'Needs confirmation',
+ 'PURPOSE REQUIRED':'Needs purpose', 'AWAITING APPROVAL':'Awaiting approval'
+}));
+englishDisplayLabels.forEach((display,key) => {
+  if(!translationsVi.has(key)) translationsVi.set(key,translationsVi.get(display) || display);
+});
+const originalAria = new WeakMap();
+const dialogOpeners = new WeakMap();
 const tabLabels = {
-  dashboard: { en: 'Dashboard', vi: 'Tổng quan' },
+  dashboard: { en: 'Overview', vi: 'Tổng quan' },
   transactions: { en: 'Transactions', vi: 'Giao dịch' },
   student: { en: 'Student finance', vi: 'Tài chính du học' },
-  agent: { en: 'Agent & Payments', vi: 'Tác vụ & Thanh toán' }
+  agent: { en: 'Payments & history', vi: 'Thanh toán & Lịch sử' }
 };
 const tabAnchors = {
   dashboard: '#overview',
@@ -736,9 +880,11 @@ let pendingUpdate = 0;
 let updateSequence = 0;
 let pendingChatController = null;
 const chatControlBaseline = new WeakMap();
+let validationSequence=0;
 let assistantOpener = null;
 let assistantScrollPosition = null;
 const assistantQuestions = {
+  balance: { en: 'What is my current Bank A balance?', vi: 'Số dư hiện tại của Bank A là bao nhiêu?' },
   spending: { en: 'Where did I spend the most this month?', vi: 'Tháng này tôi chi nhiều nhất vào đâu?' },
   budget: { en: 'How much budget do I have left this month?', vi: 'Ngân sách tháng này của tôi còn bao nhiêu?' },
   affordability: { en: 'After paying tuition, will I have enough money for living expenses?', vi: 'Nếu đóng học phí thì còn đủ tiền sinh hoạt không?' },
@@ -768,7 +914,6 @@ function updateActiveTabLabel(language = selectedLanguage()) {
 
 function activateTab(tab, updateLocation = true) {
   activeTab = tabLabels[tab] ? tab : 'dashboard';
-  if (activeTab === 'agent' && !Number(document.querySelector('[data-payment-count]')?.dataset.paymentCount || 0)) activeTab = 'student';
   document.querySelectorAll('[data-tab-panel]').forEach((panel) => {
     panel.hidden = panel.dataset.tabPanel !== activeTab;
   });
@@ -956,11 +1101,17 @@ function activateDashboardView(view, updateLocation = true) {
   document.querySelectorAll('[data-dashboard-view]').forEach((button) => {
     button.setAttribute('aria-selected', String(button.dataset.dashboardView === activeDashboardView));
   });
+  renderIntroduction();
   if (updateLocation) {
     const hashes = { summary: '#overview', accounts: '#accounts', planning: '#planning' };
     history.replaceState(null, '', hashes[activeDashboardView]);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+}
+
+function renderIntroduction() {
+  const intro=document.querySelector('[data-first-use]');
+  if(intro) intro.hidden=activeTab!=='dashboard' || activeDashboardView!=='summary' || localStorage.getItem('finbridge-intro-dismissed')==='true';
 }
 
 function initialTransactionView() {
@@ -1259,6 +1410,8 @@ function initializeQuoteExpiryStatuses() {
       const eligibility = card.querySelector('.eligibility');
       card.classList.toggle('quote-is-expired', expired);
       if (planForm) planForm.hidden = expired;
+      const refresh = card.querySelector('[data-channel-refresh]');
+      if (refresh) refresh.hidden = !expired;
       if (expired && channelEligible && card.classList.contains('connected-payment-card')) {
         if (card.dataset.state !== 'expired') accountFilterChanged = true;
         card.dataset.state = 'expired';
@@ -1292,9 +1445,18 @@ function initializeQuoteExpiryStatuses() {
 }
 
 function translateDynamic(text) {
+  const countryDue=text.match(/^(.+) · Due (.+)$/);
+  if(countryDue) return (translationsVi.get(countryDue[1]) || countryDue[1])+' · Hạn '+countryDue[2];
+  const budgetProgress=text.match(/^(.+) has used (.+)% of its synthetic monthly budget\.$/);
+  if(budgetProgress) return (translationsVi.get(budgetProgress[1]) || budgetProgress[1])+' đã dùng '+budgetProgress[2]+'% ngân sách tháng mô phỏng.';
   const planNotice = text.match(/^Student payment plan (.+)\. Approval is always required\.$/);
   if (planNotice) return `Kế hoạch thanh toán: ${paymentStatusLabels[planNotice[1]]?.[1] || planNotice[1]}. Luôn cần bạn phê duyệt.`;
   const rules = [
+    [/^(\d+)% confidence$/, 'Độ tin cậy $1%'],
+    [/^(\d+) transaction\(s\) need category confirmation or a purpose\.$/, '$1 giao dịch cần xác nhận danh mục hoặc bổ sung mục đích.'],
+    [/^(.+) has used (.+)% of its synthetic monthly budget\.$/, '$1 đã dùng $2% ngân sách tháng mô phỏng.'],
+    [/^(.+) VND remains above the 3,000,000 VND safety buffer\.$/, 'Còn $1 VND ngoài đệm an toàn 3.000.000 VND.'],
+    [/^(.+) · Due (.+)$/, '$1 · Hạn $2'],
     [/^Prepared tuition-payment plan (.+) from the verified bill and current (.+) quote\. It is awaiting explicit approval; no Sandbox payment has been executed\.$/, 'Đã chuẩn bị kế hoạch học phí $1 từ hóa đơn đã xác minh và báo giá $2 hiện tại. Kế hoạch đang chờ phê duyệt rõ ràng; chưa có thanh toán Sandbox nào được thực thi.'],
     [/^Verified tuition-channel comparison: (.+)\. Availability, costs, and timing come from the deterministic backend\.$/, 'So sánh kênh học phí đã xác minh: $1. Tính khả dụng, chi phí và thời gian do backend xác định.'],
     [/^(\d+) insights$/, '$1 thông tin'],
@@ -1352,23 +1514,19 @@ function translateDynamic(text) {
   return text;
 }
 
-function translateValue(value, language, allowFragments = true) {
-  if (language !== 'vi') return value;
+function translateValue(value, language) {
   const trimmed = value.trim();
   if (!trimmed) return value;
-  let translated = translationsVi.get(trimmed) || translateDynamic(trimmed);
-  if (allowFragments && translated === trimmed) {
-    for (const [english, vietnamese] of translationFragments) {
-      if (translated.includes(english)) translated = translated.split(english).join(vietnamese);
-    }
-  }
+  const translated = language === 'vi'
+    ? (translationsVi.get(trimmed) || translateDynamic(trimmed))
+    : (englishDisplayLabels.get(trimmed) || trimmed);
   return translated === trimmed ? value : value.replace(trimmed, translated);
 }
 
 function applyLanguage(language) {
   const selected = language === 'vi' ? 'vi' : 'en';
   document.documentElement.lang = selected;
-  document.title = selected === 'vi' ? 'Atlas · Giai đoạn 5' : 'Atlas · Phase 5';
+  document.title = selected === 'vi' ? 'FinBridge · Tài chính của bạn' : 'FinBridge · Your finances';
   document.querySelectorAll('[data-language], [data-assistant-language]').forEach((button) => {
     button.setAttribute('aria-pressed', String((button.dataset.language || button.dataset.assistantLanguage) === selected));
   });
@@ -1388,14 +1546,14 @@ function applyLanguage(language) {
   while (walker.nextNode()) nodes.push(walker.currentNode);
   nodes.forEach((node) => {
     // A structured answer keeps the language of that turn, including labels and evidence.
-    if (node.parentElement?.closest('[data-response-language]')) return;
+    if (node.parentElement?.closest('[data-response-language], [data-user-authored]')) return;
     if (!originalText.has(node)) originalText.set(node, node.nodeValue);
     const messageBody = node.parentElement?.closest('.message p');
     const original = originalText.get(node);
     // User text is verbatim. Backend replies already have a language; only complete known
     // templates may be translated, never word fragments inside financial explanations.
     node.nodeValue = messageBody?.closest('.message.user') ? original
-      : translateValue(original, selected, !messageBody);
+      : translateValue(original, selected);
   });
 
   document.querySelectorAll('[placeholder]').forEach((element) => {
@@ -1410,6 +1568,14 @@ function applyLanguage(language) {
     } else {
       element.placeholder = original;
     }
+  });
+  document.querySelectorAll('[aria-label]').forEach(element => {
+    if (!originalAria.has(element)) originalAria.set(element,element.getAttribute('aria-label'));
+    element.setAttribute('aria-label',translateValue(originalAria.get(element),selected));
+  });
+  document.querySelectorAll('#transactions tbody tr').forEach(row => {
+    const labels=Array.from(document.querySelectorAll('#transactions thead th')).map(th => th.textContent.trim());
+    Array.from(row.cells).forEach((cell,index) => cell.dataset.label=labels[index]);
   });
   updateActiveTabLabel(selected);
   renderTransactionList();
@@ -1523,7 +1689,7 @@ function renderPaymentWorkflow() {
 }
 function syncPaymentNavigation(nextDocument) {
   const count = Number(document.querySelector('[data-payment-count]')?.dataset.paymentCount || 0);
-  document.querySelectorAll('[data-payment-entry]').forEach((entry) => { entry.hidden = count === 0; });
+  document.querySelectorAll('[data-payment-entry]').forEach((entry) => { entry.hidden = false; });
   if (nextDocument) {
     const current = document.querySelector('[data-global-policy]');
     const next = nextDocument.querySelector('[data-global-policy]');
@@ -1601,10 +1767,14 @@ function initializeWorkspaceContent(state) {
   document.querySelectorAll('[data-open-dialog]').forEach((button) => {
     button.addEventListener('click', () => {
       const dialog = document.getElementById(button.dataset.openDialog);
-      if (dialog && typeof dialog.showModal === 'function') dialog.showModal();
+      if (dialog && typeof dialog.showModal === 'function') { dialogOpeners.set(dialog,button); dialog.showModal(); }
     });
   });
   document.querySelectorAll('dialog').forEach((modal) => {
+    modal.addEventListener('close', () => {
+      const opener=dialogOpeners.get(modal);
+      if(opener?.isConnected) opener.focus({preventScroll:true});
+    });
     modal.querySelectorAll('[data-close-dialog]').forEach((button) => {
       button.addEventListener('click', () => modal.close());
     });
@@ -1832,7 +2002,18 @@ async function submitWorkspaceForm(event) {
 
 document.addEventListener('DOMContentLoaded', () => {
   initializeWorkspaceContent();
+  renderIntroduction();
+  document.addEventListener('click', event => {
+    if (event.target.closest('[data-dismiss-intro]')) {
+      document.querySelector('[data-first-use]').hidden = true;
+      localStorage.setItem('finbridge-intro-dismissed', 'true');
+      document.querySelector('[data-testid="overview-primary-action"]')?.focus({ preventScroll: true });
+    }
+  });
   updateAssistantViewport();
+  const workspaceHeader=document.querySelector('main>header');
+  const syncHeaderHeight=()=>document.documentElement.style.setProperty('--workspace-header-height',workspaceHeader.getBoundingClientRect().height+'px');
+  new ResizeObserver(syncHeaderHeight).observe(workspaceHeader);syncHeaderHeight();
   window.addEventListener('resize', updateAssistantViewport);
   window.visualViewport?.addEventListener('resize', updateAssistantViewport);
   window.visualViewport?.addEventListener('scroll', updateAssistantViewport);
@@ -1847,6 +2028,28 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem('finbridge-language', language);
       applyLanguage(language);
     });
+  });
+  document.addEventListener('invalid',event => {
+    const control=event.target;
+    if(!control.matches('input,select,textarea') || control.type==='hidden') return;
+    const label=control.closest('label') || control.parentElement;
+    let feedback=label.querySelector('.field-error');
+    if(!feedback) {
+      feedback=document.createElement('small');feedback.className='field-error';
+      feedback.id='field-error-'+(++validationSequence);label.append(feedback);
+    }
+    const message=control.validity.valueMissing ? 'Fill in this field.' : control.validity.rangeUnderflow || control.validity.rangeOverflow ? 'Enter a value within the displayed limits.' : control.validity.patternMismatch ? 'Use the requested format.' : 'Enter a valid value to continue.';
+    feedback.textContent=translateValue(message,selectedLanguage());
+    control.setAttribute('aria-invalid','true');control.setAttribute('aria-describedby',feedback.id);
+  },true);
+  document.addEventListener('input',event => {
+    const control=event.target;
+    if(control.validity?.valid) {control.removeAttribute('aria-invalid');control.closest('label')?.querySelector('.field-error')?.remove();}
+  });
+  document.querySelector('[data-assistant-navigation]')?.addEventListener('change',event => {
+    const target=event.target.value;
+    if(!target) return;
+    setAssistantOpen(false);activateTab(target);event.target.value='';
   });
   document.addEventListener('submit', submitWorkspaceForm);
   document.addEventListener('click', openPaymentPlan);

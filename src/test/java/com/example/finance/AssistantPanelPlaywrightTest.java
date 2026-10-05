@@ -179,7 +179,7 @@ class AssistantPanelPlaywrightTest {
         page.getByTestId("assistant-plan-help").click();
         page.getByTestId("assistant-language-vi").click();
         assertThat(page.locator("#assistant-title")).hasText("Hỏi FinBridge");
-        assertThat(page.getByTestId("assistant-screen")).hasText("Tác vụ & Thanh toán");
+        assertThat(page.getByTestId("assistant-screen")).hasText("Thanh toán & Lịch sử");
         assertThat(page.getByTestId("assistant-plan-context")).containsText("cần bạn phê duyệt");
         assertThat(page.getByTestId("assistant-emergency-stop")).isVisible();
         assertThat(input()).isVisible();
@@ -224,13 +224,13 @@ class AssistantPanelPlaywrightTest {
         assertEquals(0, payments.sandboxTransactionCount());
         assertThat(page.getByTestId("assistant-replies")).not().containsText("Prepared tuition-payment plan");
         page.getByTestId("assistant-close").click();
-        page.getByTestId("reset-demo").click();
+        page.getByTestId("environment-tools").evaluate("e=>e.open=true");        page.getByTestId("reset-demo").click();
         idle();
         page.getByTestId("assistant-launcher").click();
         send("Prepare tuition draft");
         page.waitForCondition(() -> calls.get() == 2);
         page.getByTestId("assistant-close").click();
-        page.getByTestId("reset-demo").click();
+        page.getByTestId("environment-tools").evaluate("e=>e.open=true");        page.getByTestId("reset-demo").click();
         idle();
         resetReply.countDown();
         page.waitForCondition(() -> returned.get() == 2);

@@ -201,3 +201,108 @@ header{position:sticky;top:0;z-index:10}.mobile-tabs{top:70px}.payment-demo-entr
 @media(max-width:700px){.runway-scenario input{font-size:16px}}
 @media(max-width:700px){.runway-scenario{max-height:calc(var(--assistant-visible-height,100dvh)*.42)}.assistant-compact .assistant-heading{padding:8px 12px}.assistant-compact .assistant-heading small{display:none}.assistant-compact .assistant-heading h2{font-size:17px;margin:0}.assistant-compact .assistant-close{height:32px;width:32px}.assistant-compact .assistant-toolbar{padding:0 12px 8px}.assistant-compact .assistant-body{padding:8px 12px}.assistant-compact .runway-scenario{padding:7px 12px;max-height:calc(var(--assistant-visible-height,100dvh)*.55)}.assistant-compact .runway-scenario form{margin:4px 0}.assistant-compact .runway-scenario input{padding:5px;font-size:16px}.assistant-compact .runway-scenario form button{padding:6px}.assistant-compact .assistant-composer{padding:8px 12px 5px}.assistant-compact .assistant-composer input{padding:8px}.assistant-compact .assistant-safety{padding:2px 12px 6px;font-size:10px}.response-conclusion{font-size:18px}}
 @media(max-width:700px){.section-help-actions{justify-content:flex-start}.assistant-launcher{right:16px;bottom:16px;padding:12px 16px}.assistant-panel{inset:8px;width:calc(100vw - 16px);max-height:calc(100dvh - 16px);border-radius:14px}.assistant-heading{padding:14px 16px 10px}.assistant-toolbar{padding:0 16px 10px}.assistant-body{padding:14px 16px}.assistant-panel .assistant-composer{padding:12px 16px 8px}.assistant-composer input{font-size:16px}.assistant-safety{padding:4px 16px 12px}.assistant-heading h2{font-size:19px}}
+
+/* FinBridge product workspace: presentation only. */
+:root{--ink:#173b42;--muted:#61777d;--blue:#087e84;--line:#dde8e8;--surface:#fff;--radius:14px}
+body{background:#f3f7f7;color:var(--ink);font:14px/1.5 Arial,sans-serif}
+h1,h2,h3{line-height:1.25}button,input,select,textarea{font:inherit}
+button,a,input,select,summary{touch-action:manipulation}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,textarea:focus-visible{outline:3px solid #258b9d;outline-offset:3px}
+button:disabled{cursor:not-allowed;opacity:.55}a{color:#087e84}main{min-width:0}
+.sidebar{width:218px;padding:26px 16px;background:#fff}.brand{padding:0 8px 28px;gap:10px}
+.brand .mark{border-radius:11px;background:#087e84;font-size:22px}.brand strong{font-size:23px;letter-spacing:-.7px;color:#173b42}.brand small{font-size:10px;letter-spacing:0;color:#61777d;font-weight:400}
+.sidebar nav button{padding:12px;font-weight:600;border-radius:9px;min-height:46px}
+.sidebar nav button:hover,.sidebar nav button[aria-selected=true]{background:#e8f4f3;color:#06747a}
+.side-foot{font-size:11px;color:#61777d}.side-foot strong{font-size:11px;color:#61777d;display:block;margin-top:6px}
+header{height:72px;padding:0 28px;color:#61777d}.header-actions{gap:12px}.tag{background:#e8f4f3;color:#14666b;padding:7px 10px;font-size:11px}
+.global-payment-control button{min-height:36px}.language-switcher button{min-width:36px;min-height:36px;color:#45636a}
+.content{max-width:1450px;padding:26px 28px 112px}
+.shared-demo-banner{background:#f9faf4;border-color:#e0e6ce;color:#526446;padding:10px 14px;margin-bottom:18px}.shared-demo-banner strong{font-size:12px}.shared-demo-banner p{font-size:12px;margin:3px 0 0}
+.intro{margin:16px 0 20px}.intro h1{font-size:27px;letter-spacing:-.7px}.intro p,.section-title p{color:#61777d;max-width:74ch}
+.eyebrow{font-size:10px;letter-spacing:1.1px;color:#61777d}.card{padding:22px;border-radius:14px;box-shadow:0 2px 8px #173b4204;border-color:#dfe8e8}
+.section-title{margin-bottom:18px;align-items:flex-start}.section-title h2{font-size:21px;letter-spacing:-.4px}
+.primary-button,.planning-only{background:#087e84!important;color:#fff!important;border:1px solid #087e84;border-radius:9px;padding:11px 16px;font-weight:700;min-height:42px}
+.primary-button:hover,.planning-only:hover{background:#066b70!important}.secondary{border-color:#d6e3e4;color:#385d65;border-radius:9px;padding:9px 13px;min-height:38px}
+.text-action{color:#087e84;font-size:13px}.pill{background:#e9f3f3;color:#35616a;font-size:11px}
+.stats{gap:12px}.stats article{padding:18px;border-color:#dfe8e8;box-shadow:none}.stats small{margin:10px 0 6px;color:#61777d;font-size:12px}.stats strong{font-size:26px;color:#173b42}.stats p{font-size:12px;color:#61777d}.stats .icon{display:none}
+.welcome-note{display:flex;gap:16px;align-items:center;padding:14px 16px;border:1px solid #d6e8e5;background:#ebf6f3;border-radius:12px;margin-bottom:20px}
+.welcome-note[hidden]{display:none}.welcome-note p{font-size:12px;line-height:1.5;color:#4e6c71;margin:4px 0 0}.welcome-note>div:first-child{flex:1}.welcome-actions{display:flex;gap:12px;flex-wrap:wrap}.icon-button{width:36px;height:36px;border:0;border-radius:8px;background:#fff;color:#385d65;font-size:23px;cursor:pointer;flex:none}
+.environment-tools{padding:16px;border:1px solid #dce6e7;border-radius:12px;background:#fff;margin:20px 0}.environment-tools summary{font-weight:700;cursor:pointer;color:#4e6972}.environment-tools p{font-size:12px;color:#61777d;max-width:72ch}
+footer{font-size:11px;color:#61777d}.assistant-launcher{background:#087e84;box-shadow:0 4px 18px #076e7d30;min-height:48px}.assistant-launcher:hover{background:#066b70}
+@media(max-width:1050px){.sidebar{width:190px}.content{padding:22px}.welcome-note{flex-wrap:wrap}.welcome-actions{width:100%;order:3}}
+@media(max-width:700px){.sidebar{display:none}header{padding:10px 12px;height:auto;min-height:72px;flex-wrap:wrap;gap:8px;align-items:center}header>span{font-size:12px}.header-actions{gap:6px;flex-wrap:wrap;justify-content:flex-end}.header-actions .tag{display:inline-block!important;font-size:10px;max-width:135px;white-space:normal;padding:5px 8px}.global-policy-state{display:none}.global-payment-control button{min-height:44px;padding:8px;font-size:11px}.language-switcher button{min-width:36px;min-height:44px;padding:5px}.mobile-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:8px;background:#fff;position:sticky;top:0;z-index:9;border-bottom:1px solid var(--line)}.mobile-tabs button{white-space:normal;min-height:48px;padding:7px 4px;font-size:11px;line-height:1.3;min-width:0}.mobile-tabs button[aria-selected=true]{background:#087e84;color:#fff}.content{padding:16px 12px 108px}.intro{align-items:flex-start;flex-wrap:wrap;gap:12px}.intro h1{font-size:23px}.card{padding:16px}.section-title{flex-wrap:wrap}.section-title h2{font-size:20px}.primary-button,.planning-only{min-height:44px}.secondary,.text-action{min-height:44px}.welcome-note{padding:12px;gap:10px}.welcome-note>div:first-child{min-width:0}.welcome-actions{gap:10px}.stats strong{font-size:22px}.stats article{padding:14px}.section-help-actions{width:100%;gap:8px}.shared-demo-banner{padding:10px}.assistant-launcher{bottom:16px;right:12px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+.section-title>*{min-width:0}.section-help-actions{flex-wrap:wrap}.card,.intro,.stats,.payment-review-grid,.payment-review-section,.planning-layout{min-width:0;max-width:100%}
+@media(min-width:701px) and (max-width:1050px){header{height:auto;min-height:72px;flex-wrap:wrap;gap:8px;padding:12px 20px}.header-actions{flex-wrap:wrap;gap:8px}.sidebar{width:174px}}
+
+.channel-heading{flex-wrap:wrap;min-width:0}.channel-heading-tools{width:auto;flex:1;min-width:0;max-width:100%}
+.channel-comparison-section,.channel-list,.student-expense-section,.student-bill-list{min-width:0;max-width:100%}
+
+.account-snapshot .section-title{margin-bottom:14px}.current-account-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}.current-account-grid article{background:#f6f9f9;padding:12px;border-radius:9px}.current-account-grid small,.current-account-grid strong,.current-account-grid span{display:block}.current-account-grid small{font-size:12px;line-height:1.4;min-height:34px;color:#536d74}.current-account-grid strong{font-size:16px;font-variant-numeric:tabular-nums;margin:5px 0;overflow-wrap:anywhere}.current-account-grid span{font-size:11px;color:#61777d}
+.source-disclosure{font-size:12px;color:#61777d;line-height:1.5;margin:14px 0 0}.finance-month-snapshot{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}.monthly-spending>div>small{font-size:13px;color:#61777d}.monthly-spending strong{display:block;font-size:30px;margin:4px 0;color:#173b42;font-variant-numeric:tabular-nums}.monthly-spending span{font-size:12px;color:#61777d}.monthly-spending p,.budget-snapshot p{font-size:12px;color:#61777d}.budget-snapshot h3{margin:0;font-size:16px}.budget-snapshot-list{display:grid;gap:7px;margin:12px 0}.budget-snapshot-list>div{display:flex;justify-content:space-between;gap:10px;font-size:13px}.budget-snapshot-list strong{font-variant-numeric:tabular-nums;white-space:nowrap}.overview-stats{grid-template-columns:repeat(4,minmax(0,1fr))}.overview-stats article{background:#f8fafb}.overview-stats strong{font-size:23px}
+.inline-chat-history summary,.source-details summary,.transaction-evidence summary{font-size:12px;cursor:pointer;color:#496d75}.inline-chat-history{margin-bottom:12px}.finance-message-list{max-height:170px}.insight{padding:14px 0;align-items:start}.insight p{font-size:13px!important;line-height:1.5}.insight-why{color:#536d74!important}.source-details{margin-top:8px}.source-details small{line-height:1.6;display:block}.insight .priority{font-size:10px}.cashflow-facts strong{font-size:20px}.cashflow-facts small{font-size:12px}
+.transaction-toolbar label,.student-bill-toolbar label{font-size:12px;color:#536d74}.transaction-toolbar input,.transaction-toolbar select,.student-bill-toolbar input,.student-bill-toolbar select{min-height:42px;font-size:13px}.transaction-view-tabs button,.dashboard-view-tabs button{font-size:13px;min-height:42px}.transaction-view-tabs button[aria-selected=true],.dashboard-view-tabs button[aria-selected=true]{color:#06747a}
+#transactions table{font-size:13px}#transactions td{padding:14px 10px;vertical-align:top}#transactions td small{font-size:11px;line-height:1.5;color:#61777d}#transactions th{font-size:11px;letter-spacing:.3px}#transactions td.amount{font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap}.review-status,.type{font-size:11px!important;line-height:1.5;padding:4px 7px;border-radius:7px;background:#eef3f3;color:#536d74;display:inline-block}.review-status[data-record-status=AUTO],.review-status[data-record-status=CONFIRMED]{background:#e9f6ef;color:#286a48}.review-status[data-record-status=PURPOSE_REQUIRED],.review-status[data-record-status=CONFIRMATION_REQUIRED]{background:#fff4df;color:#855c19}
+tr[data-type=Income] .type{background:#e9f6ef;color:#286a48}tr[data-type=Expense] .type{background:#f7eceb;color:#934640}tr[data-type=Refund] .type{background:#e7f3f8;color:#296883}tr[data-type="Internal Transfer"] .type{background:#f0eef7;color:#67548b}
+.transaction-review-form label,.review-policy-note{font-size:12px}.review-transaction-summary p,.review-transaction-summary em{font-size:12px}.review-transaction-summary h3{font-size:16px}.review-policy-note{background:#f6f9f9}
+@media(max-width:1100px){.current-account-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.overview-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.current-account-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.current-account-grid small{min-height:0}.current-account-grid strong{font-size:15px}.finance-month-snapshot{grid-template-columns:1fr}.monthly-spending strong{font-size:27px}.transaction-toolbar,.student-bill-toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.transaction-search,.student-bill-search{grid-column:1/-1}.transaction-toolbar input,.transaction-toolbar select,.student-bill-toolbar input,.student-bill-toolbar select{width:100%;min-width:0;min-height:44px}.transaction-review-form input,.transaction-review-form select{min-height:44px}
+#transactions .table-scroll{overflow:visible}#transactions table,#transactions tbody{display:block;width:100%;min-width:0}#transactions thead{display:none}#transactions tr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;border:1px solid #dce6e7;border-radius:12px;padding:14px;margin-bottom:10px}#transactions td{display:block;border:0;padding:0;min-width:0;overflow-wrap:anywhere}#transactions td:first-child{grid-column:1/-1}#transactions td:first-child strong{font-size:16px}#transactions td::before{content:attr(data-label);display:block;font-size:11px;color:#61777d;margin-bottom:3px}#transactions td:first-child::before{display:none}#transactions td.amount{text-align:left;font-size:16px}#transactions td:last-child{display:flex;justify-content:flex-end;align-items:center}#transactions td:last-child::before{display:none}.confidence{font-size:12px}.review-transaction-summary{grid-template-columns:minmax(0,1fr) auto}.review-transaction-summary>div:first-child{grid-column:1/-1}.review-policy-note{align-items:start;flex-direction:column;gap:5px}
+}
+
+/* Education payment stages and state-specific review. */
+.tuition-progress{display:flex;gap:12px;list-style:none;padding:16px 0;margin:0 0 20px;overflow-x:auto;max-width:100%;border-bottom:1px solid var(--border)}
+.tuition-progress li{display:flex;align-items:center;gap:7px;font-size:12px;white-space:nowrap;color:var(--muted)}
+.tuition-progress li span{border:1px solid var(--border);border-radius:50%;width:24px;height:24px;display:grid;place-items:center}
+.tuition-progress .complete{color:#227b6a}.tuition-progress .current{color:var(--accent);font-weight:700}.tuition-progress .current span{background:#e6f4f0;border-color:var(--accent)}
+.channel-essential-facts{margin:0;border-top:1px solid var(--border);padding-top:10px}.channel-essential-facts div{display:flex;justify-content:space-between;gap:12px;padding:4px 0;font-size:12px}.channel-essential-facts dt{color:var(--muted)}.channel-essential-facts dd{margin:0;font-weight:600;text-align:right}
+.channel-recovery{font-size:12px;line-height:1.5;margin:0;color:#81581c}
+[data-channel-refresh] small{display:block;margin-top:7px;color:var(--muted);font-size:12px}
+.simulation-disclosure{font-size:12px;color:var(--muted);padding:8px 0;margin:0}
+.payment-info{border:1px solid var(--border);border-radius:12px;margin:16px 0;overflow:hidden}.payment-info>summary{font-weight:700;cursor:pointer;padding:16px;background:#f8fafb}.payment-info>.payment-review-grid,.payment-info>.payment-quote{margin:16px}
+.receipt-balance-label{font-weight:700;margin-top:12px}.receipt-historical-note{font-size:12px;color:var(--muted);margin:6px 0}
+.payment-receipt{margin:14px 0;background:#f5fbf8}.payment-plan-heading{align-items:flex-start}.payment-plan-heading h3{overflow-wrap:anywhere}
+@media(max-width:768px){.student-title,.payment-accounts-heading{flex-wrap:wrap}.section-help-actions{max-width:100%;flex-wrap:wrap}.corridor-strip{grid-template-columns:repeat(2,minmax(0,1fr));padding:12px}.corridor-strip>div{padding:6px}.payment-review-grid{grid-template-columns:1fr}.payment-facts>div{gap:10px}.payment-facts dd{min-width:0;overflow-wrap:anywhere}.payment-info>.payment-review-grid,.payment-info>.payment-quote{margin:10px}.tuition-progress{gap:10px}.payment-steps{overflow-x:auto}.payment-steps li{min-width:max-content}.channel-heading-tools{width:auto}.student-bill-toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Assistant and accessible feedback. */
+:root{--border:#dde8e8;--accent:#087e84}
+.assistant-panel{border-color:#cfdfdf;box-shadow:0 12px 50px #173b4230}.assistant-heading h2{color:#173b42}.assistant-toolbar button[aria-pressed=true]{background:#087e84}
+.assistant-navigation{padding:0 16px 8px;flex:none}.assistant-navigation select{width:100%;min-height:38px;border:1px solid #d6e3e4;border-radius:8px;background:#f7faf9;color:#385d65}
+.assistant-context>p{font-size:11px;margin:6px 0}.assistant-context>[data-assistant-context-state]{padding:10px;background:#f1f7f6;border-radius:9px;font-size:12px}.assistant-context>[data-assistant-context-state]>small{font-size:10px;color:#61777d}
+.assistant-suggestions{gap:6px;margin:10px 0}.assistant-suggestions button{border-color:#d4e5e2;color:#33696b;background:#f7fbfa}
+.assistant-plan-summary{margin-top:10px}.assistant-plan-summary summary{font-size:12px;cursor:pointer}.assistant-plan-summary dl{font-size:12px}
+.assistant-message-list .message.user{background:#e6f2ef;color:#173b42;align-self:flex-end}.assistant-message-list .message.assistant{background:#f8fafb;border-color:#dce7e8}
+.response-conclusion{color:#165c63}.response-details summary{color:#176b72}.response-warning{font-size:12px}.assistant-context-choices{display:grid;grid-template-columns:minmax(0,1fr);gap:6px}
+.field-error{display:block;color:#a53b35;font-size:12px;margin:5px 0}[aria-invalid=true]{border-color:#a53b35!important}
+dialog{max-width:calc(100vw - 24px);max-height:calc(100dvh - 32px);overflow:auto}dialog::backdrop{background:#173b4260}.dialog-heading button{width:44px;height:44px;font-size:23px;flex:none}
+@media(max-width:700px){.assistant-close{width:44px;height:44px}.assistant-compact .assistant-close{height:44px;width:44px}.assistant-panel .primary-button,.assistant-panel .secondary,.assistant-suggestions button,.assistant-navigation select{min-height:44px}.assistant-navigation{padding:0 12px 6px}.assistant-short .assistant-navigation{display:none}.assistant-short .assistant-toolbar{padding-bottom:4px}.icon-button{height:44px;width:44px}.assistant-toolbar button{min-height:36px}.assistant-body{overscroll-behavior:contain}}
+
+@media(max-width:700px){
+.assistant-compact .assistant-navigation{display:none}
+.assistant-compact .runway-scenario>p{display:none}
+.assistant-compact .runway-scenario{padding:5px 12px}
+.assistant-compact .runway-scenario>strong{font-size:11px}
+.assistant-compact .runway-scenario>form{margin:3px 0;gap:3px 8px}
+.assistant-compact .runway-scenario>form input{min-height:36px}
+.assistant-short .assistant-heading{padding:4px 12px}.assistant-short .assistant-body{padding:0}
+.assistant-short .assistant-safety{display:none}
+.assistant-short .assistant-actions:empty{display:none}
+.assistant-short [data-assistant-runway]{flex:none}
+}
+
+.mobile-tabs{top:var(--workspace-header-height,72px)}
+#agent-workspace,#student-finance,#overview,#transactions,#transaction-review{scroll-margin-top:calc(var(--workspace-header-height,72px) + 16px)}
+@media(max-width:700px){header>span{display:none}.header-actions{width:100%;justify-content:space-between}
+#agent-workspace,#student-finance,#overview,#transactions,#transaction-review{scroll-margin-top:calc(var(--workspace-header-height,72px) + 80px)}
+.assistant-launcher{width:52px;height:52px;padding:0;display:grid;place-items:center}.assistant-launcher>span:first-child{font-size:24px}.assistant-launcher>span:last-child{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+.payment-actions{padding-bottom:24px}.receipt li{font-size:12px;gap:12px}.receipt li strong{white-space:nowrap}.receipt-id strong{font-size:14px}}
+
+.reference-quote-details{grid-column:1/-1;min-width:0;max-width:100%;font-size:12px}
+.reference-quote-details>summary{cursor:pointer;color:#456d74;min-height:28px}
+.reference-quote-details .channel-essential-facts{max-width:520px}
+
+.payment-summary{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;padding:16px;border:1px solid #d3e8e3;background:#f2faf7;border-radius:12px;margin:14px 0}
+.payment-summary-amount>small{font-size:12px;color:#496d72}.payment-summary-amount>strong{display:block;font-size:28px;line-height:1.3;letter-spacing:-.5px;color:#14595f;margin:5px 0;overflow-wrap:anywhere}
+.payment-summary-amount p{font-size:13px;color:#496d72;margin:6px 0}.payment-summary-parties{margin:0;font-size:12px}.payment-summary-parties div{display:grid;grid-template-columns:110px minmax(0,1fr);gap:8px;margin:5px 0}.payment-summary-parties dt{color:#61777d}.payment-summary-parties dd{margin:0;overflow-wrap:anywhere;font-weight:600}
+@media(max-width:700px){.payment-summary{grid-template-columns:1fr;gap:8px;padding:12px}.payment-summary-amount>strong{font-size:25px}.payment-summary-parties div{grid-template-columns:105px minmax(0,1fr)}}

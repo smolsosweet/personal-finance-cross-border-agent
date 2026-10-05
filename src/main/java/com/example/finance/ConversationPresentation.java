@@ -24,6 +24,12 @@ public class ConversationPresentation {
         public String historyLabel(){return "vi".equals(language)?"Kết quả tại thời điểm trả lời; hỏi lại để cập nhật.":"Snapshot at reply time; ask again for current data.";}
     }
 
+    /** Formatting only: preserve all supplied decimal digits; never aggregate or round money. */
+    public String money(Number value) {
+        String raw = value instanceof java.math.BigDecimal decimal ? decimal.toPlainString() : value.toString();
+        return number(raw, false);
+    }
+
     public List<Reply> present(List<PhaseFourService.ConversationMessage> messages) {
         var replies=new ArrayList<Reply>();
         for(int i=0;i<messages.size();i++){
