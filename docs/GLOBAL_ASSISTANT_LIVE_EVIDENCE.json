@@ -1,0 +1,210 @@
+{
+  "submissions" : 19,
+  "cap" : 20,
+  "results" : [ {
+    "case" : "initial_provider_failure",
+    "payments" : 0,
+    "actual" : "GEMINI_SERVICE_UNAVAILABLE",
+    "generationAttempts" : 1,
+    "plans" : 0,
+    "schemaValid" : false
+  }, {
+    "question" : "What is my current Vietcombank balance?",
+    "expectedIntent" : "EXPLAIN_CURRENT_BALANCE",
+    "actualIntent" : "EXPLAIN_CURRENT_BALANCE",
+    "schemaValid" : true,
+    "latencyMs" : 9767,
+    "expectedEvidence" : "82000000.00",
+    "actualReply" : "CURRENT ACCOUNT BALANCES\nVietcombank Everyday · •••• 6682: 82000000.00 VND.\nTotal VND: 82000000.00.\nObserved at: 2026-10-05T08:23:17.508629900.\nSource: connected/verified payment_source_accounts with latest sandbox_accounts balances. Planner, recipient and fee accounts are excluded. Currencies are not added; safety buffer is not deducted. Synthetic data, not a live bank balance.",
+    "plans" : 0,
+    "payments" : 0
+  }, {
+    "question" : "Hiện Vietcombank còn bao nhiêu tiền?",
+    "expectedIntent" : "EXPLAIN_CURRENT_BALANCE",
+    "actualIntent" : "EXPLAIN_CURRENT_BALANCE",
+    "schemaValid" : true,
+    "latencyMs" : 8983,
+    "expectedEvidence" : "82000000.00",
+    "actualReply" : "SỐ DƯ TÀI KHOẢN HIỆN TẠI\nVietcombank Everyday · •••• 6682: 82000000.00 VND.\nTổng VND: 82000000.00.\nQuan sát lúc: 2026-10-05T08:23:26.885673700.\nNguồn: tài khoản đã kết nối/xác minh trong payment_source_accounts, số dư mới nhất từ sandbox_accounts. Không cộng tài khoản planner, tài khoản người nhận hoặc tài khoản phí. Không cộng các tiền tệ; không trừ đệm an toàn. Dữ liệu mô phỏng, không phải số dư ngân hàng thật.",
+    "plans" : 0,
+    "payments" : 0
+  }, {
+    "question" : "Show all my account balances",
+    "expectedIntent" : "EXPLAIN_CURRENT_BALANCE",
+    "actualIntent" : "EXPLAIN_CURRENT_BALANCE",
+    "schemaValid" : true,
+    "latencyMs" : 1286,
+    "expectedEvidence" : "314000000.00",
+    "actualReply" : "CURRENT ACCOUNT BALANCES\nBank A Everyday · •••• 2048: 100000000.00 VND.\nVietcombank Everyday · •••• 6682: 82000000.00 VND.\nTechcombank Everyday · •••• 1106: 45000000.00 VND.\nMoMo Wallet · •••• 0921: 12000000.00 VND.\nAlipay Education Wallet · •••• 8890: 75000000.00 VND.\nTotal VND: 314000000.00.\nObserved at: 2026-10-05T08:23:28.509025800.\nSource: connected/verified payment_source_accounts with latest sandbox_accounts balances. Planner, recipient and fee accounts are excluded. Currencies are not added; safety buffer is not deducted. Synthetic data, not a live bank balance.",
+    "plans" : 0,
+    "payments" : 0
+  }, {
+    "question" : "Hiện Bank A còn bao nhiêu tiền?",
+    "expectedIntent" : "EXPLAIN_CURRENT_BALANCE",
+    "actualIntent" : "EXPLAIN_CURRENT_BALANCE",
+    "schemaValid" : true,
+    "latencyMs" : 1361,
+    "expectedEvidence" : "Chọn rõ một tài khoản",
+    "actualReply" : "Chọn rõ một tài khoản trong chat; lựa chọn này chỉ thuộc phiên của bạn.",
+    "plans" : 0,
+    "payments" : 0
+  }, {
+    "question" : "How much is there now?",
+    "expectedIntent" : "EXPLAIN_CURRENT_BALANCE",
+    "actualIntent" : "EXPLAIN_CURRENT_BALANCE",
+    "schemaValid" : true,
+    "latencyMs" : 1338,
+    "expectedEvidence" : "100000000.00",
+    "actualReply" : "CURRENT ACCOUNT BALANCES\nBank A Everyday · •••• 2048: 100000000.00 VND.\nTotal VND: 100000000.00.\nObserved at: 2026-10-05T08:23:31.788212200.\nSource: connected/verified payment_source_accounts with latest sandbox_accounts balances. Planner, recipient and fee accounts are excluded. Currencies are not added; safety buffer is not deducted. Synthetic data, not a live bank balance.",
+    "plans" : 0,
+    "payments" : 0
+  }, {
+    "question" : "Show my remaining budgets this month",
+    "expectedIntent" : "EXPLAIN_BUDGET_STATUS",
+    "actualIntent" : "EXPLAIN_BUDGET_STATUS",
+    "schemaValid" : true,
+    "latencyMs" : 1231,
+    "expectedEvidence" : "Budget remaining is not an account balance",
+    "actualReply" : "Reporting period: 2026-10-01 – 2026-10-31.\nCategory budgets: VND.\nFood & Drinks: limit 2000000.00, spent 0.00, remaining 2000000.00, overspent 0.00 VND.\nShopping: limit 1000000.00, spent 0.00, remaining 1000000.00, overspent 0.00 VND.\nTransport: limit 1500000.00, spent 70000.00, remaining 1430000.00, overspent 0.00 VND.\nUtilities: limit 1800000.00, spent 90000.00, remaining 1710000.00, overspent 0.00 VND.\nTotal configured budget 6300000.00; spending in budgeted categories 160000.00; remaining across categories 6140000.00 VND.\nExpenses outside budgeted categories: 0.00 VND.\nEvidence: configured budgets and current-month AUTO/CONFIRMED transactions. Remaining is floored at zero per category; overspending shown separately. Refunds do not reduce spending; pending reviews excluded. Budget remaining is not an account balance.",
+    "plans" : 0,
+    "payments" : 0
+  }, {
+    "question" : "Tháng này tôi chi nhiều nhất vào đâu?",
+    "expectedIntent" : "EXPLAIN_SPENDING_SUMMARY",
+    "actualIntent" : "EXPLAIN_SPENDING_SUMMARY",
+    "schemaValid" : true,
+    "latencyMs" : 1295,
+    "expectedEvidence" : "Tổng chi tiêu",
+    "actualReply" : "Kỳ báo cáo: 2026-10-01 – 2026-10-31.\nTổng chi tiêu VND: 160000.00.\nUtilities: 90000.00 VND.\nTransport: 70000.00 VND.\nDanh mục lớn nhất: Utilities.\nHoàn tiền ghi nhận riêng: 85000.00 VND.\nNguồn: giao dịch đã ghi nhận; chi tiêu AUTO/CONFIRMED. Chuyển nội bộ và thu nhập không tính vào chi; hoàn tiền không giảm chi tiêu/ngân sách. Không cộng các tiền tệ.\nGiao dịch đang chờ xem xét trong kỳ: 1. Đây chỉ là dữ liệu hiện có; chưa biết chi tiêu tương lai.",
+    "plans" : 0,
+    "payments" : 0
+  }, {
+    "question" : "Vì sao không dùng được Bank B?",
+    "expectedIntent" : "EXPLAIN_CHANNEL_UNAVAILABLE",
+    "actualIntent" : "EXPLAIN_CHANNEL_UNAVAILABLE",
+    "schemaValid" : true,
+    "latencyMs" : 1311,
+    "expectedEvidence" : "không thể thực thi",
+    "actualReply" : "Kênh Bank B Promotional Rate: Chỉ để tham khảo: chưa kết nối tài khoản Bank B. Không khả dụng và không thể thực thi.",
+    "plans" : 0,
+    "payments" : 0
+  }, {
+    "question" : "Compare the tuition channels",
+    "expectedIntent" : "COMPARE_TUITION_CHANNELS",
+    "actualIntent" : "COMPARE_TUITION_CHANNELS",
+    "schemaValid" : true,
+    "latencyMs" : 1302,
+    "expectedEvidence" : "Verified tuition-channel comparison",
+    "actualReply" : "Verified tuition-channel comparison: SZDU-2026-MINH\nShowing 3 eligible channels · lowest total cost\nBank A International Transfer: 70760800.00 VND; 2–3 days; Q-BANK_A-F26B359F; Synthetic Bank A treasury quote; 2026-10-05T08:18:45; 2026-10-05T08:23:45\nTechcombank International Transfer: 70764792.00 VND; 2–3 days; Q-TCB-60FE5236; Synthetic Techcombank treasury quote; 2026-10-05T08:18:45; 2026-10-05T08:23:45\nVietcombank International Transfer: 70846972.00 VND; 2–3 days; Q-VCB-E67A15D1; Synthetic Vietcombank treasury quote; 2026-10-05T08:18:45; 2026-10-05T08:23:45\nEvidence: current backend bill and quotes. No plan or payment created. Tuition always requires separate approval.",
+    "plans" : 0,
+    "payments" : 0
+  }, {
+    "question" : "Nếu đóng học phí bằng Vietcombank thì còn bao nhiêu?",
+    "expectedIntent" : "EXPLAIN_TUITION_AFFORDABILITY",
+    "actualIntent" : "EXPLAIN_TUITION_AFFORDABILITY",
+    "schemaValid" : true,
+    "latencyMs" : 1419,
+    "expectedEvidence" : "11153028.00",
+    "actualReply" : "Kỳ báo cáo: 2026-10-01 – 2026-10-31.\nƯỚC TÍNH SAU HỌC PHÍ · VND (không phải thanh toán).\nGiới hạn: planner và tài khoản Sandbox chưa ánh xạ với nhau. Các con số dưới đây là ước tính; chưa thể kết luận đủ tiền sinh hoạt.\nTài khoản nguồn Vietcombank Everyday; số dư hiện tại 82000000.00 VND.\nHóa đơn đã xác minh SZDU-2026-MINH: 20000.00 CNY.\nKênh Vietcombank International Transfer; tiền nguồn 70540000.00; phí 180000.00; phụ phí FX 126972.00; tổng chi phí 70846972.00 VND.\nSố dư dự kiến sau học phí: 11153028.00 VND.\nĐệm an toàn cấu hình: 3000000.00; còn sau đệm 8153028.00 VND.\nDự kiến đáp ứng đệm an toàn.\nKhoản sinh hoạt đã giữ trước trong planner 30 ngày: 8300000.00 VND.\nMonthly rent: 8000000.00 VND.\nMobile plan: 300000.00 VND.\nNếu giữ thêm toàn bộ khoản planner trên: -146972.00 VND.\nGiả định bảo thủ: planner và tài khoản thanh toán là các nguồn riêng, chưa ánh xạ tài khoản; không cộng số dư. Khoản chưa giữ trước và chi tiêu tương lai chưa biết; không thể bảo đảm đủ sinh hoạt.\nNguồn: registry hóa đơn; tài khoản sandbox đang chọn; policy safety buffer; planner; báo giá Q-VCB-E67A15D1 · Synthetic Vietcombank treasury quote · 2026-10-05T08:18:45 · hết hạn 2026-10-05T08:23:45.\nChỉ là mô phỏng; chưa tạo kế hoạch, phê duyệt hay biên nhận.",
+    "plans" : 0,
+    "payments" : 0
+  }, {
+    "question" : "How many months of living costs after tuition using Bank A Everyday?",
+    "expectedIntent" : "EXPLAIN_LIVING_EXPENSE_RUNWAY",
+    "actualIntent" : "EXPLAIN_LIVING_EXPENSE_RUNWAY",
+    "schemaValid" : true,
+    "latencyMs" : 1283,
+    "expectedEvidence" : "each month",
+    "actualReply" : "How much VND do you expect to need each month for living expenses? Confirm the form, including rent, food, transport and utilities. This is a scenario assumption, not a budget or payment authorization.",
+    "plans" : 0,
+    "payments" : 0
+  }, {
+    "question" : "Prepare the existing tuition payment draft",
+    "expectedIntent" : "CREATE_TUITION_PLAN",
+    "actualIntent" : "CREATE_TUITION_PLAN",
+    "schemaValid" : true,
+    "latencyMs" : 1301,
+    "expectedEvidence" : "awaiting",
+    "actualReply" : "Prepared tuition-payment plan ACT-CE8D3D08-EE6 · AWAITING_APPROVAL. Separate approval on the review screen is required. No payment yet.",
+    "plans" : 1,
+    "payments" : 0
+  }, {
+    "question" : "What is the status of plan ACT-CE8D3D08-EE6?",
+    "expectedIntent" : "CHECK_TUITION_STATUS",
+    "actualIntent" : "CHECK_TUITION_STATUS",
+    "schemaValid" : true,
+    "latencyMs" : 1257,
+    "expectedEvidence" : "AWAITING_APPROVAL",
+    "actualReply" : "Plan ACT-CE8D3D08-EE6 · AWAITING_APPROVAL. Separate approval on the review screen is required. No payment yet.",
+    "plans" : 1,
+    "payments" : 0
+  }, {
+    "approvalBeforeRefresh" : "NOT_EXECUTABLE",
+    "paymentsBeforeApproval" : 0,
+    "replacementPlan" : "ACT-1B2E1416-DA2",
+    "generationAttempts" : 0,
+    "case" : "expired_quote_recovery",
+    "oldPlan" : "ACT-CE8D3D08-EE6"
+  }, {
+    "question" : "Sau khi đã thanh toán giao dịch SBOX-DD713225-F30 tôi còn bao nhiêu?",
+    "expectedIntent" : "EXPLAIN_RECEIPT_BALANCE",
+    "actualIntent" : "EXPLAIN_RECEIPT_BALANCE",
+    "schemaValid" : true,
+    "latencyMs" : 1406,
+    "expectedEvidence" : "29239200.00",
+    "actualReply" : "THANH TOÁN HỌC PHÍ ĐÃ HOÀN TẤT · VND (Payment Sandbox).\nSố dư thực tế sau thanh toán: 29239200.00 VND.\nBiên nhận: SBOX-DD713225-F30 · Kế hoạch: ACT-1B2E1416-DA2.\nThời điểm thanh toán: 2026-10-05T08:30:00.319732.\nTài khoản nguồn: PAYER_VND.\nTổng tiền đã trừ: 70760800.00 VND; tiền quy đổi: 70400000.00 VND; phí: 360800.00 VND.\nNgười nhận đã ghi có: 20000.00 CNY.\nĐây là số dư được biên nhận ghi lại ngay sau giao dịch này. Giao dịch Sandbox phát sinh sau đó có thể làm số dư tài khoản hiện tại khác đi. Không cần báo giá đang hiệu lực và không tạo kế hoạch, phê duyệt hoặc thanh toán mới.",
+    "plans" : 2,
+    "payments" : 1
+  }, {
+    "question" : "What is my current Bank A Everyday balance?",
+    "expectedIntent" : "EXPLAIN_CURRENT_BALANCE",
+    "actualIntent" : "EXPLAIN_CURRENT_BALANCE",
+    "schemaValid" : true,
+    "latencyMs" : 1376,
+    "expectedEvidence" : "29239200.00",
+    "actualReply" : "CURRENT ACCOUNT BALANCES\nBank A Everyday · •••• 2048: 29239200.00 VND.\nTotal VND: 29239200.00.\nObserved at: 2026-10-05T08:30:03.640222300.\nSource: connected/verified payment_source_accounts with latest sandbox_accounts balances. Planner, recipient and fee accounts are excluded. Currencies are not added; safety buffer is not deducted. Synthetic data, not a live bank balance.",
+    "plans" : 2,
+    "payments" : 1
+  }, {
+    "question" : "Nếu đóng học phí thì còn bao nhiêu?",
+    "expectedIntent" : "EXPLAIN_TUITION_AFFORDABILITY",
+    "actualIntent" : "EXPLAIN_TUITION_AFFORDABILITY",
+    "schemaValid" : true,
+    "latencyMs" : 1268,
+    "expectedEvidence" : "không trừ học phí lần nữa",
+    "actualReply" : "THANH TOÁN HỌC PHÍ ĐÃ HOÀN TẤT · VND (Payment Sandbox).\nSố dư thực tế sau thanh toán: 29239200.00 VND.\nBiên nhận: SBOX-DD713225-F30 · Kế hoạch: ACT-1B2E1416-DA2.\nThời điểm thanh toán: 2026-10-05T08:30:00.319732.\nTài khoản nguồn: PAYER_VND.\nTổng tiền đã trừ: 70760800.00 VND; tiền quy đổi: 70400000.00 VND; phí: 360800.00 VND.\nNgười nhận đã ghi có: 20000.00 CNY.\nĐây là số dư được biên nhận ghi lại ngay sau giao dịch này. Giao dịch Sandbox phát sinh sau đó có thể làm số dư tài khoản hiện tại khác đi. Không cần báo giá đang hiệu lực và không tạo kế hoạch, phê duyệt hoặc thanh toán mới.\nHóa đơn đã thanh toán; không trừ học phí lần nữa. Bạn muốn xem số dư hiện tại hay một hóa đơn chưa thanh toán khác?",
+    "plans" : 2,
+    "payments" : 1
+  }, {
+    "question" : "Prepare tuition draft TUITION-B-DEMO using Vietcombank",
+    "expectedIntent" : "CREATE_TUITION_PLAN",
+    "actualIntent" : "CREATE_TUITION_PLAN",
+    "schemaValid" : true,
+    "latencyMs" : 1201,
+    "expectedEvidence" : "AWAITING_APPROVAL",
+    "actualReply" : "Prepared tuition-payment plan ACT-5209CEF0-067 · AWAITING_APPROVAL. Separate approval on the review screen is required. No payment yet.",
+    "plans" : 3,
+    "payments" : 1
+  }, {
+    "question" : "What is the status of plan ACT-5209CEF0-067?",
+    "expectedIntent" : "CHECK_TUITION_STATUS",
+    "actualIntent" : "CHECK_TUITION_STATUS",
+    "schemaValid" : true,
+    "latencyMs" : 1226,
+    "expectedEvidence" : "AWAITING_APPROVAL",
+    "actualReply" : "Plan ACT-5209CEF0-067 · AWAITING_APPROVAL. Separate approval on the review screen is required. No payment yet.",
+    "plans" : 3,
+    "payments" : 1
+  }, {
+    "workspaceBill" : 1,
+    "actual" : "B_COMPLETED_WITHOUT_SELECTION_CHANGE",
+    "payments" : 2,
+    "case" : "draft_B_approval",
+    "planB" : "ACT-5209CEF0-067",
+    "sharedSource" : "PAYER_VND"
+  }, {
+    "case" : "injection",
+    "generationAttempts" : 0,
+    "actual" : "PREFILTER_BLOCKED"
+  } ]
+}

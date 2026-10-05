@@ -127,7 +127,7 @@ class SessionConversationIntegrationTest {
         assertTrue(answer.contains("Số dư thực tế sau thanh toán: 29239200.00 VND"));
         assertTrue(answer.contains(receipt.transactionId()));
         assertTrue(answer.contains("Không cần báo giá đang hiệu lực"));
-        assertEquals(ModelConversationContext.Topic.TUITION_AFFORDABILITY,view(session).topic());
+        assertEquals(ModelConversationContext.Topic.RECEIPT_BALANCE,view(session).topic());
         assertEquals(1,payments.sandboxTransactionCount());
         assertEquals(receipt.transactionId(),payments.receiptForAction(plan.id()).transactionId());
     }
@@ -171,10 +171,10 @@ class SessionConversationIntegrationTest {
     @Test void missingOrAmbiguousSelectedAccountNeverFallsThroughToFirstAccount(){
         stub(CREATE_TUITION_PLAN);
         db.update("UPDATE payment_source_accounts SET selected=FALSE");
-        var before=PersonalFinanceAiIntegrationTest.snapshot(db);assertTrue(ask("Prepare tuition draft").contains("một tài khoản nguồn"));
+        var before=PersonalFinanceAiIntegrationTest.snapshot(db);assertTrue(ask("Prepare tuition draft").contains("một tài khoản trong chat"));
         assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));assertNull(payments.latestAction());
         db.update("UPDATE payment_source_accounts SET selected=TRUE");
-        before=PersonalFinanceAiIntegrationTest.snapshot(db);assertTrue(ask("Prepare tuition draft").contains("một tài khoản nguồn"));
+        before=PersonalFinanceAiIntegrationTest.snapshot(db);assertTrue(ask("Prepare tuition draft").contains("một tài khoản trong chat"));
         assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));assertNull(payments.latestAction());
     }
     @Test void modelCannotUpgradeFollowupOrNegatedRequestIntoDraftAndExplicitDraftNeedsApproval(){
@@ -241,7 +241,7 @@ class SessionConversationIntegrationTest {
     @Test void quoteExpiryAndWorkspaceChangesBlockStaleContextWithoutRefreshing(){
         stub(COMPARE_TUITION_CHANNELS);ask("Compare tuition channels");
         db.update("UPDATE fx_quotes SET expires_at=?",LocalDateTime.now().minusSeconds(1));var before=PersonalFinanceAiIntegrationTest.snapshot(db);
-        clearInvocations(llm);assertTrue(ask("What about the fastest option?").contains("hết hạn"));verify(llm,never()).classify(anyString());
+        clearInvocations(llm);assertTrue(ask("What about the fastest option?").contains("hết hạn"));verify(llm,times(1)).classify(anyString());
         assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));assertNull(payments.latestAction());
         crossBorder.refreshQuotes();ask("Compare tuition channels");
         db.update("UPDATE payment_source_accounts SET selected=(account_id='VCB_VND')");
@@ -251,11 +251,11 @@ class SessionConversationIntegrationTest {
     @Test void billVersionAndPlanHashAreRevalidatedBeforeAnotherTurn(){
         stub(COMPARE_TUITION_CHANNELS);ask("Compare tuition channels");
         db.update("UPDATE international_bills SET updated_at=? WHERE selected=TRUE",LocalDateTime.now().plusSeconds(1));
-        clearInvocations(llm);assertTrue(ask("What about the fastest option?").contains("thay đổi"));verify(llm,never()).classify(anyString());
+        clearInvocations(llm);assertTrue(ask("What about the fastest option?").contains("thay đổi"));verify(llm,times(1)).classify(anyString());
         stub(CREATE_TUITION_PLAN);ask("Prepare tuition draft");var plan=payments.latestAction();assertNotNull(plan);
         db.update("UPDATE action_plans SET action_hash='test-stale-hash' WHERE id=?",plan.id());
         var before=PersonalFinanceAiIntegrationTest.snapshot(db);clearInvocations(llm);
-        assertTrue(ask("What's its status?").contains("thay đổi"));verify(llm,never()).classify(anyString());
+        assertTrue(ask("What's its status?").contains("thay đổi"));verify(llm,times(1)).classify(anyString());
         assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));assertNull(payments.receiptForAction(plan.id()));
     }
     @Test void expiredCapabilitiesAndResetAcrossRegisteredSessionsCannotBeReused(){

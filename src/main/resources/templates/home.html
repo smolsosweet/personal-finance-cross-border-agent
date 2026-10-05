@@ -508,6 +508,7 @@
       <p>Choose a question, then press Send. Opening the assistant does not create or approve a payment.</p>
       <div data-assistant-context-state data-testid="assistant-context-state">
         <p><span>Conversation topic</span> · <strong th:text="${conversationContext.topic}"></strong></p>
+        <p th:if="${conversationContext.pending.name() != 'NONE'}" data-testid="assistant-pending"><span>Waiting for clarification</span> · <strong th:text="${conversationContext.pending}"></strong></p>
         <p th:if="${!#strings.isEmpty(conversationContext.clarification)}" th:text="${conversationContext.clarification}"></p>
         <div class="assistant-context-choices" data-testid="assistant-context-choices">
           <form th:each="choice : ${conversationContext.choices}" th:action="@{/agent/context/choice}" method="post" data-context-form data-chat-timeout="10000"><input type="hidden" name="token" th:value="${choice.token}"><button type="submit" class="secondary" data-testid="assistant-context-choice" th:text="${choice.label}"></button></form>
@@ -539,7 +540,14 @@
               <div th:if="${paymentReview != null}"><dt th:text="${latestReceipt == null ? 'Projected balance after payment' : 'Source balance after payment'}"></dt><dd data-testid="assistant-plan-remaining" th:text="${#numbers.formatDecimal(paymentReview.balanceAfter,1,'COMMA',2,'POINT') + ' VND'}"></dd></div>
             </dl>
             <p>These figures come from the displayed plan. Financial questions use recorded data and estimates; they do not approve this plan.</p>
-            <p th:if="${latestAction.requiredPermission == 'APPROVAL'}">This plan requires explicit approval on the payment review screen. Creating a plan or sending a chat message does not execute it.</p>
+            <div th:switch="${latestAction.status}" data-testid="assistant-plan-state">
+              <p th:case="'AWAITING_APPROVAL'">This plan requires explicit approval on the payment review screen. Creating a plan or sending a chat message does not execute it.</p>
+              <p th:case="'COMPLETED'">Payment completed. View its receipt; no further approval is required for this payment.</p>
+              <p th:case="'INVALIDATED'">Plan invalidated. Review the changed bill or quote before creating a new draft.</p>
+              <p th:case="'BLOCKED'">Plan blocked. Review the policy reason before continuing.</p>
+              <p th:case="'CANCELED'">Plan canceled. No new execution is available for this plan.</p>
+              <p th:case="*">Reload the authoritative plan state. Chat does not approve or execute payments.</p>
+            </div>
           </details>
         </div>
         <button th:if="${latestAction != null}" type="button" class="secondary" data-assistant-review-plan data-testid="assistant-review-plan">View payment plan</button>

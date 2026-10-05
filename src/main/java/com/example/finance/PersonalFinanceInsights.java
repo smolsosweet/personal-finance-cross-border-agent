@@ -91,22 +91,25 @@ public class PersonalFinanceInsights {
     }
 
     private String affordability(PhaseFourService payments, boolean vi) {
+        return tuitionProjection(payments,null,null,ModelConversationContext.Channel.NONE,vi);
+    }
+    String tuitionProjection(PhaseFourService payments,Integer billId,String accountId,ModelConversationContext.Channel channel,boolean vi) {
         String heading = period(vi) + (vi ? "ƯỚC TÍNH SAU HỌC PHÍ · VND (không phải thanh toán).\n" : "TUITION PROJECTION · VND (estimate, not a payment).\n")
                 + (vi ? "Giới hạn: planner và tài khoản Sandbox chưa ánh xạ với nhau. Các con số dưới đây là ước tính; chưa thể kết luận đủ tiền sinh hoạt.\n"
                       : "Limitation: planner and Sandbox accounts are not mapped to each other. Figures below are estimates; sufficient living funds cannot be confirmed.\n");
         CrossBorderService.StudentExpense expense;
-        try { expense = crossBorder.selectedExpense(); }
+        try { expense = billId==null?crossBorder.selectedExpense():crossBorder.expense(billId); }
         catch (IllegalStateException ex) { return heading + limitation(vi, "Không có hóa đơn đang chọn.", "No selected bill."); }
         if (expense.executed()) return completedAffordability(payments,expense,vi);
         if (!expense.active() || expense.amount().signum() <= 0 || !"TUITION".equals(expense.expenseType()))
             return heading + limitation(vi, "Cần hóa đơn học phí đang hoạt động, chưa thanh toán.", "An active unpaid tuition bill is required.");
         if (!crossBorder.verifyRecipient(expense.id()).verified())
             return heading + limitation(vi, "Người thụ hưởng chưa khớp registry.", "Recipient does not match the registry.");
-        var source = payments.paymentSourceAccounts().stream().filter(PhaseFourService.PaymentSourceAccount::selected).findFirst().orElse(null);
+        var source = payments.paymentSourceAccounts().stream().filter(a->accountId==null?a.selected():a.accountId().equals(accountId)).findFirst().orElse(null);
         if (source == null || !source.ready())
             return heading + limitation(vi, "Chưa có tài khoản nguồn được kết nối, xác minh và cho phép.", "No connected, verified, eligible selected source account.");
         var quote = crossBorder.rankedQuotesForExpense(expense.id()).stream()
-                .filter(q -> source.accountId().equals(q.sourceAccountId())).findFirst().orElse(null);
+                .filter(q -> source.accountId().equals(q.sourceAccountId())&&(channel==ModelConversationContext.Channel.NONE||channel.name().equals(q.channelId()))).findFirst().orElse(null);
         if (quote == null || !quote.eligible())
             return heading + limitation(vi, "Kênh của tài khoản đang chọn không khả dụng hoặc thiếu báo giá.", "Selected source channel is unavailable or has no quote.");
         if (quote.expired())
@@ -172,6 +175,8 @@ public class PersonalFinanceInsights {
                 .append(money(receipt.vndBalanceAfter())).append(" VND.\n")
                 .append(vi?"Biên nhận: ":"Receipt: ").append(receipt.transactionId())
                 .append(vi?" · Kế hoạch: ":" · Plan: ").append(plan.id()).append(".\n")
+                .append(vi?"Thời điểm thanh toán: ":"Payment timestamp: ").append(receipt.createdAt()).append(".\n")
+                .append(vi?"Tài khoản nguồn: ":"Source account: ").append(receipt.sourceAccountId()).append(".\n")
                 .append(vi?"Tổng tiền đã trừ: ":"Total debited: ").append(money(receipt.vndDebit()))
                 .append(vi?" VND; tiền quy đổi: ":" VND; conversion: ").append(money(receipt.conversionVnd()))
                 .append(vi?" VND; phí: ":" VND; fees: ").append(money(receipt.feeDeductionVnd())).append(" VND.\n")

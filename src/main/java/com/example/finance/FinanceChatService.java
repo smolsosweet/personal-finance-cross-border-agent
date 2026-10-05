@@ -65,16 +65,15 @@ public class FinanceChatService {
         if (PhaseFourService.isInjection(message)) {
             early = "This request cannot change payment safety controls or bypass approval.";
             outcome = "BLOCKED"; reason = "UNTRUSTED INSTRUCTION";
-        } else if (contextError != null) {
-            early = contextError; reason = turn.reason();
-        } else if (OTHER_PERIOD.matcher(message).find()) {
+        } else if (turn!=null&&!turn.current()) {
+            early=vi?"Yêu cầu đã được thay thế hoặc reset; kết quả cũ đã bỏ qua.":"Request superseded or reset; old result discarded.";
+            reason="CONTEXT_STALE";
+        } else if (OTHER_PERIOD.matcher(message.replaceAll("(?iu)\\b(?:ACT|SBOX|SZDU)-[A-Z0-9-]+\\b","")).find()) {
             early = clarification(vi);
             reason = "UNSUPPORTED PERIOD";
-        } else if ((turn == null || turn.summary().topic() == ModelConversationContext.Topic.NONE)
-                && (lower.contains("surplus") || ((lower.contains("balance") || lower.contains("số dư"))
-                && !Pattern.compile("(?iu)tuition|university|fee|budget|spend|học phí|ngân sách|chi tiêu|sinh hoạt|after|remaining|project").matcher(message).find()))) {
-            early = payments.deterministicFallback(message);
-            reason = "GUIDED BALANCE";
+        } else if (lower.contains("surplus")) {
+            early=payments.deterministicFallback(message);
+            reason="GUIDED SURPLUS";
         } else if (!online) {
             early = payments.deterministicFallback(message);
             outcome = "FALLBACK"; reason = "LLM UNAVAILABLE";
@@ -116,7 +115,10 @@ public class FinanceChatService {
             } else {
                 audit("LLM_INTENT", "INTENT_CLASSIFIED", requestId, "COMPLETED", classified.intent().name(),
                         "Preference " + classified.channelPreference() + "; confidence " + confidenceBand(classified.confidence()));
-                if (turn != null) {
+                if (turn != null && contextError != null && !independentLookup(classified.intent())) {
+                    answer=contextError;
+                    turn.rejected("CONTEXT_STALE",vi);
+                } else if (turn != null) {
                     answer = turn.respond(classified, vi);
                 } else if (isReadOnly(classified.intent())) {
                     if (classified.confidence().compareTo(new BigDecimal("0.80")) < 0
@@ -125,7 +127,9 @@ public class FinanceChatService {
                         audit("FINANCE_READ_ONLY", "READ_ONLY_CLARIFICATION", requestId, "CLARIFICATION",
                                 "AMBIGUOUS_REQUEST", "Confidence or scope requires clarification");
                     } else {
-                        answer = classified.intent()==LlmIntent.Intent.EXPLAIN_LIVING_EXPENSE_RUNWAY
+                        answer = classified.intent()==LlmIntent.Intent.EXPLAIN_CURRENT_BALANCE || classified.intent()==LlmIntent.Intent.EXPLAIN_RECEIPT_BALANCE
+                                ? (vi?"Dùng trợ lý theo phiên để chọn rõ tài khoản hoặc biên nhận trong chat.":"Use the session assistant to choose an account or receipt inside chat.")
+                                : classified.intent()==LlmIntent.Intent.EXPLAIN_LIVING_EXPENSE_RUNWAY
                                 ? (vi?"Mở trợ lý theo phiên và xác nhận mức chi VND trong form để ước tính; không tự suy ra mức chi.":"Use the session assistant and confirm VND monthly expenses in its form; no baseline is inferred.")
                                 : insights.render(classified.intent(), payments, vi);
                         audit("FINANCE_READ_ONLY", "READ_ONLY_RESULT", requestId, "COMPLETED", classified.intent().name(),
@@ -151,9 +155,19 @@ public class FinanceChatService {
 
     static boolean isReadOnly(LlmIntent.Intent intent) {
         return intent == LlmIntent.Intent.EXPLAIN_SPENDING_SUMMARY
+                || intent == LlmIntent.Intent.EXPLAIN_CURRENT_BALANCE
+                || intent == LlmIntent.Intent.EXPLAIN_RECEIPT_BALANCE
                 || intent == LlmIntent.Intent.EXPLAIN_BUDGET_STATUS
                 || intent == LlmIntent.Intent.EXPLAIN_TUITION_AFFORDABILITY
                 || intent == LlmIntent.Intent.EXPLAIN_LIVING_EXPENSE_RUNWAY;
+    }
+    // A stale FX scenario cannot gate these independent, read-only lookups. They resolve and
+    // validate their own backend candidates. Draft creation still fails on the original context error.
+    private static boolean independentLookup(LlmIntent.Intent intent) {
+        return intent==LlmIntent.Intent.EXPLAIN_CURRENT_BALANCE
+                || intent==LlmIntent.Intent.EXPLAIN_RECEIPT_BALANCE
+                || intent==LlmIntent.Intent.EXPLAIN_SPENDING_SUMMARY
+                || intent==LlmIntent.Intent.EXPLAIN_BUDGET_STATUS;
     }
 
     static boolean scopedQuestion(String message) {

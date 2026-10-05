@@ -9,6 +9,21 @@ import org.junit.jupiter.api.Test;
 class StrictLlmIntentParserTest {
     private final ObjectMapper mapper = new ObjectMapper();
     private final StrictLlmIntentParser parser = new StrictLlmIntentParser(mapper);
+    @Test void balanceIntentsUseSameStrictSchemaAcrossAllProviders(){
+        for(String intent:java.util.List.of("EXPLAIN_CURRENT_BALANCE","EXPLAIN_RECEIPT_BALANCE")){
+            String json="{\"intent\":\""+intent+"\",\"channelPreference\":\"NONE\",\"confidence\":0.95,\"clarificationCode\":\"NONE\"}";
+            assertEquals(intent,parser.parse(json).intent().name());
+            assertThrows(LlmIntentException.class,()->parser.parse(json.replace("\"NONE\",\"confidence\"","\"CHEAPEST\",\"confidence\"")));
+            assertThrows(LlmIntentException.class,()->parser.parse(json.replace("}",",\"accountId\":\"PAYER_VND\"}")));
+            assertThrows(LlmIntentException.class,()->parser.parse(json.replace("}",",\"balance\":100000000}")));
+        }
+        var schema=LlmIntentContract.schema();assertEquals(false,schema.get("additionalProperties"));
+        for(Object provider:java.util.List.of(
+                new OpenAiIntentClient(mapper,parser,true,"synthetic","test-model").requestBody("Current balance"),
+                new OllamaIntentClient(mapper,parser,true,"http://localhost:11434","qwen3:4b",java.time.Duration.ofSeconds(2),java.time.Duration.ofSeconds(2)).requestBody("Current balance"))){
+            String request=provider.toString();assertTrue(request.contains("EXPLAIN_CURRENT_BALANCE"));assertTrue(request.contains("EXPLAIN_RECEIPT_BALANCE"));
+        }
+    }
 
     @Test
     void acceptsOnlyTheBackendOwnedIntentContract() {

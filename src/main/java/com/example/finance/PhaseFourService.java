@@ -236,7 +236,7 @@ public class PhaseFourService {
             case COMPARE_TUITION_CHANNELS -> verifiedChannelComparison(classified.channelPreference());
             case EXPLAIN_CHANNEL_UNAVAILABLE -> explainBankB();
             case CHECK_TUITION_STATUS -> verifiedTuitionStatus();
-            case EXPLAIN_SPENDING_SUMMARY, EXPLAIN_BUDGET_STATUS, EXPLAIN_TUITION_AFFORDABILITY, EXPLAIN_LIVING_EXPENSE_RUNWAY ->
+            case EXPLAIN_SPENDING_SUMMARY, EXPLAIN_BUDGET_STATUS, EXPLAIN_TUITION_AFFORDABILITY, EXPLAIN_LIVING_EXPENSE_RUNWAY, EXPLAIN_CURRENT_BALANCE, EXPLAIN_RECEIPT_BALANCE ->
                     throw new IllegalArgumentException("Read-only intents must use the insights router");
             case NEED_CLARIFICATION ->
                     "Please clarify whether you want to compare tuition channels, check tuition status, or prepare a tuition-payment plan.";
@@ -349,7 +349,10 @@ public class PhaseFourService {
 
     String deterministicFallback(String message) {
         String lower = message.toLowerCase(Locale.ROOT);
-        if (lower.contains("surplus") || lower.contains("balance") || lower.contains("số dư")) {
+        if (!lower.contains("surplus") && (lower.contains("balance") || lower.contains("số dư"))) {
+            return "AI is temporarily unavailable. Current account balances are available in the account list; no balance is inferred from planner surplus or historical receipts.";
+        }
+        if (lower.contains("surplus")) {
             BigDecimal surplus=(BigDecimal)transactions.dashboard().get("surplus");
             return "The deterministic surplus is "+surplus.toPlainString()
                     +" VND after the 3,000,000 VND safety buffer.";
@@ -389,6 +392,18 @@ public class PhaseFourService {
     @Transactional
     public ActionPlan createTuitionPlan(String channelId, String sourceAccountId, int expenseId,
                                         String billVersion, String quoteId) {
+        return createBoundTuitionPlan(channelId,sourceAccountId,expenseId,billVersion,quoteId,true);
+    }
+
+    /** Explicit backend-resolved conversation objects; never changes shared workspace selections. */
+    @Transactional
+    public ActionPlan createConversationTuitionPlan(String channelId, String sourceAccountId, int expenseId,
+                                                    String billVersion, String quoteId) {
+        return createBoundTuitionPlan(channelId,sourceAccountId,expenseId,billVersion,quoteId,false);
+    }
+
+    private ActionPlan createBoundTuitionPlan(String channelId, String sourceAccountId, int expenseId,
+                                              String billVersion, String quoteId, boolean requireWorkspaceSelection) {
         lockPaymentWorkflow();
         var expense=crossBorder.expense(expenseId);
         if (!expense.active() || expense.executed())
@@ -396,7 +411,7 @@ public class PhaseFourService {
         LocalDateTime requestedVersion;
         try { requestedVersion=LocalDateTime.parse(billVersion); }
         catch (Exception ex) { throw new IllegalArgumentException("Bill version is missing or invalid; reload comparison before creating a plan"); }
-        if (!expense.selected() || !expense.updatedAt().equals(requestedVersion))
+        if ((requireWorkspaceSelection && !expense.selected()) || !expense.updatedAt().equals(requestedVersion))
             throw new IllegalArgumentException("The selected bill changed; reload comparison before creating a plan");
         PaymentSourceAccount source=paymentSource(sourceAccountId);
         var quote=crossBorder.rankedQuotesForExpense(expenseId).stream()

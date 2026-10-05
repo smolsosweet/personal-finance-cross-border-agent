@@ -118,10 +118,13 @@ public class PhaseOneController {
         model.addAttribute("completedPlanByExpense", phaseFour.completedPlansByExpense());
         Map<String,Object> agentTuitionInsight=latestAction!=null && "TUITION".equals(latestAction.actionType())
                 ? Map.of("priority", "BLOCKED".equals(paymentDecision.decision())?"BLOCKED":"HIGH",
-                        "title", "Student payment plan needs controlled execution",
+                        "title", "COMPLETED".equals(latestAction.status())?"Student payment completed":"Student payment plan needs controlled execution",
                         "message", "Bill "+paymentReview.paymentReference()+" for "+latestAction.destinationAmount().toPlainString()
                                 +" "+latestAction.destinationCurrency()+"; due "+paymentReview.dueDate()
-                                +"; latest safe date "+paymentReview.latestSafeDate()+". Approval Mode is required before payment.",
+                                +"; latest safe date "+paymentReview.latestSafeDate()+". "
+                                +("COMPLETED".equals(latestAction.status())?"Payment completed; view the immutable Sandbox receipt."
+                                  :"AWAITING_APPROVAL".equals(latestAction.status())?"Approval Mode is required before payment."
+                                  :"Plan state: "+latestAction.status()+". Check the authoritative review before proceeding."),
                         "evidence", "Locked payment plan · "+paymentReview.channelName()+" · quote "+latestAction.quoteId()
                                 +" · landed cost "+latestAction.debitAmount().toPlainString()+" VND")
                 : defaultTuitionInsight;

@@ -54,12 +54,21 @@ public class ConversationPresentation {
         if(!value.isEmpty())facts.add(new Fact(label,money(value,vi)));
     }
     private Reply render(String id,String role,String text){
-        boolean vi=text.contains("Kỳ báo cáo:")||text.contains("ƯỚC TÍNH")||text.startsWith("So sánh kênh học phí")||text.startsWith("THANH TOÁN HỌC PHÍ ĐÃ HOÀN TẤT");
+        boolean vi=text.contains("Kỳ báo cáo:")||text.contains("ƯỚC TÍNH")||text.startsWith("So sánh kênh học phí")||text.startsWith("THANH TOÁN HỌC PHÍ ĐÃ HOÀN TẤT")||text.startsWith("SỐ DƯ TÀI KHOẢN HIỆN TẠI");
         String conclusion="",subtitle=""; boolean estimate=false;
         var facts=new ArrayList<Fact>(); var warnings=new ArrayList<String>();
         List<String> columns=List.of(); var rows=new ArrayList<List<String>>(); var channels=new ArrayList<Channel>();
         if("ASSISTANT".equals(role)){
-            if(text.startsWith("ƯỚC TÍNH THỜI GIAN SINH HOẠT")||text.startsWith("LIVING-EXPENSE RUNWAY ESTIMATE")){
+            if(text.startsWith("SỐ DƯ TÀI KHOẢN HIỆN TẠI")||text.startsWith("CURRENT ACCOUNT BALANCES")){
+                conclusion=vi?"Số dư tài khoản hiện tại":"Current account balances";
+                subtitle=line(text,vi?"Quan sát lúc: ":"Observed at: ");
+                columns=vi?List.of("Tài khoản","Số dư","Tiền tệ"):List.of("Account","Balance","Currency");
+                var m=Pattern.compile("^(.+ · .+): (-?[0-9]+\\.[0-9]+) ([A-Z]{3})\\.$",Pattern.MULTILINE).matcher(text);
+                while(m.find())rows.add(List.of(m.group(1),number(m.group(2),vi),m.group(3)));
+                m=Pattern.compile("^(?:Tổng|Total) ([A-Z]{3}): (-?[0-9]+\\.[0-9]+)\\.$",Pattern.MULTILINE).matcher(text);
+                while(m.find())facts.add(new Fact((vi?"Tổng ":"Total ")+m.group(1),number(m.group(2),vi)+" "+m.group(1)));
+                warnings.add(vi?"Số dư Sandbox mới nhất; tách tiền tệ, không cộng planner và không trừ đệm an toàn.":"Latest Sandbox balances; currencies separate, planner excluded, no safety buffer deduction.");
+            }else if(text.startsWith("ƯỚC TÍNH THỜI GIAN SINH HOẠT")||text.startsWith("LIVING-EXPENSE RUNWAY ESTIMATE")){
                 String months=find(text,"^(?:Khoảng|Approximately) ([0-9]+\\.[0-9]+) (?:tháng|months)",1);
                 if(!months.isEmpty()){
                     conclusion=(vi?"Đủ khoảng ":"Covers approximately ")+(vi?months.replace('.',','):months)+(vi?" tháng":" months"); estimate=true;
@@ -76,6 +85,8 @@ public class ConversationPresentation {
                     conclusion=(vi?"Số dư sau thanh toán: ":"Balance after payment: ")+money(remaining,vi);
                     subtitle=vi?"Số dư ghi nhận trong biên nhận Sandbox":"Balance recorded in the Sandbox receipt";
                     fact(facts,text,vi?"Tổng tiền đã trừ: ":"Total debited: ",vi?"Đã trừ":"Debited",vi);
+                    facts.add(new Fact(vi?"Thời điểm thanh toán":"Payment timestamp",line(text,vi?"Thời điểm thanh toán: ":"Payment timestamp: ")));
+                    facts.add(new Fact(vi?"Biên nhận":"Receipt",line(text,vi?"Biên nhận: ":"Receipt: ")));
                     warnings.add(vi?"Số dư này là kết quả đã thực thi, không phải dự báo và không tạo thanh toán mới.":"This is an executed result, not a projection, and does not create a new payment.");
                 }
             }else if(text.contains("Category budgets: VND.")||text.contains("Ngân sách danh mục: VND.")){

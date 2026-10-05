@@ -4,7 +4,7 @@ import java.util.function.Supplier;
 
 /** Enum-only model input. Object IDs, transcripts and financial facts never enter this boundary. */
 public record ModelConversationContext(Topic topic, Channel channel, LlmIntent.Intent lastIntent, Pending pending) {
-    public enum Topic { NONE, SPENDING, BUDGET, TUITION_AFFORDABILITY, TUITION_CHANNELS, CHANNEL_UNAVAILABLE, TUITION_PLAN, TUITION_STATUS, LIVING_EXPENSE_RUNWAY }
+    public enum Topic { NONE, CURRENT_BALANCE, RECEIPT_BALANCE, SPENDING, BUDGET, TUITION_AFFORDABILITY, TUITION_CHANNELS, CHANNEL_UNAVAILABLE, TUITION_PLAN, TUITION_STATUS, LIVING_EXPENSE_RUNWAY }
     public enum Channel { NONE, ALIPAY, BANK_A, BANK_B, VCB, TCB, MOMO }
     public enum Pending { NONE, TOPIC, BILL, ACCOUNT, CHANNEL, PLAN, MONTHLY_EXPENSE }
     private static final ThreadLocal<ModelConversationContext> CURRENT = new ThreadLocal<>();
@@ -24,6 +24,10 @@ public record ModelConversationContext(Topic topic, Channel channel, LlmIntent.I
             Topic BUDGET plus 'How much is left?' / 'Còn bao nhiêu?' means EXPLAIN_BUDGET_STATUS.
             Topic SPENDING plus a request for the biggest category means EXPLAIN_SPENDING_SUMMARY.
             Topic TUITION_AFFORDABILITY plus a question about the remainder means EXPLAIN_TUITION_AFFORDABILITY.
+            Topic CURRENT_BALANCE plus 'How much is left now?' means EXPLAIN_CURRENT_BALANCE.
+            Topic RECEIPT_BALANCE plus a question about that completed payment means EXPLAIN_RECEIPT_BALANCE.
+            An explicit current balance request always overrides payment/history context. Account references
+            are resolved by the backend, never output IDs or add fields to the four-field schema.
             Topic TUITION_CHANNELS plus 'What about the fastest option?' / 'Còn kênh nhanh nhất?' means
             COMPARE_TUITION_CHANNELS with FASTEST. It NEVER means CREATE_TUITION_PLAN.
             Topic CHANNEL_UNAVAILABLE plus 'Why can't I use that channel?' / 'Vì sao kênh đó không dùng được?'

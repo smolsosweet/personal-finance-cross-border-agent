@@ -20,6 +20,14 @@ final class LlmIntentContract {
             - COMPARE_TUITION_CHANNELS: compare, rank, or list tuition payment routes or channels.
             - EXPLAIN_CHANNEL_UNAVAILABLE: ask why Bank B or another named tuition channel cannot be used.
             - CHECK_TUITION_STATUS: ask for the current tuition bill or tuition payment status.
+            - EXPLAIN_CURRENT_BALANCE: ask how much money is currently in an account, wallet or all accounts
+              belonging to this demo profile. Natural named account references such as Bank A are supported.
+              "Hiện Bank A còn bao nhiêu tiền?", "tổng số tiền tôi còn lại trong tài khoản là bao nhiêu",
+              "What is my current balance?" and "Show all my account balances" use this intent with NONE.
+              Current balances are not remaining budgets, planner surplus or balances in old receipts.
+            - EXPLAIN_RECEIPT_BALANCE: ask the actual balance immediately after a completed payment,
+              e.g. "Sau khi đã thanh toán học phí tôi còn bao nhiêu?" or "What remained after that payment?"
+              Use NONE. The backend selects and reads immutable receipts, never calculate a projection.
             - EXPLAIN_SPENDING_SUMMARY: asks about current-month recorded expenses, category breakdown, or the largest expense category.
             - EXPLAIN_BUDGET_STATUS: asks about configured current-month category budgets, remaining budget, or overspending.
             - EXPLAIN_TUITION_AFFORDABILITY: asks whether paying the existing tuition bill leaves enough balance for living costs.
@@ -51,7 +59,11 @@ final class LlmIntentContract {
             Budget: {"intent":"EXPLAIN_BUDGET_STATUS","channelPreference":"NONE","confidence":0.95,"clarificationCode":"NONE"}
             Affordability: {"intent":"EXPLAIN_TUITION_AFFORDABILITY","channelPreference":"NONE","confidence":0.95,"clarificationCode":"NONE"}
             Only the current demo month and existing demo profile are supported. Requests for last month, next month,
-            a specific month/year, custom dates, another person/account/category, or multiple operations need clarification.
+            a specific month/year, custom dates, another person's data, custom category reports, or multiple
+            operations need clarification. Named accounts of this profile are supported for current balances
+            and tuition scenarios. Explicit account/bill/plan references override earlier conversational scope.
+            A hypothetical future payment is EXPLAIN_TUITION_AFFORDABILITY even if a payment may already exist;
+            backend checks paid state and must never subtract it twice.
             Do not infer financial parameters. A hypothetical affordability question does not authorize a payment.
             "can you help me with that?" and "bạn giúp tôi việc đó được không?" are NEED_CLARIFICATION with
             AMBIGUOUS_REQUEST. A vague or polite request is not unsafe. For every intent other than
@@ -67,6 +79,7 @@ final class LlmIntentContract {
                 "EXPLAIN_CHANNEL_UNAVAILABLE", "CHECK_TUITION_STATUS",
                 "EXPLAIN_SPENDING_SUMMARY", "EXPLAIN_BUDGET_STATUS", "EXPLAIN_TUITION_AFFORDABILITY",
                 "EXPLAIN_LIVING_EXPENSE_RUNWAY",
+                "EXPLAIN_CURRENT_BALANCE", "EXPLAIN_RECEIPT_BALANCE",
                 "NEED_CLARIFICATION", "UNSAFE_REQUEST", "UNSUPPORTED_REQUEST")));
         properties.put("channelPreference", Map.of("type", "string", "enum", List.of(
                 "NONE", "CHEAPEST", "FASTEST")));

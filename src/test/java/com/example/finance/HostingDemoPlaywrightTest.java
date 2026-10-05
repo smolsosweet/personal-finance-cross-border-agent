@@ -9,16 +9,18 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
 /** Real browser/app, hosting profile; AI disabled, zero external model calls. */
 @ActiveProfiles("hosting")
-@SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.DEFINED_PORT,
-    properties={"server.port=8124","finbridge.llm.enabled=false"})
+@SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties={"finbridge.llm.enabled=false"})
 class HostingDemoPlaywrightTest {
     @Autowired DemoDataService demo;
     @Autowired PhaseFourService payments;
     @Autowired JdbcTemplate db;
     @Autowired Environment environment;
+    @LocalServerPort int port;
     @BeforeEach void reset(){demo.resetAll();}
 
     @Test void hostingUsesEphemeralDatabaseAndShowsBilingualSharedNotice(){
@@ -27,7 +29,7 @@ class HostingDemoPlaywrightTest {
         assertEquals("10s",environment.getProperty("finbridge.llm.connect-timeout"));
         assertEquals("30s",environment.getProperty("finbridge.llm.request-timeout"));
         try(Playwright pw=Playwright.create();Browser browser=pw.chromium().launch(new BrowserType.LaunchOptions().setChannel("chrome").setHeadless(true))){
-            Page page=browser.newPage();page.navigate("http://localhost:8124");
+            Page page=browser.newPage();page.navigate("http://localhost:"+port);
             page.getByTestId("language-en").click();
             assertThat(page.getByTestId("shared-demo-notice")).containsText("Reset affects everyone. Restart restores the seed data.");
             assertThat(page.getByTestId("reset-demo").locator("..")).hasAttribute("data-confirm-en","Reset shared synthetic data for the whole team? This affects everyone.");
@@ -39,7 +41,7 @@ class HostingDemoPlaywrightTest {
     @Test void teamSeesSharedDraftAndResetButHasSeparateChatSessions(){
         try(Playwright pw=Playwright.create();Browser browser=pw.chromium().launch(new BrowserType.LaunchOptions().setChannel("chrome").setHeadless(true));
             BrowserContext first=browser.newContext();BrowserContext second=browser.newContext()){
-            Page a=first.newPage(),b=second.newPage();a.navigate("http://localhost:8124");b.navigate("http://localhost:8124");
+            Page a=first.newPage(),b=second.newPage();a.navigate("http://localhost:"+port);b.navigate("http://localhost:"+port);
             var draft=payments.createTuitionPlan("BANK_A");
             a.reload();b.reload();
             assertThat(a.getByTestId("tab-agent")).isVisible();assertThat(b.getByTestId("tab-agent")).isVisible();
