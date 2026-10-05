@@ -1,0 +1,55 @@
+{
+  "generationSubmissions" : 5,
+  "cap" : 20,
+  "results" : [ {
+    "payments" : 0,
+    "actualIntent" : "EXPLAIN_CURRENT_BALANCE",
+    "expectedIntent" : "EXPLAIN_CURRENT_BALANCE",
+    "question" : "Hiện Bank A Everyday còn bao nhiêu tiền?",
+    "schemaValid" : true,
+    "plans" : 0,
+    "actualReply" : "SỐ DƯ TÀI KHOẢN HIỆN TẠI\nBank A Everyday · •••• 2048: 100000000.00 VND.\nTổng VND: 100000000.00.\nQuan sát lúc: 2026-10-05T14:23:18.707247100.\nNguồn: sổ tài khoản chung financial_accounts, dùng cho Tổng quan, kế hoạch và Payment Sandbox. Nguồn nhập tay/tiền mặt được ghi rõ. Không cộng tài khoản người nhận hoặc tài khoản phí. Không cộng các tiền tệ; không trừ đệm an toàn. Dữ liệu mô phỏng, không phải số dư ngân hàng thật.",
+    "latencyMs" : 1957,
+    "expectedEvidence" : "100000000.00"
+  }, {
+    "payments" : 0,
+    "actualIntent" : "CREATE_TUITION_PLAN",
+    "expectedIntent" : "CREATE_TUITION_PLAN",
+    "question" : "Prepare the existing tuition payment draft using Bank A Everyday and Bank A International Transfer",
+    "schemaValid" : true,
+    "plans" : 1,
+    "actualReply" : "Prepared tuition-payment plan ACT-687DBF83-43E · AWAITING_APPROVAL. Separate approval on the review screen is required. No payment yet.",
+    "latencyMs" : 1298,
+    "expectedEvidence" : "AWAITING_APPROVAL"
+  }, {
+    "payments" : 1,
+    "actualIntent" : "EXPLAIN_CURRENT_BALANCE",
+    "expectedIntent" : "EXPLAIN_CURRENT_BALANCE",
+    "question" : "What is my current Bank A Everyday balance?",
+    "schemaValid" : true,
+    "plans" : 1,
+    "actualReply" : "CURRENT ACCOUNT BALANCES\nBank A Everyday · •••• 2048: 29239200.00 VND.\nTotal VND: 29239200.00.\nObserved at: 2026-10-05T14:23:23.050625600.\nSource: unified financial_accounts ledger shared by Overview, planning and Payment Sandbox. Manual/cash sources are labelled. Recipient and fee accounts are excluded. Currencies are not added; safety buffer is not deducted. Synthetic data, not a live bank balance.",
+    "latencyMs" : 1453,
+    "expectedEvidence" : "29239200.00"
+  }, {
+    "payments" : 1,
+    "actualIntent" : "EXPLAIN_RECEIPT_BALANCE",
+    "expectedIntent" : "EXPLAIN_RECEIPT_BALANCE",
+    "question" : "Sau khi đã thanh toán giao dịch SBOX-3A6DBC4A-B2D tôi còn bao nhiêu?",
+    "schemaValid" : true,
+    "plans" : 1,
+    "actualReply" : "THANH TOÁN HỌC PHÍ ĐÃ HOÀN TẤT · VND (Payment Sandbox).\nSố dư thực tế sau thanh toán: 29239200.00 VND.\nBiên nhận: SBOX-3A6DBC4A-B2D · Kế hoạch: ACT-687DBF83-43E.\nThời điểm thanh toán: 2026-10-05T14:23:20.476477.\nTài khoản nguồn: PAYER_VND.\nTổng tiền đã trừ: 70760800.00 VND; tiền quy đổi: 70400000.00 VND; phí: 360800.00 VND.\nNgười nhận đã ghi có: 20000.00 CNY.\nĐây là số dư được biên nhận ghi lại ngay sau giao dịch này. Sự kiện ngân hàng hoặc giao dịch phát sinh sau đó có thể làm số dư tài khoản hiện tại khác đi. Không cần báo giá đang hiệu lực và không tạo kế hoạch, phê duyệt hoặc thanh toán mới.",
+    "latencyMs" : 1631,
+    "expectedEvidence" : "29239200.00"
+  }, {
+    "payments" : 1,
+    "actualIntent" : "EXPLAIN_CURRENT_BALANCE",
+    "expectedIntent" : "EXPLAIN_CURRENT_BALANCE",
+    "question" : "What is my current Bank A Everyday balance?",
+    "schemaValid" : true,
+    "plans" : 1,
+    "actualReply" : "CURRENT ACCOUNT BALANCES\nBank A Everyday · •••• 2048: 30139200.00 VND.\nTotal VND: 30139200.00.\nObserved at: 2026-10-05T14:23:26.804227700.\nSource: unified financial_accounts ledger shared by Overview, planning and Payment Sandbox. Manual/cash sources are labelled. Recipient and fee accounts are excluded. Currencies are not added; safety buffer is not deducted. Synthetic data, not a live bank balance.",
+    "latencyMs" : 1641,
+    "expectedEvidence" : "30139200.00"
+  } ]
+}

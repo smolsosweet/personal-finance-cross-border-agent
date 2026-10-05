@@ -1,0 +1,346 @@
+[
+  {
+    "name": "com.example.finance.AssistantAnswerPresentationPlaywrightTest",
+    "tests": "7",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "23.853"
+  },
+  {
+    "name": "com.example.finance.AssistantPanelPlaywrightTest",
+    "tests": "9",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "21.512"
+  },
+  {
+    "name": "com.example.finance.CategorizationServiceTest",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.002"
+  },
+  {
+    "name": "com.example.finance.ContextualConversationPlaywrightTest",
+    "tests": "5",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "14.133"
+  },
+  {
+    "name": "com.example.finance.FinanceOverviewPlaywrightE2ETest",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "3.158"
+  },
+  {
+    "name": "com.example.finance.FinanceWorkspaceIntegrationTest",
+    "tests": "5",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.412"
+  },
+  {
+    "name": "com.example.finance.FinBridgePlaywrightE2ETest",
+    "tests": "10",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "11.31"
+  },
+  {
+    "name": "com.example.finance.GeminiIntegrationTest",
+    "tests": "4",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "5.181"
+  },
+  {
+    "name": "com.example.finance.GeminiIntentClientTest",
+    "tests": "38",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "1.124"
+  },
+  {
+    "name": "com.example.finance.GeminiStartupScriptTest",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "15.281"
+  },
+  {
+    "name": "com.example.finance.GlobalAssistantIntegrationTest",
+    "tests": "28",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "2.757"
+  },
+  {
+    "name": "com.example.finance.GlobalAssistantPlaywrightTest",
+    "tests": "5",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "27.211"
+  },
+  {
+    "name": "com.example.finance.HostingDemoPlaywrightTest",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "4.119"
+  },
+  {
+    "name": "com.example.finance.LivingExpenseRunwayTest",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.005"
+  },
+  {
+    "name": "com.example.finance.LlmIntentIntegrationTest",
+    "tests": "7",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.599"
+  },
+  {
+    "name": "com.example.finance.LlmProviderConfigurationTest",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.026"
+  },
+  {
+    "name": "com.example.finance.LocalStartupCmdTest",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.984"
+  },
+  {
+    "name": "com.example.finance.LocalStartupScriptTest",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "18.219"
+  },
+  {
+    "name": "com.example.finance.OllamaIntentClientTest",
+    "tests": "5",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.557"
+  },
+  {
+    "name": "com.example.finance.OllamaIntentIntegrationTest",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.361"
+  },
+  {
+    "name": "com.example.finance.PaymentSourceIntegrationTest",
+    "tests": "4",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.421"
+  },
+  {
+    "name": "com.example.finance.PaymentSourcePlaywrightE2ETest",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "2.033"
+  },
+  {
+    "name": "com.example.finance.PaymentWorkflowIntegrationTest",
+    "tests": "19",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "1.369"
+  },
+  {
+    "name": "com.example.finance.PaymentWorkflowPlaywrightE2ETest",
+    "tests": "5",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "12.479"
+  },
+  {
+    "name": "com.example.finance.PersonalFinanceAiIntegrationTest",
+    "tests": "12",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.379"
+  },
+  {
+    "name": "com.example.finance.PersonalFinanceAiPlaywrightTest",
+    "tests": "4",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "10.475"
+  },
+  {
+    "name": "com.example.finance.PhaseFiveIntegrationTest",
+    "tests": "9",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.336"
+  },
+  {
+    "name": "com.example.finance.PhaseFourIntegrationTest",
+    "tests": "17",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.45"
+  },
+  {
+    "name": "com.example.finance.PhaseThreeIntegrationTest",
+    "tests": "10",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.387"
+  },
+  {
+    "name": "com.example.finance.PhaseTwoIntegrationTest",
+    "tests": "11",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.305"
+  },
+  {
+    "name": "com.example.finance.ProductionUiIntegrationTest",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.344"
+  },
+  {
+    "name": "com.example.finance.RunwayIntegrationTest",
+    "tests": "18",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.527"
+  },
+  {
+    "name": "com.example.finance.RunwayPlaywrightTest",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "7.152"
+  },
+  {
+    "name": "com.example.finance.ScreenshotEvidenceCollectorTest",
+    "tests": "4",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "8.106"
+  },
+  {
+    "name": "com.example.finance.SessionConversationIntegrationTest",
+    "tests": "22",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.541"
+  },
+  {
+    "name": "com.example.finance.StrictLlmIntentParserTest",
+    "tests": "5",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.014"
+  },
+  {
+    "name": "com.example.finance.StudentExpenseIntegrationTest",
+    "tests": "9",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.447"
+  },
+  {
+    "name": "com.example.finance.StudentExpensePlaywrightE2ETest",
+    "tests": "8",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "25.147"
+  },
+  {
+    "name": "com.example.finance.TransactionServiceTest",
+    "tests": "11",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.524"
+  },
+  {
+    "name": "com.example.finance.UiProductRefinementPlaywrightTest",
+    "tests": "6",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "12.583"
+  },
+  {
+    "name": "com.example.finance.UiReviewFollowupPlaywrightTest",
+    "tests": "4",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "8.528"
+  },
+  {
+    "name": "com.example.finance.UnifiedAccountLedgerIntegrationTest",
+    "tests": "11",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.538"
+  },
+  {
+    "name": "com.example.finance.UnifiedAccountsPlaywrightTest",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "7.653"
+  }
+]
