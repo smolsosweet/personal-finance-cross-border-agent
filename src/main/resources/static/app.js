@@ -1817,13 +1817,23 @@ function initializeBoundedLists() {
     if(heading){ if(!heading.id)heading.id='list-heading-'+index; region.setAttribute('aria-labelledby',heading.id); }
     region.id ||= 'bounded-list-'+index;
     const button=document.createElement('button');
-    button.type='button';button.className='text-action list-scroll-down';
+    button.type='button';button.className='text-action list-scroll-down';button.hidden=true;
     button.textContent='Scroll down';button.setAttribute('aria-controls',region.id);
     button.addEventListener('click',()=>region.scrollBy({top:Math.max(120,region.clientHeight*.75),behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'}));
     region.after(button);
-    const update=()=>{button.disabled=region.scrollHeight-region.clientHeight-region.scrollTop<2;};
+    const update=()=>{
+      const overflow=region.clientHeight>0 && region.scrollHeight>region.clientHeight+2;
+      button.hidden=!overflow;
+      button.disabled=!overflow || region.scrollHeight-region.clientHeight-region.scrollTop<2;
+    };
     region.addEventListener('scroll',update,{passive:true});
     const observer=new ResizeObserver(update);observer.observe(region);
+    Array.from(region.children).forEach(child=>observer.observe(child));
+    const contentObserver=new MutationObserver(records=>{
+      records.forEach(record=>record.addedNodes.forEach(node=>{if(node.nodeType===1)observer.observe(node);}));
+      update();
+    });
+    contentObserver.observe(region,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden','style']});
     update();
   });
 }

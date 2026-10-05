@@ -1,0 +1,34 @@
+[
+  {
+    "name": "com.example.finance.FinanceOverviewPlaywrightE2ETest",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "8.26"
+  },
+  {
+    "name": "com.example.finance.UiReviewFollowupPlaywrightTest",
+    "tests": "4",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "11.031"
+  },
+  {
+    "name": "com.example.finance.UnifiedAccountsPlaywrightTest",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "6.798"
+  },
+  {
+    "name": "com.example.finance.WorkspaceListScrollPlaywrightTest",
+    "tests": "5",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "8.462"
+  }
+]

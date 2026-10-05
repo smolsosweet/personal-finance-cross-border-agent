@@ -328,15 +328,30 @@ dialog{max-width:calc(100vw - 24px);max-height:calc(100dvh - 32px);overflow:auto
 }
 
 /* Lists keep a predictable footprint; controls remain reachable outside the scroll area. */
-.bounded-list{height:320px;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;scrollbar-gutter:stable;padding-right:8px;align-content:start;scrollbar-color:#aebbd1 #f0f3f8}
+.bounded-list{height:auto;max-height:320px;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:auto;scrollbar-gutter:stable;padding-right:8px;align-content:start;scrollbar-color:#aebbd1 #f0f3f8}
 .bounded-list:focus-visible{outline:2px solid #5269ee;outline-offset:3px;border-radius:8px}
-.current-account-grid.bounded-list{height:240px}
-.money-source-grid.bounded-list,.plan-list.bounded-list{height:480px;grid-auto-rows:max-content}
-.budget-snapshot-list.bounded-list{height:200px}
+.current-account-grid.bounded-list{max-height:240px}
+.money-source-grid.bounded-list,.plan-list.bounded-list{max-height:480px}.money-source-grid.bounded-list{grid-auto-rows:minmax(220px,auto)}.plan-list.bounded-list{grid-auto-rows:max-content}
+.budget-snapshot-list.bounded-list{max-height:200px}
 .list-scroll-down{display:block;margin:10px auto 0;padding:8px 16px;min-height:40px}
 .list-scroll-down:disabled{opacity:.4;cursor:default}
-@media(max-width:760px){.money-source-grid.bounded-list,.plan-list.bounded-list{height:420px}.bounded-list{height:300px}}
+@media(max-width:760px){.money-source-grid.bounded-list,.plan-list.bounded-list{max-height:420px}.bounded-list{max-height:300px}}
 
 .table-scroll.bounded-list{overflow-x:auto}
-#transactions .table-scroll.bounded-list{height:480px}
-@media(max-width:760px){#transactions .table-scroll.bounded-list{height:420px}}
+#transactions .table-scroll.bounded-list{max-height:480px;overflow:auto}
+@media(max-width:760px){#transactions .table-scroll.bounded-list{max-height:420px}}
+
+/* Related cards share a row; short lists do not reserve empty scroll space. */
+.money-source-card{min-width:0;overflow-wrap:anywhere}
+.money-source-card h3{min-height:35px;margin:12px 0 4px;font-size:16px}
+.money-source-card>p{min-height:28px;line-height:1.5;font-size:12px}
+.money-source-card>strong{font-variant-numeric:tabular-nums;margin-top:12px;font-size:24px}
+.money-source-card>small{font-size:11px}
+.money-source-card .source-actions{min-height:48px;align-items:flex-end;font-size:12px}
+.overview-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch}
+.overview-summary-grid>.card{margin-bottom:0}
+.overview-summary-grid .attention-center{grid-row:auto}
+.overview-summary-grid .cashflow-snapshot{grid-column:1/-1}
+.finance-month-snapshot>.card{margin-bottom:18px}
+.monthly-spending{display:flex;flex-direction:column;justify-content:space-between}
+@media(max-width:1050px){.overview-summary-grid{grid-template-columns:1fr}}
