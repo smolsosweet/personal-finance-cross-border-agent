@@ -450,22 +450,20 @@ for results, lifecycle, financial invariance and protected-code diff evidence.
 
 FinBridge keeps both document providers. In **Transactions → Add transaction → Read receipt with AI**, choose **Local AI** or **Gemini**. The same choice is available when adding an education bill. Local mode runs PaddleOCR for Vietnamese text and then sends only that recognized text to the configured local Qwen model through Ollama. The image is processed locally and is not sent to Gemini. Review and edit every result before saving; save still goes through the existing transaction service, duplicate detection, categorization, and budget flow.
 
-Install Python 3.12 x64 first, then run these commands once from the project root in PowerShell:
+Install Java 21, Maven 3.9+, Python 3.12 x64, and Ollama first. Open Ollama, then from the project root run one setup command in PowerShell:
 
 ```powershell
-python -m venv .venv-bill-ai
-.\.venv-bill-ai\Scripts\python.exe -m pip install --upgrade pip
-.\.venv-bill-ai\Scripts\python.exe -m pip install -r tools\bill-ai-local\requirements.txt
+.\scripts\setup-bill-ai.ps1
 ```
 
-The supported local setup pins PaddlePaddle 3.0.0 and PaddleOCR 3.x; this avoids a Windows oneDNN runtime issue seen with PaddlePaddle 3.3.1.
+The setup script checks for Python 3.12 x64, creates the ignored project-local `.venv-bill-ai`, installs the packages from `tools/bill-ai-local/requirements.txt`, verifies PaddleOCR imports, and downloads `qwen3:4b` through Ollama when it is missing. It does not install Java, Maven, Python, or Ollama; install those prerequisites first. Use `-SkipOllamaModel` to set up OCR without downloading the local Qwen model. The supported local setup pins PaddlePaddle 3.0.0 and PaddleOCR 3.x; this avoids a Windows oneDNN runtime issue seen with PaddlePaddle 3.3.1.
 
 The `start-local.ps1` launcher starts the local OCR service from `.venv-bill-ai` automatically and stops the service it started when you press Ctrl+C. The first startup may download PaddleOCR model weights. You can still start the OCR service separately with `\.venv-bill-ai\Scripts\python.exe tools\bill-ai-local\server.py` if needed.
 
-Keep Ollama running and install the default Qwen text model once:
+After setup, start FinBridge with:
 
 ```powershell
-ollama pull qwen3:4b
+.\scripts\start-local.ps1 -Port 8080
 ```
 
 Configuration defaults are `BILL_AI_PROVIDER=local`, `BILL_LOCAL_OCR_URL=http://localhost:8099/api/ocr`, `OLLAMA_BASE_URL=http://localhost:11434`, and `OLLAMA_MODEL=qwen3:4b`. Set `BILL_AI_PROVIDER=gemini` to make Gemini the default selection; either provider can still be selected from the upload form. Gemini continues to require `GEMINI_API_KEY`.
