@@ -28,7 +28,8 @@ final class LlmIntentContract {
             - EXPLAIN_RECEIPT_BALANCE: ask the actual balance immediately after a completed payment,
               e.g. "Sau khi đã thanh toán học phí tôi còn bao nhiêu?" or "What remained after that payment?"
               Use NONE. The backend selects and reads immutable receipts, never calculate a projection.
-            - EXPLAIN_SPENDING_SUMMARY: asks about current-month recorded expenses, category breakdown, or the largest expense category.
+            - EXPLAIN_SPENDING_SUMMARY: read-only questions about recorded expenses, including natural-language requests for totals, category comparisons, transaction lists, merchants, or what was bought/eaten on a date. Use this intent for paraphrases like "tháng này ăn uống với đi lại hết bao nhiêu?", "ngày 6/10/2026 tôi đã ăn gì?", "show my purchases yesterday", or "where did my money go?". The backend reads and filters transactions; never invent amounts or merchants.
+              Also use this intent for asking which transactions are awaiting the user's review, confirmation, or purpose; the backend will list only records in review-required states.
             - EXPLAIN_BUDGET_STATUS: asks about configured current-month category budgets, remaining budget, or overspending.
             - EXPLAIN_TUITION_AFFORDABILITY: asks whether paying the existing tuition bill leaves enough balance for living costs.
               This is a read-only projection, never CREATE_TUITION_PLAN.
@@ -47,7 +48,7 @@ final class LlmIntentContract {
             CREATE_TUITION_PLAN with CHEAPEST. "compare tuition routes by speed" and "so sánh kênh học phí nhanh nhất"
             are COMPARE_TUITION_CHANNELS with FASTEST. "why can't I use Bank B?" and "vì sao không dùng được Bank B?"
             are EXPLAIN_CHANNEL_UNAVAILABLE with NONE. "what is my tuition status?" is CHECK_TUITION_STATUS with NONE.
-            "Where did I spend the most this month?" and "Tháng này tôi chi nhiều nhất vào đâu?" are
+            "Where did I spend the most this month?", "Tháng này tôi chi nhiều nhất vào đâu?", "tháng này tôi chi bao nhiêu cho ăn uống và đi lại", and "ngày 6/10/2026 tôi đã ăn gì" are
             EXPLAIN_SPENDING_SUMMARY. "How much budget remains this month?" and "Ngân sách tháng này còn bao nhiêu?"
             are EXPLAIN_BUDGET_STATUS. "Can I afford living costs after tuition?" and
             "Nếu đóng học phí thì còn đủ tiền sinh hoạt không?" are EXPLAIN_TUITION_AFFORDABILITY.
@@ -58,8 +59,8 @@ final class LlmIntentContract {
             Spending: {"intent":"EXPLAIN_SPENDING_SUMMARY","channelPreference":"NONE","confidence":0.95,"clarificationCode":"NONE"}
             Budget: {"intent":"EXPLAIN_BUDGET_STATUS","channelPreference":"NONE","confidence":0.95,"clarificationCode":"NONE"}
             Affordability: {"intent":"EXPLAIN_TUITION_AFFORDABILITY","channelPreference":"NONE","confidence":0.95,"clarificationCode":"NONE"}
-            Only the current demo month and existing demo profile are supported. Requests for last month, next month,
-            a specific month/year, custom dates, another person's data, custom category reports, or multiple
+            Only data in the existing demo profile is supported. Exact dates are valid for transaction lookups. Requests for unsupported historical/future periods,
+            specific month/year summaries, custom date ranges, another person's data, custom category reports, or multiple
             operations need clarification. Named accounts of this profile are supported for current balances
             and tuition scenarios. Explicit account/bill/plan references override earlier conversational scope.
             A hypothetical future payment is EXPLAIN_TUITION_AFFORDABILITY even if a payment may already exist;

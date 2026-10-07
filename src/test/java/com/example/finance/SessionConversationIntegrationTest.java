@@ -155,7 +155,7 @@ class SessionConversationIntegrationTest {
 
         String answer=conversation.send(session,"How much remained after I paid tuition?","en");
 
-        assertTrue(answer.startsWith("COMPLETED TUITION PAYMENT"));
+        assertTrue(answer.startsWith("COMPLETED TUITION PAYMENT"), answer);
         assertTrue(answer.contains("Actual balance immediately after payment: 29239200.00 VND"));
         assertTrue(answer.contains(receipt.transactionId()));assertTrue(answer.contains(plan.id()));
         assertFalse(answer.contains("SECOND"));
@@ -281,9 +281,8 @@ class SessionConversationIntegrationTest {
     @Test void unchangedOutputSchemaAndScopedProviderPromptNeverContainFinancialReferences(){
         var mapper=new com.fasterxml.jackson.databind.ObjectMapper();var parser=new StrictLlmIntentParser(mapper);
         var context=new ModelConversationContext(ModelConversationContext.Topic.BUDGET,ModelConversationContext.Channel.NONE,EXPLAIN_BUDGET_STATUS,ModelConversationContext.Pending.NONE);
-        var ollama=new OllamaIntentClient(mapper,parser,true,"http://localhost:11434","qwen3:4b",java.time.Duration.ofSeconds(1),java.time.Duration.ofSeconds(1));
-        var openai=new OpenAiIntentClient(mapper,parser,false,"","",java.time.Duration.ofSeconds(1),java.time.Duration.ofSeconds(1));
-        ModelConversationContext.with(context,()->{assertTrue(ollama.requestBody("Còn bao nhiêu?").toString().contains("context_v1"));assertTrue(openai.requestBody("How much is left?").toString().contains("topic=BUDGET"));return null;});
+        var gemini=new GeminiIntentClient(mapper,parser,true,"synthetic-key","gemini-3.5-flash-lite",java.time.Duration.ofSeconds(1),java.time.Duration.ofSeconds(1));
+        ModelConversationContext.with(context,()->{assertTrue(gemini.requestBody("Còn bao nhiêu?").toString().contains("context_v1"));assertTrue(gemini.requestBody("How much is left?").toString().contains("topic=BUDGET"));return null;});
         assertEquals(LlmIntentContract.INSTRUCTIONS,ModelConversationContext.instructions());
         assertEquals(4,((java.util.Map<?,?>)LlmIntentContract.schema().get("properties")).size());
         assertThrows(LlmIntentException.class,()->parser.parse("{\"intent\":\"CHECK_TUITION_STATUS\",\"channelPreference\":\"NONE\",\"confidence\":0.95,\"clarificationCode\":\"NONE\",\"planId\":\"evil\"}"));

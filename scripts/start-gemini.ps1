@@ -7,8 +7,8 @@ param(
     [ValidateRange(1,120)][int]$RequestTimeoutSeconds = 30
 )
 
-# Import process/toolchain helpers only; dot-sourcing does not invoke the Ollama launcher.
-. (Join-Path $PSScriptRoot 'start-local.ps1') -Port $Port -OpenBrowser:$OpenBrowser -StartupTimeoutSeconds $StartupTimeoutSeconds
+# Shared process helpers; no model provider is started on this machine.
+. (Join-Path $PSScriptRoot 'startup-common.ps1')
 
 function New-FinBridgeGeminiProcessInfo {
     param([string]$ProjectRoot,[string]$Maven,[int]$Port,[string]$Model,[int]$ConnectTimeoutSeconds,[int]$RequestTimeoutSeconds)
@@ -18,9 +18,9 @@ function New-FinBridgeGeminiProcessInfo {
     $info.UseShellExecute=$false;$info.CreateNoWindow=$true
     $info.RedirectStandardOutput=$true;$info.RedirectStandardError=$true
     # Secret remains inherited in the child environment; it is never a CLI argument.
-    $appArgs='--spring.profiles.active=gemini --server.port='+$Port+' --finbridge.llm.enabled=true --finbridge.llm.provider=gemini --finbridge.llm.model='+$Model+' --finbridge.llm.connect-timeout='+$ConnectTimeoutSeconds+'s --finbridge.llm.request-timeout='+$RequestTimeoutSeconds+'s'
+    $appArgs='--spring.profiles.active=gemini --server.port='+$Port+' --finbridge.llm.enabled=true --finbridge.llm.model='+$Model+' --finbridge.llm.connect-timeout='+$ConnectTimeoutSeconds+'s --finbridge.llm.request-timeout='+$RequestTimeoutSeconds+'s'
     $info.Arguments='/d /s /c ""'+$Maven+'" -B spring-boot:run "-Dspring-boot.run.arguments='+$appArgs+'" "-Dspring-boot.run.jvmArguments=-Dspring.main.add-command-line-properties=true""'
-    foreach ($setting in @{FINBRIDGE_LLM_ENABLED='true';FINBRIDGE_LLM_PROVIDER='gemini';FINBRIDGE_LLM_MODEL=$Model;FINBRIDGE_LLM_CONNECT_TIMEOUT=($ConnectTimeoutSeconds.ToString()+'s');FINBRIDGE_LLM_REQUEST_TIMEOUT=($RequestTimeoutSeconds.ToString()+'s');SPRING_PROFILES_ACTIVE='gemini';SPRING_MAIN_ADD_COMMAND_LINE_PROPERTIES='true'}.GetEnumerator()) {
+    foreach ($setting in @{FINBRIDGE_LLM_ENABLED='true';FINBRIDGE_LLM_MODEL=$Model;FINBRIDGE_LLM_CONNECT_TIMEOUT=($ConnectTimeoutSeconds.ToString()+'s');FINBRIDGE_LLM_REQUEST_TIMEOUT=($RequestTimeoutSeconds.ToString()+'s');SPRING_PROFILES_ACTIVE='gemini';SPRING_MAIN_ADD_COMMAND_LINE_PROPERTIES='true'}.GetEnumerator()) {
         $info.EnvironmentVariables[$setting.Key]=$setting.Value
     }
     $info.EnvironmentVariables.Remove('SPRING_APPLICATION_JSON')
@@ -50,7 +50,7 @@ function Invoke-FinBridgeGemini {
         # Keep occupied-process handling separate: never kill an existing application's owner.
         try { Assert-FinBridgePort -Port $Port }
         catch { throw "Port $Port is already occupied. Stop its owner or use scripts\start-gemini.cmd -Port $($Port+1). No process was killed." }
-        Write-Host "Starting FinBridge (gemini / $Model) on port $Port. Ollama is not required."
+        Write-Host "Starting FinBridge (Gemini / $Model) on port $Port."
         $run=Start-FinBridgeGeminiProcess -ProjectRoot $root -Maven $tools.Maven -Port $Port -Model $Model -ConnectTimeoutSeconds $ConnectTimeoutSeconds -RequestTimeoutSeconds $RequestTimeoutSeconds
         $url="http://localhost:$Port"
         $deadline=[DateTime]::UtcNow.AddSeconds($StartupTimeoutSeconds);$ready=$false

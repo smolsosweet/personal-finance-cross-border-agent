@@ -127,7 +127,7 @@ class GeminiLiveIT {
     }
     private void assertLauncherProvider(int port) throws Exception {
         // Return only a boolean marker, never command lines, headers or inherited credentials.
-        String command="$found=Get-CimInstance Win32_Process -Filter \"name='java.exe'\" | Where-Object { $_.CommandLine -match '--finbridge.llm.provider=gemini' -and $_.CommandLine -match '--server.port="+port+"(?: |$)' -and $_.CommandLine -match '--finbridge.llm.model=gemini-3.5-flash-lite' }; if($found){'GEMINI_LAUNCHER_VERIFIED'}";
+        String command="$found=Get-CimInstance Win32_Process -Filter \"name='java.exe'\" | Where-Object { $_.CommandLine -match '--spring.profiles.active=gemini' -and $_.CommandLine -match '--server.port="+port+"(?: |$)' -and $_.CommandLine -match '--finbridge.llm.model=gemini-3.5-flash-lite' }; if($found){'GEMINI_LAUNCHER_VERIFIED'}";
         var process=new ProcessBuilder("powershell.exe","-NoProfile","-Command",command).redirectErrorStream(true).start();
         assertTrue(process.waitFor(10,TimeUnit.SECONDS));
         String marker=new String(process.getInputStream().readAllBytes(),java.nio.charset.StandardCharsets.UTF_8);

@@ -16,7 +16,7 @@ import java.time.Duration;
 /** Real app/browser and Gemini HTTP adapter; HTTP model responses are STUBBED. */
 @SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.DEFINED_PORT,properties={
     "server.port=8120","spring.datasource.url=jdbc:h2:mem:gemini_stub;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1",
-    "finbridge.llm.enabled=true","finbridge.llm.provider=gemini","finbridge.llm.gemini-api-key=synthetic-key",
+    "finbridge.llm.enabled=true","finbridge.llm.gemini-api-key=synthetic-key",
     "finbridge.llm.model=gemini-3.5-flash-lite","app.demo-tools-enabled=false"
 })
 class GeminiIntegrationTest {

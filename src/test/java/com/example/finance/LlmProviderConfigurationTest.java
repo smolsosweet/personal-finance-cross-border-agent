@@ -12,41 +12,31 @@ class LlmProviderConfigurationTest {
     private final LlmProviderConfiguration configuration = new LlmProviderConfiguration();
 
     @Test
-    void providerSelectionIsExplicitAndOllamaDefaultsToQwen() {
-        LlmIntentClient ollama = select(true, "ollama", "", "", "http://localhost:11434");
-        assertInstanceOf(OllamaIntentClient.class, ollama);
-        assertEquals("qwen3:4b", ((OllamaIntentClient) ollama)
-                .requestBody("test").get("model"));
+    void enabledChatbotAlwaysUsesGeminiAndDisabledModeMakesNoProviderChoice() {
+        LlmIntentClient gemini = select(true, "synthetic-gemini-key", "gemini-3.5-flash-lite");
+        assertInstanceOf(GeminiIntentClient.class, gemini);
+        assertTrue(gemini.enabled());
 
-        LlmIntentClient openai = select(true, "openai", "test-key", "test-model", "http://localhost:11434");
-        assertInstanceOf(OpenAiIntentClient.class, openai);
-        assertTrue(openai.enabled());
-
-        LlmIntentClient disabled = select(true, "disabled", "test-key", "test-model", "http://localhost:11434");
+        LlmIntentClient disabled = select(false, "", "");
         assertFalse(disabled.enabled());
     }
 
     @Test
-    void apiKeyAloneDoesNotEnableOpenAiAndUnknownProviderFailsClearly() {
-        LlmIntentClient openai = select(false, "openai", "test-key", "test-model", "http://localhost:11434");
-        assertFalse(openai.enabled());
-        assertThrows(LlmIntentException.class, () -> openai.classify("Check tuition"));
-
-        IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> select(false, "unknown", "", "", "http://localhost:11434"));
-        assertTrue(error.getMessage().contains("expected ollama, gemini, openai, or disabled"));
+    void enabledGeminiRequiresServerKeyAndValidModel() {
+        assertThrows(IllegalStateException.class, () -> select(true, "", "gemini-3.5-flash-lite"));
+        assertThrows(IllegalStateException.class, () -> select(true, "synthetic-key", "bad/model"));
     }
 
-    private LlmIntentClient select(boolean enabled, String provider, String key, String model, String baseUrl) {
-        return configuration.llmIntentClient(mapper, parser, enabled, provider, key, "", model, baseUrl,
+    private LlmIntentClient select(boolean enabled, String key, String model) {
+        return configuration.llmIntentClient(mapper, parser, enabled, key, model,
                 Duration.ofSeconds(1), Duration.ofSeconds(2));
     }
 
     @Test void geminiRequiresItsOwnKeyAndExplicitModelOnlyWhenEnabled() {
-        assertThrows(IllegalStateException.class, () -> select(true,"gemini","openai-only","gemini-3.5-flash-lite","http://localhost:11434"));
-        assertThrows(IllegalStateException.class, () -> configuration.llmIntentClient(mapper,parser,true,"gemini","","synthetic-key","","",Duration.ofSeconds(1),Duration.ofSeconds(2)));
-        var client=configuration.llmIntentClient(mapper,parser,true,"gemini","","synthetic-key","gemini-3.5-flash-lite","http://localhost:11434",Duration.ofSeconds(1),Duration.ofSeconds(2));
+        assertThrows(IllegalStateException.class, () -> select(true,"","gemini-3.5-flash-lite"));
+        assertThrows(IllegalStateException.class, () -> select(true,"synthetic-key",""));
+        var client=configuration.llmIntentClient(mapper,parser,true,"synthetic-key","gemini-3.5-flash-lite",Duration.ofSeconds(1),Duration.ofSeconds(2));
         assertInstanceOf(GeminiIntentClient.class,client);assertTrue(client.enabled());
-        assertFalse(select(false,"gemini","","","http://localhost:11434").enabled());
+        assertFalse(select(false,"","").enabled());
     }
 }

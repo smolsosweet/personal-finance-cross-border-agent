@@ -19,8 +19,7 @@ const translationsVi = new Map(Object.entries({
   'Add transaction': 'Thêm giao dịch',
   'Manual entry': 'Nhập thủ công',
   'Read receipt with AI': 'Đọc bill bằng AI',
-  'Bill AI provider': 'Nhà cung cấp AI đọc bill', 'Local AI · PaddleOCR + Ollama/Qwen': 'AI cục bộ · PaddleOCR + Ollama/Qwen', 'Gemini · cloud': 'Gemini · đám mây',
-  'Choose Gemini or local AI to prefill this bill. Always verify beneficiary details against the official bill; extraction does not verify the recipient.': 'Chọn Gemini hoặc AI cục bộ để điền hóa đơn. Luôn đối chiếu người thụ hưởng với hóa đơn chính thức; tính năng đọc bill không xác minh người nhận.',
+  'Gemini reads this image to prefill the bill. Always verify beneficiary details against the official bill; extraction does not verify the recipient.': 'Gemini sẽ đọc ảnh để điền hóa đơn. Luôn đối chiếu người thụ hưởng với hóa đơn chính thức; tính năng đọc bill không xác minh người nhận.',
   'Local AI': 'AI cục bộ', 'Gemini': 'Gemini', 'confidence': 'độ tin cậy',
   'Upload a bill image to Gemini to prefill details. Confirm the beneficiary against the official school bill; extraction does not verify the recipient.': 'Ảnh hóa đơn sẽ được gửi tới Gemini để điền thông tin. Hãy đối chiếu người nhận với hóa đơn chính thức; AI không xác minh người thụ hưởng.',
   'Receipt image': 'Ảnh hóa đơn',
@@ -1903,7 +1902,6 @@ async function handleDocumentExtraction(event) {
     status.textContent = 'Choose a JPG, PNG or WEBP image up to 5 MB.'; return;
   }
   const data = new FormData(); data.append('file', file); data.append('kind', button.dataset.aiKind);
-  data.append('provider', section.querySelector('[data-ai-provider]')?.value || 'local');
   button.disabled = true; status.textContent = 'Reading image…';
   try {
     const response = await fetch('/api/ai/extract-document', { method: 'POST', body: data, headers: { Accept: 'application/json' } });

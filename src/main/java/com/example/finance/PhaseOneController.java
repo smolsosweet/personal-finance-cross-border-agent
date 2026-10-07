@@ -45,11 +45,6 @@ public class PhaseOneController {
         this.sharedDemo = sharedDemo;
     }
 
-    @org.springframework.web.bind.annotation.ModelAttribute("documentAiProvider")
-    public String documentAiProvider(@Value("${finbridge.document-ai.provider:local}") String provider) {
-        return "gemini".equalsIgnoreCase(provider) ? "gemini" : "local";
-    }
-
     @Bean
     ApplicationRunner seedDemo(DemoDataService demoData) {
         return args -> demoData.initialize();
