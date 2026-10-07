@@ -1,6 +1,14 @@
 /target/
+/.venv-bill-ai/
 /finance-demo*.db
 /.idea/
 /.vscode/
 *.log
 /finance-phase1*.db
+/.env
+/.env.*
+!/.env.example
+/test_bill/
+/tools/apache-maven-*/
+/tools/downloads/
+/tools/m2repo/

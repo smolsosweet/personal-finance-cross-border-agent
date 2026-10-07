@@ -70,9 +70,10 @@ public class OllamaIntentClient implements LlmIntentClient {
                         Map.of("role", "system", "content", ModelConversationContext.instructions()),
                         Map.of("role", "user", "content", userMessage)),
                 "stream", false,
+                "keep_alive", "10m",
                 "think", false,
                 "format", LlmIntentContract.schema(),
-                "options", Map.of("temperature", 0));
+                "options", Map.of("temperature", 0, "num_predict", 96));
     }
 
     String extractContent(JsonNode response) {

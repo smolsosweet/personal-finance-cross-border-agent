@@ -45,6 +45,11 @@ public class PhaseOneController {
         this.sharedDemo = sharedDemo;
     }
 
+    @org.springframework.web.bind.annotation.ModelAttribute("documentAiProvider")
+    public String documentAiProvider(@Value("${finbridge.document-ai.provider:local}") String provider) {
+        return "gemini".equalsIgnoreCase(provider) ? "gemini" : "local";
+    }
+
     @Bean
     ApplicationRunner seedDemo(DemoDataService demoData) {
         return args -> demoData.initialize();
@@ -141,6 +146,19 @@ public class PhaseOneController {
         model.addAttribute("newTransaction", newTransaction);
         if (review != null && !review.isBlank()) model.addAttribute("reviewTransactionId", review);
         return "home";
+    }
+
+    @PostMapping("/transactions/manual")
+    public String manualTransaction(@RequestParam String merchant, @RequestParam BigDecimal amount,
+                                    @RequestParam String currency, @RequestParam LocalDate occurredAt,
+                                    @RequestParam(required=false) String paymentMethod, @RequestParam String category,
+                                    @RequestParam(required=false) String reference,
+                                    @RequestParam(required=false) String description, RedirectAttributes flash) {
+        String id = transactions.recordManualTransaction(merchant, amount, currency, occurredAt,
+                paymentMethod, category, reference, description);
+        Map<String,Object> transaction = transactions.transaction(id);
+        flash.addFlashAttribute("message", "Transaction saved · " + transaction.get("category") + " · " + transaction.get("review_status"));
+        return "redirect:/?newTransaction=" + id + "#transactions";
     }
 
     @PostMapping("/events/simulate")

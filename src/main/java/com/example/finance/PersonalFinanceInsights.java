@@ -1,6 +1,11 @@
 package com.example.finance;
 
 import java.math.BigDecimal;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+import java.util.Locale;
+import java.time.DateTimeException;
+import java.text.Normalizer;
 import java.time.LocalDate;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -13,6 +18,10 @@ public class PersonalFinanceInsights {
     private final TransactionService transactions;
     private final FinanceWorkspaceService workspace;
     private final CrossBorderService crossBorder;
+    private static final Pattern ISO_DATE = Pattern.compile("(?iu)(20\\d{2})-(\\d{1,2})-(\\d{1,2})");
+    private static final Pattern DAY_MONTH_DATE = Pattern.compile("(?iu)(?:ngày\\s*)?(\\d{1,2})[/-](\\d{1,2})(?:[/-](20\\d{2}))?");
+    private static final Pattern EXPENSE_WORD = Pattern.compile("(?iu)\\b(chi|spend|spent|spending|expense|expenses|paid|mua)\\b|đã chi|chi tiêu|tiêu bao nhiêu");
+    private static final Pattern SPENDING_DATES = Pattern.compile("(?iu)ngày nào|những ngày nào|hôm nào|what dates|which dates|what days|which days|on what date");
 
     public PersonalFinanceInsights(TransactionService transactions, FinanceWorkspaceService workspace,
                                    CrossBorderService crossBorder) {
@@ -22,12 +31,87 @@ public class PersonalFinanceInsights {
     }
 
     public String render(LlmIntent.Intent intent, PhaseFourService payments, boolean vi) {
+        return render(intent, payments, vi, "");
+    }
+
+    public String render(LlmIntent.Intent intent, PhaseFourService payments, boolean vi, String question) {
         return switch (intent) {
-            case EXPLAIN_SPENDING_SUMMARY -> spending(vi);
+            case EXPLAIN_SPENDING_SUMMARY -> spending(vi, question);
             case EXPLAIN_BUDGET_STATUS -> budgets(vi);
             case EXPLAIN_TUITION_AFFORDABILITY -> affordability(payments, vi);
             default -> throw new IllegalArgumentException("Not a read-only Personal Finance intent");
         };
+    }
+
+    /** Recognize a narrow, safe read-only query so a local LLM call is not needed for it. */
+    public boolean isCategorySpendingQuestion(String question) {
+        return !requestedCategories(question).isEmpty();
+    }
+
+    public boolean isSupportedSpendingScope(String question) {
+        return isCategorySpendingQuestion(question) || isSpendingDatesQuestion(question) || requestedDate(question) != null && isExpenseQuestion(question);
+    }
+
+    public boolean isSpendingDatesQuestion(String question) {
+        return isCategorySpendingQuestion(question) && SPENDING_DATES.matcher(question).find();
+    }
+
+    public boolean isDailySpendingQuestion(String question) {
+        return requestedDate(question) != null && isExpenseQuestion(question);
+    }
+
+    private boolean isExpenseQuestion(String question) {
+        return question != null && EXPENSE_WORD.matcher(question).find();
+    }
+
+    private LocalDate requestedDate(String question) {
+        if (question == null) return null;
+        LocalDate reportingDate = transactions.reportingDate();
+        Matcher iso = ISO_DATE.matcher(question);
+        Matcher localized = DAY_MONTH_DATE.matcher(question);
+        try {
+            LocalDate date;
+            if (iso.find()) {
+                date = LocalDate.of(Integer.parseInt(iso.group(1)), Integer.parseInt(iso.group(2)), Integer.parseInt(iso.group(3)));
+            } else if (localized.find()) {
+                int year = localized.group(3) == null ? reportingDate.getYear() : Integer.parseInt(localized.group(3));
+                date = LocalDate.of(year, Integer.parseInt(localized.group(2)), Integer.parseInt(localized.group(1)));
+            } else return null;
+            return date.getYear() == reportingDate.getYear() && date.getMonth() == reportingDate.getMonth() ? date : null;
+        } catch (DateTimeException | NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    private List<String> requestedCategories(String question) {
+        if (question == null || question.isBlank() || !isExpenseQuestion(question)) return List.of();
+        String normalized = normalize(question);
+        var requested = new LinkedHashSet<String>();
+        Map<String, List<String>> aliases = Map.of(
+                "Education", List.of("education", "giao duc", "hoc phi", "tuition", "school"),
+                "Food & Drinks", List.of("food", "food drinks", "an uong", "coffee"),
+                "Shopping", List.of("shopping", "mua sam", "groceries", "thuc pham"),
+                "Transport", List.of("transport", "di lai", "xe buyt"),
+                "Utilities", List.of("utilities", "tien ich", "dien nuoc"));
+        for (var entry : aliases.entrySet()) {
+            if (entry.getValue().stream().anyMatch(alias -> containsPhrase(normalized, normalize(alias))))
+                requested.add(entry.getKey());
+        }
+        for (var row : transactions.monthlySpending()) {
+            String category = (String) row.get("category");
+            if (containsPhrase(normalized, normalize(category))) requested.add(category);
+        }
+        return List.copyOf(requested);
+    }
+
+    private static String normalize(String value) {
+        return Normalizer.normalize(value, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", "").toLowerCase(Locale.ROOT)
+                .replaceAll("[^a-z0-9]+", " ").trim().replaceAll(" +", " ");
+    }
+
+    private static boolean containsPhrase(String text, String phrase) {
+        return !phrase.isBlank() && (" " + text + " ").contains(" " + phrase + " ");
     }
 
     private String period(boolean vi) {
@@ -35,9 +119,69 @@ public class PersonalFinanceInsights {
         return (vi ? "Kỳ báo cáo: " : "Reporting period: ") + start + " – " + start.plusMonths(1).minusDays(1) + ".\n";
     }
 
-    private String spending(boolean vi) {
+    private String spending(boolean vi, String question) {
         StringBuilder out = new StringBuilder(period(vi));
         var rows = transactions.monthlySpending();
+        LocalDate requestedDate = requestedDate(question);
+        List<String> requestedCategories = requestedCategories(question);
+        if (requestedDate != null && isExpenseQuestion(question)) {
+            var dayRows = transactions.spendingOn(requestedDate).stream()
+                    .filter(row -> requestedCategories.isEmpty() || requestedCategories.stream()
+                            .anyMatch(category -> category.equalsIgnoreCase((String) row.get("category"))))
+                    .toList();
+            out.append(vi ? "Giao dịch chi tiêu ngày " : "Expenses on ").append(requestedDate).append(":\n");
+            if (dayRows.isEmpty()) return out.append(vi ? "Không có giao dịch chi tiêu đã xác nhận trong phạm vi này." : "No confirmed expenses found for this scope.").toString();
+            for (var row : dayRows) {
+                out.append(row.get("merchant")).append(" · ").append(categoryLabel((String) row.get("category"), vi))
+                        .append(" · ").append(money((BigDecimal) row.get("amount"))).append(' ')
+                        .append(row.get("currency")).append('\n');
+            }
+            var currencies = dayRows.stream().map(row -> (String) row.get("currency")).distinct().toList();
+            for (String currency : currencies) {
+                BigDecimal total = dayRows.stream().filter(row -> currency.equals(row.get("currency")))
+                        .map(row -> (BigDecimal) row.get("amount")).reduce(BigDecimal.ZERO, BigDecimal::add);
+                out.append(vi ? "Tổng " : "Total ").append(currency).append(": ").append(money(total)).append(".\n");
+            }
+            return out.append(vi ? "Nguồn: giao dịch chi tiêu tự động phân loại hoặc đã xác nhận; giao dịch chờ xem xét không được tính." : "Source: automatically categorized or confirmed expenses; pending reviews are excluded.").toString();
+        }
+        if (isSpendingDatesQuestion(question)) {
+            var matching = requestedCategories.stream()
+                    .flatMap(category -> transactions.monthlySpendingTransactions(category).stream())
+                    .toList();
+            out.append(vi ? "Các giao dịch " : "Transactions ")
+                    .append(requestedCategories.stream().map(category -> categoryLabel(category, vi)).reduce((a,b) -> a + (vi ? " và " : " and ") + b).orElse(""))
+                    .append(vi ? " trong kỳ báo cáo:\n" : " during this reporting period:\n");
+            if (matching.isEmpty()) return out.append(vi ? "Chưa có giao dịch chi tiêu đã xác nhận trong danh mục này." : "No confirmed expenses recorded in this category.").toString();
+            for (var row : matching) {
+                out.append(row.get("spent_on")).append(" · ").append(row.get("merchant")).append(" · ")
+                        .append(money((BigDecimal) row.get("amount"))).append(' ').append(row.get("currency")).append('\n');
+            }
+            return out.append(vi ? "Nguồn: giao dịch chi tiêu AUTO/CONFIRMED trong tháng báo cáo; giao dịch chờ xem xét không được tính." : "Source: AUTO/CONFIRMED expenses in the reporting month; pending reviews excluded.").toString();
+        }
+        if (!requestedCategories.isEmpty()) {
+            var matching = rows.stream()
+                    .filter(row -> requestedCategories.stream().anyMatch(category -> category.equalsIgnoreCase((String) row.get("category")))).toList();
+            if (matching.isEmpty()) {
+                return out.append(vi ? "Chưa ghi nhận khoản chi cho " : "No recorded spending for ")
+                        .append(requestedCategories.stream().map(category -> categoryLabel(category, vi)).reduce((a,b) -> a + (vi ? " và " : " and ") + b).orElse(""))
+                        .append(vi ? " trong kỳ này." : " in this period.").toString();
+            }
+            for (String currency : matching.stream().map(row -> (String) row.get("currency")).distinct().toList()) {
+                BigDecimal combined = BigDecimal.ZERO;
+                for (String category : requestedCategories) {
+                    BigDecimal total = matching.stream().filter(row -> currency.equals(row.get("currency")) && category.equalsIgnoreCase((String) row.get("category")))
+                            .map(row -> (BigDecimal) row.get("spent")).reduce(BigDecimal.ZERO, BigDecimal::add);
+                    if (total.signum() == 0) continue;
+                    combined = combined.add(total);
+                    out.append(categoryLabel(category, vi)).append(": ").append(money(total)).append(' ').append(currency).append(".\n");
+                }
+                out.append(vi ? "Tổng các danh mục được hỏi: " : "Total for requested categories: ")
+                        .append(money(combined)).append(' ').append(currency).append(".\n");
+            }
+            return out.append(vi
+                    ? "Nguồn: giao dịch chi tiêu đã ghi nhận, trạng thái tự động hoặc đã xác nhận; không gồm giao dịch đang chờ xem xét."
+                    : "Source: recorded expenses that are automatic or confirmed; pending-review transactions are excluded.").toString();
+        }
         var refunds = transactions.monthlyRefunds();
         var currencies = new LinkedHashSet<String>();
         rows.forEach(row -> currencies.add((String) row.get("currency")));
@@ -59,6 +203,18 @@ public class PersonalFinanceInsights {
         out.append(vi ? "Giao dịch đang chờ xem xét trong kỳ: " : "Pending reviews in period: ").append(transactions.monthlyPendingReviews())
                 .append(vi ? ". Đây chỉ là dữ liệu hiện có; chưa biết chi tiêu tương lai." : ". Recorded data only; future spending is unknown.");
         return out.toString();
+    }
+
+    private static String categoryLabel(String category, boolean vi) {
+        if (!vi) return category;
+        return switch (category) {
+            case "Education" -> "Giáo dục";
+            case "Food & Drinks" -> "Ăn uống";
+            case "Shopping" -> "Mua sắm";
+            case "Transport" -> "Di chuyển";
+            case "Utilities" -> "Tiện ích";
+            default -> category;
+        };
     }
 
     private String budgets(boolean vi) {

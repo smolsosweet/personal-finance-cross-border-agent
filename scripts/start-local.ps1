@@ -42,8 +42,61 @@ function Assert-FinBridgePort {
     }
 }
 
+function Start-FinBridgeOcrService {
+    param([string]$ProjectRoot,[int]$TimeoutSeconds=120)
+    $healthUrl='http://127.0.0.1:8099/health'
+    # Reuse a healthy OCR service already listening on the configured loopback port.
+    try {
+        $health=Invoke-RestMethod -Uri $healthUrl -TimeoutSec 2 -ErrorAction Stop
+        if ($health.status -eq 'ok' -and $health.engine -eq 'PaddleOCR') {
+            Write-Host 'Bill reading: reusing the running local PaddleOCR service.'
+            return $null
+        }
+        throw 'Port 8099 is occupied by a service that is not FinBridge PaddleOCR.'
+    } catch {
+        if ($_.Exception.Message -like '*occupied by a service*') { throw }
+        # Invoke-RestMethod wraps connection-refused differently across PowerShell versions.
+    }
+    $python=Join-Path $ProjectRoot '.venv-bill-ai\Scripts\python.exe'
+    $server=Join-Path $ProjectRoot 'tools\bill-ai-local\server.py'
+    if (-not (Test-Path -LiteralPath $python)) { throw 'The local bill AI environment is missing. Create/fix .venv-bill-ai first, then run .\.venv-bill-ai\Scripts\python.exe -m pip install -r tools\bill-ai-local\requirements.txt.' }
+    if (-not (Test-Path -LiteralPath $server)) { throw 'The local PaddleOCR server script is missing from tools\bill-ai-local.' }
+    $logBase=Join-Path ([System.IO.Path]::GetTempPath()) 'finbridge-bill-ocr'
+    $process=Start-Process -FilePath $python -ArgumentList @($server) -WorkingDirectory $ProjectRoot -WindowStyle Hidden -RedirectStandardOutput "$logBase.stdout.log" -RedirectStandardError "$logBase.stderr.log" -PassThru
+    Write-Host 'Starting the local PaddleOCR service from .venv-bill-ai...'
+    $deadline=[DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
+    try {
+        while ([DateTime]::UtcNow -lt $deadline) {
+            if ($process.HasExited) {
+                $tail=if (Test-Path -LiteralPath "$logBase.stderr.log") { (Get-Content -LiteralPath "$logBase.stderr.log" -Tail 12 | Out-String).Trim() } else { '' }
+                throw "PaddleOCR exited during startup (exit $($process.ExitCode)). $tail"
+            }
+            try {
+                $health=Invoke-RestMethod -Uri $healthUrl -TimeoutSec 2 -ErrorAction Stop
+                if ($health.status -eq 'ok' -and $health.engine -eq 'PaddleOCR') {
+                    Write-Host 'Bill reading: local PaddleOCR is ready on http://127.0.0.1:8099.'
+                    return $process
+                }
+            } catch { }
+            Start-Sleep -Milliseconds 500
+        }
+        throw "PaddleOCR did not become ready within $TimeoutSeconds seconds. Check $logBase.stderr.log."
+    } catch {
+        Stop-FinBridgeOcrService -Process $process
+        throw
+    }
+}
+
+function Stop-FinBridgeOcrService {
+    param([System.Diagnostics.Process]$Process)
+    if ($null -ne $Process -and -not $Process.HasExited) {
+        Stop-Process -Id $Process.Id -Force -ErrorAction SilentlyContinue
+        [void]$Process.WaitForExit(5000)
+    }
+}
+
 function Start-FinBridgeOwnedProcess {
-    param([string]$ProjectRoot,[string]$Maven,[int]$Port)
+    param([string]$ProjectRoot,[string]$Maven,[int]$Port,[string]$DocumentApiKey)
     $info=New-Object System.Diagnostics.ProcessStartInfo
     $info.FileName=Join-Path $env:SystemRoot 'System32\cmd.exe'
     $info.WorkingDirectory=$ProjectRoot
@@ -56,6 +109,10 @@ function Start-FinBridgeOwnedProcess {
     $info.Arguments='/d /s /c ""'+$Maven+'" -B spring-boot:run "-Dspring-boot.run.arguments='+$applicationArguments+'" "-Dspring-boot.run.jvmArguments=-Dspring.main.add-command-line-properties=true""'
     foreach ($setting in @{FINBRIDGE_LLM_ENABLED='true';FINBRIDGE_LLM_PROVIDER='ollama';FINBRIDGE_LLM_MODEL='qwen3:4b';FINBRIDGE_LLM_BASE_URL='http://localhost:11434';FINBRIDGE_LLM_CONNECT_TIMEOUT='3s';FINBRIDGE_LLM_REQUEST_TIMEOUT='60s';SPRING_PROFILES_ACTIVE='local';SPRING_MAIN_ADD_COMMAND_LINE_PROPERTIES='true'}.GetEnumerator()) {
         $info.EnvironmentVariables[$setting.Key]=$setting.Value
+    }
+    if (-not [string]::IsNullOrWhiteSpace($DocumentApiKey)) {
+        # OCR key is passed only through the child environment, never CLI arguments or a file.
+        $info.EnvironmentVariables['GEMINI_API_KEY']=$DocumentApiKey
     }
     $info.EnvironmentVariables.Remove('SPRING_APPLICATION_JSON')
     $info.EnvironmentVariables.Remove('SPRING_PROFILES_INCLUDE')
@@ -100,13 +157,50 @@ function Invoke-FinBridgeLocal {
     $ProgressPreference='SilentlyContinue'
     $root=Split-Path -Parent $PSScriptRoot
     $run=$null
+    $ocrProcess=$null
     try {
         $tools=Get-FinBridgeToolchain -ProjectRoot $root
         Assert-FinBridgePort -Port $Port
+        $ocrProcess=Start-FinBridgeOcrService -ProjectRoot $root -TimeoutSeconds $StartupTimeoutSeconds
         . (Join-Path $PSScriptRoot 'prepare-demo.ps1')
         Assert-FinBridgeOllama -Model 'qwen3:4b' -BaseUrl 'http://localhost:11434'
+        $documentApiKey=$env:GEMINI_API_KEY
+        $secureDocumentApiKey=$null
+        $keyConfigPath=Join-Path $env:LOCALAPPDATA 'FinBridge\gemini-api-key.dpapi'
+        if ([string]::IsNullOrWhiteSpace($documentApiKey) -and (Test-Path -LiteralPath $keyConfigPath)) {
+            try {
+                $encryptedKey=[System.IO.File]::ReadAllText($keyConfigPath).Trim()
+                if ($encryptedKey) {
+                    $secureDocumentApiKey=ConvertTo-SecureString -String $encryptedKey
+                    $documentApiKey=[System.Net.NetworkCredential]::new('', $secureDocumentApiKey).Password
+                    Write-Host 'Bill reading: loaded your Windows-encrypted local Gemini key.'
+                }
+            } catch {
+                $secureDocumentApiKey=$null
+                $documentApiKey=$null
+                Write-Warning 'Could not decrypt the saved Gemini key for this Windows account. Enter it again to replace the local key.'
+            }
+        }
+        if ([string]::IsNullOrWhiteSpace($documentApiKey)) {
+            $secureDocumentApiKey=Read-Host 'Gemini API key for bill reading (input hidden; saved encrypted for this Windows account)' -AsSecureString
+            if ($secureDocumentApiKey.Length -gt 0) {
+                $documentApiKey=[System.Net.NetworkCredential]::new('', $secureDocumentApiKey).Password
+                $keyDirectory=Split-Path -Parent $keyConfigPath
+                if (-not (Test-Path -LiteralPath $keyDirectory)) {
+                    New-Item -ItemType Directory -Path $keyDirectory -Force | Out-Null
+                }
+                $encryptedKey=ConvertFrom-SecureString -SecureString $secureDocumentApiKey
+                [System.IO.File]::WriteAllText($keyConfigPath,$encryptedKey,[System.Text.Encoding]::ASCII)
+                Write-Host 'Gemini key saved encrypted in your Windows user profile for future launches.'
+            }
+        }
+        if ([string]::IsNullOrWhiteSpace($documentApiKey)) {
+            Write-Host 'Bill reading: disabled (no Gemini key supplied). The rest of FinBridge can still start.'
+        } else {
+            Write-Host 'Bill reading: Gemini key configured for the app process.'
+        }
         Write-Host "Starting FinBridge (local / ollama / qwen3:4b) on port $Port. Ctrl+C stops only this application's process tree."
-        $run=Start-FinBridgeOwnedProcess -ProjectRoot $root -Maven $tools.Maven -Port $Port
+        $run=Start-FinBridgeOwnedProcess -ProjectRoot $root -Maven $tools.Maven -Port $Port -DocumentApiKey $documentApiKey
         $url="http://localhost:$Port"
         $deadline=[DateTime]::UtcNow.AddSeconds($StartupTimeoutSeconds)
         $ready=$false
@@ -149,7 +243,10 @@ function Invoke-FinBridgeLocal {
         return 1
     } finally {
         Stop-FinBridgeOwnedProcess -Run $run
+        Stop-FinBridgeOcrService -Process $ocrProcess
         if ($null -ne $run) { $run.Process.Dispose() }
+        if ($null -ne $secureDocumentApiKey) { $secureDocumentApiKey.Dispose() }
+        $documentApiKey=$null
         # Caller cwd/environment never changed: working directory and overrides belong to the child only.
     }
 }

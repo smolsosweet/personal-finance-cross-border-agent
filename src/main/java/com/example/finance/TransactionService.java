@@ -146,7 +146,17 @@ public class TransactionService {
 
     @Transactional
     public String ingest(BankEvent event) {
-        Normalized tx = normalize(event);
+        return ingest(event, "VND", null);
+    }
+
+    @Transactional
+    private String ingest(BankEvent event, String currency, String selectedCategory) {
+        Normalized normalized = normalize(event);
+        String cleanCurrency = currency == null ? "" : currency.trim().toUpperCase();
+        if (!cleanCurrency.matches("[A-Z]{3}")) throw new IllegalArgumentException("Currency must be a three-letter code");
+        Normalized tx = new Normalized(normalized.merchant(), normalized.description(), normalized.amount(),
+                cleanCurrency, normalized.direction(), normalized.type(), normalized.occurredAt());
+        String cleanCategory = selectedCategory == null ? null : canonicalActiveCategory(selectedCategory);
         String accountId=ledger.canonicalId(event.sourceAccount()==null?"CHECKING":event.sourceAccount());
         if(!ledger.personalVnd(accountId))throw new IllegalArgumentException("Bank event requires an owned VND account");
         String destination=event.destinationAccount()==null?null:ledger.canonicalId(event.destinationAccount());
@@ -159,7 +169,7 @@ public class TransactionService {
         if (!byReference.isEmpty()) return db.queryForObject("SELECT id FROM transactions WHERE event_id=?", String.class, byReference.getFirst());
 
         String fingerprint = sha256(accountId+"|" + tx.direction() + "|" + tx.amount() + "|" + tx.merchant().toLowerCase() + "|" + tx.occurredAt().truncatedTo(ChronoUnit.MINUTES));
-        List<String> duplicate = db.query("SELECT id FROM transactions WHERE fingerprint=?", (rs,n) -> rs.getString(1), fingerprint);
+        List<String> duplicate = db.query("SELECT id FROM transactions WHERE fingerprint=? AND currency=?", (rs,n) -> rs.getString(1), fingerprint, tx.currency());
         if (!duplicate.isEmpty()) return duplicate.getFirst();
 
         CategorizationService.Suggestion suggestion = categorization.categorize(tx);
@@ -175,8 +185,11 @@ public class TransactionService {
                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,NULL,?,?,?)
                 """,
                 transactionId, eventId, fingerprint, accountId, tx.occurredAt(), tx.merchant(), tx.description(),
-                tx.amount(), tx.currency(), tx.direction(), tx.type(), source, suggestion.category(),
-                suggestion.confidence(), suggestion.reviewStatus(), suggestion.evidence());
+                tx.amount(), tx.currency(), tx.direction(), tx.type(), source,
+                cleanCategory == null ? suggestion.category() : cleanCategory,
+                cleanCategory == null ? suggestion.confidence() : 100,
+                cleanCategory == null ? suggestion.reviewStatus() : "CONFIRMED",
+                cleanCategory == null ? suggestion.evidence() : "Manually entered; category confirmed by user");
 
         if ("Simulated Bank Event".equals(source)) {
             BigDecimal delta = tx.direction().equals("IN") ? tx.amount() : tx.amount().negate();
@@ -188,6 +201,36 @@ public class TransactionService {
         return transactionId;
     }
 
+    @Transactional
+    public String recordManualTransaction(String merchant, BigDecimal amount, String currency,
+                                         LocalDate date, String paymentMethod, String category, String reference) {
+        return recordManualTransaction(merchant, amount, currency, date, paymentMethod, category, reference, null);
+    }
+
+    @Transactional
+    public String recordManualTransaction(String merchant, BigDecimal amount, String currency,
+                                         LocalDate date, String paymentMethod, String category, String reference, String details) {
+        if (merchant == null || merchant.isBlank() || merchant.trim().length() > 120)
+            throw new IllegalArgumentException("Merchant is required and must be at most 120 characters");
+        if (amount == null || amount.signum() <= 0) throw new IllegalArgumentException("Amount must be positive");
+        if (date == null) throw new IllegalArgumentException("Transaction date is required");
+        if (paymentMethod != null && paymentMethod.trim().length() > 80)
+            throw new IllegalArgumentException("Payment method must be at most 80 characters");
+        if (category == null || category.isBlank()) throw new IllegalArgumentException("Category is required");
+        String cleanReference = reference == null ? "" : reference.trim();
+        if (cleanReference.length() > 120) throw new IllegalArgumentException("Reference must be at most 120 characters");
+        String cleanDetails = details == null ? "" : details.trim();
+        if (cleanDetails.length() > 160) throw new IllegalArgumentException("Description must be at most 160 characters");
+        String cleanPaymentMethod = paymentMethod == null ? "" : paymentMethod.trim();
+        List<String> descriptionParts = new ArrayList<>();
+        if (!cleanDetails.isBlank()) descriptionParts.add(cleanDetails);
+        if (!cleanPaymentMethod.isBlank()) descriptionParts.add("Payment method: " + cleanPaymentMethod);
+        if (!cleanReference.isBlank()) descriptionParts.add("Reference: " + cleanReference);
+        String description = String.join(" · ", descriptionParts);
+        BankEvent event = new BankEvent(cleanReference.isBlank() ? "MANUAL-" + UUID.randomUUID() : cleanReference,
+                date.atStartOfDay(), merchant.trim(), description, amount, "OUT", "CHECKING", null, "Manual Entry");
+        return ingest(event, currency, category);
+    }
     /**
      * Records a completed Payment Sandbox debit in the personal transaction history.
      * This records history only: the unified account balances are
@@ -460,6 +503,27 @@ public class TransactionService {
                   AND occurred_at>=? AND occurred_at<?
                 GROUP BY currency,COALESCE(category,'Uncategorized') ORDER BY currency,spent DESC,category
                 """, start.atStartOfDay(), start.plusMonths(1).atStartOfDay());
+    }
+
+    public List<Map<String,Object>> spendingOn(LocalDate date) {
+        return db.queryForList("""
+                SELECT merchant,COALESCE(category,'Uncategorized') AS category,currency,amount,occurred_at
+                FROM transactions
+                WHERE type='Expense' AND review_status IN ('AUTO','CONFIRMED')
+                  AND occurred_at>=? AND occurred_at<?
+                ORDER BY occurred_at DESC,id DESC
+                """, date.atStartOfDay(), date.plusDays(1).atStartOfDay());
+    }
+
+    public List<Map<String,Object>> monthlySpendingTransactions(String category) {
+        LocalDate start = reportingDate().withDayOfMonth(1);
+        return db.queryForList("""
+                SELECT CAST(occurred_at AS DATE) AS spent_on,merchant,amount,currency
+                FROM transactions
+                WHERE type='Expense' AND review_status IN ('AUTO','CONFIRMED')
+                  AND category=? AND occurred_at>=? AND occurred_at<?
+                ORDER BY occurred_at,id
+                """, category, start.atStartOfDay(), start.plusMonths(1).atStartOfDay());
     }
 
     public List<Map<String,Object>> monthlyRefunds() {

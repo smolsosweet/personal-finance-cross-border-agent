@@ -87,7 +87,7 @@
         <article><span class="icon violet">?</span><small>Needs review</small><strong th:text="${dashboard.pendingReview}"></strong><p>Transactions waiting for your input</p></article>
       </section>
 
-      <section class="intro" data-tab-panel="transactions" hidden><div><div class="eyebrow">YOUR ACTIVITY</div><h1>Transactions</h1><p>Review incoming activity, confirm categories and find past payments.</p></div><button type="button" class="primary-button" data-open-assistant>Ask about spending</button></section>
+      <section class="intro" data-tab-panel="transactions" hidden><div><div class="eyebrow">YOUR ACTIVITY</div><h1>Transactions</h1><p>Review incoming activity, confirm categories and find past payments.</p></div><button type="button" class="primary-button" data-open-dialog="add-transaction">+ Add transaction</button></section>
       <nav class="transaction-view-tabs" data-tab-panel="transactions" aria-label="Transaction views" hidden>
         <button type="button" data-transaction-view="review" data-testid="transaction-view-review" aria-pressed="false">Needs review <span th:if="${dashboard.pendingReview > 0}" th:text="${dashboard.pendingReview}"></span></button>
         <button type="button" data-transaction-view="history" data-testid="transaction-view-history" aria-pressed="true">All transactions</button>
@@ -332,6 +332,7 @@
         <dialog id="add-student-expense" class="student-expense-dialog">
           <div class="dialog-heading"><div><small>NEW EDUCATION BILL</small><h3>Add a school or provider bill</h3></div><button type="button" data-close-dialog aria-label="Close">×</button></div>
           <p>Enter beneficiary details from the official bill or authenticated provider portal. The demo verifies them against a synthetic trusted registry; it does not contact the bank or school.</p>
+          <section class="ai-upload-flow student-bill-ai" data-student-ai-upload><p>Choose Gemini or local AI to prefill this bill. Always verify beneficiary details against the official bill; extraction does not verify the recipient.</p><label><span>Bill AI provider</span><select data-ai-provider><option value="local" th:selected="${documentAiProvider == 'local'}">Local AI · PaddleOCR + Ollama/Qwen</option><option value="gemini" th:selected="${documentAiProvider == 'gemini'}">Gemini · cloud</option></select></label><label><span>Bill image</span><input type="file" accept="image/jpeg,image/png,image/webp" data-ai-file><small>JPG, PNG or WEBP · max 5 MB</small></label><button type="button" class="secondary" data-ai-extract data-ai-kind="student-bill">Read bill</button><p class="ai-extraction-status" data-ai-status role="status"></p><p class="ai-review-note" data-ai-review-note hidden>AI recognized these details. Please review and edit them before saving.</p></section>
           <form th:action="@{/student/expenses}" method="post" enctype="multipart/form-data" class="student-expense-form" data-corridor-form data-use-corridor-defaults="true">
             <label><span>Education expense type</span><select name="expenseType" required><option value="TUITION">Tuition</option><option value="DORMITORY">Dormitory</option><option value="INSURANCE">Student insurance</option><option value="VISA">Visa fee</option><option value="LIVING">Provider-billed living expense</option><option value="OTHER">Other education fee</option></select></label>
             <label><span>Bill name</span><input name="title" maxlength="120" required placeholder="Example: Dormitory deposit"></label>
@@ -345,7 +346,7 @@
             <label><span>Beneficiary account / provider ID</span><input name="recipientAccount" maxlength="120" required value="SZDU-TUITION-2026" data-corridor-recipient></label>
             <label><span>Payment reference</span><input name="paymentReference" maxlength="80" required></label>
             <label><span>Due date</span><input name="dueDate" type="date" required></label>
-            <label class="wide"><span>Attachment (optional)</span><input name="document" type="file" accept="application/pdf,image/jpeg,image/png"><small>PDF, JPG or PNG · maximum 5 MB · no OCR in this version</small></label>
+            <label class="wide"><span>Attachment (optional)</span><input name="document" type="file" accept="application/pdf,image/jpeg,image/png"><small>PDF, JPG or PNG · maximum 5 MB</small></label>
             <button class="primary-button wide" type="submit">Add and verify bill</button>
           </form>
         </dialog>
@@ -464,6 +465,19 @@
           <article class="sandbox-accounts"><h3>Sandbox balances</h3><div th:each="account : ${sandboxAccounts}" class="sandbox-account"><div><strong th:text="${account.display_name}"></strong><small th:text="${account.id}"></small></div><b th:text="${#numbers.formatDecimal(account.balance,1,'COMMA',2,'POINT') + ' ' + account.currency}"></b></div></article>
         </details>
       </section>
+      <dialog id="add-transaction" class="finance-dialog ai-entry-dialog">
+        <div class="dialog-heading"><div><small>NEW TRANSACTION</small><h3>Add transaction</h3></div><button type="button" data-close-dialog aria-label="Close">×</button></div>
+        <div class="entry-choice" data-entry-choice><button type="button" class="secondary" data-entry-manual>Manual entry</button><button type="button" class="secondary" data-entry-ai>Read receipt with AI</button></div>
+        <section class="ai-upload-flow" data-ai-upload hidden><label><span>Bill AI provider</span><select data-ai-provider><option value="local" th:selected="${documentAiProvider == 'local'}">Local AI · PaddleOCR + Ollama/Qwen</option><option value="gemini" th:selected="${documentAiProvider == 'gemini'}">Gemini · cloud</option></select></label><label><span>Receipt image</span><input type="file" accept="image/jpeg,image/png,image/webp" data-ai-file><small>JPG, PNG or WEBP · max 5 MB</small></label><button type="button" class="secondary" data-ai-extract data-ai-kind="transaction">Read receipt</button><p class="ai-extraction-status" data-ai-status role="status"></p></section>
+        <form th:action="@{/transactions/manual}" method="post" class="finance-form transaction-manual-form" data-manual-transaction data-next-anchor="transaction-event" hidden>
+          <p class="wide ai-review-note" data-ai-review-note hidden>AI recognized these details. Please review them before saving.</p>
+          <label><span>Merchant</span><input name="merchant" maxlength="120" required></label><label><span>Amount</span><input name="amount" type="number" min="0.01" step="0.01" required></label>
+          <label><span>Currency</span><input name="currency" value="VND" minlength="3" maxlength="3" pattern="[A-Za-z]{3}" required></label><label><span>Date</span><input name="occurredAt" type="date" required></label>
+          <label><span>Payment method (optional)</span><input name="paymentMethod" maxlength="80"></label><label><span>Category</span><select name="category" required><option value="">Choose a category</option><option th:each="category : ${transactionCategories}" th:if="${category.active}" th:value="${category.name}" th:text="${category.name}"></option></select></label>
+          <label class="wide"><span>Description (optional)</span><input name="description" maxlength="160"></label><label class="wide"><span>Invoice / reference number (optional)</span><input name="reference" maxlength="120"></label><button class="primary-button wide" type="submit">Review and save transaction</button>
+        </form>
+      </dialog>
+
       <section class="card transaction-review-section" id="transaction-review" data-tab-panel="transactions" data-transaction-view-panel="review" hidden>
         <div class="section-title"><div><div class="eyebrow">TRANSACTION INBOX</div><h2>Needs your review</h2><p>These transactions already happened at the bank. Your answer only completes their purpose and category for budgets and reports.</p></div><span class="pill" th:text="${#lists.size(pendingTransactions) + ' pending'}"></span></div>
         <div class="review-policy-note"><strong>How decisions work</strong><span>90% or higher is categorized automatically · 60–89% asks you to confirm · below 60% asks for purpose and category.</span></div>
@@ -497,9 +511,10 @@
 
       <section class="card" id="transactions" data-tab-panel="transactions" data-transaction-view-panel="history" hidden>
         <div class="section-title"><div><div class="eyebrow">TRANSACTION HISTORY</div><h2>Transaction history</h2><p>Newest transactions appear first. Search or filter the list to focus on what you want to review.</p></div><span class="pill" th:text="${#lists.size(transactions) + ' records'}"></span></div>
-        <p class="history-scope" data-testid="transaction-history-scope"><strong>All time</strong><span>Filters narrow the recorded history, not the monthly spending report.</span></p>
+        <p class="history-scope" data-testid="transaction-history-scope"><strong>Last 30 days</strong><span>Filters narrow the recorded history, not the monthly spending report.</span></p>
         <div class="transaction-toolbar" data-testid="transaction-filters">
           <label class="transaction-search"><span>Search</span><input type="search" data-testid="transaction-search" placeholder="Search merchant or evidence"></label>
+          <label><span>Period</span><select data-testid="transaction-period-filter"><option value="1">Last 1 day</option><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="all">All time</option></select></label>
           <label><span>Type</span><select data-testid="transaction-type-filter"><option value="">All transaction types</option><option value="Expense">Expense</option><option value="Income">Income</option><option value="Internal Transfer">Internal Transfer</option><option value="Refund">Refund</option></select></label>
           <label><span>Review status</span><select data-testid="transaction-status-filter"><option value="">All processing states</option><option value="AUTO">Automatically categorized</option><option value="CONFIRMED">Confirmed by you</option><option value="CONFIRMATION_REQUIRED">Needs confirmation</option><option value="PURPOSE_REQUIRED">Needs purpose</option></select></label>
           <label><span>Category</span><select data-testid="transaction-category-filter"><option value="">All categories</option></select></label>
@@ -509,8 +524,8 @@
         <div class="transaction-list-meta"><span data-testid="transaction-result-count" aria-live="polite"></span><span>Showing 5 transactions per page</span></div>
         <div class="table-scroll"><table>
           <thead><tr><th>Merchant and date</th><th>Type</th><th>Category</th><th>Confidence</th><th>Status</th><th class="right">Amount</th><th>Action</th></tr></thead>
-          <tbody data-testid="transaction-table-body"><tr th:each="tx : ${transactions}" data-testid="transaction-row" th:classappend="${newTransaction == tx.id ? ' newly-created' : ''}" th:attr="data-transaction-id=${tx.id},data-review-status=${tx.review_status},data-type=${tx.type},data-category=${tx.category ?: ''},data-search=${tx.merchant + ' ' + tx.description + ' ' + (tx.purpose ?: '') + ' ' + tx.categorization_evidence},data-amount=${tx.amount},data-new-transaction=${newTransaction == tx.id}">
-            <td><strong data-user-authored th:text="${tx.merchant}"></strong><span th:if="${newTransaction == tx.id}" class="new-transaction-badge">Just created</span><small><span th:text="${#dates.format(tx.occurred_at,'dd/MM/yyyy HH:mm:ss')}"></span> · <span th:text="${tx.source_label}"></span></small><small th:if="${tx.source_account_name != null}"><span>Source account</span> · <span data-user-authored th:text="${tx.source_account_name}"></span> · <span th:text="${tx.source_masked_number}"></span></small><small th:if="${tx.purpose != null}" th:text="${'Purpose: ' + tx.purpose}"></small><details class="transaction-evidence"><summary>Why this category?</summary><small th:text="${tx.categorization_evidence}"></small></details></td>
+          <tbody data-testid="transaction-table-body"><tr th:each="tx : ${transactions}" data-testid="transaction-row" th:classappend="${newTransaction == tx.id ? ' newly-created' : ''}" th:attr="data-transaction-id=${tx.id},data-occurred-at=${tx.occurred_at.time},data-review-status=${tx.review_status},data-type=${tx.type},data-category=${tx.category ?: ''},data-search=${tx.merchant + ' ' + tx.description + ' ' + (tx.purpose ?: '') + ' ' + tx.categorization_evidence},data-amount=${tx.amount},data-new-transaction=${newTransaction == tx.id}">
+            <td><strong data-user-authored th:text="${tx.merchant}"></strong><span th:if="${newTransaction == tx.id}" class="new-transaction-badge">Just created</span><small><span th:text="${#dates.format(tx.occurred_at,'dd/MM/yyyy HH:mm:ss')}"></span> · <span th:text="${tx.source_label}"></span></small><small th:if="${tx.source_account_name != null}"><span>Source account</span> · <span data-user-authored th:text="${tx.source_account_name}"></span> · <span th:text="${tx.source_masked_number}"></span></small><small th:if="${tx.purpose != null}" th:text="${'Purpose: ' + tx.purpose}"></small><small th:if="${#strings.contains(tx.description, 'Payment method:')}" th:text="${tx.description}"></small><details class="transaction-evidence"><summary>Why this category?</summary><small th:text="${tx.categorization_evidence}"></small></details></td>
             <td><span class="type" th:text="${tx.type}"></span></td>
             <td th:text="${tx.category ?: 'Purpose required'}"></td>
             <td><span class="confidence" th:classappend="${tx.confidence >= 90 ? ' high' : (tx.confidence >= 60 ? ' medium' : ' low')}" th:text="${tx.confidence + '%'}"></span></td>
@@ -600,7 +615,7 @@
   </div>
       <section data-assistant-runway data-testid="assistant-runway">
         <div th:if="${conversationContext.runway.visible}" class="runway-scenario">
-          <strong>Living-expense scenario · ESTIMATE</strong>
+          <div class="runway-heading"><strong>Living-expense scenario · ESTIMATE</strong><button type="button" class="secondary" data-dismiss-runway aria-label="Hide estimate" title="Hide estimate">×</button></div>
           <p th:if="${conversationContext.runway.monthly != null}"><span>Confirmed monthly expense</span>: <b data-testid="runway-confirmed-monthly" th:text="${conversationContext.runway.monthly + ' VND'}"></b></p>
           <form th:action="@{/agent/runway/monthly-expense}" method="post" data-context-form data-runway-form data-chat-timeout="10000">
             <input type="hidden" name="token" th:value="${conversationContext.runway.token}">
@@ -634,6 +649,6 @@
   </form>
   <p class="assistant-safety">AI helps understand your question. Asking does not authorize a payment.</p>
 </aside>
-<script th:src="@{/app.js(v='20261005-ux-cleanup')}"></script>
+<script th:src="@{/app.js(v='20261006-local-bill-ai-v1')}"></script>
 </body>
 </html>

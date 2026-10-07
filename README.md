@@ -68,6 +68,8 @@ Chạy trực tiếp qua Maven có thể dùng profile `gemini`, `FINBRIDGE_LLM_
 `FINBRIDGE_LLM_MODEL`, `FINBRIDGE_LLM_CONNECT_TIMEOUT`, `FINBRIDGE_LLM_REQUEST_TIMEOUT`.
 `GEMINI_API_KEY` được bind vào `finbridge.llm.gemini-api-key`, tách khỏi `OPENAI_API_KEY`.
 
+Đọc bill dùng Gemini Vision riêng qua `finbridge.document-ai.*`, vẫn lấy `GEMINI_API_KEY` ở backend. Ảnh chỉ được gửi tới Google khi người dùng bấm **Đọc hóa đơn**; ứng dụng không ghi ảnh vào cơ sở dữ liệu. Kết quả chỉ điền form để người dùng kiểm tra, không tự tạo giao dịch hay xác minh người thụ hưởng. Mặc định model `gemini-3.5-flash-lite`; có thể đặt `FINBRIDGE_DOCUMENT_AI_MODEL` ở môi trường server.
+
 **Model và tài liệu Google kiểm tra ngày 2026-10-04:**
 
 - [Gemini 3.5 Flash-Lite](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite): stable, structured outputs supported.
@@ -442,3 +444,28 @@ Full existing regression gate:
 
 See [the Vietnamese Task A verification report](docs/CONTEXTUAL_CONVERSATION_VERIFICATION.md)
 for results, lifecycle, financial invariance and protected-code diff evidence.
+
+
+### Local bill/receipt AI (no provider API quota)
+
+FinBridge keeps both document providers. In **Transactions → Add transaction → Read receipt with AI**, choose **Local AI** or **Gemini**. The same choice is available when adding an education bill. Local mode runs PaddleOCR for Vietnamese text and then sends only that recognized text to the configured local Qwen model through Ollama. The image is processed locally and is not sent to Gemini. Review and edit every result before saving; save still goes through the existing transaction service, duplicate detection, categorization, and budget flow.
+
+Install Python 3.12 x64 first, then run these commands once from the project root in PowerShell:
+
+```powershell
+python -m venv .venv-bill-ai
+.\.venv-bill-ai\Scripts\python.exe -m pip install --upgrade pip
+.\.venv-bill-ai\Scripts\python.exe -m pip install -r tools\bill-ai-local\requirements.txt
+```
+
+The supported local setup pins PaddlePaddle 3.0.0 and PaddleOCR 3.x; this avoids a Windows oneDNN runtime issue seen with PaddlePaddle 3.3.1.
+
+The `start-local.ps1` launcher starts the local OCR service from `.venv-bill-ai` automatically and stops the service it started when you press Ctrl+C. The first startup may download PaddleOCR model weights. You can still start the OCR service separately with `\.venv-bill-ai\Scripts\python.exe tools\bill-ai-local\server.py` if needed.
+
+Keep Ollama running and install the default Qwen text model once:
+
+```powershell
+ollama pull qwen3:4b
+```
+
+Configuration defaults are `BILL_AI_PROVIDER=local`, `BILL_LOCAL_OCR_URL=http://localhost:8099/api/ocr`, `OLLAMA_BASE_URL=http://localhost:11434`, and `OLLAMA_MODEL=qwen3:4b`. Set `BILL_AI_PROVIDER=gemini` to make Gemini the default selection; either provider can still be selected from the upload form. Gemini continues to require `GEMINI_API_KEY`.

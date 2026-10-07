@@ -12,6 +12,38 @@ const translationsVi = new Map(Object.entries({
   'Clear monthly assumption': 'Xóa giả định chi hàng tháng',
   'Previous estimates are historical snapshots. Ask again or confirm the form for current data. VND only; no automatic currency conversion.': 'Ước tính trước là ảnh chụp dữ liệu tại thời điểm trả lời. Hỏi lại hoặc xác nhận form để lấy dữ liệu hiện tại. Chỉ dùng VND; không tự đổi tiền tệ.',
   'Ask FinBridge': 'Hỏi FinBridge',
+  'Transactions': 'Giao dịch',
+  'Review incoming activity, confirm categories and find past payments.': 'Xem giao dịch mới, xác nhận danh mục và tìm khoản đã chi.',
+  '+ Add transaction': '+ Thêm giao dịch',
+  'NEW TRANSACTION': 'GIAO DỊCH MỚI',
+  'Add transaction': 'Thêm giao dịch',
+  'Manual entry': 'Nhập thủ công',
+  'Read receipt with AI': 'Đọc bill bằng AI',
+  'Bill AI provider': 'Nhà cung cấp AI đọc bill', 'Local AI · PaddleOCR + Ollama/Qwen': 'AI cục bộ · PaddleOCR + Ollama/Qwen', 'Gemini · cloud': 'Gemini · đám mây',
+  'Choose Gemini or local AI to prefill this bill. Always verify beneficiary details against the official bill; extraction does not verify the recipient.': 'Chọn Gemini hoặc AI cục bộ để điền hóa đơn. Luôn đối chiếu người thụ hưởng với hóa đơn chính thức; tính năng đọc bill không xác minh người nhận.',
+  'Local AI': 'AI cục bộ', 'Gemini': 'Gemini', 'confidence': 'độ tin cậy',
+  'Upload a bill image to Gemini to prefill details. Confirm the beneficiary against the official school bill; extraction does not verify the recipient.': 'Ảnh hóa đơn sẽ được gửi tới Gemini để điền thông tin. Hãy đối chiếu người nhận với hóa đơn chính thức; AI không xác minh người thụ hưởng.',
+  'Receipt image': 'Ảnh hóa đơn',
+  'Read receipt': 'Đọc hóa đơn',
+  'AI recognized these details. Please review them before saving.': 'AI đã nhận diện thông tin. Vui lòng kiểm tra trước khi lưu.',
+  'AI recognized these details. Please review and edit them before saving.': 'AI đã nhận diện thông tin. Vui lòng kiểm tra và chỉnh sửa trước khi lưu.',
+  'Choose an image first.': 'Vui lòng chọn ảnh trước.',
+  'Choose a JPG, PNG or WEBP image up to 5 MB.': 'Chọn ảnh JPG, PNG hoặc WEBP tối đa 5 MB.',
+  'Reading image…': 'Đang đọc ảnh…',
+  'Receipt AI is not configured. Set GEMINI_API_KEY on the server.': 'Máy chủ chưa có GEMINI_API_KEY để đọc hóa đơn.',
+  'Gemini rejected the API key. Check GEMINI_API_KEY in the server environment.': 'Gemini từ chối API key. Hãy kiểm tra GEMINI_API_KEY trên máy chủ.',
+  'Gemini quota or rate limit reached. Try again later.': 'Gemini đã hết hạn mức hoặc đang giới hạn yêu cầu. Hãy thử lại sau.',
+  'Gemini is temporarily unavailable. Try again later.': 'Gemini tạm thời không khả dụng. Hãy thử lại sau.',
+  'Could not read this receipt. Try a clearer JPG, PNG or WEBP image.': 'Không đọc được hóa đơn. Hãy thử ảnh JPG, PNG hoặc WEBP rõ hơn.',
+  'Read bill': 'Đọc hóa đơn',
+  'AI/OCR extraction is not configured on this server yet. No fields were extracted.': 'Máy chủ chưa cấu hình OCR/AI đọc hóa đơn. Chưa có thông tin nào được nhận diện.',
+  'Review and save transaction': 'Kiểm tra và lưu giao dịch',
+  'Merchant': 'Đơn vị bán hàng',
+  'Date': 'Ngày giao dịch',
+  'Payment method': 'Phương thức thanh toán', 'Payment method (optional)': 'Phương thức thanh toán (không bắt buộc)',
+  'Invoice / reference number (optional)': 'Mã hóa đơn / tham chiếu (không bắt buộc)',
+  'AI/OCR extraction is not configured on this server yet. No fields were extracted.': 'Máy chủ chưa cấu hình OCR/AI đọc hóa đơn. Chưa có thông tin nào được nhận diện.',
+
   'Conversation topic': 'Chủ đề hội thoại',
   'CURRENT_BALANCE': 'Số dư tài khoản hiện tại',
   'RECEIPT_BALANCE': 'Số dư lịch sử trong biên nhận',
@@ -735,6 +767,8 @@ Object.entries({
   "Separate records for everyday spending and manual cash. Payment account balances above are not included.": "Các bản ghi riêng cho chi tiêu hằng ngày và tiền mặt nhập thủ công. Không bao gồm số dư tài khoản thanh toán ở trên.",
   "Transaction history": "Lịch sử giao dịch",
   "All time": "Tất cả thời gian",
+  "Period": "Khoảng thời gian", "Last 1 day": "1 ngày qua", "Last 7 days": "7 ngày qua",
+  "Last 30 days": "30 ngày qua",
   "Filters narrow the recorded history, not the monthly spending report.": "Bộ lọc thu hẹp lịch sử đã ghi nhận, không thay đổi báo cáo chi tiêu tháng.",
   "Block new payments immediately. Completed payments are not reversed.": "Chặn thanh toán mới ngay. Không hoàn tác các khoản đã hoàn tất.",
   "Your financial workspace": "Không gian tài chính của bạn",
@@ -948,6 +982,7 @@ const workspaceFilterSelectors = [
   '[data-testid="student-bill-search"]', '[data-testid="student-bill-status-filter"]',
   '[data-testid="student-bill-verification-filter"]', '[data-testid="student-bill-sort"]',
   '[data-testid="payment-account-filter"]', '[data-testid="transaction-search"]',
+  '[data-testid="transaction-period-filter"]',
   '[data-testid="transaction-type-filter"]', '[data-testid="transaction-status-filter"]',
   '[data-testid="transaction-category-filter"]', '[data-testid="transaction-sort"]'
 ];
@@ -1117,6 +1152,9 @@ function handleAssistantClick(event) {
     contextForm.elements.token.value = opener.dataset.assistantContextToken;
     contextForm.requestSubmit();
   }
+  if (event.target.closest('[data-dismiss-runway]')) {
+    document.querySelector('[data-assistant-runway]')?.setAttribute('hidden', '');
+  }
   if (event.target.closest('[data-close-assistant]')) setAssistantOpen(false);
   if (event.target.closest('[data-assistant-review-plan]')) {
     setAssistantOpen(false);
@@ -1245,6 +1283,7 @@ function initializeTransactionList(initialPage = 1) {
   if (!rows.length) return;
 
   const search = document.querySelector('[data-testid="transaction-search"]');
+  const period = document.querySelector('[data-testid="transaction-period-filter"]');
   const type = document.querySelector('[data-testid="transaction-type-filter"]');
   const status = document.querySelector('[data-testid="transaction-status-filter"]');
   const category = document.querySelector('[data-testid="transaction-category-filter"]');
@@ -1269,8 +1308,10 @@ function initializeTransactionList(initialPage = 1) {
 
   const render = () => {
     const query = search.value.trim().toLowerCase();
+    const cutoff = period.value === 'all' ? null : Date.now() - Number(period.value) * 86400000;
     let matches = rows.filter((row) =>
-      (!query || row.dataset.search.toLowerCase().includes(query))
+      (cutoff === null || Number(row.dataset.occurredAt) >= cutoff)
+      && (!query || row.dataset.search.toLowerCase().includes(query))
       && (!type.value || row.dataset.type === type.value)
       && (!status.value || row.dataset.reviewStatus === status.value)
       && (!category.value || row.dataset.category === category.value));
@@ -1289,6 +1330,9 @@ function initializeTransactionList(initialPage = 1) {
     rows.forEach((row) => { row.hidden = !visibleRows.has(row); });
 
     const language = selectedLanguage();
+    const scopeLabel = document.querySelector('[data-testid="transaction-history-scope"] strong');
+    if (scopeLabel) scopeLabel.textContent = period.value === 'all' ? (language === 'vi' ? 'Toàn bộ thời gian' : 'All time')
+      : (language === 'vi' ? `${period.value} ngày qua` : `Last ${period.value} day${period.value === '1' ? '' : 's'}`);
     count.textContent = language === 'vi'
       ? `${matches.length} giao dịch phù hợp`
       : `${matches.length} matching transactions`;
@@ -1300,7 +1344,7 @@ function initializeTransactionList(initialPage = 1) {
     next.disabled = page === pages;
   };
 
-  [search, type, status, category, sort].forEach((control) => {
+  [search, period, type, status, category, sort].forEach((control) => {
     control.addEventListener(control === search ? 'input' : 'change', () => {
       page = 1;
       render();
@@ -1308,6 +1352,7 @@ function initializeTransactionList(initialPage = 1) {
   });
   clear.addEventListener('click', () => {
     search.value = '';
+    period.value = '30';
     type.value = '';
     status.value = '';
     category.value = '';
@@ -1844,6 +1889,46 @@ function initializeBoundedLists() {
   });
 }
 
+async function handleDocumentExtraction(event) {
+  const button = event.target.closest('[data-ai-extract]');
+  if (!button || button.disabled) return;
+  const section = button.closest('[data-ai-upload]') || button.closest('[data-student-ai-upload]');
+  const file = section?.querySelector('[data-ai-file]')?.files?.[0];
+  const status = section?.querySelector('[data-ai-status]');
+  const form = button.dataset.aiKind === 'transaction'
+    ? button.closest('dialog')?.querySelector('[data-manual-transaction]')
+    : document.querySelector('#add-student-expense [data-corridor-form]');
+  if (!file || !status || !form) { if (status) status.textContent = 'Choose an image first.'; return; }
+  if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size > 5 * 1024 * 1024) {
+    status.textContent = 'Choose a JPG, PNG or WEBP image up to 5 MB.'; return;
+  }
+  const data = new FormData(); data.append('file', file); data.append('kind', button.dataset.aiKind);
+  data.append('provider', section.querySelector('[data-ai-provider]')?.value || 'local');
+  button.disabled = true; status.textContent = 'Reading image…';
+  try {
+    const response = await fetch('/api/ai/extract-document', { method: 'POST', body: data, headers: { Accept: 'application/json' } });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.message || 'AI/OCR extraction is not configured on this server yet.');
+    const fields = result.fields || {};
+    Object.entries(fields).forEach(([key, value]) => {
+      const input = form.elements.namedItem(key);
+      if (input && value != null && typeof value !== 'object') {
+        input.value = value == null ? '' : String(value);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+    const note = button.closest('[data-ai-upload], [data-student-ai-upload]')?.querySelector('[data-ai-review-note]');
+    if (note) note.hidden = false;
+    if (button.dataset.aiKind === 'transaction') form.hidden = false;
+    const confidence = Number.isFinite(Number(result.confidence)) ? ` · ${Math.round(Number(result.confidence) * 100)}% confidence` : '';
+    const provider = result.provider === 'local' ? 'Local AI' : 'Gemini';
+    status.textContent = `${provider} recognized the available details${confidence}. Please review and edit before saving.`;
+  } catch (error) {
+    status.textContent = error.message;
+  } finally { button.disabled = false; }
+}
+
 function initializeWorkspaceContent(state) {
   initializeBoundedLists();
   renderTransactionList = () => {};
@@ -1872,6 +1957,17 @@ function initializeWorkspaceContent(state) {
   }
   applyLanguage(selectedLanguage());
 
+  document.querySelectorAll('[data-entry-manual]').forEach(button => button.addEventListener('click', () => {
+    const dialog = button.closest('dialog');
+    dialog.querySelector('[data-ai-upload]').hidden = true;
+    dialog.querySelector('[data-manual-transaction]').hidden = false;
+    dialog.querySelector('[data-manual-transaction] input[name="merchant"]').focus();
+  }));
+  document.querySelectorAll('[data-entry-ai]').forEach(button => button.addEventListener('click', () => {
+    const dialog = button.closest('dialog');
+    dialog.querySelector('[data-ai-upload]').hidden = false;
+    dialog.querySelector('[data-manual-transaction]').hidden = true;
+  }));
   document.querySelectorAll('[data-open-dialog]').forEach((button) => {
     button.addEventListener('click', () => {
       const dialog = document.getElementById(button.dataset.openDialog);
@@ -2168,6 +2264,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.addEventListener('submit', submitWorkspaceForm);
   document.addEventListener('click', openPaymentPlan);
+  document.addEventListener('click', handleDocumentExtraction);
   document.addEventListener('click', handleAssistantClick);
   document.addEventListener('click', (event) => {
     if (event.target.closest('[data-return-to-comparison]')) { event.preventDefault(); activateTab('student'); }
