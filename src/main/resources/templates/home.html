@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>FinBridge · Financial workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261009-bill-workflow')}">
+  <title>FinBridge · Financial workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261010-notification-layout')}">
 </head>
 <body>
 <a class="skip-link" href="#workspace-content">Skip to main content</a>
@@ -181,8 +181,6 @@
           <form th:action="@{'/finance/plans/' + ${plan.id} + '/edit'}" method="post" class="finance-form"><label class="wide"><span>Plan name</span><input name="title" maxlength="120" required th:value="${plan.title}"></label><label><span>Plan type</span><select name="planType" required><option value="EXPENSE" th:selected="${plan.plan_type == 'EXPENSE'}">One-time expense</option><option value="RECURRING_BILL" th:selected="${plan.plan_type == 'RECURRING_BILL'}">Recurring bill</option><option value="SAVINGS_GOAL" th:selected="${plan.plan_type == 'SAVINGS_GOAL'}">Savings goal</option></select></label><label><span>Category</span><input name="category" maxlength="80" required th:value="${plan.category}"></label><label><span>Amount (VND)</span><input name="amount" type="number" min="1" step="0.01" required th:value="${plan.amount}"></label><label><span>Cadence</span><select name="cadence" required><option value="ONCE" th:selected="${plan.cadence == 'ONCE'}">Once</option><option value="WEEKLY" th:selected="${plan.cadence == 'WEEKLY'}">Weekly</option><option value="MONTHLY" th:selected="${plan.cadence == 'MONTHLY'}">Monthly</option></select></label><label><span>Next due date</span><input name="nextDueDate" type="date" required th:value="${plan.next_due_date}"></label><label><span>Funding source</span><select name="fundingAccountId"><option value="">Decide later</option><option th:each="account : ${accounts}" th:value="${account.id}" data-user-authored th:text="${account.account_name}" th:selected="${account.id == plan.funding_account_id}"></option></select></label><label class="wide reserve-choice"><input name="reserveFunds" type="checkbox" value="true" th:checked="${plan.reserve_funds}"><span>Reserve this money in available-to-allocate calculations</span></label><label class="wide"><span>Notes</span><input name="notes" maxlength="255" th:value="${plan.notes}"></label><button class="primary-button wide" type="submit">Save plan</button></form>
         </dialog>
       </section>
-
-      <details th:if="${demoToolsEnabled}" class="card payment-demo-entry" data-tab-panel="dashboard" data-dashboard-view-panel="summary"><summary>Environment tools: payment examples</summary><p>These examples use synthetic data. Education payments always require your approval.</p><form th:action="@{/agent/plans/low-risk}" method="post" data-next-anchor="#agent-workspace"><input type="hidden" name="amount" value="250000"><button class="secondary" data-testid="create-first-demo-action">Create a simulated low-risk plan</button></form></details>
       <section class="card student-section" id="student-finance" data-tab-panel="student" hidden>
         <div class="section-title student-title">
           <div><div class="eyebrow">EDUCATION PAYMENTS</div><h2>Study expense planning</h2><p>Select a school or education-provider bill, verify its beneficiary and compare payment options before preparing a plan.</p></div>
@@ -218,7 +216,7 @@
             <label><span>Sort</span><select data-testid="student-bill-sort"><option value="due-asc">Due date: nearest</option><option value="newest">Newest added</option><option value="amount-desc">Amount: highest</option><option value="provider-asc">Provider: A–Z</option></select></label>
             <button type="button" class="secondary clear-filters" data-testid="student-bill-clear">Clear filters</button>
           </div>
-          <div class="horizontal-scroll-hint">← Scroll horizontally to view bills and providers →</div>
+          <div class="horizontal-scroll-hint" data-scroll-hint>← Scroll horizontally to view bills and providers →</div>
           <div class="student-bill-list" data-testid="student-expense-list" role="region" aria-labelledby="student-bill-heading" tabindex="0">
             <th:block th:each="expense : ${studentExpenses}">
               <article class="student-expense-card student-bill-row" th:classappend="${(expense.selected ? ' selected' : '') + (!expense.active ? ' inactive' : '')}"
@@ -262,8 +260,10 @@
             </th:block>
           </div>
           <div class="student-bill-empty" data-testid="student-bill-empty" hidden>No education bills match these filters.</div>
-          <div class="student-bill-list-meta"><span data-testid="student-bill-visible-count"></span><span>Only verified active bills can be selected for comparison.</span></div>
-          <nav class="student-bill-pagination" aria-label="Education bill pages"><button type="button" class="secondary" data-testid="student-bill-prev">Previous</button><span data-testid="student-bill-page" aria-live="polite"></span><button type="button" class="secondary" data-testid="student-bill-next">Next</button></nav>
+          <div class="student-bill-footer">
+            <div class="student-bill-list-meta"><span data-testid="student-bill-visible-count"></span><span>Only verified active bills can be selected for comparison.</span></div>
+            <nav class="student-bill-pagination" aria-label="Education bill pages"><button type="button" class="secondary" data-testid="student-bill-prev">Previous</button><span data-testid="student-bill-page" aria-live="polite"></span><button type="button" class="secondary" data-testid="student-bill-next">Next</button></nav>
+          </div>
         </section>
         <th:block th:if="${selectedExpense != null}">
         <div class="selected-expense-grid">
@@ -288,26 +288,29 @@
             <form th:action="@{/student/preference}" method="post" class="preference-form"><label>Priority and order<select name="preference" onchange="this.form.requestSubmit()"><option value="CHEAPER" th:selected="${studentProfile.preference == 'CHEAPER'}">Cheaper</option><option value="FASTER" th:selected="${studentProfile.preference == 'FASTER'}">Faster</option><option value="SAFER" th:selected="${studentProfile.preference == 'SAFER'}">Safer</option></select></label><small>This choice determines both recommendation rank and display order.</small></form>
             <div class="payment-account-tools" data-testid="payment-account-filters"><label>Status<select data-testid="payment-account-filter"><option value="all">All connected channels</option><option value="payable">Ready to pay now</option><option value="insufficient">Insufficient balance</option><option value="unavailable">Unavailable for corridor</option><option value="expired">Quote expired</option></select></label></div>
           </div>
-          <div class="horizontal-scroll-hint" th:if="${!selectedExpense.executed}">← Scroll horizontally to compare channels →</div>
+          <div class="horizontal-scroll-hint" data-scroll-hint th:if="${!selectedExpense.executed}">← Scroll horizontally to compare channels →</div>
           <div class="channel-list" data-testid="payment-account-list" th:attr="data-bill-id=${selectedExpense.id}" th:if="${!selectedExpense.executed}">
             <th:block th:each="quote : ${connectedChannelQuotes}" th:with="sourceAccount=${paymentAccountById.get(quote.sourceAccountId)},canFund=${quote.eligible and sourceAccount != null and sourceAccount.canFund(quote.landedCost,agentPolicy.safetyBuffer)}">
               <article class="connected-payment-card channel-list-row" th:classappend="${!quote.eligible ? ' unavailable-account' : (!canFund ? ' insufficient-account' : '')}" th:attr="data-testid=${'channel-' + quote.channelId},data-quote-expiry=${quote.expiresAtEpochMillis},data-channel-eligible=${quote.eligible},data-state=${!quote.eligible ? 'unavailable' : (quote.expired ? 'expired' : (canFund ? 'payable' : 'insufficient'))},data-balance=${sourceAccount.balance},data-remaining=${sourceAccount.balance.subtract(quote.landedCost)},data-cost=${quote.landedCost},data-settlement=${quote.settlementMaxDays},data-safety=${quote.safetyScore},data-name=${quote.displayName}">
                 <div class="channel-list-name"><span class="rank" th:text="${quote.rank != null ? '#' + quote.rank : 'N/A'}"></span><div><strong th:text="${quote.displayName}"></strong><small th:text="${sourceAccount.displayName + ' · ' + sourceAccount.maskedNumber}"></small></div></div>
                 <button class="secondary channel-picker" type="button" th:disabled="${!quote.eligible}" th:attr="data-select-channel=${quote.channelId},aria-label=${'Select ' + quote.displayName}" aria-pressed="false"><span>Select for comparison</span></button>
-                <small th:if="${!quote.eligible}">Reference estimate only; payment is unavailable.</small>
                 <div><small>Status</small><span class="eligibility" th:classappend="${canFund and !quote.expired ? ' eligible' : ' unavailable-tag'}" th:text="${!quote.eligible ? 'Unavailable for corridor' : (quote.expired ? 'Quote expired' : (canFund ? 'Ready to pay' : 'Insufficient balance'))}"></span></div>
                 <div><small>Total cost</small><strong th:text="${@conversationPresentation.money(quote.landedCost) + ' VND'}"></strong></div>
                 <div class="row-remaining" th:attr="data-testid=${'remaining-' + quote.channelId}"><small>Estimated balance after payment</small><strong th:text="${@conversationPresentation.money(sourceAccount.balance.subtract(quote.landedCost)) + ' VND'}"></strong></div>
                 <div><small>Settlement</small><strong th:text="${quote.settlementMinDays + '–' + quote.settlementMaxDays + ' day(s)'}"></strong></div>
                 <dl class="channel-essential-facts"><div><dt>Current balance</dt><dd th:text="${@conversationPresentation.money(sourceAccount.balance) + ' ' + sourceAccount.currency}"></dd></div><div><dt>Expected received</dt><dd th:text="${@conversationPresentation.money(quote.expectedReceived) + ' ' + selectedExpense.currency}"></dd></div><div><dt>Transfer fee</dt><dd th:text="${@conversationPresentation.money(quote.transferFee) + ' VND'}"></dd></div><div><dt>FX markup</dt><dd th:text="${@conversationPresentation.money(quote.fxMarkup) + ' VND'}"></dd></div></dl>
+                <small th:if="${!quote.eligible}">Reference estimate only; payment is unavailable.</small>
                 <p class="channel-recovery" th:if="${!quote.eligible}" th:text="${quote.eligibilityReason}"></p>
                 <p class="channel-recovery" th:if="${!quote.eligible}"><span>Account connected, but this channel does not support</span> <strong th:text="${studentProfile.sourceCountry + ' → ' + selectedExpense.destinationCountry + ' · VND → ' + selectedExpense.currency}"></strong><span>. Reconnecting the account will not enable this route. Choose an eligible channel.</span></p>
                 <p class="channel-recovery" th:if="${quote.eligible and !canFund}">This account cannot cover the total cost and safety buffer. Choose another account.</p>
                 <p class="channel-recovery" th:if="${!recipientVerification.verified}">Verify the bill beneficiary before creating a plan.</p>
-                <div class="channel-row-actions"><button class="secondary" type="button" th:attr="data-open-dialog=${'quote-detail-' + quote.channelId}">Details</button><form th:if="${canFund and !quote.expired and recipientVerification.verified}" th:action="@{/agent/plans/tuition}" method="post" class="planning-form" data-next-anchor="#agent-workspace"><input type="hidden" name="channel" th:value="${quote.channelId}"><input type="hidden" name="sourceAccountId" th:value="${sourceAccount.accountId}"><input type="hidden" name="expenseId" th:value="${selectedExpense.id}"><input type="hidden" name="billVersion" th:value="${selectedExpense.updatedAt}"><input type="hidden" name="quoteId" th:value="${quote.quoteId}"><button class="planning-only" type="submit" th:attr="data-testid=${'plan-' + quote.channelId}">Confirm channel and create plan</button></form></div>
-                <small th:if="${canFund and recipientVerification.verified}">Confirm this channel to create a plan for review. No payment is made until you approve it separately.</small>
-                <div class="quote-live-status compact" data-quote-live-status aria-live="polite"></div>
-                <form th:action="@{/student/quotes/refresh}" method="post" data-channel-refresh hidden><button type="submit" class="secondary">Refresh expired quote</button><small>Refresh is manual. Review the new cost before creating a plan.</small></form>
+                <div class="channel-card-footer">
+                  <div class="channel-row-actions"><button class="secondary" type="button" th:attr="data-open-dialog=${'quote-detail-' + quote.channelId}">Details</button><form th:if="${canFund and !quote.expired and recipientVerification.verified}" th:action="@{/agent/plans/tuition}" method="post" class="planning-form" data-next-anchor="#agent-workspace"><input type="hidden" name="channel" th:value="${quote.channelId}"><input type="hidden" name="sourceAccountId" th:value="${sourceAccount.accountId}"><input type="hidden" name="expenseId" th:value="${selectedExpense.id}"><input type="hidden" name="billVersion" th:value="${selectedExpense.updatedAt}"><input type="hidden" name="quoteId" th:value="${quote.quoteId}"><button class="planning-only" type="submit" th:attr="data-testid=${'plan-' + quote.channelId}">Confirm channel and create plan</button></form></div>
+                  <small th:if="${canFund and recipientVerification.verified}">Confirm this channel to create a plan for review. No payment is made until you approve it separately.</small>
+                  <small class="channel-helper-spacer" th:unless="${canFund and recipientVerification.verified}" aria-hidden="true"></small>
+                  <div class="quote-live-status compact" data-quote-live-status aria-live="polite"></div>
+                  <form th:action="@{/student/quotes/refresh}" method="post" data-channel-refresh hidden><button type="submit" class="secondary">Refresh expired quote</button><small>Refresh is manual. Review the new cost before creating a plan.</small></form>
+                </div>
                 <dialog class="quote-detail-dialog" th:id="${'quote-detail-' + quote.channelId}"><div class="dialog-heading"><div><small>QUOTE DETAILS · SIMULATION</small><h3 th:text="${quote.displayName}"></h3></div><button type="button" data-close-dialog aria-label="Close">×</button></div><p th:text="${quote.eligibilityReason}"></p><dl class="fee-breakdown"><div><dt>Funding account</dt><dd th:text="${sourceAccount.displayName + ' · ' + @conversationPresentation.money(sourceAccount.balance) + ' VND'}"></dd></div><div><dt>Rate</dt><dd th:text="${@conversationPresentation.money(quote.rateVndPerCny) + ' VND/' + selectedExpense.currency}"></dd></div><div><dt>Source amount</dt><dd th:text="${@conversationPresentation.money(quote.sourceAmount) + ' VND'}"></dd></div><div><dt>Transfer fee</dt><dd th:text="${@conversationPresentation.money(quote.transferFee) + ' VND'}"></dd></div><div><dt>FX markup</dt><dd th:text="${@conversationPresentation.money(quote.fxMarkup) + ' VND'}"></dd></div><div><dt>Expected received</dt><dd th:text="${@conversationPresentation.money(quote.expectedReceived) + ' ' + selectedExpense.currency}"></dd></div><div><dt>Latest safe date</dt><dd th:text="${quote.latestSafeDate}"></dd></div><div><dt>Safety score</dt><dd th:text="${quote.safetyScore + '/100 synthetic'}"></dd></div></dl><div class="quote-meta"><span th:text="${quote.quoteSource}"></span><br><span th:text="${'Quoted ' + #temporals.format(quote.quotedAt,'dd MMM yyyy HH:mm:ss')}"></span><br><span th:text="${'Expires ' + #temporals.format(quote.expiresAt,'dd MMM yyyy HH:mm:ss')}"></span></div></dialog>
               </article>
             </th:block>
@@ -681,6 +684,6 @@
   </form>
   <p class="assistant-safety">AI helps understand your question. Asking does not authorize a payment.</p>
 </aside>
-<script th:src="@{/app.js(v='20261009-bill-workflow')}"></script>
+<script th:src="@{/app.js(v='20261010-notification-layout')}"></script>
 </body>
 </html>

@@ -2,6 +2,27 @@ const translationsVi = new Map(Object.entries({
   'Deselect bill': 'Bỏ chọn hóa đơn',
   'The selected bill changed. Your current selection was kept; review it before continuing.': 'Hóa đơn đang chọn đã thay đổi. Lựa chọn hiện tại được giữ nguyên; hãy kiểm tra trước khi tiếp tục.',
   'This bill already has a plan awaiting review. Open that exact plan to continue; creating another bill does not approve it.': 'Hóa đơn này đã có kế hoạch chờ xem lại. Mở đúng kế hoạch để tiếp tục; thêm hóa đơn khác không phê duyệt kế hoạch này.',
+  'Tuition payment can be planned': 'Có thể lập kế hoạch thanh toán học phí',
+  'Tuition payment planning is due soon': 'Sắp đến lúc lập kế hoạch thanh toán học phí',
+  'Tuition payment needs action now': 'Học phí cần xử lý ngay',
+  'Education payment route needs attention': 'Tuyến thanh toán giáo dục cần xử lý',
+  'Tuition payment plan is blocked': 'Kế hoạch thanh toán học phí bị chặn',
+  'Tuition payment approval is due now': 'Cần phê duyệt học phí ngay',
+  'Tuition payment approval is due soon': 'Sắp đến lúc phê duyệt học phí',
+  'Tuition payment plan is ready for review': 'Kế hoạch thanh toán học phí sẵn sàng để xem lại',
+  'Plan ahead': 'Chuẩn bị sớm',
+  'Resolve payment route': 'Xử lý tuyến thanh toán',
+  'Review payment plan →': 'Xem kế hoạch thanh toán →',
+  'Review budget': 'Kiểm tra ngân sách',
+  'Review balance': 'Kiểm tra số dư',
+  'Safety buffer needs attention': 'Số dư thấp hơn đệm an toàn',
+  'Review the account balance before planning another payment.': 'Kiểm tra số dư tài khoản trước khi lập kế hoạch thanh toán tiếp theo.',
+  'Recorded checking balance minus configured buffer': 'Số dư tài khoản thanh toán so với đệm an toàn',
+  'Plan payment': 'Lập kế hoạch thanh toán',
+  'Action soon': 'Cần xử lý sớm',
+  'Approve payment': 'Phê duyệt thanh toán',
+  'Review blocked plan': 'Xem kế hoạch bị chặn',
+  'Plan ready': 'Kế hoạch sẵn sàng',
   'Select a bill to start. Click the selected bill again to clear your selection. Existing plans and receipts remain unchanged.': 'Chọn hóa đơn để bắt đầu. Bấm lại hóa đơn đang chọn để bỏ chọn. Kế hoạch và biên nhận đã có được giữ nguyên.',
   'Step 2 is completed automatically when the beneficiary matches the trusted registry.': 'Bước 2 tự hoàn tất khi thông tin người thụ hưởng khớp danh bạ đã xác minh.',
   'Confirm channel and create plan': 'Xác nhận kênh và tạo kế hoạch',
@@ -1485,6 +1506,7 @@ function initializeStudentBillList(initialPage = 1) {
   const count = document.querySelector('[data-testid="student-bill-visible-count"]');
   const pageLabel = document.querySelector('[data-testid="student-bill-page"]');
   const empty = document.querySelector('[data-testid="student-bill-empty"]');
+  const pagination = previous.closest('.student-bill-pagination');
   const pageSize = 5;
   let page = initialPage;
 
@@ -1526,6 +1548,7 @@ function initializeStudentBillList(initialPage = 1) {
     const start = (page - 1) * pageSize;
     const visibleRows = new Set(matches.slice(start, start + pageSize));
     rows.forEach((row) => { row.hidden = !visibleRows.has(row); });
+    list.classList.toggle('single-visible-bill', visibleRows.size === 1);
     list.scrollLeft = 0;
 
     const vietnamese = selectedLanguage() === 'vi';
@@ -1538,6 +1561,7 @@ function initializeStudentBillList(initialPage = 1) {
     empty.hidden = matches.length !== 0;
     previous.disabled = page === 1;
     next.disabled = page === pages;
+    pagination.hidden = pages <= 1;
   };
 
   [search, status, verification, sort].forEach((control) => {
@@ -1768,6 +1792,11 @@ function translateDynamic(text) {
     [/^(.+) needs a controlled plan$/, '$1 cần một kế hoạch có kiểm soát'],
     [/^Bill (.+) has been paid\. No further approval is required\.$/, 'Hóa đơn $1 đã được thanh toán. Không cần phê duyệt thêm.'],
     [/^Bill (.+) for (.+) ([A-Z]{3}) is verified, due (.+), with latest safe date (.+)\. Approval Mode is still required before payment\.$/, 'Hóa đơn $1 trị giá $2 $3 đã được xác minh, hạn thanh toán $4, với ngày an toàn cuối cùng $5. Vẫn cần phê duyệt trước khi thanh toán.'],
+    [/^Bill (.+) is verified\. The latest safe payment date is (.+), in (\d+) days\. Plan a payment when ready; approval is still required\.$/, 'Hóa đơn $1 đã được xác minh. Ngày thanh toán an toàn cuối cùng là $2, còn $3 ngày. Hãy lập kế hoạch khi sẵn sàng; vẫn cần phê duyệt riêng.'],
+    [/^Bill (.+) is verified\. Plan the payment within (\d+) days, before the latest safe date (.+)\.$/, 'Hóa đơn $1 đã được xác minh. Hãy lập kế hoạch thanh toán trong $2 ngày, trước ngày an toàn cuối cùng $3.'],
+    [/^Bill (.+) is verified\. Its latest safe payment date (has passed|is today|is tomorrow|is in 2 days) \((.+)\)\. Review an eligible channel and create a plan before approval\.$/, (_, ref, timing, date) => `Hóa đơn ${ref} đã được xác minh. Ngày thanh toán an toàn cuối cùng ${{'has passed':'đã qua','is today':'là hôm nay','is tomorrow':'là ngày mai','is in 2 days':'còn 2 ngày'}[timing]} (${date}). Hãy kiểm tra kênh phù hợp và tạo kế hoạch trước khi phê duyệt.`],
+    [/^Bank A Everyday is (.+) VND below the 3,000,000 VND safety buffer\.$/, 'Bank A Everyday thiếu $1 VND so với đệm an toàn 3.000.000 VND.'],
+    [/^Plan (.+) is ready for bill (.+)\. It has not moved money and still requires separate approval\.$/, 'Kế hoạch $1 cho hóa đơn $2 đã sẵn sàng. Chưa có tiền được chuyển và vẫn cần phê duyệt riêng.'],
     [/^Low-risk plan status: (.+)\.$/, 'Trạng thái kế hoạch rủi ro thấp: $1.'],
     [/^Payment Sandbox completed: (.+)$/, 'Payment Sandbox đã hoàn tất: $1'],
     [/^Action blocked: (.+)$/, 'Tác vụ bị chặn: $1'],
@@ -2041,6 +2070,8 @@ function initializeHorizontalLists() {
     if (track.dataset.horizontalControls) return;
     track.dataset.horizontalControls = 'true';
     track.id ||= 'comparison-track-'+index;
+    const hint = track.previousElementSibling?.matches('[data-scroll-hint]')
+      ? track.previousElementSibling : null;
     const controls = document.createElement('div');
     controls.className = 'scroll-track-controls';
     const buttons = [-1,1].map(direction => {
@@ -2060,6 +2091,7 @@ function initializeHorizontalLists() {
     const update = () => {
       const overflow = track.clientWidth > 0 && track.scrollWidth > track.clientWidth+2;
       controls.hidden = !overflow;
+      if (hint) hint.hidden = !overflow;
       buttons[0].disabled = track.scrollLeft <= 1;
       buttons[1].disabled = track.scrollLeft+track.clientWidth >= track.scrollWidth-2;
     };

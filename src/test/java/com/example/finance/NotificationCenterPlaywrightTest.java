@@ -153,17 +153,18 @@ class NotificationCenterPlaywrightTest {
  }
 
  @Test void filtersSeparateActionStateFromSeenAndCountAllUnseenItems(){
+  urgentBill();
   var before=PersonalFinanceAiIntegrationTest.snapshot(db);bell();
   String count=page.getByTestId("notification-count").textContent();
   center().locator("[data-notification-filter='UPDATE']").click();
   assertThat(center().locator("[data-notification-kind='ACTION']:visible")).hasCount(0);
-  assertThat(center().locator("[data-notification-kind='UPDATE']:visible")).hasCount(3);
+  assertThat(center().locator("[data-notification-kind='UPDATE']:visible")).hasCount(1);
   assertThat(page.getByTestId("notification-count")).hasText(count);
   assertThat(center().locator("[data-notification-key='attention-Upcoming money is reserved']")).hasAttribute("data-notification-kind","UPDATE");
   center().locator("[data-notification-filter='ACTION']").click();
   assertThat(center().locator("[data-notification-kind='UPDATE']:visible")).hasCount(0);
   education().locator("[data-notification-mark-seen]").click();
-  assertThat(education()).isVisible();assertThat(education().locator("[data-notification-state-label]")).hasText("Prepare payment");
+  assertThat(education()).isVisible();assertThat(education().locator("[data-notification-state-label]")).hasText("Action soon");
   assertThat(education().locator("[data-notification-mark-seen]")).isHidden();
   page.getByTestId("notifications-mark-all").click();
   center().locator("[data-notification-filter='all']").click();
@@ -173,34 +174,46 @@ class NotificationCenterPlaywrightTest {
  }
 
  @Test void informationalBodyAndKeyboardMarkSeenButActionAndDetailsDoNot(){
+  java.math.BigDecimal spent=(java.math.BigDecimal)transactions.budgetSummary().stream().filter(i->"Utilities".equals(i.get("category"))).findFirst().orElseThrow().get("spent");
+  db.update("UPDATE budgets SET monthly_limit=? WHERE category='Utilities'",spent.divide(new java.math.BigDecimal("0.9"),2,java.math.RoundingMode.HALF_UP));urgentBill();
   var before=PersonalFinanceAiIntegrationTest.snapshot(db);bell();
   Locator budget=center().locator("[data-notification-key='insight-Budget progress']");
   budget.locator("summary").click();assertThat(budget).hasAttribute("data-notification-seen","false");
   budget.locator("strong").click();assertThat(budget).hasAttribute("data-notification-seen","true");
   assertThat(budget.locator("[data-notification-mark-seen]")).isHidden();
-  Locator safety=center().locator("[data-notification-key='insight-Safety buffer protected']");
+  Locator safety=center().locator("[data-notification-key='attention-Upcoming money is reserved']");
   safety.focus();page.keyboard().press("Enter");assertThat(safety).hasAttribute("data-notification-seen","true");
   education().locator("strong").click();assertThat(education()).hasAttribute("data-notification-seen","false");
   assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));assertTrue(posts.isEmpty());
  }
 
  @Test void recordedTimeControlsOrderAndRemainsStableAcrossReloadSeenAndLanguage()throws Exception{
-  db.update("UPDATE financial_accounts SET balance_updated_at=? WHERE id='CHECKING'",java.time.LocalDateTime.now().plusMinutes(1));
+  db.update("UPDATE financial_accounts SET balance=2999999,balance_updated_at=? WHERE id='CHECKING'",java.time.LocalDateTime.now().plusMinutes(1));
   page.reload();bell();
   Locator items=center().locator(".insight-list > [data-notification-key]:visible");
-  assertThat(items.first()).hasAttribute("data-notification-key","insight-Safety buffer protected");
+  assertThat(items.first()).hasAttribute("data-notification-key","insight-Safety buffer needs attention");
   @SuppressWarnings("unchecked") List<String> order=(List<String>)items.evaluateAll("es=>es.map(e=>e.dataset.notificationKey+'|'+(e.dataset.notificationTime||''))");
   var before=PersonalFinanceAiIntegrationTest.snapshot(db);
   assertTrue((Boolean)items.evaluateAll("es=>es.every((e,i)=>!i||Number(es[i-1].dataset.notificationTime||0)>=Number(e.dataset.notificationTime||0))"));
   page.getByTestId("notifications-mark-all").click();
   page.getByTestId("language-vi").evaluate("e=>e.click()");
   assertThat(center().locator("[data-notification-filter='UPDATE']")).hasText("Cập nhật & gợi ý");
-  assertThat(items.first().locator("[data-notification-state-label]")).hasText("Thông tin tham khảo");
+  assertThat(items.first().locator("[data-notification-state-label]")).hasText("Kiểm tra số dư");
   assertEquals(order,items.evaluateAll("es=>es.map(e=>e.dataset.notificationKey+'|'+(e.dataset.notificationTime||''))"));
   page.keyboard().press("Escape");page.reload();bell();
   assertEquals(order,items.evaluateAll("es=>es.map(e=>e.dataset.notificationKey+'|'+(e.dataset.notificationTime||''))"));
   assertThat(page.getByTestId("notification-count")).isHidden();
   page.setViewportSize(390,844);screenshot("seen-timeline-mobile-vi");
   assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));assertTrue(posts.isEmpty());
+ }
+ void urgentBill(){db.update("UPDATE international_bills SET due_date=? WHERE id=1",java.time.LocalDate.now().plusDays(5));crossBorder.refreshQuotes();page.reload();}
+ @Test void deadlineUrgencyAndTwoDayMessageTranslateWithoutEnglishFragments(){
+  bell();assertThat(education().locator(".priority")).hasText("INFO");page.keyboard().press("Escape");
+  db.update("UPDATE international_bills SET due_date=? WHERE id=1",java.time.LocalDate.now().plusDays(6));crossBorder.refreshQuotes();page.reload();bell();
+  assertThat(education()).containsText("is in 2 days");
+  page.getByTestId("language-vi").evaluate("e=>e.click()");
+  assertThat(education()).containsText("còn 2 ngày");assertThat(education()).not().containsText("is in 2 days");
+  assertThat(education().locator(".priority")).hasText("Ưu tiên cao");
+  assertThat(education().locator("[data-notification-state-label]")).hasText("Cần xử lý sớm");
  }
 }

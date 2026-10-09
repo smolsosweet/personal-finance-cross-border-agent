@@ -122,7 +122,7 @@ public class FinanceWorkspaceService {
     public List<Map<String,Object>> attentionItems(int pendingTransactions) {
         List<Map<String,Object>> items = new ArrayList<>();
         if (pendingTransactions > 0) {
-            items.add(attention("HIGH", pendingTransactions + " transaction(s) need review",
+            items.add(attention("MEDIUM", pendingTransactions + " transaction(s) need review",
                     "Confirm the category or add the payment purpose.", "#transaction-review", "Review transactions"));
         }
         LocalDate today = LocalDate.now();
@@ -133,7 +133,7 @@ public class FinanceWorkspaceService {
         }
         BigDecimal reserved = summary().reservedNext30Days();
         if (reserved.signum() > 0) {
-            items.add(attention("MEDIUM", "Upcoming money is reserved",
+            items.add(attention("INFO", "Upcoming money is reserved",
                     money(reserved) + " VND is protected for plans due in the next 30 days.",
                     "#planning", "Open planning"));
         }

@@ -2,6 +2,7 @@ package com.example.finance;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.microsoft.playwright.Browser;
@@ -707,6 +708,35 @@ class StudentExpensePlaywrightE2ETest {
                     String.join(" | ",pageErrors) + " · " + languageState);
             assertThat(page.locator("#student-finance")).containsText("Lập kế hoạch chi phí du học");
             assertThat(page.locator("#student-finance")).containsText("So sánh thông tin cần thiết");
+        }
+    }
+    @Test void billSurfaceHidesRedundantSinglePageControlsAndChannelFootersStayAlignedInBothLanguages() {
+        try (BrowserContext context = browser.newContext(new Browser.NewContextOptions().setViewportSize(1440, 1000))) {
+            Page page = context.newPage();
+            page.navigate(BASE_URL);
+            page.getByTestId("tab-student").click();
+
+            assertThat(page.locator(".student-bill-pagination")).isHidden();
+            assertThat(page.locator(".payment-demo-entry")).hasCount(0);
+            assertThat(page.locator("[data-scroll-hint]").first()).isHidden();
+
+            for (String language : List.of("en", "vi")) {
+                page.getByTestId("language-" + language).click();
+                var bank = page.getByTestId("channel-BANK_A");
+                var vcb = page.getByTestId("channel-VCB");
+                var bankBox = bank.boundingBox();
+                var vcbBox = vcb.boundingBox();
+                var bankFooter = bank.locator(".channel-card-footer").boundingBox();
+                var vcbFooter = vcb.locator(".channel-card-footer").boundingBox();
+                assertNotNull(bankBox); assertNotNull(vcbBox);
+                assertNotNull(bankFooter); assertNotNull(vcbFooter);
+                assertEquals(bankBox.height, vcbBox.height, 2.0);
+                assertEquals(bankFooter.y + bankFooter.height, vcbFooter.y + vcbFooter.height, 2.0);
+                assertThat(bank.locator("[data-open-dialog]")).hasText(language.equals("vi") ? "Chi tiết" : "Details");
+                assertThat(bank.getByTestId("plan-BANK_A")).hasText(language.equals("vi")
+                        ? "Xác nhận kênh và tạo kế hoạch" : "Confirm channel and create plan");
+                assertTrue((Boolean) page.evaluate("() => document.documentElement.scrollWidth <= innerWidth + 1"));
+            }
         }
     }
 }

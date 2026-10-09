@@ -3,6 +3,7 @@ package com.example.finance;
 import static org.junit.jupiter.api.Assertions.*;
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -148,14 +149,12 @@ class PhaseThreeIntegrationTest {
     @Test void resetSurfacesTuitionInsightInMainFeedConsistentWithWorkspace() throws Exception {
         var insight = crossBorder.tuitionInsight();
         var bill = crossBorder.bill();
-        var preferred = crossBorder.rankedQuotes("CHEAPER").stream()
-                .filter(CrossBorderService.ChannelQuote::eligible).findFirst().orElseThrow();
 
         String html = mvc.perform(get("/"))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         int feedStart = html.indexOf("id=\"feed\"");
-        int feedEnd = html.indexOf("id=\"budget\"", feedStart);
+        int feedEnd = html.indexOf("data-notification-empty", feedStart);
         assertTrue(feedStart >= 0 && feedEnd > feedStart);
         String feed = html.substring(feedStart, feedEnd);
 
@@ -163,10 +162,49 @@ class PhaseThreeIntegrationTest {
         assertTrue(feed.contains((String) insight.get("message")));
         assertTrue(feed.contains((String) insight.get("evidence")));
         assertTrue(feed.contains(bill.paymentReference()));
-        assertTrue(feed.contains(bill.dueDate().toString()));
-        assertTrue(feed.contains(preferred.latestSafeDate().toString()));
-        assertTrue(feed.contains("Approval Mode is still required before payment"));
+        assertTrue(feed.contains("Plan a payment when ready; approval is still required."));
         assertFalse(feed.contains("payment has been executed"));
+    }
+
+    @Test void tuitionNotificationsUseSafeDateRiskInsteadOfTreatingEveryVerifiedBillAsUrgent() {
+        var later = crossBorder.tuitionInsight();
+        assertEquals("INFO", later.get("priority"));
+        assertEquals("UPDATE", later.get("notificationKind"));
+        assertEquals("Plan ahead", later.get("actionState"));
+        assertEquals("Tuition payment can be planned", later.get("title"));
+
+        db.update("UPDATE international_bills SET due_date=? WHERE id=1", LocalDate.now().plusDays(8));
+        crossBorder.refreshQuotes();
+        var soon = crossBorder.tuitionInsight();
+        assertEquals("MEDIUM", soon.get("priority"));
+        assertEquals("ACTION", soon.get("notificationKind"));
+        assertEquals("Plan payment", soon.get("actionState"));
+
+        db.update("UPDATE international_bills SET due_date=? WHERE id=1", LocalDate.now().plusDays(6));
+        crossBorder.refreshQuotes();
+        var twoDays = crossBorder.tuitionInsight();
+        assertEquals("HIGH", twoDays.get("priority"));
+        assertTrue(twoDays.get("message").toString().contains("is in 2 days"));
+
+        db.update("UPDATE international_bills SET due_date=? WHERE id=1", LocalDate.now().plusDays(5));
+        crossBorder.refreshQuotes();
+        var urgent = crossBorder.tuitionInsight();
+        assertEquals("HIGH", urgent.get("priority"));
+        assertEquals("ACTION", urgent.get("notificationKind"));
+        assertEquals("Action soon", urgent.get("actionState"));
+    }
+
+    @Test void draftReplacesGenericBillReminderWithItsOwnReviewNotification() throws Exception {
+        var plan = phaseFour.createTuitionPlan("BANK_A");
+        String html = mvc.perform(get("/").param("action", plan.id())).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        int feedStart = html.indexOf("id=\"feed\"");
+        int feedEnd = html.indexOf("data-payment-confirm-dialog", feedStart);
+        String feed = html.substring(feedStart, feedEnd);
+        assertTrue(feed.contains("Tuition payment plan is ready for review"));
+        assertTrue(feed.contains(plan.id()));
+        assertFalse(feed.contains("Tuition payment can be planned"));
+        assertFalse(feed.contains("Tuition payment needs a controlled plan"));
     }
 
     private static CrossBorderService.ChannelQuote quote(String id, List<CrossBorderService.ChannelQuote> quotes) {

@@ -569,7 +569,7 @@ public class TransactionService {
         Map<String,Object> dashboard = dashboard();
         int pending = (Integer) dashboard.get("pendingReview");
         if (pending > 0) {
-            insights.add(NotificationMetadata.attach(insight("HIGH", "Transactions need your input",
+            insights.add(NotificationMetadata.attach(insight("MEDIUM", "Transactions need your input",
                     pending + " transaction(s) need category confirmation or a purpose.",
                     "Confidence rules: medium and low confidence"), "ACTION", "Needs confirmation",
                     db.queryForObject("""
@@ -580,13 +580,20 @@ public class TransactionService {
         }
 
         Map<String,Object> highest = budgetSummary().stream()
-                .max((a,b) -> ((BigDecimal)a.get("percent")).compareTo((BigDecimal)b.get("percent")))
+                .max((a,b) -> ((BigDecimal)a.get("spent")).multiply((BigDecimal)b.get("monthly_limit"))
+                        .compareTo(((BigDecimal)b.get("spent")).multiply((BigDecimal)a.get("monthly_limit"))))
                 .orElse(null);
-        if (highest != null) {
+        if (highest != null && ((BigDecimal) highest.get("spent")).multiply(new BigDecimal("100"))
+                .compareTo(((BigDecimal) highest.get("monthly_limit")).multiply(new BigDecimal("80"))) >= 0) {
+            boolean exhausted = ((BigDecimal) highest.get("spent"))
+                    .compareTo((BigDecimal) highest.get("monthly_limit")) >= 0;
+            BigDecimal usedPercent = ((BigDecimal) highest.get("spent")).multiply(new BigDecimal("100"))
+                    .divide((BigDecimal) highest.get("monthly_limit"), 0, RoundingMode.HALF_UP);
             LocalDate start = reportingDate().withDayOfMonth(1);
-            insights.add(NotificationMetadata.attach(insight("MEDIUM", "Budget progress",
-                    highest.get("category") + " has used " + highest.get("percent") + "% of its synthetic monthly budget.",
-                    "Confirmed and auto-categorized expenses"), "UPDATE", "Information only",
+            insights.add(NotificationMetadata.attach(insight(exhausted ? "HIGH" : "MEDIUM", "Budget progress",
+                    highest.get("category") + " has used " + usedPercent + "% of its synthetic monthly budget.",
+                    "Confirmed and auto-categorized expenses"), exhausted ? "ACTION" : "UPDATE",
+                    exhausted ? "Review budget" : "Information only",
                     db.queryForObject("""
                         SELECT MAX(COALESCE(t.reviewed_at,e.received_at)) FROM transactions t
                         JOIN bank_events e ON e.id=t.event_id
@@ -595,11 +602,17 @@ public class TransactionService {
                         """, LocalDateTime.class, highest.get("category"), start.atStartOfDay(), start.plusMonths(1).atStartOfDay())));
         }
 
-        BigDecimal surplus = (BigDecimal) dashboard.get("surplus");
-        insights.add(NotificationMetadata.attach(insight("OPPORTUNITY", "Safety buffer protected",
-                surplus.setScale(0, RoundingMode.HALF_UP) + " VND remains above the 3,000,000 VND safety buffer.",
-                "Demo checking balance minus configured buffer"), "UPDATE", "Information only",
-                db.queryForObject("SELECT balance_updated_at FROM financial_accounts WHERE id='CHECKING'", LocalDateTime.class)));
+        BigDecimal checkingBalance = db.queryForObject("SELECT balance FROM financial_accounts WHERE id='CHECKING'", BigDecimal.class);
+        if (checkingBalance.compareTo(SAFETY_BUFFER) < 0) {
+            Map<String,Object> alert = insight("HIGH", "Safety buffer needs attention",
+                    "Bank A Everyday is " + SAFETY_BUFFER.subtract(checkingBalance).setScale(0, RoundingMode.HALF_UP)
+                            + " VND below the 3,000,000 VND safety buffer.", "Recorded checking balance minus configured buffer");
+            alert.put("href", "#accounts");
+            alert.put("action", "Review planning accounts →");
+            alert.put("why", "Review the account balance before planning another payment.");
+            insights.add(NotificationMetadata.attach(alert, "ACTION", "Review balance",
+                    db.queryForObject("SELECT balance_updated_at FROM financial_accounts WHERE id='CHECKING'", LocalDateTime.class)));
+        }
         return insights;
     }
 

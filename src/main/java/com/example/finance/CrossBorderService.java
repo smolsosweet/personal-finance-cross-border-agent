@@ -5,6 +5,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -343,10 +344,39 @@ public class CrossBorderService {
                         + " has a recipient mismatch and is blocked until verification succeeds.";
         String evidence = option == null ? "Education Provider Registry verification" :
                 "Verified Education Provider Registry · " + option.displayName() + " · landed cost " + option.landedCost().toPlainString() + " VND";
-        return NotificationMetadata.attach(Map.of("priority", verification.verified() ? "HIGH" : "BLOCKED",
-                "title", title, "message", message, "evidence", evidence,
-                "notificationKey", "education-bill-" + expense.id()), "ACTION",
-                verification.verified() ? "Prepare payment" : "Needs verification", expense.updatedAt());
+        if (!verification.verified()) {
+            return NotificationMetadata.attach(Map.of("priority", "BLOCKED", "title", title, "message", message,
+                    "evidence", evidence, "notificationKey", "education-bill-" + expense.id()), "ACTION",
+                    "Needs verification", expense.updatedAt());
+        }
+        if (option == null) {
+            return NotificationMetadata.attach(Map.of("priority", "BLOCKED", "title", "Education payment route needs attention",
+                    "message", message, "evidence", evidence, "notificationKey", "education-bill-" + expense.id()), "ACTION",
+                    "Resolve payment route", expense.updatedAt());
+        }
+        long daysToSafeDate = ChronoUnit.DAYS.between(LocalDate.now(), option.latestSafeDate());
+        if (daysToSafeDate <= 2) {
+            String timing = daysToSafeDate < 0 ? "has passed" : daysToSafeDate == 0 ? "is today"
+                    : daysToSafeDate == 1 ? "is tomorrow" : "is in 2 days";
+            return NotificationMetadata.attach(Map.of("priority", "HIGH", "title", "Tuition payment needs action now",
+                    "message", "Bill " + tuition.paymentReference() + " is verified. Its latest safe payment date " + timing
+                            + " (" + option.latestSafeDate() + "). Review an eligible channel and create a plan before approval.",
+                    "evidence", evidence, "notificationKey", "education-bill-" + expense.id()), "ACTION",
+                    "Action soon", expense.updatedAt());
+        }
+        if (daysToSafeDate <= 7) {
+            return NotificationMetadata.attach(Map.of("priority", "MEDIUM", "title", "Tuition payment planning is due soon",
+                    "message", "Bill " + tuition.paymentReference() + " is verified. Plan the payment within " + daysToSafeDate
+                            + " days, before the latest safe date " + option.latestSafeDate() + ".",
+                    "evidence", evidence, "notificationKey", "education-bill-" + expense.id()), "ACTION",
+                    "Plan payment", expense.updatedAt());
+        }
+        return NotificationMetadata.attach(Map.of("priority", "INFO", "title", "Tuition payment can be planned",
+                "message", "Bill " + tuition.paymentReference() + " is verified. The latest safe payment date is "
+                        + option.latestSafeDate() + ", in " + daysToSafeDate
+                        + " days. Plan a payment when ready; approval is still required.",
+                "evidence", evidence, "notificationKey", "education-bill-" + expense.id()), "UPDATE",
+                "Plan ahead", expense.updatedAt());
     }
 
     public Map<String,Object> tuitionInsightForPlan(String channelId, String quoteId, BigDecimal landedCost) {

@@ -149,7 +149,8 @@ class PhaseTwoIntegrationTest {
 
         service.simulate("low");
         assertTrue((Integer)service.dashboard().get("pendingReview") > (Integer)before.get("pendingReview"));
-        assertTrue(service.proactiveFeed().stream().anyMatch(item -> "HIGH".equals(item.get("priority"))));
+        assertTrue(service.proactiveFeed().stream().anyMatch(item -> "Transactions need your input".equals(item.get("title"))
+                && "MEDIUM".equals(item.get("priority")) && "ACTION".equals(item.get("notificationKind"))));
         assertTrue(service.proactiveFeed().stream().allMatch(item -> item.get("evidence") != null));
     }
 
