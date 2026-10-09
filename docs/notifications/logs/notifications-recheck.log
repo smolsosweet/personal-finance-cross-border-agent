@@ -1,0 +1,116 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ----------< com.example:personal-finance-cross-border-agent >-----------
+[INFO] Building personal-finance-cross-border-agent 1.0.0
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ personal-finance-cross-border-agent ---
+[INFO] Copying 5 resources from src\main\resources to target\classes
+[INFO] Copying 5 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ personal-finance-cross-border-agent ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ personal-finance-cross-border-agent ---
+[INFO] skip non existing resourceDirectory D:\personal-finance-cross-border-agent\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ personal-finance-cross-border-agent ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 57 source files with javac [debug parameters release 21] to target\test-classes
+[INFO] /D:/personal-finance-cross-border-agent/src/test/java/com/example/finance/DeployedAcceptanceIT.java: D:\personal-finance-cross-border-agent\src\test\java\com\example\finance\DeployedAcceptanceIT.java uses or overrides a deprecated API.
+[INFO] /D:/personal-finance-cross-border-agent/src/test/java/com/example/finance/DeployedAcceptanceIT.java: Recompile with -Xlint:deprecation for details.
+[INFO] /D:/personal-finance-cross-border-agent/src/test/java/com/example/finance/DeployedAcceptanceIT.java: Some input files use unchecked or unsafe operations.
+[INFO] /D:/personal-finance-cross-border-agent/src/test/java/com/example/finance/DeployedAcceptanceIT.java: Recompile with -Xlint:unchecked for details.
+[INFO] 
+[INFO] --- surefire:3.5.4:test (default-test) @ personal-finance-cross-border-agent ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.example.finance.NotificationCenterPlaywrightTest
+19:15:11.956 [main] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.example.finance.NotificationCenterPlaywrightTest]: NotificationCenterPlaywrightTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+19:15:12.202 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.example.finance.FinanceApplication for test class com.example.finance.NotificationCenterPlaywrightTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2026-10-09T19:15:12.570+07:00  INFO 25576 --- [           main] c.e.f.NotificationCenterPlaywrightTest   : Starting NotificationCenterPlaywrightTest using Java 21.0.6 with PID 25576 (started by ADMIN in D:\personal-finance-cross-border-agent)
+2026-10-09T19:15:12.571+07:00  INFO 25576 --- [           main] c.e.f.NotificationCenterPlaywrightTest   : No active profile set, falling back to 1 default profile: "default"
+Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
+WARNING: A Java agent has been loaded dynamically (C:\Users\ADMIN\.m2\repository\net\bytebuddy\byte-buddy-agent\1.17.7\byte-buddy-agent-1.17.7.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+Java HotSpot(TM) 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+2026-10-09T19:15:15.083+07:00  INFO 25576 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8164 (http)
+2026-10-09T19:15:15.103+07:00  INFO 25576 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-10-09T19:15:15.104+07:00  INFO 25576 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.46]
+2026-10-09T19:15:15.174+07:00  INFO 25576 --- [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-10-09T19:15:15.176+07:00  INFO 25576 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2582 ms
+2026-10-09T19:15:15.369+07:00  INFO 25576 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-10-09T19:15:15.656+07:00  INFO 25576 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:notification_ui user=SA
+2026-10-09T19:15:15.658+07:00  INFO 25576 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-10-09T19:15:17.309+07:00  INFO 25576 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8164 (http) with context path '/'
+2026-10-09T19:15:17.323+07:00  INFO 25576 --- [           main] c.e.f.NotificationCenterPlaywrightTest   : Started NotificationCenterPlaywrightTest in 5.011 seconds (process running for 6.003)
+2026-10-09T19:15:20.058+07:00  INFO 25576 --- [nio-8164-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-09T19:15:20.058+07:00  INFO 25576 --- [nio-8164-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-10-09T19:15:20.059+07:00  INFO 25576 --- [nio-8164-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
+NOTIFICATION DEBUG {ready=complete, open=[], bell=<button type="button" class="notification-bell" data-notifications-open="" data-testid="notification-bell" aria-label="Notifications � 5 current items" title="Notifications" aria-controls="notification-center" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" stroke-linecap="round" stroke-linejoin="round"></path></svg><span class="notification-count" data-testid="notification-count" data-user-authored="">5</span></button>, active=<button type="button" class="notification-bell" data-notifications-open="" data-testid="notification-bell" aria-label="Notifications � 5 current items" title="Notifications" aria-controls="notification-center" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" stroke-linecap="round" stroke-linejoin="round"></path></svg><span class="notification-count" data-testid="notification-count" data-user-authored="">5</span></button>}
+[ERROR] Tests run: 4, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 20.65 s <<< FAILURE! -- in com.example.finance.NotificationCenterPlaywrightTest
+[ERROR] com.example.finance.NotificationCenterPlaywrightTest.escapeBackdropAndKeyboardKeepFocusAndDoNotHideInlinePaymentBlocks -- Time elapsed: 6.510 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+Locator expected to be visible
+Call log:
+  - Assert "isVisible" getByTestId("notification-center") with timeout 5000ms
+  - waiting for getByTestId("notification-center")
+    14 � locator resolved to <dialog id="notification-center" class="notification-dialog" data-testid="notification-center" aria-labelledby="notification-title">�</dialog>
+       - unexpected value "hidden"
+	at com.microsoft.playwright.impl.AssertionsBase.expectImpl(AssertionsBase.java:76)
+	at com.microsoft.playwright.impl.AssertionsBase.expectImpl(AssertionsBase.java:47)
+	at com.microsoft.playwright.impl.LocatorAssertionsImpl.expectTrue(LocatorAssertionsImpl.java:471)
+	at com.microsoft.playwright.impl.LocatorAssertionsImpl.isVisible(LocatorAssertionsImpl.java:466)
+	at com.microsoft.playwright.assertions.LocatorAssertions.isVisible(LocatorAssertions.java:861)
+	at com.example.finance.NotificationCenterPlaywrightTest.bell(NotificationCenterPlaywrightTest.java:29)
+	at com.example.finance.NotificationCenterPlaywrightTest.escapeBackdropAndKeyboardKeepFocusAndDoNotHideInlinePaymentBlocks(NotificationCenterPlaywrightTest.java:74)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   NotificationCenterPlaywrightTest.escapeBackdropAndKeyboardKeepFocusAndDoNotHideInlinePaymentBlocks:74->bell:29 Locator expected to be visible
+Call log:
+  - Assert "isVisible" getByTestId("notification-center") with timeout 5000ms
+  - waiting for getByTestId("notification-center")
+    14 � locator resolved to <dialog id="notification-center" class="notification-dialog" data-testid="notification-center" aria-labelledby="notification-title">�</dialog>
+       - unexpected value "hidden"
+[INFO] 
+[ERROR] Tests run: 4, Failures: 1, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  27.164 s
+[INFO] Finished at: 2026-10-09T19:15:33+07:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.4:test (default-test) on project personal-finance-cross-border-agent: There are test failures.
+[ERROR] 
+[ERROR] See D:\personal-finance-cross-border-agent\target\surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

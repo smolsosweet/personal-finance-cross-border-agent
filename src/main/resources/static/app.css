@@ -494,3 +494,21 @@ button:disabled{opacity:.55;cursor:not-allowed}button[aria-pressed=true]{font-we
 
 .confirmation-footer .confirmation-quote-status{font-size:11px;line-height:1.4;margin:6px 0;color:var(--muted)}
 .confirmation-footer .confirmation-quote-status.quote-expired{color:var(--status-danger)}
+
+/* Global notifications keep the overview focused; inline payment warnings remain visible. */
+.notification-bell{position:relative;display:grid;place-items:center;width:44px;height:44px;flex:none;background:#fff;border:1px solid var(--border);border-radius:12px;color:var(--ink);cursor:pointer}
+.notification-bell:hover{background:#edf7f4}.notification-bell:focus-visible{outline:2px solid #087e84;outline-offset:3px}
+.notification-count{position:absolute;top:-4px;right:-5px;min-width:19px;height:19px;padding:0 4px;display:grid;place-items:center;background:#087e84;color:#fff;border-radius:12px;font-size:10px;font-weight:700}
+.notification-count[hidden]{display:none}
+.notification-dialog{width:min(480px,calc(100vw - 24px));max-height:calc(100dvh - 32px);padding:20px;border:1px solid var(--border);border-radius:16px;color:var(--ink);box-shadow:0 20px 70px #173b4240}
+.notification-dialog[open]{display:flex;flex-direction:column;overflow:hidden}.notification-dialog .dialog-heading{flex:none}
+.notification-dialog h2{margin:4px 0;font-size:23px}.notification-dialog .dialog-heading p{font-size:12px;line-height:1.5;color:var(--muted);margin:6px 0 12px}
+.notification-body{min-height:0;overflow:auto;overscroll-behavior:contain;padding-right:5px}
+.notification-group{margin:0 0 20px}.notification-group[hidden]{display:none}
+.notification-group .section-title{margin:0 0 8px}.notification-group h3{font-size:13px;margin:8px 0;color:var(--muted)}
+.notification-group .attention-list,.notification-group .insight-list{max-height:none;overflow:visible;padding:0;scrollbar-gutter:auto}
+.notification-group .list-scroll-down{display:none}.notification-group .attention-item{grid-template-columns:1fr;padding:14px 0;gap:6px}.notification-group .attention-item>b{grid-column:auto;white-space:normal}
+.notification-group .insight{display:block;padding:14px 0;border-top:1px solid var(--border);background:transparent}.notification-group .insight[hidden],.notification-group .attention-item[hidden]{display:none}
+.notification-group .priority{display:inline-block;width:max-content;margin-bottom:6px}.notification-group p{font-size:12px;line-height:1.6;color:var(--muted)}.notification-group strong{font-size:14px}
+.overview-summary-grid{grid-template-columns:1fr}
+@media(max-width:700px){.notification-dialog{padding:16px}.notification-bell{width:40px;height:44px}}

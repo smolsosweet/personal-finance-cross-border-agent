@@ -75,18 +75,14 @@ class WorkspaceListScrollPlaywrightTest {
   assertNotEquals(first,page.locator("[data-testid=transaction-row]:visible").first().innerText());
   assertTrue(page.locator("[data-testid=transaction-row]:visible").count()<=5);
  }
- @Test void overviewCardsArePairedWithoutOneCardSpanningTwoRows()throws Exception{
+ @Test void overviewStaysCompactWithAttentionInTheGlobalBell()throws Exception{
   navigate();var before=PersonalFinanceAiIntegrationTest.snapshot(db);
-  for(String language:new String[]{"vi","en"}){
-   page.getByTestId("language-"+language).click();
-   var action=page.getByTestId("attention-center").boundingBox();var feed=page.getByTestId("proactive-feed").boundingBox();
-   assertEquals(action.y,feed.y,1);assertEquals(action.height,feed.height,1);
-   var cash=page.locator(".cashflow-snapshot").boundingBox();assertTrue(cash.y>=action.y+action.height);
-   assertTrue(cash.width>action.width+feed.width);
+  for(int width:new int[]{390,1366})for(String language:new String[]{"vi","en"}){
+   page.setViewportSize(width,844);page.getByTestId("language-"+language).click();
+   assertThat(page.getByTestId("attention-center")).isHidden();assertThat(page.getByTestId("proactive-feed")).isHidden();
+   assertThat(page.locator(".cashflow-snapshot")).isVisible();assertThat(page.getByTestId("notification-bell")).isVisible();
+   assertTrue((Boolean)page.evaluate("()=>document.documentElement.scrollWidth<=innerWidth"));
   }
-  page.setViewportSize(390,844);var action=page.getByTestId("attention-center").boundingBox();var feed=page.getByTestId("proactive-feed").boundingBox();
-  assertTrue(feed.y>=action.y+action.height);assertEquals(action.width,feed.width,1);
-  assertTrue((Boolean)page.evaluate("()=>document.documentElement.scrollWidth<=innerWidth"));
   assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));screenshot("overview-mobile");
  }
 }

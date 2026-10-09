@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>FinBridge · Financial workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261009-business-ux')}">
+  <title>FinBridge · Financial workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261009-notification-center')}">
 </head>
 <body>
 <a class="skip-link" href="#workspace-content">Skip to main content</a>
@@ -26,6 +26,7 @@
           <form th:if="${agentPolicy.state == 'ACTIVE'}" th:action="@{/agent/emergency-stop}" method="post"><input th:if="${latestAction != null}" type="hidden" name="action" th:value="${latestAction.id}"><button class="stop-button" title="Block new payments immediately. Completed payments are not reversed." data-testid="emergency-stop">■ Emergency Stop</button></form>
           <form th:if="${agentPolicy.state == 'PAUSED'}" th:action="@{/agent/resume}" method="post"><input th:if="${latestAction != null}" type="hidden" name="action" th:value="${latestAction.id}"><button class="resume-button" data-testid="emergency-resume">Resume Agent</button></form>
         </div>
+        <button type="button" class="notification-bell" data-notifications-open data-testid="notification-bell" aria-label="Notifications" title="Notifications" aria-controls="notification-center" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="notification-count" data-testid="notification-count" data-user-authored hidden></span></button>
         <div class="language-switcher" role="group" aria-label="Language">
           <button type="button" data-language="vi" data-testid="language-vi" aria-pressed="false">VI</button>
           <button type="button" data-language="en" data-testid="language-en" aria-pressed="true">EN</button>
@@ -120,25 +121,6 @@
       </section>
 
       <div class="dashboard-grid overview-summary-grid" data-tab-panel="dashboard" data-dashboard-view-panel="summary">
-        <section class="card attention-center" data-testid="attention-center">
-          <div class="section-title"><div><div class="eyebrow">ACTION CENTER</div><h2>What needs your attention</h2><p>Each item opens the workspace where you can resolve it.</p></div><span class="pill" th:text="${#lists.size(attentionItems) + ' item(s)'}"></span></div>
-          <div th:if="${#lists.isEmpty(attentionItems)}" class="empty-state">Nothing urgent. Your current plans and transactions are in order.</div>
-          <div class="attention-list"><a class="attention-item" th:each="item : ${attentionItems}" th:href="${item.href}">
-            <span class="priority" th:classappend="${#strings.toLowerCase(item.priority)}" th:text="${item.priority}"></span>
-            <div><strong th:text="${item.title}"></strong><p th:text="${item.message}"></p></div><b th:text="${item.action + ' →'}"></b>
-          </a>
-          <a class="attention-item workflow-link" href="#student-finance"><span class="priority opportunity">STUDENT</span><div><strong>Education payments</strong><p>Verify a provider bill and compare eligible payment channels.</p></div><b>Open student finance →</b></a>
-          <a th:if="${!#lists.isEmpty(paymentPlans)}" class="attention-item workflow-link" href="#agent-workspace"><span class="priority medium">PAYMENT</span><div><strong>Controlled payment plans</strong><p>Review approvals, Sandbox receipts and the Audit Log.</p></div><b>Open payments →</b></a>
-          </div>
-        </section>
-        <section class="card" id="feed" data-testid="proactive-feed">
-          <div class="section-title"><div><div class="eyebrow">PROACTIVE FEED</div><h2>Worth your attention</h2><p>See what changed, why it matters and what you can do next.</p></div><span class="pill" th:text="${#lists.size(insights) + ' insights'}"></span></div>
-          <div class="insight-list"><div class="insight" th:each="insight : ${insights}">
-            <span class="priority" th:classappend="${#strings.toLowerCase(insight.priority)}" th:text="${insight.priority}"></span>
-            <div><strong th:text="${insight.title}"></strong><p th:text="${insight.message}"></p><p class="insight-why" th:text="${insight.title == 'Transactions need your input' ? 'Confirming a category keeps your spending report accurate.' : (insight.title == 'Budget progress' ? 'Check category limits before your next expense.' : (insight.title == 'Safety buffer protected' ? 'This insight applies the safety buffer to the recorded checking balance.' : 'Verify the bill and available channels before preparing a payment.'))}"></p><a class="text-action" th:href="${insight.title == 'Transactions need your input' ? '#transaction-review' : (insight.title == 'Budget progress' ? '#planning' : (insight.title == 'Safety buffer protected' ? '#accounts' : '#student-finance'))}" th:text="${insight.title == 'Transactions need your input' ? 'Review transactions →' : (insight.title == 'Budget progress' ? 'Review budgets →' : (insight.title == 'Safety buffer protected' ? 'Review planning accounts →' : 'Review education bill →'))}"></a><details class="source-details"><summary>Sources and assumptions</summary><small th:text="${'Evidence: ' + insight.evidence}"></small></details></div>
-          </div>
-          </div>
-        </section>
         <section class="card cashflow-snapshot">
           <div class="section-title"><div><div class="eyebrow">ALL RECORDED TRANSACTIONS</div><h2>Recorded money movement</h2><p>Totals for all recorded transactions. Internal transfers are excluded; refunds remain separate.</p></div></div>
           <div class="cashflow-facts" th:if="${#lists.isEmpty(transactions.?[currency != 'VND'])}"><div data-testid="stat-income"><small>Income</small><strong th:text="${@conversationPresentation.money(dashboard.income) + ' VND'}"></strong></div><div data-testid="stat-expenses"><small>Expenses</small><strong th:text="${@conversationPresentation.money(dashboard.expenses) + ' VND'}"></strong></div><div><small>Refunds</small><strong th:text="${@conversationPresentation.money(dashboard.refunds) + ' VND'}"></strong></div><div><small>Monthly budget</small><strong th:text="${@conversationPresentation.money(financeSummary.monthlyBudget) + ' VND'}"></strong></div></div>
@@ -542,6 +524,30 @@
         <nav class="transaction-pagination" aria-label="Transaction pages"><button type="button" class="secondary" data-testid="transaction-prev">Previous</button><span data-testid="transaction-page" aria-live="polite"></span><button type="button" class="secondary" data-testid="transaction-next">Next</button></nav>
       </section>
 
+      <dialog id="notification-center" class="notification-dialog" data-testid="notification-center" aria-labelledby="notification-title">
+        <div class="dialog-heading"><div><h2 id="notification-title">Notifications</h2><p>Current items to review, not an unread message count.</p></div><button type="button" data-close-dialog aria-label="Close" autofocus>×</button></div>
+        <div class="notification-body" tabindex="0" role="region" aria-label="Notifications">
+        <section class="notification-group attention-center" data-testid="attention-center">
+          <div class="section-title"><div><h3>Action items</h3></div></div>
+          <div th:if="${#lists.isEmpty(attentionItems)}" class="empty-state">Nothing urgent. Your current plans and transactions are in order.</div>
+          <div class="attention-list"><a class="attention-item" th:each="item : ${attentionItems}" th:href="${item.href}" th:attr="data-notification-key=${item.href == '#transaction-review' ? 'transactions-review' : 'attention-' + item.title}">
+            <span class="priority" th:classappend="${#strings.toLowerCase(item.priority)}" th:text="${item.priority}"></span>
+            <div><strong th:text="${item.title}"></strong><p th:text="${item.message}"></p></div><b th:text="${item.action + ' →'}"></b>
+          </a>
+          </div>
+        </section>
+        <section class="notification-group" id="feed" data-testid="proactive-feed">
+          <div class="section-title"><div><h3>Current updates</h3></div></div>
+          <div class="insight-list"><div class="insight" th:each="insight : ${insights}" th:attr="data-notification-key=${insight.title == 'Transactions need your input' ? 'transactions-review' : 'insight-' + insight.title}">
+            <span class="priority" th:classappend="${#strings.toLowerCase(insight.priority)}" th:text="${insight.priority}"></span>
+            <div><strong th:text="${insight.title}"></strong><p th:text="${insight.message}"></p><p class="insight-why" th:text="${insight.title == 'Transactions need your input' ? 'Confirming a category keeps your spending report accurate.' : (insight.title == 'Budget progress' ? 'Check category limits before your next expense.' : (insight.title == 'Safety buffer protected' ? 'This insight applies the safety buffer to the recorded checking balance.' : 'Verify the bill and available channels before preparing a payment.'))}"></p><a class="text-action" th:href="${insight.title == 'Transactions need your input' ? '#transaction-review' : (insight.title == 'Budget progress' ? '#planning' : (insight.title == 'Safety buffer protected' ? '#accounts' : '#student-finance'))}" th:text="${insight.title == 'Transactions need your input' ? 'Review transactions →' : (insight.title == 'Budget progress' ? 'Review budgets →' : (insight.title == 'Safety buffer protected' ? 'Review planning accounts →' : 'Review education bill →'))}"></a><details class="source-details"><summary>Sources and assumptions</summary><small th:text="${'Evidence: ' + insight.evidence}"></small></details></div>
+          </div>
+          </div>
+        </section>
+        <p data-notification-empty hidden>Nothing needs your attention right now.</p>
+        </div>
+      </dialog>
+
       <dialog th:if="${latestAction != null and latestReceipt == null}" class="payment-confirm-dialog" data-payment-confirm-dialog data-testid="payment-confirm-dialog" aria-labelledby="payment-confirm-title" aria-describedby="payment-confirm-description" th:attr="data-action-id=${latestAction.id},data-action-type=${latestAction.actionType},data-quote-expires=${paymentReview != null and paymentReview.expiresAt != null ? paymentReview.expiresAtEpochMillis : ''}">
         <div class="dialog-heading"><div><small>FINAL REVIEW</small><h2 id="payment-confirm-title" th:text="${latestAction.actionType == 'TUITION' ? 'Confirm education payment' : 'Confirm internal transfer'}"></h2></div><button type="button" data-payment-confirm-cancel aria-label="Close" autofocus>×</button></div>
         <div class="confirmation-body" tabindex="0" role="region" aria-label="Payment details">
@@ -677,6 +683,6 @@
   </form>
   <p class="assistant-safety">AI helps understand your question. Asking does not authorize a payment.</p>
 </aside>
-<script th:src="@{/app.js(v='20261009-business-ux')}"></script>
+<script th:src="@{/app.js(v='20261009-notification-center')}"></script>
 </body>
 </html>

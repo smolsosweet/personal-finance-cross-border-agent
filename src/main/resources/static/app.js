@@ -961,6 +961,13 @@ Object.entries({
   'Plan reference': 'Mã kế hoạch',
   'Bill / reference': 'Hóa đơn / mã tham chiếu',
   'Payment details': 'Chi tiết thanh toán',
+  'Notifications': 'Thông báo',
+  'Action items': 'Việc cần xử lý',
+  'Financial insights': 'Thông tin tài chính',
+  'Current updates': 'Nội dung cần chú ý',
+  'Current items to review, not an unread message count.': 'Các nội dung hiện cần xem xét, không phải số tin nhắn chưa đọc.',
+  'Nothing needs your attention right now.': 'Hiện không có nội dung cần bạn chú ý.',
+  'Open planning →': 'Xem kế hoạch →',
   'Previous items': 'Các mục trước',
   'Next items': 'Các mục tiếp theo',
   'Account connected, but this channel does not support': 'Tài khoản đã liên kết, nhưng kênh này chưa hỗ trợ',
@@ -1798,6 +1805,7 @@ function applyLanguage(language) {
   renderPaymentWorkflow();
   renderAssistantContext();
   renderResponseQuotes();
+  updateNotificationBadge();
 }
 
 // Give status messages their own layout row; never float over approval or chat controls.
@@ -2061,7 +2069,48 @@ async function handleDocumentExtraction(event) {
   } finally { button.disabled = false; }
 }
 
+function updateNotificationBadge() {
+  const dialog=document.getElementById('notification-center');
+  const bell=document.querySelector('[data-notifications-open]');
+  if (!dialog || !bell) return;
+  const count=dialog.querySelectorAll('[data-notification-key]:not([hidden])').length;
+  const badge=bell.querySelector('.notification-count');
+  badge.textContent=count>99?'99+':String(count);
+  badge.hidden=count===0;
+  bell.setAttribute('aria-label',selectedLanguage()==='vi'?`Thông báo · ${count} nội dung cần xem xét`:`Notifications · ${count} current items`);
+  dialog.querySelector('[data-notification-empty]').hidden=count!==0;
+}
+function initializeNotifications() {
+  const dialog=document.getElementById('notification-center');
+  const bell=document.querySelector('[data-notifications-open]');
+  if (!dialog || !bell) return;
+  const keys=new Set();
+  // Prefer the detailed insight when the same transaction review appears in both sources.
+  const items=Array.from(dialog.querySelectorAll('[data-notification-key]'));
+  items.sort((a,b)=>Number(b.classList.contains('insight'))-Number(a.classList.contains('insight')));
+  items.forEach(item=>{item.hidden=keys.has(item.dataset.notificationKey);keys.add(item.dataset.notificationKey);});
+  const list=dialog.querySelector('.insight-list');
+  const priority=item=>item.querySelector('.priority')?.classList.contains('high')?0:item.querySelector('.priority')?.classList.contains('medium')?1:2;
+  items.filter(item=>!item.hidden).sort((a,b)=>priority(a)-priority(b)).forEach(item=>list.append(item));
+  dialog.querySelectorAll('.notification-group').forEach(group=>{
+    group.hidden=!group.querySelector('[data-notification-key]:not([hidden])');
+  });
+  bell.setAttribute('aria-expanded','false');
+  dialog.addEventListener('close',()=>bell.setAttribute('aria-expanded','false'));
+  dialog.addEventListener('click',event=>{if(event.target.closest('a[href]'))dialog.close();});
+  dialog.addEventListener('keydown',event=>{
+    if(event.key!=='Tab')return;
+    const controls=Array.from(dialog.querySelectorAll('button,a[href],summary,[tabindex="0"]')).filter(e=>e.getClientRects().length);
+    const first=controls[0],last=controls.at(-1);
+    if((event.shiftKey&&document.activeElement===first)||(!event.shiftKey&&document.activeElement===last)){
+      event.preventDefault();(event.shiftKey?last:first)?.focus();
+    }
+  });
+  updateNotificationBadge();
+}
+
 function initializeWorkspaceContent(state) {
+  initializeNotifications();
   initializeBoundedLists();
   renderTransactionList = () => {};
   renderStudentBillList = () => {};
@@ -2427,6 +2476,16 @@ async function submitWorkspaceForm(event) {
 document.addEventListener('DOMContentLoaded', () => {
   initializeWorkspaceContent();
   renderIntroduction();
+  document.addEventListener('click',event=>{
+    const bell=event.target.closest('[data-notifications-open]');
+    if(!bell)return;
+    const dialog=document.getElementById('notification-center');
+    if(!dialog||dialog.open)return;
+    dialogOpeners.set(dialog,bell);
+    bell.setAttribute('aria-expanded','true');
+    dialog.showModal();
+    dialog.querySelector('.notification-body').scrollTop=0;
+  });
   document.addEventListener('click', event => {
     if (event.target.closest('[data-dismiss-intro]')) {
       document.querySelector('[data-first-use]').hidden = true;
