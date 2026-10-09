@@ -183,7 +183,7 @@ class AssistantPanelPlaywrightTest {
         assertThat(page.locator("#assistant-title")).hasText("Hỏi FinBridge");
         assertThat(page.getByTestId("assistant-screen")).hasCount(0);
         assertThat(page.getByTestId("assistant-plan-context")).containsText("cần bạn phê duyệt");
-        assertThat(page.getByTestId("assistant-emergency-stop")).isVisible();
+        assertThat(page.getByTestId("assistant-emergency-stop")).hasCount(0);
         assertThat(input()).isVisible();
         assertTrue((Boolean) panel().evaluate("p => { const r=p.getBoundingClientRect(); return r.left>=0 && r.right<=innerWidth && r.top>=0 && r.bottom<=innerHeight && p.scrollWidth<=p.clientWidth+1; }"));
         input().fill("Câu hỏi chưa gửi");
@@ -214,8 +214,10 @@ class AssistantPanelPlaywrightTest {
         page.getByTestId("assistant-launcher").click();
         send("Prepare tuition draft");
         page.waitForCondition(() -> calls.get() == 1);
-        page.getByTestId("assistant-emergency-stop").click();
+        page.getByTestId("assistant-close").click();
+        page.getByTestId("emergency-stop").click();
         idle();
+        page.getByTestId("assistant-launcher").click();
         assertThat(panel().locator("[data-assistant-policy]")).containsText("Emergency Stop is active");
         assertThat(input()).isEnabled();
         stopReply.countDown();
@@ -352,6 +354,34 @@ class AssistantPanelPlaywrightTest {
 
     private Locator panel() { return page.getByTestId("assistant-panel"); }
     private Locator input() { return page.getByTestId("assistant-conversation-input"); }
+    @Test void compactHeaderKeepsChatSpaceAndGlobalStopUpdatesThePausedStatus() throws Exception {
+        var before = PersonalFinanceAiIntegrationTest.snapshot(db);
+        java.nio.file.Files.createDirectories(Path.of("target/chat-header"));
+        for (int width : new int[]{360,390,1440}) {
+            page.setViewportSize(width,844);
+            page.getByTestId("assistant-launcher").click();
+            for (String language : new String[]{"vi","en"}) {
+                UiLanguageControls.select(page,language);
+                assertThat(page.getByTestId("assistant-emergency-stop")).hasCount(0);
+                assertThat(page.getByTestId("assistant-environment-label")).isVisible();
+                assertThat(page.getByTestId("assistant-permission-mode").locator("strong")).hasText(language.equals("vi")?"Phê duyệt":"Approval");
+                assertThat(page.getByTestId("assistant-policy-state")).hasCount(0);
+                assertTrue((Boolean) panel().evaluate("p=>{const h=p.querySelector('.assistant-heading'),r=h.getBoundingClientRect();return r.height<=96 && h.scrollWidth<=h.clientWidth+1;}"),"Compact header fits and is at most 96px");
+                assertTrue((Boolean) panel().evaluate("p=>p.querySelector('.assistant-body').clientHeight>=p.clientHeight*.55"),"Conversation keeps most of the available space");
+                assertThat(input()).isInViewport();assertThat(page.getByTestId("assistant-close")).isInViewport();
+                panel().screenshot(new Locator.ScreenshotOptions().setPath(Path.of("target/chat-header/header-"+width+"-"+language+".png")));
+            }
+            page.getByTestId("assistant-close").click();
+        }
+        assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));verify(llm,never()).classify(anyString());
+        page.getByTestId("emergency-stop").click();idle();page.getByTestId("assistant-launcher").click();
+        assertThat(page.getByTestId("assistant-policy-state")).hasText("Emergency Stop is active");
+        assertEquals("PAUSED",payments.policy().state());assertEquals(0,payments.sandboxTransactionCount());
+        page.getByTestId("assistant-close").click();page.getByTestId("emergency-resume").click();idle();
+        page.getByTestId("assistant-launcher").click();assertThat(page.getByTestId("assistant-policy-state")).hasCount(0);
+        assertEquals("ACTIVE",payments.policy().state());assertEquals(0,payments.sandboxTransactionCount());
+    }
+
     private void send(String question) {
         input().fill(question);
         page.getByTestId("assistant-send-message").click();

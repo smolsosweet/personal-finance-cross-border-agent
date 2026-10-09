@@ -105,7 +105,7 @@ class UiReviewFollowupPlaywrightTest {
         assertThat(page.getByTestId("assistant-launcher")).isFocused();
         page.getByTestId("assistant-launcher").click();
         UiLanguageControls.select(page,"vi");
-        assertThat(page.getByTestId("assistant-emergency-stop")).isVisible();
+        assertThat(page.getByTestId("assistant-emergency-stop")).hasCount(0);
         page.getByTestId("assistant-close").click();
         tab("student");
         assertThat(panel).isHidden();assertFalse((Boolean)page.evaluate("() => document.querySelector('.shell').inert"));
@@ -128,8 +128,9 @@ class UiReviewFollowupPlaywrightTest {
             tab("student");
             assertThat(page.getByTestId("tuition-bill")).containsText("Budget Current balance nguyên văn");
             page.getByTestId("assistant-launcher").click();
-            assertThat(page.getByTestId("assistant-emergency-stop")).hasAttribute("title",language.equals("vi")?"Chặn thanh toán mới ngay. Không hoàn tác các khoản đã hoàn tất.":"Block new payments immediately. Completed payments are not reversed.");
+            assertThat(page.getByTestId("assistant-emergency-stop")).hasCount(0);
             page.getByTestId("assistant-close").click();
+            assertThat(page.getByTestId("emergency-stop")).hasAttribute("title",language.equals("vi")?"Chặn thanh toán mới ngay. Không hoàn tác các khoản đã hoàn tất.":"Block new payments immediately. Completed payments are not reversed.");
         }
     }
 }

@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>FinBridge · Financial workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261009-notification-state')}">
+  <title>FinBridge · Financial workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261009-chat-header')}">
 </head>
 <body>
 <a class="skip-link" href="#workspace-content">Skip to main content</a>
@@ -586,14 +586,15 @@
 <div class="assistant-backdrop" data-assistant-backdrop data-close-assistant aria-hidden="true" hidden></div>
 <aside id="finbridge-assistant" class="assistant-panel" data-assistant-panel data-testid="assistant-panel" role="dialog" aria-modal="false" aria-labelledby="assistant-title" hidden>
   <div class="assistant-heading">
-    <div><small>FINANCE ASSISTANT</small><h2 id="assistant-title">Ask FinBridge</h2><span class="tag" data-testid="assistant-environment-label">Simulation environment</span></div>
-    <button type="button" class="assistant-close" data-close-assistant data-testid="assistant-close"><span aria-hidden="true">×</span><span class="visually-hidden">Close assistant</span></button>
-  </div>
-  <div class="assistant-toolbar">
-    <div data-assistant-policy><span class="permission-badge" data-testid="assistant-permission-mode"><span>Permission mode</span><strong th:text="${agentPolicy.mode == 'DELEGATED' ? 'Delegated' : 'Approval'}"></strong></span>
-      <form th:if="${agentPolicy.state == 'ACTIVE'}" th:action="@{/agent/emergency-stop}" method="post"><input th:if="${latestAction != null}" type="hidden" name="action" th:value="${latestAction.id}"><button type="submit" class="stop-button" title="Block new payments immediately. Completed payments are not reversed." data-testid="assistant-emergency-stop">■ Emergency Stop</button></form>
-      <strong th:if="${agentPolicy.state == 'PAUSED'}">Emergency Stop is active</strong>
+    <div class="assistant-heading-content"><h2 id="assistant-title">Ask FinBridge</h2>
+      <div class="assistant-header-meta">
+        <span class="tag" data-testid="assistant-environment-label">Simulation environment</span>
+        <div data-assistant-policy><span class="permission-badge" data-testid="assistant-permission-mode" title="Permission mode"><span class="visually-hidden">Permission mode</span> <strong th:text="${agentPolicy.mode == 'DELEGATED' ? 'Delegated' : 'Approval'}"></strong></span>
+          <strong class="assistant-paused" role="status" data-testid="assistant-policy-state" th:if="${agentPolicy.state == 'PAUSED'}">Emergency Stop is active</strong>
+        </div>
+      </div>
     </div>
+    <button type="button" class="assistant-close" data-close-assistant data-testid="assistant-close"><span aria-hidden="true">×</span><span class="visually-hidden">Close assistant</span></button>
   </div>
   <div class="assistant-notices" data-assistant-notices data-testid="assistant-notices"></div>
   <div class="assistant-body">
@@ -670,6 +671,6 @@
   </form>
   <p class="assistant-safety">AI helps understand your question. Asking does not authorize a payment.</p>
 </aside>
-<script th:src="@{/app.js(v='20261009-notification-state')}"></script>
+<script th:src="@{/app.js(v='20261009-chat-header')}"></script>
 </body>
 </html>
