@@ -67,7 +67,7 @@ class GeminiIntegrationTest {
             page.getByTestId("language-en").click();page.getByTestId("assistant-launcher").click();
             send(page,"Show my configured budgets for this month.");assertThat(page.getByTestId("assistant-replies")).containsText("Category budgets: VND.");
             send(page,"How much is left?");assertTrue(stub.body.contains("topic=BUDGET"));
-            page.getByTestId("assistant-language-vi").click();send(page,"Còn bao nhiêu?");
+            UiLanguageControls.select(page,"vi");send(page,"Còn bao nhiêu?");
             assertThat(page.getByTestId("assistant-replies")).containsText("Ngân sách danh mục: VND.");
             assertEquals(3,stub.calls.get());assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));assertNull(payments.latestAction());noPayment();
         }

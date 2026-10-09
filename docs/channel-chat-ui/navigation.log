@@ -1,0 +1,204 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ----------< com.example:personal-finance-cross-border-agent >-----------
+[INFO] Building personal-finance-cross-border-agent 1.0.0
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ personal-finance-cross-border-agent ---
+[INFO] Copying 5 resources from src\main\resources to target\classes
+[INFO] Copying 5 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ personal-finance-cross-border-agent ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ personal-finance-cross-border-agent ---
+[INFO] skip non existing resourceDirectory D:\personal-finance-cross-border-agent\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ personal-finance-cross-border-agent ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.5.4:test (default-test) @ personal-finance-cross-border-agent ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.example.finance.UiProductRefinementPlaywrightTest
+10:18:30.453 [main] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.example.finance.UiProductRefinementPlaywrightTest]: UiProductRefinementPlaywrightTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+10:18:30.739 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.example.finance.FinanceApplication for test class com.example.finance.UiProductRefinementPlaywrightTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2026-10-09T10:18:31.202+07:00  INFO 40456 --- [           main] c.e.f.UiProductRefinementPlaywrightTest  : Starting UiProductRefinementPlaywrightTest using Java 21.0.6 with PID 40456 (started by ADMIN in D:\personal-finance-cross-border-agent)
+2026-10-09T10:18:31.203+07:00  INFO 40456 --- [           main] c.e.f.UiProductRefinementPlaywrightTest  : No active profile set, falling back to 1 default profile: "default"
+Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
+WARNING: A Java agent has been loaded dynamically (C:\Users\ADMIN\.m2\repository\net\bytebuddy\byte-buddy-agent\1.17.7\byte-buddy-agent-1.17.7.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+Java HotSpot(TM) 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+2026-10-09T10:18:33.493+07:00  INFO 40456 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8136 (http)
+2026-10-09T10:18:33.511+07:00  INFO 40456 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-10-09T10:18:33.512+07:00  INFO 40456 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.46]
+2026-10-09T10:18:33.585+07:00  INFO 40456 --- [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-10-09T10:18:33.587+07:00  INFO 40456 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2364 ms
+2026-10-09T10:18:33.719+07:00  INFO 40456 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-10-09T10:18:34.016+07:00  INFO 40456 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:ui_product user=SA
+2026-10-09T10:18:34.019+07:00  INFO 40456 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-10-09T10:18:35.820+07:00  INFO 40456 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8136 (http) with context path '/'
+2026-10-09T10:18:35.834+07:00  INFO 40456 --- [           main] c.e.f.UiProductRefinementPlaywrightTest  : Started UiProductRefinementPlaywrightTest in 4.97 seconds (process running for 6.22)
+2026-10-09T10:18:40.560+07:00  INFO 40456 --- [nio-8136-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-09T10:18:40.561+07:00  INFO 40456 --- [nio-8136-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-10-09T10:18:40.562+07:00  INFO 40456 --- [nio-8136-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 13.21 s -- in com.example.finance.UiProductRefinementPlaywrightTest
+[INFO] Running com.example.finance.UiReviewFollowupPlaywrightTest
+2026-10-09T10:18:43.516+07:00  INFO 40456 --- [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.example.finance.UiReviewFollowupPlaywrightTest]: UiReviewFollowupPlaywrightTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-09T10:18:43.519+07:00  INFO 40456 --- [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.example.finance.FinanceApplication for test class com.example.finance.UiReviewFollowupPlaywrightTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2026-10-09T10:18:43.607+07:00  INFO 40456 --- [           main] c.e.f.UiReviewFollowupPlaywrightTest     : Starting UiReviewFollowupPlaywrightTest using Java 21.0.6 with PID 40456 (started by ADMIN in D:\personal-finance-cross-border-agent)
+2026-10-09T10:18:43.607+07:00  INFO 40456 --- [           main] c.e.f.UiReviewFollowupPlaywrightTest     : No active profile set, falling back to 1 default profile: "default"
+2026-10-09T10:18:44.179+07:00  INFO 40456 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8137 (http)
+2026-10-09T10:18:44.183+07:00  INFO 40456 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-10-09T10:18:44.184+07:00  INFO 40456 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.46]
+2026-10-09T10:18:44.247+07:00  INFO 40456 --- [           main] o.a.c.c.C.[Tomcat-1].[localhost].[/]     : Initializing Spring embedded WebApplicationContext
+2026-10-09T10:18:44.248+07:00  INFO 40456 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 636 ms
+2026-10-09T10:18:44.285+07:00  INFO 40456 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Starting...
+2026-10-09T10:18:44.288+07:00  INFO 40456 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-2 - Added connection conn10: url=jdbc:h2:mem:ux_review_followup user=SA
+2026-10-09T10:18:44.289+07:00  INFO 40456 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Start completed.
+2026-10-09T10:18:44.608+07:00  INFO 40456 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8137 (http) with context path '/'
+2026-10-09T10:18:44.612+07:00  INFO 40456 --- [           main] c.e.f.UiReviewFollowupPlaywrightTest     : Started UiReviewFollowupPlaywrightTest in 1.087 seconds (process running for 14.998)
+2026-10-09T10:18:46.952+07:00  INFO 40456 --- [nio-8137-exec-2] o.a.c.c.C.[Tomcat-1].[localhost].[/]     : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-09T10:18:46.952+07:00  INFO 40456 --- [nio-8137-exec-2] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-10-09T10:18:46.953+07:00  INFO 40456 --- [nio-8137-exec-2] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 15.26 s <<< FAILURE! -- in com.example.finance.UiReviewFollowupPlaywrightTest
+[ERROR] com.example.finance.UiReviewFollowupPlaywrightTest.mobilePanelTrapsFocusAndDesktopRemainsNonmodal -- Time elapsed: 14.09 s <<< ERROR!
+com.microsoft.playwright.TimeoutError: 
+Error {
+  message='Timeout 10000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 10000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2799786124378332283\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2799786124378332283\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("tab-student")
+-     - locator resolved to <button type="button" data-tab="student" aria-pressed="false" data-testid="tab-student">�</button>
+-   - attempting click action
+-     2 � waiting for element to be visible, enabled and stable
+-       - element is not visible
+-     - retrying click action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and stable
+-       - element is not visible
+-     - retrying click action
+-       - waiting 100ms
+-     19 � waiting for element to be visible, enabled and stable
+-        - element is not visible
+-      - retrying click action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.WaitableResult.get(WaitableResult.java:52)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:147)
+	at com.microsoft.playwright.impl.Connection.sendMessage(Connection.java:136)
+	at com.microsoft.playwright.impl.ChannelOwner.sendMessage(ChannelOwner.java:133)
+	at com.microsoft.playwright.impl.FrameImpl.clickImpl(FrameImpl.java:244)
+	at com.microsoft.playwright.impl.LocatorImpl.click(LocatorImpl.java:173)
+	at com.microsoft.playwright.Locator.click(Locator.java:2840)
+	at com.example.finance.UiReviewFollowupPlaywrightTest.mobilePanelTrapsFocusAndDesktopRemainsNonmodal(UiReviewFollowupPlaywrightTest.java:110)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: com.microsoft.playwright.TimeoutError: Error {
+  message='Timeout 10000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 10000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2799786124378332283\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2799786124378332283\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("tab-student")
+-     - locator resolved to <button type="button" data-tab="student" aria-pressed="false" data-testid="tab-student">�</button>
+-   - attempting click action
+-     2 � waiting for element to be visible, enabled and stable
+-       - element is not visible
+-     - retrying click action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and stable
+-       - element is not visible
+-     - retrying click action
+-       - waiting 100ms
+-     19 � waiting for element to be visible, enabled and stable
+-        - element is not visible
+-      - retrying click action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.Connection.dispatch(Connection.java:274)
+	at com.microsoft.playwright.impl.Connection.processOneMessage(Connection.java:230)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:145)
+	... 9 more
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Errors: 
+[ERROR]   UiReviewFollowupPlaywrightTest.mobilePanelTrapsFocusAndDesktopRemainsNonmodal:110 � Timeout Error {
+  message='Timeout 10000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 10000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2799786124378332283\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2799786124378332283\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("tab-student")
+-     - locator resolved to <button type="button" data-tab="student" aria-pressed="false" data-testid="tab-student">�</button>
+-   - attempting click action
+-     2 � waiting for element to be visible, enabled and stable
+-       - element is not visible
+-     - retrying click action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and stable
+-       - element is not visible
+-     - retrying click action
+-       - waiting 100ms
+-     19 � waiting for element to be visible, enabled and stable
+-        - element is not visible
+-      - retrying click action
+-        - waiting 500ms
+
+[INFO] 
+[ERROR] Tests run: 2, Failures: 0, Errors: 1, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  34.088 s
+[INFO] Finished at: 2026-10-09T10:18:59+07:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.4:test (default-test) on project personal-finance-cross-border-agent: 
+[ERROR] 
+[ERROR] See D:\personal-finance-cross-border-agent\target\surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

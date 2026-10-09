@@ -34,7 +34,7 @@ class GlobalAssistantPlaywrightTest {
     void stub(LlmIntent.Intent intent){doReturn(new LlmIntent(intent,LlmIntent.ChannelPreference.NONE,new BigDecimal("0.95"),LlmIntent.ClarificationCode.NONE)).when(model).classify(anyString());}
     void idle(){page.waitForFunction("() => !document.querySelector('.content').hasAttribute('aria-busy')");}
     String send(String text,LlmIntent.Intent intent,String language){
-        stub(intent);page.getByTestId("assistant-language-"+language).click();
+        stub(intent);UiLanguageControls.select(page,""+language);
         page.getByTestId("assistant-conversation-input").fill(text);page.getByTestId("assistant-send-message").click();idle();
         return reply().locator("[data-response-raw]").textContent();
     }
@@ -94,10 +94,10 @@ class GlobalAssistantPlaywrightTest {
             page.navigate("http://localhost:8131/?action="+plan.id()+"#agent-workspace");
             page.reload();
             if(!page.getByTestId("assistant-panel").isVisible())page.getByTestId("assistant-launcher").click();
-            page.getByTestId("assistant-language-en").click();
+            UiLanguageControls.select(page,"en");
             assertThat(page.getByTestId("assistant-plan-state")).containsText(entry.getValue());
             if(!entry.getKey().equals("AWAITING_APPROVAL"))assertThat(page.getByTestId("assistant-plan-state")).not().containsText("requires explicit approval");
-            page.getByTestId("assistant-language-vi").click();
+            UiLanguageControls.select(page,"vi");
             assertThat(page.getByTestId("assistant-plan-state")).not().containsText(entry.getValue());
         }
     }

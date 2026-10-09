@@ -157,9 +157,10 @@ class UiProductRefinementPlaywrightTest {
         assertThat(opener).isFocused();
         page.getByTestId("assistant-launcher").click();
         page.getByTestId("assistant-conversation-input").fill("Active Budget Tuition — nguyên văn");
-        page.getByTestId("assistant-language-en").click();
+        UiLanguageControls.select(page,"en");
         assertThat(page.getByTestId("assistant-conversation-input")).hasValue("Active Budget Tuition — nguyên văn");
-        page.locator("[data-assistant-navigation]").selectOption("agent");
+        page.getByTestId("assistant-close").click();
+        page.getByTestId("tab-agent").click();
         assertThat(page.getByTestId("assistant-panel")).isHidden();
         assertThat(page.getByTestId("tab-agent")).hasAttribute("aria-pressed","true");
         page.getByTestId("assistant-launcher").click();

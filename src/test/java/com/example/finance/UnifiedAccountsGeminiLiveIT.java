@@ -70,7 +70,7 @@ class UnifiedAccountsGeminiLiveIT {
     void send(String text,String language,String intent,String expected)throws Exception{
         assertTrue(submissions<20);submissions++;Files.writeString(counter,Integer.toString(submissions));
         int before=db.queryForObject("SELECT COUNT(*) FROM audit_log WHERE event_type='INTENT_CLASSIFIED'",Integer.class);
-        page.getByTestId("assistant-language-"+language).click();
+        UiLanguageControls.select(page,""+language);
         long start=System.nanoTime();page.getByTestId("assistant-conversation-input").fill(text);page.getByTestId("assistant-send-message").click();idle();
         long latency=(System.nanoTime()-start)/1_000_000;
         int after=db.queryForObject("SELECT COUNT(*) FROM audit_log WHERE event_type='INTENT_CLASSIFIED'",Integer.class);

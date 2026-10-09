@@ -104,9 +104,10 @@ class UiReviewFollowupPlaywrightTest {
         assertThat(panel).isHidden();assertFalse((Boolean)page.evaluate("() => document.querySelector('.shell').inert"));
         assertThat(page.getByTestId("assistant-launcher")).isFocused();
         page.getByTestId("assistant-launcher").click();
-        page.getByTestId("assistant-language-vi").click();
+        UiLanguageControls.select(page,"vi");
         assertThat(page.getByTestId("assistant-emergency-stop")).isVisible();
-        page.locator("[data-assistant-navigation]").selectOption("student");
+        page.getByTestId("assistant-close").click();
+        tab("student");
         assertThat(panel).isHidden();assertFalse((Boolean)page.evaluate("() => document.querySelector('.shell').inert"));
         assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
     }

@@ -1,0 +1,1683 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ----------< com.example:personal-finance-cross-border-agent >-----------
+[INFO] Building personal-finance-cross-border-agent 1.0.0
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ personal-finance-cross-border-agent ---
+[INFO] Copying 5 resources from src\main\resources to target\classes
+[INFO] Copying 5 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ personal-finance-cross-border-agent ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ personal-finance-cross-border-agent ---
+[INFO] skip non existing resourceDirectory D:\personal-finance-cross-border-agent\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ personal-finance-cross-border-agent ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 54 source files with javac [debug parameters release 21] to target\test-classes
+[INFO] /D:/personal-finance-cross-border-agent/src/test/java/com/example/finance/DeployedAcceptanceIT.java: D:\personal-finance-cross-border-agent\src\test\java\com\example\finance\DeployedAcceptanceIT.java uses or overrides a deprecated API.
+[INFO] /D:/personal-finance-cross-border-agent/src/test/java/com/example/finance/DeployedAcceptanceIT.java: Recompile with -Xlint:deprecation for details.
+[INFO] /D:/personal-finance-cross-border-agent/src/test/java/com/example/finance/DeployedAcceptanceIT.java: Some input files use unchecked or unsafe operations.
+[INFO] /D:/personal-finance-cross-border-agent/src/test/java/com/example/finance/DeployedAcceptanceIT.java: Recompile with -Xlint:unchecked for details.
+[INFO] 
+[INFO] --- surefire:3.5.4:test (default-test) @ personal-finance-cross-border-agent ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.example.finance.AssistantPanelPlaywrightTest
+10:13:14.267 [main] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.example.finance.AssistantPanelPlaywrightTest]: AssistantPanelPlaywrightTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+10:13:14.572 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.example.finance.FinanceApplication for test class com.example.finance.AssistantPanelPlaywrightTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2026-10-09T10:13:15.043+07:00  INFO 13072 --- [           main] c.e.f.AssistantPanelPlaywrightTest       : Starting AssistantPanelPlaywrightTest using Java 21.0.6 with PID 13072 (started by ADMIN in D:\personal-finance-cross-border-agent)
+2026-10-09T10:13:15.044+07:00  INFO 13072 --- [           main] c.e.f.AssistantPanelPlaywrightTest       : No active profile set, falling back to 1 default profile: "default"
+Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
+Java HotSpot(TM) 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+WARNING: A Java agent has been loaded dynamically (C:\Users\ADMIN\.m2\repository\net\bytebuddy\byte-buddy-agent\1.17.7\byte-buddy-agent-1.17.7.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+2026-10-09T10:13:17.760+07:00  INFO 13072 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8101 (http)
+2026-10-09T10:13:17.783+07:00  INFO 13072 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-10-09T10:13:17.784+07:00  INFO 13072 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.46]
+2026-10-09T10:13:17.865+07:00  INFO 13072 --- [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-10-09T10:13:17.866+07:00  INFO 13072 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2798 ms
+2026-10-09T10:13:18.076+07:00  INFO 13072 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-10-09T10:13:18.428+07:00  INFO 13072 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:assistant_panel user=SA
+2026-10-09T10:13:18.430+07:00  INFO 13072 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-10-09T10:13:20.090+07:00  INFO 13072 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8101 (http) with context path '/'
+2026-10-09T10:13:20.101+07:00  INFO 13072 --- [           main] c.e.f.AssistantPanelPlaywrightTest       : Started AssistantPanelPlaywrightTest in 5.395 seconds (process running for 6.589)
+2026-10-09T10:13:24.259+07:00  INFO 13072 --- [nio-8101-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-09T10:13:24.260+07:00  INFO 13072 --- [nio-8101-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-10-09T10:13:24.261+07:00  INFO 13072 --- [nio-8101-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+[ERROR] Tests run: 9, Failures: 2, Errors: 7, Skipped: 0, Time elapsed: 103.7 s <<< FAILURE! -- in com.example.finance.AssistantPanelPlaywrightTest
+[ERROR] com.example.finance.AssistantPanelPlaywrightTest.emergencyStopBlocksLateDraftAndResetDiscardsLateResponseAndRestoresComposer -- Time elapsed: 15.26 s <<< ERROR!
+com.microsoft.playwright.TimeoutError: 
+Error {
+  message='Timeout 10000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 10000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("Prepare tuition draft")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     20 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.WaitableResult.get(WaitableResult.java:52)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:147)
+	at com.microsoft.playwright.impl.Connection.sendMessage(Connection.java:136)
+	at com.microsoft.playwright.impl.ChannelOwner.sendMessage(ChannelOwner.java:133)
+	at com.microsoft.playwright.impl.FrameImpl.fill(FrameImpl.java:310)
+	at com.microsoft.playwright.impl.LocatorImpl.fill(LocatorImpl.java:274)
+	at com.microsoft.playwright.Locator.fill(Locator.java:3509)
+	at com.example.finance.AssistantPanelPlaywrightTest.send(AssistantPanelPlaywrightTest.java:354)
+	at com.example.finance.AssistantPanelPlaywrightTest.emergencyStopBlocksLateDraftAndResetDiscardsLateResponseAndRestoresComposer(AssistantPanelPlaywrightTest.java:213)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	Suppressed: org.opentest4j.AssertionFailedError: TypeError: Cannot read properties of null (reading 'setAttribute')
+TypeError: Cannot read properties of null (reading 'setAttribute')
+    at renderAssistantContext (http://localhost:8101/app.js?v=20261009-ai-ui-local:1049:40)
+    at activateTab (http://localhost:8101/app.js?v=20261009-ai-ui-local:1026:3)
+    at initializeWorkspaceContent (http://localhost:8101/app.js?v=20261009-ai-ui-local:2010:3)
+    at HTMLDocument.<anonymous> (http://localhost:8101/app.js?v=20261009-ai-ui-local:2271:3) ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at com.example.finance.AssistantPanelPlaywrightTest.close(AssistantPanelPlaywrightTest.java:53)
+		... 3 more
+Caused by: com.microsoft.playwright.TimeoutError: Error {
+  message='Timeout 10000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 10000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("Prepare tuition draft")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     20 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.Connection.dispatch(Connection.java:274)
+	at com.microsoft.playwright.impl.Connection.processOneMessage(Connection.java:230)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:145)
+	... 10 more
+
+[ERROR] com.example.finance.AssistantPanelPlaywrightTest.aReplyArrivingWhileChatIsClosedIsVisibleWhenReopened -- Time elapsed: 11.61 s <<< ERROR!
+com.microsoft.playwright.TimeoutError: 
+Error {
+  message='Timeout 10000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 10000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("Show remaining budgets this month.")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     20 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.WaitableResult.get(WaitableResult.java:52)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:147)
+	at com.microsoft.playwright.impl.Connection.sendMessage(Connection.java:136)
+	at com.microsoft.playwright.impl.ChannelOwner.sendMessage(ChannelOwner.java:133)
+	at com.microsoft.playwright.impl.FrameImpl.fill(FrameImpl.java:310)
+	at com.microsoft.playwright.impl.LocatorImpl.fill(LocatorImpl.java:274)
+	at com.microsoft.playwright.Locator.fill(Locator.java:3509)
+	at com.example.finance.AssistantPanelPlaywrightTest.send(AssistantPanelPlaywrightTest.java:354)
+	at com.example.finance.AssistantPanelPlaywrightTest.aReplyArrivingWhileChatIsClosedIsVisibleWhenReopened(AssistantPanelPlaywrightTest.java:286)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	Suppressed: org.opentest4j.AssertionFailedError: TypeError: Cannot read properties of null (reading 'setAttribute')
+TypeError: Cannot read properties of null (reading 'setAttribute')
+    at renderAssistantContext (http://localhost:8101/app.js?v=20261009-ai-ui-local:1049:40)
+    at activateTab (http://localhost:8101/app.js?v=20261009-ai-ui-local:1026:3)
+    at initializeWorkspaceContent (http://localhost:8101/app.js?v=20261009-ai-ui-local:2010:3)
+    at HTMLDocument.<anonymous> (http://localhost:8101/app.js?v=20261009-ai-ui-local:2271:3) ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at com.example.finance.AssistantPanelPlaywrightTest.close(AssistantPanelPlaywrightTest.java:53)
+		... 3 more
+Caused by: com.microsoft.playwright.TimeoutError: Error {
+  message='Timeout 10000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 10000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("Show remaining budgets this month.")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     20 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.Connection.dispatch(Connection.java:274)
+	at com.microsoft.playwright.impl.Connection.processOneMessage(Connection.java:230)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:145)
+	... 10 more
+
+[ERROR] com.example.finance.AssistantPanelPlaywrightTest.entryPointsLanguageAndDraftSurviveTabChangesWithoutCallingModel -- Time elapsed: 6.404 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+Locator expected to have text
+Expected: Transactions
+Received: Overview
+
+Call log:
+  - Assert "hasText" getByTestId("assistant-screen") with timeout 5000ms
+  - waiting for getByTestId("assistant-screen")
+    14 � locator resolved to <strong data-assistant-screen="" data-testid="assistant-screen">Overview</strong>
+       - unexpected value "Overview"
+	at com.microsoft.playwright.impl.AssertionsBase.expectImpl(AssertionsBase.java:81)
+	at com.microsoft.playwright.impl.AssertionsBase.expectImpl(AssertionsBase.java:47)
+	at com.microsoft.playwright.impl.AssertionsBase.expectImpl(AssertionsBase.java:39)
+	at com.microsoft.playwright.impl.LocatorAssertionsImpl.hasText(LocatorAssertionsImpl.java:303)
+	at com.microsoft.playwright.assertions.LocatorAssertions.hasText(LocatorAssertions.java:1996)
+	at com.example.finance.AssistantPanelPlaywrightTest.entryPointsLanguageAndDraftSurviveTabChangesWithoutCallingModel(AssistantPanelPlaywrightTest.java:62)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	Suppressed: org.opentest4j.AssertionFailedError: TypeError: Cannot read properties of null (reading 'setAttribute')
+TypeError: Cannot read properties of null (reading 'setAttribute')
+    at renderAssistantContext (http://localhost:8101/app.js?v=20261009-ai-ui-local:1049:40)
+    at activateTab (http://localhost:8101/app.js?v=20261009-ai-ui-local:1026:3)
+    at initializeWorkspaceContent (http://localhost:8101/app.js?v=20261009-ai-ui-local:2010:3)
+    at HTMLDocument.<anonymous> (http://localhost:8101/app.js?v=20261009-ai-ui-local:2271:3) ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at com.example.finance.AssistantPanelPlaywrightTest.close(AssistantPanelPlaywrightTest.java:53)
+		... 3 more
+
+[ERROR] com.example.finance.AssistantPanelPlaywrightTest.draftNeedsSeparateApprovalAndContextUsesExactlyTheDisplayedPlan -- Time elapsed: 11.38 s <<< ERROR!
+com.microsoft.playwright.TimeoutError: 
+Error {
+  message='Timeout 10000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 10000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("Prepare the cheapest tuition payment draft.")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     20 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.WaitableResult.get(WaitableResult.java:52)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:147)
+	at com.microsoft.playwright.impl.Connection.sendMessage(Connection.java:136)
+	at com.microsoft.playwright.impl.ChannelOwner.sendMessage(ChannelOwner.java:133)
+	at com.microsoft.playwright.impl.FrameImpl.fill(FrameImpl.java:310)
+	at com.microsoft.playwright.impl.LocatorImpl.fill(LocatorImpl.java:274)
+	at com.microsoft.playwright.Locator.fill(Locator.java:3509)
+	at com.example.finance.AssistantPanelPlaywrightTest.send(AssistantPanelPlaywrightTest.java:354)
+	at com.example.finance.AssistantPanelPlaywrightTest.draftNeedsSeparateApprovalAndContextUsesExactlyTheDisplayedPlan(AssistantPanelPlaywrightTest.java:149)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	Suppressed: org.opentest4j.AssertionFailedError: TypeError: Cannot read properties of null (reading 'setAttribute')
+TypeError: Cannot read properties of null (reading 'setAttribute')
+    at renderAssistantContext (http://localhost:8101/app.js?v=20261009-ai-ui-local:1049:40)
+    at activateTab (http://localhost:8101/app.js?v=20261009-ai-ui-local:1026:3)
+    at initializeWorkspaceContent (http://localhost:8101/app.js?v=20261009-ai-ui-local:2010:3)
+    at HTMLDocument.<anonymous> (http://localhost:8101/app.js?v=20261009-ai-ui-local:2271:3) ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at com.example.finance.AssistantPanelPlaywrightTest.close(AssistantPanelPlaywrightTest.java:53)
+		... 3 more
+Caused by: com.microsoft.playwright.TimeoutError: Error {
+  message='Timeout 10000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 10000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("Prepare the cheapest tuition payment draft.")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     20 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.Connection.dispatch(Connection.java:274)
+	at com.microsoft.playwright.impl.Connection.processOneMessage(Connection.java:230)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:145)
+	... 10 more
+
+[ERROR] com.example.finance.AssistantPanelPlaywrightTest.reopeningLongChatRestoresTheLastReadPositionAndDraftAcrossTabs -- Time elapsed: 11.36 s <<< ERROR!
+com.microsoft.playwright.TimeoutError: 
+Error {
+  message='Timeout 10000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 10000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("Show remaining budgets this month.")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     20 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.WaitableResult.get(WaitableResult.java:52)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:147)
+	at com.microsoft.playwright.impl.Connection.sendMessage(Connection.java:136)
+	at com.microsoft.playwright.impl.ChannelOwner.sendMessage(ChannelOwner.java:133)
+	at com.microsoft.playwright.impl.FrameImpl.fill(FrameImpl.java:310)
+	at com.microsoft.playwright.impl.LocatorImpl.fill(LocatorImpl.java:274)
+	at com.microsoft.playwright.Locator.fill(Locator.java:3509)
+	at com.example.finance.AssistantPanelPlaywrightTest.send(AssistantPanelPlaywrightTest.java:354)
+	at com.example.finance.AssistantPanelPlaywrightTest.reopeningLongChatRestoresTheLastReadPositionAndDraftAcrossTabs(AssistantPanelPlaywrightTest.java:252)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	Suppressed: org.opentest4j.AssertionFailedError: TypeError: Cannot read properties of null (reading 'setAttribute')
+TypeError: Cannot read properties of null (reading 'setAttribute')
+    at renderAssistantContext (http://localhost:8101/app.js?v=20261009-ai-ui-local:1049:40)
+    at activateTab (http://localhost:8101/app.js?v=20261009-ai-ui-local:1026:3)
+    at initializeWorkspaceContent (http://localhost:8101/app.js?v=20261009-ai-ui-local:2010:3)
+    at HTMLDocument.<anonymous> (http://localhost:8101/app.js?v=20261009-ai-ui-local:2271:3) ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at com.example.finance.AssistantPanelPlaywrightTest.close(AssistantPanelPlaywrightTest.java:53)
+		... 3 more
+Caused by: com.microsoft.playwright.TimeoutError: Error {
+  message='Timeout 10000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 10000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("Show remaining budgets this month.")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     20 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.Connection.dispatch(Connection.java:274)
+	at com.microsoft.playwright.impl.Connection.processOneMessage(Connection.java:230)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:145)
+	... 10 more
+
+[ERROR] com.example.finance.AssistantPanelPlaywrightTest.pendingStateDuplicateGuardAndRepliesAreSharedWithOverview -- Time elapsed: 11.62 s <<< ERROR!
+com.microsoft.playwright.TimeoutError: 
+Error {
+  message='Timeout 10000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 10000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("Ng�n s�ch th�ng n�y c?a t�i c�n bao nhi�u?")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     20 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.WaitableResult.get(WaitableResult.java:52)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:147)
+	at com.microsoft.playwright.impl.Connection.sendMessage(Connection.java:136)
+	at com.microsoft.playwright.impl.ChannelOwner.sendMessage(ChannelOwner.java:133)
+	at com.microsoft.playwright.impl.FrameImpl.fill(FrameImpl.java:310)
+	at com.microsoft.playwright.impl.LocatorImpl.fill(LocatorImpl.java:274)
+	at com.microsoft.playwright.Locator.fill(Locator.java:3509)
+	at com.example.finance.AssistantPanelPlaywrightTest.send(AssistantPanelPlaywrightTest.java:354)
+	at com.example.finance.AssistantPanelPlaywrightTest.pendingStateDuplicateGuardAndRepliesAreSharedWithOverview(AssistantPanelPlaywrightTest.java:95)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	Suppressed: org.opentest4j.AssertionFailedError: TypeError: Cannot read properties of null (reading 'setAttribute')
+TypeError: Cannot read properties of null (reading 'setAttribute')
+    at renderAssistantContext (http://localhost:8101/app.js?v=20261009-ai-ui-local:1049:40)
+    at activateTab (http://localhost:8101/app.js?v=20261009-ai-ui-local:1026:3)
+    at initializeWorkspaceContent (http://localhost:8101/app.js?v=20261009-ai-ui-local:2010:3)
+    at HTMLDocument.<anonymous> (http://localhost:8101/app.js?v=20261009-ai-ui-local:2271:3) ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at com.example.finance.AssistantPanelPlaywrightTest.close(AssistantPanelPlaywrightTest.java:53)
+		... 3 more
+Caused by: com.microsoft.playwright.TimeoutError: Error {
+  message='Timeout 10000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 10000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("Ng�n s�ch th�ng n�y c?a t�i c�n bao nhi�u?")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     20 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.Connection.dispatch(Connection.java:274)
+	at com.microsoft.playwright.impl.Connection.processOneMessage(Connection.java:230)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:145)
+	... 10 more
+
+[ERROR] com.example.finance.AssistantPanelPlaywrightTest.connectionFailureAndTimeoutKeepDraftAndRecoverOnlyAfterExplicitRetry -- Time elapsed: 11.61 s <<< ERROR!
+com.microsoft.playwright.TimeoutError: 
+Error {
+  message='Timeout 10000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 10000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("Where did I spend the most this month?")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     20 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.WaitableResult.get(WaitableResult.java:52)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:147)
+	at com.microsoft.playwright.impl.Connection.sendMessage(Connection.java:136)
+	at com.microsoft.playwright.impl.ChannelOwner.sendMessage(ChannelOwner.java:133)
+	at com.microsoft.playwright.impl.FrameImpl.fill(FrameImpl.java:310)
+	at com.microsoft.playwright.impl.LocatorImpl.fill(LocatorImpl.java:274)
+	at com.microsoft.playwright.Locator.fill(Locator.java:3509)
+	at com.example.finance.AssistantPanelPlaywrightTest.send(AssistantPanelPlaywrightTest.java:354)
+	at com.example.finance.AssistantPanelPlaywrightTest.connectionFailureAndTimeoutKeepDraftAndRecoverOnlyAfterExplicitRetry(AssistantPanelPlaywrightTest.java:124)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	Suppressed: org.opentest4j.AssertionFailedError: TypeError: Cannot read properties of null (reading 'setAttribute')
+TypeError: Cannot read properties of null (reading 'setAttribute')
+    at renderAssistantContext (http://localhost:8101/app.js?v=20261009-ai-ui-local:1049:40)
+    at activateTab (http://localhost:8101/app.js?v=20261009-ai-ui-local:1026:3)
+    at initializeWorkspaceContent (http://localhost:8101/app.js?v=20261009-ai-ui-local:2010:3)
+    at HTMLDocument.<anonymous> (http://localhost:8101/app.js?v=20261009-ai-ui-local:2271:3) ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at com.example.finance.AssistantPanelPlaywrightTest.close(AssistantPanelPlaywrightTest.java:53)
+		... 3 more
+Caused by: com.microsoft.playwright.TimeoutError: Error {
+  message='Timeout 10000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 10000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("Where did I spend the most this month?")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     20 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.Connection.dispatch(Connection.java:274)
+	at com.microsoft.playwright.impl.Connection.processOneMessage(Connection.java:230)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:145)
+	... 10 more
+
+[ERROR] com.example.finance.AssistantPanelPlaywrightTest.mobilePanelFitsLanguageAndKeyboardWorkWithoutExposingDemoControls -- Time elapsed: 6.633 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+Locator expected to have text
+Expected: H?i FinBridge
+Received: Ask FinBridge
+
+Call log:
+  - Assert "hasText" locator("#assistant-title") with timeout 5000ms
+  - waiting for locator("#assistant-title")
+    14 � locator resolved to <h2 id="assistant-title">Ask FinBridge</h2>
+       - unexpected value "Ask FinBridge"
+	at com.microsoft.playwright.impl.AssertionsBase.expectImpl(AssertionsBase.java:81)
+	at com.microsoft.playwright.impl.AssertionsBase.expectImpl(AssertionsBase.java:47)
+	at com.microsoft.playwright.impl.AssertionsBase.expectImpl(AssertionsBase.java:39)
+	at com.microsoft.playwright.impl.LocatorAssertionsImpl.hasText(LocatorAssertionsImpl.java:303)
+	at com.microsoft.playwright.assertions.LocatorAssertions.hasText(LocatorAssertions.java:1996)
+	at com.example.finance.AssistantPanelPlaywrightTest.mobilePanelFitsLanguageAndKeyboardWorkWithoutExposingDemoControls(AssistantPanelPlaywrightTest.java:181)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	Suppressed: org.opentest4j.AssertionFailedError: TypeError: Cannot read properties of null (reading 'setAttribute')
+TypeError: Cannot read properties of null (reading 'setAttribute')
+    at renderAssistantContext (http://localhost:8101/app.js?v=20261009-ai-ui-local:1049:40)
+    at activateTab (http://localhost:8101/app.js?v=20261009-ai-ui-local:1026:3)
+    at initializeWorkspaceContent (http://localhost:8101/app.js?v=20261009-ai-ui-local:2010:3)
+    at HTMLDocument.<anonymous> (http://localhost:8101/app.js?v=20261009-ai-ui-local:2271:3) | TypeError: Cannot read properties of null (reading 'setAttribute')
+TypeError: Cannot read properties of null (reading 'setAttribute')
+    at renderAssistantContext (http://localhost:8101/app.js?v=20261009-ai-ui-local:1049:40)
+    at activateTab (http://localhost:8101/app.js?v=20261009-ai-ui-local:1026:3)
+    at initializeWorkspaceContent (http://localhost:8101/app.js?v=20261009-ai-ui-local:2010:3)
+    at HTMLDocument.<anonymous> (http://localhost:8101/app.js?v=20261009-ai-ui-local:2271:3) ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at com.example.finance.AssistantPanelPlaywrightTest.close(AssistantPanelPlaywrightTest.java:53)
+		... 3 more
+
+[ERROR] com.example.finance.AssistantPanelPlaywrightTest.receiptShortcutStaysVisibleAndOpensTheDisplayedReceiptWithoutExecution -- Time elapsed: 11.56 s <<< ERROR!
+com.microsoft.playwright.TimeoutError: 
+Error {
+  message='Timeout 10000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 10000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("Show remaining budgets this month.")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     19 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.WaitableResult.get(WaitableResult.java:52)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:147)
+	at com.microsoft.playwright.impl.Connection.sendMessage(Connection.java:136)
+	at com.microsoft.playwright.impl.ChannelOwner.sendMessage(ChannelOwner.java:133)
+	at com.microsoft.playwright.impl.FrameImpl.fill(FrameImpl.java:310)
+	at com.microsoft.playwright.impl.LocatorImpl.fill(LocatorImpl.java:274)
+	at com.microsoft.playwright.Locator.fill(Locator.java:3509)
+	at com.example.finance.AssistantPanelPlaywrightTest.send(AssistantPanelPlaywrightTest.java:354)
+	at com.example.finance.AssistantPanelPlaywrightTest.receiptShortcutStaysVisibleAndOpensTheDisplayedReceiptWithoutExecution(AssistantPanelPlaywrightTest.java:320)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	Suppressed: org.opentest4j.AssertionFailedError: TypeError: Cannot read properties of null (reading 'setAttribute')
+TypeError: Cannot read properties of null (reading 'setAttribute')
+    at renderAssistantContext (http://localhost:8101/app.js?v=20261009-ai-ui-local:1049:40)
+    at activateTab (http://localhost:8101/app.js?v=20261009-ai-ui-local:1026:3)
+    at initializeWorkspaceContent (http://localhost:8101/app.js?v=20261009-ai-ui-local:2010:3)
+    at HTMLDocument.<anonymous> (http://localhost:8101/app.js?v=20261009-ai-ui-local:2271:3) | TypeError: Cannot read properties of null (reading 'setAttribute')
+TypeError: Cannot read properties of null (reading 'setAttribute')
+    at renderAssistantContext (http://localhost:8101/app.js?v=20261009-ai-ui-local:1049:40)
+    at activateTab (http://localhost:8101/app.js?v=20261009-ai-ui-local:1026:3)
+    at initializeWorkspaceContent (http://localhost:8101/app.js?v=20261009-ai-ui-local:2010:3)
+    at HTMLDocument.<anonymous> (http://localhost:8101/app.js?v=20261009-ai-ui-local:2271:3) ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at com.example.finance.AssistantPanelPlaywrightTest.close(AssistantPanelPlaywrightTest.java:53)
+		... 3 more
+Caused by: com.microsoft.playwright.TimeoutError: Error {
+  message='Timeout 10000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 10000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("Show remaining budgets this month.")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     19 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.Connection.dispatch(Connection.java:274)
+	at com.microsoft.playwright.impl.Connection.processOneMessage(Connection.java:230)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:145)
+	... 10 more
+
+[INFO] Running com.example.finance.GlobalAssistantPlaywrightTest
+2026-10-09T10:14:57.785+07:00  INFO 13072 --- [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.example.finance.GlobalAssistantPlaywrightTest]: GlobalAssistantPlaywrightTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-09T10:14:57.788+07:00  INFO 13072 --- [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.example.finance.FinanceApplication for test class com.example.finance.GlobalAssistantPlaywrightTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2026-10-09T10:14:57.919+07:00  INFO 13072 --- [           main] c.e.f.GlobalAssistantPlaywrightTest      : Starting GlobalAssistantPlaywrightTest using Java 21.0.6 with PID 13072 (started by ADMIN in D:\personal-finance-cross-border-agent)
+2026-10-09T10:14:57.919+07:00  INFO 13072 --- [           main] c.e.f.GlobalAssistantPlaywrightTest      : No active profile set, falling back to 1 default profile: "default"
+2026-10-09T10:14:58.846+07:00  INFO 13072 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8131 (http)
+2026-10-09T10:14:58.848+07:00  INFO 13072 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-10-09T10:14:58.848+07:00  INFO 13072 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.46]
+2026-10-09T10:14:58.921+07:00  INFO 13072 --- [           main] o.a.c.c.C.[Tomcat-1].[localhost].[/]     : Initializing Spring embedded WebApplicationContext
+2026-10-09T10:14:58.921+07:00  INFO 13072 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 998 ms
+2026-10-09T10:14:58.953+07:00  INFO 13072 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Starting...
+2026-10-09T10:14:58.956+07:00  INFO 13072 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-2 - Added connection conn10: url=jdbc:h2:mem:global_browser user=SA
+2026-10-09T10:14:58.956+07:00  INFO 13072 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Start completed.
+2026-10-09T10:14:59.262+07:00  INFO 13072 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8131 (http) with context path '/'
+2026-10-09T10:14:59.266+07:00  INFO 13072 --- [           main] c.e.f.GlobalAssistantPlaywrightTest      : Started GlobalAssistantPlaywrightTest in 1.474 seconds (process running for 105.753)
+2026-10-09T10:15:00.130+07:00  INFO 13072 --- [nio-8131-exec-1] o.a.c.c.C.[Tomcat-1].[localhost].[/]     : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-09T10:15:00.130+07:00  INFO 13072 --- [nio-8131-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-10-09T10:15:00.131+07:00  INFO 13072 --- [nio-8131-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
+[ERROR] Tests run: 5, Failures: 1, Errors: 4, Skipped: 0, Time elapsed: 74.57 s <<< FAILURE! -- in com.example.finance.GlobalAssistantPlaywrightTest
+[ERROR] com.example.finance.GlobalAssistantPlaywrightTest.historicalAndCurrentBalancesRemainDifferentAcrossAllTabsAfterActualPayment -- Time elapsed: 16.60 s <<< ERROR!
+com.microsoft.playwright.TimeoutError: 
+Error {
+  message='Timeout 15000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 15000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("S? d? ngay sau giao d?ch SBOX-0C1CF323-BDA")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     29 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.WaitableResult.get(WaitableResult.java:52)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:147)
+	at com.microsoft.playwright.impl.Connection.sendMessage(Connection.java:136)
+	at com.microsoft.playwright.impl.ChannelOwner.sendMessage(ChannelOwner.java:133)
+	at com.microsoft.playwright.impl.FrameImpl.fill(FrameImpl.java:310)
+	at com.microsoft.playwright.impl.LocatorImpl.fill(LocatorImpl.java:274)
+	at com.microsoft.playwright.Locator.fill(Locator.java:3509)
+	at com.example.finance.GlobalAssistantPlaywrightTest.send(GlobalAssistantPlaywrightTest.java:38)
+	at com.example.finance.GlobalAssistantPlaywrightTest.historicalAndCurrentBalancesRemainDifferentAcrossAllTabsAfterActualPayment(GlobalAssistantPlaywrightTest.java:65)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	Suppressed: org.opentest4j.AssertionFailedError: [TypeError: Cannot read properties of null (reading 'setAttribute')
+TypeError: Cannot read properties of null (reading 'setAttribute')
+    at renderAssistantContext (http://localhost:8131/app.js?v=20261009-ai-ui-local:1049:40)
+    at activateTab (http://localhost:8131/app.js?v=20261009-ai-ui-local:1026:3)
+    at initializeWorkspaceContent (http://localhost:8131/app.js?v=20261009-ai-ui-local:2010:3)
+    at HTMLDocument.<anonymous> (http://localhost:8131/app.js?v=20261009-ai-ui-local:2271:3)] ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at com.example.finance.GlobalAssistantPlaywrightTest.close(GlobalAssistantPlaywrightTest.java:33)
+		... 3 more
+Caused by: com.microsoft.playwright.TimeoutError: Error {
+  message='Timeout 15000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 15000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("S? d? ngay sau giao d?ch SBOX-0C1CF323-BDA")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     29 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.Connection.dispatch(Connection.java:274)
+	at com.microsoft.playwright.impl.Connection.processOneMessage(Connection.java:230)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:145)
+	... 10 more
+
+[ERROR] com.example.finance.GlobalAssistantPlaywrightTest.draftBFromChatReviewsAndPaysBOnlyWhileAStaysSelected -- Time elapsed: 16.52 s <<< ERROR!
+com.microsoft.playwright.TimeoutError: 
+Error {
+  message='Timeout 15000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 15000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("Prepare tuition draft TUITION-B-DEMO using Vietcombank")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     29 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.WaitableResult.get(WaitableResult.java:52)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:147)
+	at com.microsoft.playwright.impl.Connection.sendMessage(Connection.java:136)
+	at com.microsoft.playwright.impl.ChannelOwner.sendMessage(ChannelOwner.java:133)
+	at com.microsoft.playwright.impl.FrameImpl.fill(FrameImpl.java:310)
+	at com.microsoft.playwright.impl.LocatorImpl.fill(LocatorImpl.java:274)
+	at com.microsoft.playwright.Locator.fill(Locator.java:3509)
+	at com.example.finance.GlobalAssistantPlaywrightTest.send(GlobalAssistantPlaywrightTest.java:38)
+	at com.example.finance.GlobalAssistantPlaywrightTest.draftBFromChatReviewsAndPaysBOnlyWhileAStaysSelected(GlobalAssistantPlaywrightTest.java:108)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	Suppressed: org.opentest4j.AssertionFailedError: [TypeError: Cannot read properties of null (reading 'setAttribute')
+TypeError: Cannot read properties of null (reading 'setAttribute')
+    at renderAssistantContext (http://localhost:8131/app.js?v=20261009-ai-ui-local:1049:40)
+    at activateTab (http://localhost:8131/app.js?v=20261009-ai-ui-local:1026:3)
+    at initializeWorkspaceContent (http://localhost:8131/app.js?v=20261009-ai-ui-local:2010:3)
+    at HTMLDocument.<anonymous> (http://localhost:8131/app.js?v=20261009-ai-ui-local:2271:3)] ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at com.example.finance.GlobalAssistantPlaywrightTest.close(GlobalAssistantPlaywrightTest.java:33)
+		... 3 more
+Caused by: com.microsoft.playwright.TimeoutError: Error {
+  message='Timeout 15000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 15000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("Prepare tuition draft TUITION-B-DEMO using Vietcombank")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     29 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.Connection.dispatch(Connection.java:274)
+	at com.microsoft.playwright.impl.Connection.processOneMessage(Connection.java:230)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:145)
+	... 10 more
+
+[ERROR] com.example.finance.GlobalAssistantPlaywrightTest.everyPlanStateHasAnAccurateBilingualBanner -- Time elapsed: 6.679 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+Locator expected not to contain text
+Expected: Reload the authoritative plan state
+Received: 
+              
+              
+              
+              
+              
+              Reload the authoritative plan state. Chat does not approve or execute payments.
+            
+
+Call log:
+  - Assert "containsText" getByTestId("assistant-plan-state") with timeout 5000ms
+  - waiting for getByTestId("assistant-plan-state")
+    14 � locator resolved to <div data-testid="assistant-plan-state">�</div>
+       - unexpected value "
+              
+              
+              
+              
+              
+              Reload the authoritative plan state. Chat does not approve or execute payments.
+            "
+	at com.microsoft.playwright.impl.AssertionsBase.expectImpl(AssertionsBase.java:81)
+	at com.microsoft.playwright.impl.AssertionsBase.expectImpl(AssertionsBase.java:47)
+	at com.microsoft.playwright.impl.AssertionsBase.expectImpl(AssertionsBase.java:39)
+	at com.microsoft.playwright.impl.LocatorAssertionsImpl.containsText(LocatorAssertionsImpl.java:75)
+	at com.microsoft.playwright.assertions.LocatorAssertions.containsText(LocatorAssertions.java:1024)
+	at com.example.finance.GlobalAssistantPlaywrightTest.everyPlanStateHasAnAccurateBilingualBanner(GlobalAssistantPlaywrightTest.java:101)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	Suppressed: org.opentest4j.AssertionFailedError: [TypeError: Cannot read properties of null (reading 'setAttribute')
+TypeError: Cannot read properties of null (reading 'setAttribute')
+    at renderAssistantContext (http://localhost:8131/app.js?v=20261009-ai-ui-local:1049:40)
+    at activateTab (http://localhost:8131/app.js?v=20261009-ai-ui-local:1026:3)
+    at initializeWorkspaceContent (http://localhost:8131/app.js?v=20261009-ai-ui-local:2010:3)
+    at HTMLDocument.<anonymous> (http://localhost:8131/app.js?v=20261009-ai-ui-local:2271:3), TypeError: Cannot read properties of null (reading 'setAttribute')
+TypeError: Cannot read properties of null (reading 'setAttribute')
+    at renderAssistantContext (http://localhost:8131/app.js?v=20261009-ai-ui-local:1049:40)
+    at activateTab (http://localhost:8131/app.js?v=20261009-ai-ui-local:1026:3)
+    at initializeWorkspaceContent (http://localhost:8131/app.js?v=20261009-ai-ui-local:2010:3)
+    at HTMLDocument.<anonymous> (http://localhost:8131/app.js?v=20261009-ai-ui-local:2271:3), TypeError: Cannot read properties of null (reading 'setAttribute')
+TypeError: Cannot read properties of null (reading 'setAttribute')
+    at renderAssistantContext (http://localhost:8131/app.js?v=20261009-ai-ui-local:1049:40)
+    at activateTab (http://localhost:8131/app.js?v=20261009-ai-ui-local:1026:3)
+    at initializeWorkspaceContent (http://localhost:8131/app.js?v=20261009-ai-ui-local:2010:3)
+    at HTMLDocument.<anonymous> (http://localhost:8131/app.js?v=20261009-ai-ui-local:2271:3)] ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at com.example.finance.GlobalAssistantPlaywrightTest.close(GlobalAssistantPlaywrightTest.java:33)
+		... 3 more
+
+[ERROR] com.example.finance.GlobalAssistantPlaywrightTest.fixedCorpusHasSameResultFromEveryTabWithoutContextButtonsOrFinancialMutations -- Time elapsed: 16.56 s <<< ERROR!
+com.microsoft.playwright.TimeoutError: 
+Error {
+  message='Timeout 15000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 15000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("What is my current Vietcombank balance?")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     29 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.WaitableResult.get(WaitableResult.java:52)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:147)
+	at com.microsoft.playwright.impl.Connection.sendMessage(Connection.java:136)
+	at com.microsoft.playwright.impl.ChannelOwner.sendMessage(ChannelOwner.java:133)
+	at com.microsoft.playwright.impl.FrameImpl.fill(FrameImpl.java:310)
+	at com.microsoft.playwright.impl.LocatorImpl.fill(LocatorImpl.java:274)
+	at com.microsoft.playwright.Locator.fill(Locator.java:3509)
+	at com.example.finance.GlobalAssistantPlaywrightTest.send(GlobalAssistantPlaywrightTest.java:38)
+	at com.example.finance.GlobalAssistantPlaywrightTest.fixedCorpusHasSameResultFromEveryTabWithoutContextButtonsOrFinancialMutations(GlobalAssistantPlaywrightTest.java:49)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	Suppressed: org.opentest4j.AssertionFailedError: [TypeError: Cannot read properties of null (reading 'setAttribute')
+TypeError: Cannot read properties of null (reading 'setAttribute')
+    at renderAssistantContext (http://localhost:8131/app.js?v=20261009-ai-ui-local:1049:40)
+    at activateTab (http://localhost:8131/app.js?v=20261009-ai-ui-local:1026:3)
+    at initializeWorkspaceContent (http://localhost:8131/app.js?v=20261009-ai-ui-local:2010:3)
+    at HTMLDocument.<anonymous> (http://localhost:8131/app.js?v=20261009-ai-ui-local:2271:3)] ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at com.example.finance.GlobalAssistantPlaywrightTest.close(GlobalAssistantPlaywrightTest.java:33)
+		... 3 more
+Caused by: com.microsoft.playwright.TimeoutError: Error {
+  message='Timeout 15000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 15000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("What is my current Vietcombank balance?")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     29 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.Connection.dispatch(Connection.java:274)
+	at com.microsoft.playwright.impl.Connection.processOneMessage(Connection.java:230)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:145)
+	... 10 more
+
+[ERROR] com.example.finance.GlobalAssistantPlaywrightTest.pendingAccountChoiceIsVisibleAndBoundOnlyToThisSession -- Time elapsed: 16.68 s <<< ERROR!
+com.microsoft.playwright.TimeoutError: 
+Error {
+  message='Timeout 15000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 15000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("Hi?n Bank A c�n bao nhi�u?")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     29 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.WaitableResult.get(WaitableResult.java:52)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:147)
+	at com.microsoft.playwright.impl.Connection.sendMessage(Connection.java:136)
+	at com.microsoft.playwright.impl.ChannelOwner.sendMessage(ChannelOwner.java:133)
+	at com.microsoft.playwright.impl.FrameImpl.fill(FrameImpl.java:310)
+	at com.microsoft.playwright.impl.LocatorImpl.fill(LocatorImpl.java:274)
+	at com.microsoft.playwright.Locator.fill(Locator.java:3509)
+	at com.example.finance.GlobalAssistantPlaywrightTest.send(GlobalAssistantPlaywrightTest.java:38)
+	at com.example.finance.GlobalAssistantPlaywrightTest.pendingAccountChoiceIsVisibleAndBoundOnlyToThisSession(GlobalAssistantPlaywrightTest.java:76)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	Suppressed: org.opentest4j.AssertionFailedError: [TypeError: Cannot read properties of null (reading 'setAttribute')
+TypeError: Cannot read properties of null (reading 'setAttribute')
+    at renderAssistantContext (http://localhost:8131/app.js?v=20261009-ai-ui-local:1049:40)
+    at activateTab (http://localhost:8131/app.js?v=20261009-ai-ui-local:1026:3)
+    at initializeWorkspaceContent (http://localhost:8131/app.js?v=20261009-ai-ui-local:2010:3)
+    at HTMLDocument.<anonymous> (http://localhost:8131/app.js?v=20261009-ai-ui-local:2271:3)] ==> expected: <true> but was: <false>
+		at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+		at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+		at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+		at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+		at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+		at com.example.finance.GlobalAssistantPlaywrightTest.close(GlobalAssistantPlaywrightTest.java:33)
+		... 3 more
+Caused by: com.microsoft.playwright.TimeoutError: Error {
+  message='Timeout 15000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 15000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("Hi?n Bank A c�n bao nhi�u?")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     29 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.Connection.dispatch(Connection.java:274)
+	at com.microsoft.playwright.impl.Connection.processOneMessage(Connection.java:230)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:145)
+	... 10 more
+
+[INFO] Running com.example.finance.StudentExpensePlaywrightE2ETest
+2026-10-09T10:16:12.367+07:00  INFO 13072 --- [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.example.finance.StudentExpensePlaywrightE2ETest]: StudentExpensePlaywrightE2ETest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-09T10:16:12.372+07:00  INFO 13072 --- [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.example.finance.FinanceApplication for test class com.example.finance.StudentExpensePlaywrightE2ETest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2026-10-09T10:16:12.470+07:00  INFO 13072 --- [           main] c.e.f.StudentExpensePlaywrightE2ETest    : Starting StudentExpensePlaywrightE2ETest using Java 21.0.6 with PID 13072 (started by ADMIN in D:\personal-finance-cross-border-agent)
+2026-10-09T10:16:12.471+07:00  INFO 13072 --- [           main] c.e.f.StudentExpensePlaywrightE2ETest    : No active profile set, falling back to 1 default profile: "default"
+2026-10-09T10:16:12.802+07:00  INFO 13072 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8096 (http)
+2026-10-09T10:16:12.803+07:00  INFO 13072 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-10-09T10:16:12.803+07:00  INFO 13072 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.46]
+2026-10-09T10:16:12.852+07:00  INFO 13072 --- [           main] o.a.c.c.C.[Tomcat-2].[localhost].[/]     : Initializing Spring embedded WebApplicationContext
+2026-10-09T10:16:12.852+07:00  INFO 13072 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 375 ms
+2026-10-09T10:16:12.874+07:00  INFO 13072 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-3 - Starting...
+2026-10-09T10:16:12.877+07:00  INFO 13072 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-3 - Added connection conn20: url=jdbc:h2:mem:student_expense_e2e user=SA
+2026-10-09T10:16:12.878+07:00  INFO 13072 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-3 - Start completed.
+2026-10-09T10:16:13.167+07:00  INFO 13072 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8096 (http) with context path '/'
+2026-10-09T10:16:13.172+07:00  INFO 13072 --- [           main] c.e.f.StudentExpensePlaywrightE2ETest    : Started StudentExpensePlaywrightE2ETest in 0.792 seconds (process running for 179.658)
+2026-10-09T10:16:14.114+07:00  INFO 13072 --- [nio-8096-exec-1] o.a.c.c.C.[Tomcat-2].[localhost].[/]     : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-09T10:16:14.115+07:00  INFO 13072 --- [nio-8096-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-10-09T10:16:14.115+07:00  INFO 13072 --- [nio-8096-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
+[ERROR] Tests run: 2, Failures: 0, Errors: 2, Skipped: 0, Time elapsed: 63.20 s <<< FAILURE! -- in com.example.finance.StudentExpensePlaywrightE2ETest
+[ERROR] com.example.finance.StudentExpensePlaywrightE2ETest.channelSelectionHighlightsOnlyOneCardWithoutFinancialMutationAndSurvivesRefresh -- Time elapsed: 30.91 s <<< ERROR!
+com.microsoft.playwright.TimeoutError: 
+Error {
+  message='Timeout 30000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 30000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("channel-BANK_A").locator(".channel-list-name")
+-     - locator resolved to <div class="channel-list-name">�</div>
+-   - attempting click action
+-     2 � waiting for element to be visible, enabled and stable
+-       - element is not visible
+-     - retrying click action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and stable
+-       - element is not visible
+-     - retrying click action
+-       - waiting 100ms
+-     58 � waiting for element to be visible, enabled and stable
+-        - element is not visible
+-      - retrying click action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.WaitableResult.get(WaitableResult.java:52)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:147)
+	at com.microsoft.playwright.impl.Connection.sendMessage(Connection.java:136)
+	at com.microsoft.playwright.impl.ChannelOwner.sendMessage(ChannelOwner.java:133)
+	at com.microsoft.playwright.impl.FrameImpl.clickImpl(FrameImpl.java:244)
+	at com.microsoft.playwright.impl.LocatorImpl.click(LocatorImpl.java:173)
+	at com.microsoft.playwright.Locator.click(Locator.java:2840)
+	at com.example.finance.StudentExpensePlaywrightE2ETest.channelSelectionHighlightsOnlyOneCardWithoutFinancialMutationAndSurvivesRefresh(StudentExpensePlaywrightE2ETest.java:61)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: com.microsoft.playwright.TimeoutError: Error {
+  message='Timeout 30000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 30000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("channel-BANK_A").locator(".channel-list-name")
+-     - locator resolved to <div class="channel-list-name">�</div>
+-   - attempting click action
+-     2 � waiting for element to be visible, enabled and stable
+-       - element is not visible
+-     - retrying click action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and stable
+-       - element is not visible
+-     - retrying click action
+-       - waiting 100ms
+-     58 � waiting for element to be visible, enabled and stable
+-        - element is not visible
+-      - retrying click action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.Connection.dispatch(Connection.java:274)
+	at com.microsoft.playwright.impl.Connection.processOneMessage(Connection.java:230)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:145)
+	... 9 more
+
+[ERROR] com.example.finance.StudentExpensePlaywrightE2ETest.connectedMomoUsdRouteIsClearlyReferenceOnlyAndCannotBeSelected -- Time elapsed: 30.59 s <<< ERROR!
+com.microsoft.playwright.TimeoutError: 
+Error {
+  message='Timeout 30000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 30000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("channel-MOMO").locator(".channel-list-name")
+-     - locator resolved to <div class="channel-list-name">�</div>
+-   - attempting click action
+-     2 � waiting for element to be visible, enabled and stable
+-       - element is not visible
+-     - retrying click action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and stable
+-       - element is not visible
+-     - retrying click action
+-       - waiting 100ms
+-     59 � waiting for element to be visible, enabled and stable
+-        - element is not visible
+-      - retrying click action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.WaitableResult.get(WaitableResult.java:52)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:147)
+	at com.microsoft.playwright.impl.Connection.sendMessage(Connection.java:136)
+	at com.microsoft.playwright.impl.ChannelOwner.sendMessage(ChannelOwner.java:133)
+	at com.microsoft.playwright.impl.FrameImpl.clickImpl(FrameImpl.java:244)
+	at com.microsoft.playwright.impl.LocatorImpl.click(LocatorImpl.java:173)
+	at com.microsoft.playwright.Locator.click(Locator.java:2840)
+	at com.example.finance.StudentExpensePlaywrightE2ETest.connectedMomoUsdRouteIsClearlyReferenceOnlyAndCannotBeSelected(StudentExpensePlaywrightE2ETest.java:102)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+Caused by: com.microsoft.playwright.TimeoutError: Error {
+  message='Timeout 30000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 30000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("channel-MOMO").locator(".channel-list-name")
+-     - locator resolved to <div class="channel-list-name">�</div>
+-   - attempting click action
+-     2 � waiting for element to be visible, enabled and stable
+-       - element is not visible
+-     - retrying click action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and stable
+-       - element is not visible
+-     - retrying click action
+-       - waiting 100ms
+-     59 � waiting for element to be visible, enabled and stable
+-        - element is not visible
+-      - retrying click action
+-        - waiting 500ms
+
+	at com.microsoft.playwright.impl.Connection.dispatch(Connection.java:274)
+	at com.microsoft.playwright.impl.Connection.processOneMessage(Connection.java:230)
+	at com.microsoft.playwright.impl.ChannelOwner.runUntil(ChannelOwner.java:145)
+	... 9 more
+
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   AssistantPanelPlaywrightTest.entryPointsLanguageAndDraftSurviveTabChangesWithoutCallingModel:62 Locator expected to have text
+Expected: Transactions
+Received: Overview
+
+Call log:
+  - Assert "hasText" getByTestId("assistant-screen") with timeout 5000ms
+  - waiting for getByTestId("assistant-screen")
+    14 � locator resolved to <strong data-assistant-screen="" data-testid="assistant-screen">Overview</strong>
+       - unexpected value "Overview"
+[ERROR]   AssistantPanelPlaywrightTest.mobilePanelFitsLanguageAndKeyboardWorkWithoutExposingDemoControls:181 Locator expected to have text
+Expected: H?i FinBridge
+Received: Ask FinBridge
+
+Call log:
+  - Assert "hasText" locator("#assistant-title") with timeout 5000ms
+  - waiting for locator("#assistant-title")
+    14 � locator resolved to <h2 id="assistant-title">Ask FinBridge</h2>
+       - unexpected value "Ask FinBridge"
+[ERROR]   GlobalAssistantPlaywrightTest.everyPlanStateHasAnAccurateBilingualBanner:101 Locator expected not to contain text
+Expected: Reload the authoritative plan state
+Received: 
+              
+              
+              
+              
+              
+              Reload the authoritative plan state. Chat does not approve or execute payments.
+            
+
+Call log:
+  - Assert "containsText" getByTestId("assistant-plan-state") with timeout 5000ms
+  - waiting for getByTestId("assistant-plan-state")
+    14 � locator resolved to <div data-testid="assistant-plan-state">�</div>
+       - unexpected value "
+              
+              
+              
+              
+              
+              Reload the authoritative plan state. Chat does not approve or execute payments.
+            "
+[ERROR] Errors: 
+[ERROR]   AssistantPanelPlaywrightTest.aReplyArrivingWhileChatIsClosedIsVisibleWhenReopened:286->send:354 � Timeout Error {
+  message='Timeout 10000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 10000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("Show remaining budgets this month.")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     20 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+[ERROR]   AssistantPanelPlaywrightTest.connectionFailureAndTimeoutKeepDraftAndRecoverOnlyAfterExplicitRetry:124->send:354 � Timeout Error {
+  message='Timeout 10000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 10000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("Where did I spend the most this month?")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     20 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+[ERROR]   AssistantPanelPlaywrightTest.draftNeedsSeparateApprovalAndContextUsesExactlyTheDisplayedPlan:149->send:354 � Timeout Error {
+  message='Timeout 10000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 10000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("Prepare the cheapest tuition payment draft.")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     20 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+[ERROR]   AssistantPanelPlaywrightTest.emergencyStopBlocksLateDraftAndResetDiscardsLateResponseAndRestoresComposer:213->send:354 � Timeout Error {
+  message='Timeout 10000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 10000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("Prepare tuition draft")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     20 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+[ERROR]   AssistantPanelPlaywrightTest.pendingStateDuplicateGuardAndRepliesAreSharedWithOverview:95->send:354 � Timeout Error {
+  message='Timeout 10000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 10000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("Ng�n s�ch th�ng n�y c?a t�i c�n bao nhi�u?")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     20 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+[ERROR]   AssistantPanelPlaywrightTest.receiptShortcutStaysVisibleAndOpensTheDisplayedReceiptWithoutExecution:320->send:354 � Timeout Error {
+  message='Timeout 10000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 10000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("Show remaining budgets this month.")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     19 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+[ERROR]   AssistantPanelPlaywrightTest.reopeningLongChatRestoresTheLastReadPositionAndDraftAcrossTabs:252->send:354 � Timeout Error {
+  message='Timeout 10000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 10000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("Show remaining budgets this month.")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     20 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+[ERROR]   GlobalAssistantPlaywrightTest.draftBFromChatReviewsAndPaysBOnlyWhileAStaysSelected:108->send:38 � Timeout Error {
+  message='Timeout 15000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 15000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("Prepare tuition draft TUITION-B-DEMO using Vietcombank")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     29 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+[ERROR]   GlobalAssistantPlaywrightTest.fixedCorpusHasSameResultFromEveryTabWithoutContextButtonsOrFinancialMutations:49->send:38 � Timeout Error {
+  message='Timeout 15000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 15000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("What is my current Vietcombank balance?")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     29 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+[ERROR]   GlobalAssistantPlaywrightTest.historicalAndCurrentBalancesRemainDifferentAcrossAllTabsAfterActualPayment:65->send:38 � Timeout Error {
+  message='Timeout 15000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 15000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("S? d? ngay sau giao d?ch SBOX-0C1CF323-BDA")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     29 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+[ERROR]   GlobalAssistantPlaywrightTest.pendingAccountChoiceIsVisibleAndBoundOnlyToThisSession:76->send:38 � Timeout Error {
+  message='Timeout 15000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 15000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("assistant-conversation-input")
+-     - locator resolved to <input required="" name="message" maxlength="500" id="assistant-question" data-testid="assistant-conversation-input" placeholder="Ask about spending, budgets or tuition"/>
+-     - fill("Hi?n Bank A c�n bao nhi�u?")
+-   - attempting fill action
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and editable
+-       - element is not visible
+-     - retrying fill action
+-       - waiting 100ms
+-     29 � waiting for element to be visible, enabled and editable
+-        - element is not visible
+-      - retrying fill action
+-        - waiting 500ms
+
+[ERROR]   StudentExpensePlaywrightE2ETest.channelSelectionHighlightsOnlyOneCardWithoutFinancialMutationAndSurvivesRefresh:61 � Timeout Error {
+  message='Timeout 30000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 30000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("channel-BANK_A").locator(".channel-list-name")
+-     - locator resolved to <div class="channel-list-name">�</div>
+-   - attempting click action
+-     2 � waiting for element to be visible, enabled and stable
+-       - element is not visible
+-     - retrying click action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and stable
+-       - element is not visible
+-     - retrying click action
+-       - waiting 100ms
+-     58 � waiting for element to be visible, enabled and stable
+-        - element is not visible
+-      - retrying click action
+-        - waiting 500ms
+
+[ERROR]   StudentExpensePlaywrightE2ETest.connectedMomoUsdRouteIsClearlyReferenceOnlyAndCannotBeSelected:102 � Timeout Error {
+  message='Timeout 30000ms exceeded.
+  name='TimeoutError
+  stack='TimeoutError: Timeout 30000ms exceeded.
+    at _ProgressController.run (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:12360:32)
+    at DispatcherConnection.dispatch (C:\Users\ADMIN\AppData\Local\Temp\playwright-java-2296434470904757437\package\lib\coreBundle.js:19135:44)
+}
+Call log:
+-   - waiting for getByTestId("channel-MOMO").locator(".channel-list-name")
+-     - locator resolved to <div class="channel-list-name">�</div>
+-   - attempting click action
+-     2 � waiting for element to be visible, enabled and stable
+-       - element is not visible
+-     - retrying click action
+-     - waiting 20ms
+-     2 � waiting for element to be visible, enabled and stable
+-       - element is not visible
+-     - retrying click action
+-       - waiting 100ms
+-     59 � waiting for element to be visible, enabled and stable
+-        - element is not visible
+-      - retrying click action
+-        - waiting 500ms
+
+[INFO] 
+[ERROR] Tests run: 16, Failures: 3, Errors: 13, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  04:11 min
+[INFO] Finished at: 2026-10-09T10:17:16+07:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.4:test (default-test) on project personal-finance-cross-border-agent: There are test failures.
+[ERROR] 
+[ERROR] See D:\personal-finance-cross-border-agent\target\surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

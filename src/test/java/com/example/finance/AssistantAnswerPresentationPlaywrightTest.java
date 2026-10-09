@@ -45,7 +45,7 @@ class AssistantAnswerPresentationPlaywrightTest {
         db.update("UPDATE transactions SET occurred_at=?",LocalDateTime.of(2019,1,1,12,0));
         db.update("UPDATE budgets SET category=? WHERE category='Shopping'","<img src=x onerror=alert(1)>");
         var before=PersonalFinanceAiIntegrationTest.snapshot(db);stub(LlmIntent.Intent.EXPLAIN_BUDGET_STATUS);
-        page.getByTestId("assistant-language-vi").click();send("Ngân sách tháng này còn bao nhiêu?");
+        UiLanguageControls.select(page,"vi");send("Ngân sách tháng này còn bao nhiêu?");
         assertThat(reply().getByTestId("response-conclusion")).hasText("Ngân sách còn 6.300.000 VND");
         assertThat(reply().getByTestId("response-table").locator("tbody tr")).hasCount(4);
         assertThat(reply().getByTestId("response-table")).containsText("<img src=x onerror=alert(1)>");
@@ -55,11 +55,11 @@ class AssistantAnswerPresentationPlaywrightTest {
         reply().getByTestId("response-details").locator("summary").click();
         assertThat(reply().locator("[data-response-raw]")).isVisible();
         assertThat(reply().locator("[data-response-raw]")).containsText("Nguồn: ngân sách cấu hình");
-        page.getByTestId("assistant-language-en").click();send("Show my remaining budgets");
+        UiLanguageControls.select(page,"en");send("Show my remaining budgets");
         assertThat(reply().getByTestId("response-conclusion")).hasText("Budget remaining: 6,300,000 VND");
         assertThat(reply().getByTestId("response-table").locator("thead")).hasText("CategoryLimitSpentRemainingOverspent");
         assertThat(reply().getByTestId("response-details").locator("summary")).hasText("View details");
-        page.getByTestId("assistant-language-vi").click();
+        UiLanguageControls.select(page,"vi");
         assertThat(reply().getByTestId("response-warning")).containsText("Remaining budget is not an account balance");
         assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
         page.getByTestId("assistant-panel").screenshot(new Locator.ScreenshotOptions().setPath(Path.of("target/answer-ux-budget.png")));
@@ -83,7 +83,7 @@ class AssistantAnswerPresentationPlaywrightTest {
     }
     @Test void runwayChunksStayOneAnswerAndFormAndComposerFitReducedVisualViewport(){
         var before=PersonalFinanceAiIntegrationTest.snapshot(db);stub(LlmIntent.Intent.EXPLAIN_LIVING_EXPENSE_RUNWAY);
-        page.getByTestId("assistant-language-vi").click();send("Sau khi đóng học phí đủ sinh hoạt mấy tháng?");confirm("8000000");
+        UiLanguageControls.select(page,"vi");send("Sau khi đóng học phí đủ sinh hoạt mấy tháng?");confirm("8000000");
         assertThat(reply().getByTestId("response-conclusion")).hasText("Đủ khoảng 3,27 tháng");
         assertThat(reply().getByTestId("response-estimate")).hasText("ƯỚC TÍNH");
         assertThat(reply().locator(".response-facts")).containsText("26.239.200 VND");
@@ -111,7 +111,7 @@ class AssistantAnswerPresentationPlaywrightTest {
     @Test void completedTuitionAnswerShowsReceiptBalanceAsAnExecutedResult(){
         var plan=payments.createTuitionPlan("BANK_A");var receipt=payments.approveAndExecute(plan.id());assertNotNull(receipt);
         db.update("UPDATE fx_quotes SET expires_at=?",LocalDateTime.now().minusMinutes(1));
-        page.getByTestId("assistant-language-vi").click();stub(LlmIntent.Intent.EXPLAIN_TUITION_AFFORDABILITY);
+        UiLanguageControls.select(page,"vi");stub(LlmIntent.Intent.EXPLAIN_TUITION_AFFORDABILITY);
 
         send("Sau khi đã đóng học phí còn bao nhiêu tiền?");
 
@@ -133,7 +133,7 @@ class AssistantAnswerPresentationPlaywrightTest {
         assertThat(reply().getByTestId("response-channels")).not().containsText("Bank B");
         assertThat(reply().getByTestId("response-warning")).containsText("requires separate approval");
         assertThat(reply().locator("[data-response-raw]")).isHidden();
-        page.getByTestId("assistant-language-vi").click();stub(LlmIntent.Intent.COMPARE_TUITION_CHANNELS,LlmIntent.ChannelPreference.FASTEST);send("So sánh các kênh học phí nhanh nhất");
+        UiLanguageControls.select(page,"vi");stub(LlmIntent.Intent.COMPARE_TUITION_CHANNELS,LlmIntent.ChannelPreference.FASTEST);send("So sánh các kênh học phí nhanh nhất");
         assertThat(reply().getByTestId("response-conclusion")).containsText("Hiển thị 3 kênh đủ điều kiện · nhanh nhất");
         assertThat(reply().getByTestId("response-channel").first()).containsText("Alipay");
         page.getByTestId("assistant-panel").screenshot(new Locator.ScreenshotOptions().setPath(Path.of("target/answer-ux-comparison.png")));
@@ -144,7 +144,7 @@ class AssistantAnswerPresentationPlaywrightTest {
     }
     @Test void shortfallAndUnifiedProjectionAssumptionsRemainVisibleOutsideDetails(){
         db.update("UPDATE financial_accounts SET balance=10000000 WHERE id='CHECKING'");var before=PersonalFinanceAiIntegrationTest.snapshot(db);
-        page.getByTestId("assistant-language-vi").click();stub(LlmIntent.Intent.EXPLAIN_TUITION_AFFORDABILITY);send("Nếu đóng học phí thì còn đủ tiền sinh hoạt không?");
+        UiLanguageControls.select(page,"vi");stub(LlmIntent.Intent.EXPLAIN_TUITION_AFFORDABILITY);send("Nếu đóng học phí thì còn đủ tiền sinh hoạt không?");
         assertThat(reply().getByTestId("response-estimate")).isVisible();
         assertThat(reply().getByTestId("response-warning").filter(new Locator.FilterOptions().setHasText("số dư chung"))).isVisible();
         assertThat(reply().getByTestId("response-warning").filter(new Locator.FilterOptions().setHasText("không đủ đệm an toàn"))).isVisible();
@@ -155,7 +155,7 @@ class AssistantAnswerPresentationPlaywrightTest {
     }
     @Test void backendExpiredQuoteErrorStaysVisibleAndUncollapsed(){
         db.update("UPDATE fx_quotes SET expires_at=?",LocalDateTime.now().minusMinutes(1));var before=PersonalFinanceAiIntegrationTest.snapshot(db);
-        page.getByTestId("assistant-language-vi").click();stub(LlmIntent.Intent.EXPLAIN_LIVING_EXPENSE_RUNWAY);send("Sau học phí đủ sinh hoạt mấy tháng?");
+        UiLanguageControls.select(page,"vi");stub(LlmIntent.Intent.EXPLAIN_LIVING_EXPENSE_RUNWAY);send("Sau học phí đủ sinh hoạt mấy tháng?");
         assertThat(reply().locator("[data-response-raw]")).isVisible();assertThat(reply()).containsText("Báo giá đã hết hạn");
         assertThat(reply().getByTestId("response-details")).hasCount(0);assertThat(reply().getByTestId("response-conclusion")).hasCount(0);
         assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));assertNull(payments.latestAction());

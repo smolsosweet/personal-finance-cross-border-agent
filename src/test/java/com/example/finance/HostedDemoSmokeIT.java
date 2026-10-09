@@ -36,7 +36,7 @@ class HostedDemoSmokeIT {
             assertEquals(0,page.getByTestId("channel-BANK_B").locator("button,form,a").count(),"Unavailable Bank B must have no executable action");
             page.getByTestId("refresh-quotes").click();idle(page);page.getByTestId("assistant-launcher").click();
             send(page,"Show my configured budgets for this month.","EXPLAIN_BUDGET_STATUS");assertEquals(initial,balances(page));
-            page.getByTestId("assistant-language-vi").click();
+            UiLanguageControls.select(page,"vi");
             send(page,"Vì sao không dùng được Bank B?","EXPLAIN_CHANNEL_UNAVAILABLE");assertEquals(initial,balances(page));
             send(page,"Vì sao kênh đó không dùng được?","EXPLAIN_CHANNEL_UNAVAILABLE");assertEquals(initial,balances(page));
             send(page,"Sau khi đóng học phí, tiền còn lại đủ sinh hoạt mấy tháng?","EXPLAIN_LIVING_EXPENSE_RUNWAY");

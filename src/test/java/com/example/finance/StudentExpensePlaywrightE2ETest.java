@@ -53,6 +53,61 @@ class StudentExpensePlaywrightE2ETest {
         demoData.resetAll();
     }
 
+    @Test void channelSelectionHighlightsOnlyOneCardWithoutFinancialMutationAndSurvivesRefresh() {
+        try (BrowserContext context = browser.newContext(new Browser.NewContextOptions().setViewportSize(1440,1000))) {
+            Page page=context.newPage();page.navigate(BASE_URL);page.getByTestId("tab-student").click();
+            var before=PersonalFinanceAiIntegrationTest.snapshot(db);
+            var bank=page.getByTestId("channel-BANK_A");
+            bank.locator(".channel-list-name").click();
+            assertThat(bank).hasClass(java.util.regex.Pattern.compile(".*selected-channel.*"));
+            assertThat(bank.locator("[data-select-channel]")).hasAttribute("aria-pressed","true");
+            var vcb=page.getByTestId("channel-VCB");
+            vcb.locator("[data-select-channel]").focus();vcb.locator("[data-select-channel]").press("Enter");
+            assertThat(vcb).hasClass(java.util.regex.Pattern.compile(".*selected-channel.*"));
+            assertThat(bank.locator("[data-select-channel]")).hasAttribute("aria-pressed","false");
+            assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
+            page.reload();page.getByTestId("tab-student").click();
+            assertThat(page.getByTestId("channel-VCB").locator("[data-select-channel]")).hasAttribute("aria-pressed","true");
+            page.getByTestId("language-vi").click();
+            assertThat(page.getByTestId("channel-VCB").locator("[data-select-channel]")).hasText("✓ Đang chọn để so sánh");
+            page.getByTestId("language-en").click();
+            assertThat(page.getByTestId("channel-VCB").locator("[data-select-channel]")).hasText("✓ Selected for comparison");
+            page.getByTestId("assistant-launcher").click();
+            assertEquals(0,page.locator("[data-assistant-navigation], [data-assistant-language]").count());
+            assertThat(page.getByTestId("assistant-permission-mode")).isVisible();
+            for(int width:new int[]{1440,390,360}) {
+                page.setViewportSize(width,844);
+                assertThat(page.getByTestId("assistant-send-message")).isVisible();
+            }
+            UiLanguageControls.select(page,"vi");
+            assertEquals("vi",page.locator("html").getAttribute("lang"));
+            assertThat(page.getByTestId("assistant-panel")).isVisible();
+            assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
+        }
+    }
+
+    @Test void connectedMomoUsdRouteIsClearlyReferenceOnlyAndCannotBeSelected() {
+        crossBorder.addExpense("TUITION","USD tuition","Pacific Demo College",new BigDecimal("100"),
+                "United States","USD","Pacific Demo College Bursar","Pacific Demo Bank","PDCMUS33XXX",
+                "PDC-TUITION-USD","PDC-UX-USD",LocalDate.now().plusDays(20),null,null,null);
+        try (BrowserContext context=browser.newContext()) {
+            Page page=context.newPage();page.navigate(BASE_URL);page.getByTestId("tab-student").click();
+            var momo=page.getByTestId("channel-MOMO");
+            assertThat(momo.locator("[data-select-channel]")).isDisabled();
+            assertThat(momo).containsText("Account connected, but this demo channel does not support");
+            assertThat(momo).containsText("Vietnam → United States · VND → USD");
+            assertThat(momo).containsText("Reference estimate only");
+            assertEquals(0,momo.getByTestId("plan-MOMO").count());
+            var before=PersonalFinanceAiIntegrationTest.snapshot(db);
+            momo.locator(".channel-list-name").click();
+            assertEquals("false",momo.locator("[data-select-channel]").getAttribute("aria-pressed"));
+            page.getByTestId("language-vi").click();
+            assertThat(momo).containsText("Tài khoản đã liên kết");
+            assertThat(momo).containsText("Liên kết lại tài khoản không mở được tuyến này");
+            assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
+        }
+    }
+
     @Test void billCardsSelectByPointerAndKeyboardWithoutNavigatingOrTriggeringNestedActions() {
         int otherBill = addVerifiedBill("Campus insurance", "1200.00");
         try (BrowserContext context = browser.newContext(new Browser.NewContextOptions().setViewportSize(1440, 1000))) {

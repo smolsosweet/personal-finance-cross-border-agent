@@ -68,7 +68,7 @@ class AssistantPanelPlaywrightTest {
         page.getByTestId("assistant-launcher").click();
         assertThat(input()).hasValue("My unfinished question");
         assertThat(page.getByTestId("assistant-screen")).hasText("Student finance");
-        page.getByTestId("assistant-language-vi").click();
+        UiLanguageControls.select(page,"vi");
         assertThat(page.locator("#assistant-title")).hasText("Hỏi FinBridge");
         assertThat(page.getByTestId("assistant-screen")).hasText("Tài chính du học");
         assertThat(input()).hasValue("My unfinished question");
@@ -177,7 +177,7 @@ class AssistantPanelPlaywrightTest {
         page.setViewportSize(390, 844);
         page.navigate("http://localhost:8101/?action=" + payments.latestAction().id() + "#agent-workspace");
         page.getByTestId("assistant-plan-help").click();
-        page.getByTestId("assistant-language-vi").click();
+        UiLanguageControls.select(page,"vi");
         assertThat(page.locator("#assistant-title")).hasText("Hỏi FinBridge");
         assertThat(page.getByTestId("assistant-screen")).hasText("Thanh toán & Lịch sử");
         assertThat(page.getByTestId("assistant-plan-context")).containsText("cần bạn phê duyệt");
@@ -185,14 +185,14 @@ class AssistantPanelPlaywrightTest {
         assertThat(input()).isVisible();
         assertTrue((Boolean) panel().evaluate("p => { const r=p.getBoundingClientRect(); return r.left>=0 && r.right<=innerWidth && r.top>=0 && r.bottom<=innerHeight && p.scrollWidth<=p.clientWidth+1; }"));
         input().fill("Câu hỏi chưa gửi");
-        page.getByTestId("assistant-language-en").click();
+        UiLanguageControls.select(page,"en");
         assertThat(page.locator("#assistant-title")).hasText("Ask FinBridge");
         assertThat(input()).hasValue("Câu hỏi chưa gửi");
-        page.getByTestId("assistant-language-vi").click();
+        UiLanguageControls.select(page,"vi");
         page.screenshot(new Page.ScreenshotOptions().setPath(Path.of("target/assistant-mobile-vi.png")));
         page.keyboard().press("Escape");
         assertThat(panel()).isHidden();
-        assertThat(page.getByTestId("assistant-plan-help")).isFocused();
+        assertThat(page.getByTestId("assistant-launcher")).isFocused();
         assertThat(page.getByTestId("assistant-launcher")).isVisible();
         assertThat(page.getByTestId("payment-demo-tools")).hasCount(0);
         verify(llm, never()).classify(anyString());
@@ -314,7 +314,7 @@ class AssistantPanelPlaywrightTest {
         assertEquals("AWAITING_APPROVAL", newerPlan.status());
         page.navigate("http://localhost:8101/?action=" + completedPlan.id() + "#agent-workspace");
         page.getByTestId("assistant-launcher").click();
-        page.getByTestId("assistant-language-vi").click();
+        UiLanguageControls.select(page,"vi");
         when(llm.classify(anyString())).thenReturn(intent(LlmIntent.Intent.EXPLAIN_BUDGET_STATUS));
         for (int i = 0; i < 6; i++) {
             send("Show remaining budgets this month.");
@@ -334,7 +334,7 @@ class AssistantPanelPlaywrightTest {
                 """));
             panel().screenshot(new Locator.ScreenshotOptions().setPath(Path.of("target/assistant-receipt-shortcut-" + width + ".png")));
         }
-        page.getByTestId("assistant-language-en").click();
+        UiLanguageControls.select(page,"en");
         assertThat(page.getByTestId("assistant-review-plan")).hasText("View receipt");
         page.getByTestId("assistant-review-plan").click();
         assertThat(panel()).isHidden();

@@ -97,16 +97,16 @@ class ContextualConversationPlaywrightTest {
     @Test void languageSwitchDoesNotPartiallyTranslateRepliesOrRewriteUserMessages(){
         var before=PersonalFinanceAiIntegrationTest.snapshot(db);
         stub(LlmIntent.Intent.EXPLAIN_BUDGET_STATUS);page.getByTestId("assistant-launcher").click();
-        page.getByTestId("assistant-language-en").click();
+        UiLanguageControls.select(page,"en");
         String question="Show budgets. Expense, Refund, Category.";send(question);
-        send("How much is left?");page.getByTestId("assistant-language-vi").click();
+        send("How much is left?");UiLanguageControls.select(page,"vi");
         assertThat(page.getByTestId("assistant-replies")).containsText("Category budgets: VND.");
         assertThat(page.getByTestId("assistant-replies")).containsText("Category budgets: VND.");
         assertThat(page.getByTestId("assistant-replies")).not().containsText("Danh mục budgets");
         assertThat(page.getByTestId("assistant-replies").locator(".message.user").first().locator("p")).hasText(question);
         send("Ngân sách tháng này còn bao nhiêu?");
         assertThat(page.getByTestId("assistant-replies")).containsText("Ngân sách danh mục: VND.");
-        page.getByTestId("assistant-language-en").click();
+        UiLanguageControls.select(page,"en");
         assertThat(page.getByTestId("assistant-replies")).containsText("Category budgets: VND.");
         assertThat(page.getByTestId("assistant-replies")).containsText("Ngân sách danh mục: VND.");
         assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));

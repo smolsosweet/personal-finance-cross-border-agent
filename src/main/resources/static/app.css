@@ -424,3 +424,5 @@ button:disabled{opacity:.55;cursor:not-allowed}button[aria-pressed=true]{font-we
 
 .ai-entry-dialog{width:min(620px,94vw);max-height:88vh;overflow:auto}.entry-choice{display:flex;gap:9px;margin:12px 0}.ai-upload-flow{display:grid;gap:10px;margin:12px 0;padding:14px;border:1px solid #e2e7f0;border-radius:10px;background:#f7f9fc}.ai-upload-flow label{display:grid;gap:6px;color:#748198;font-size:10px;font-weight:700}.ai-upload-flow input[type=file]{padding:9px;border:1px solid #dce3ee;border-radius:8px;background:#fff}.ai-upload-flow p{margin:0;color:#748198;font-size:11px;line-height:1.5}.ai-extraction-status{min-height:1em;color:#5268d4}.ai-review-note{padding:10px;border-radius:8px;background:#edf5ff;color:#28578d;font-size:11px}.student-bill-ai{margin-bottom:14px}
 .payment-step-label{min-width:0;overflow-wrap:anywhere;line-height:1.5}
+.connected-payment-card.selected-channel{border-color:#5269ee;box-shadow:0 0 0 2px #5269ee33;background:#f5f7ff}
+.channel-picker{align-self:stretch;text-align:left}.channel-picker[aria-pressed=true]{border-color:#5269ee;color:#344ec0}.channel-picker:disabled{cursor:not-allowed;opacity:.6}

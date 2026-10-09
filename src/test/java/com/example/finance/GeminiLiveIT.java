@@ -50,7 +50,7 @@ class GeminiLiveIT {
             if(stability){
                 assertEquals(0,classifiedCount(),"The continuous stability flow requires a clean seed");
                 readOnly(page,"Show my configured budgets for this month.","EXPLAIN_BUDGET_STATUS");
-                page.getByTestId("assistant-language-vi").click();
+                UiLanguageControls.select(page,"vi");
                 readOnly(page,"Vì sao không dùng được Bank B?","EXPLAIN_CHANNEL_UNAVAILABLE");
                 readOnly(page,"Vì sao kênh đó không dùng được?","EXPLAIN_CHANNEL_UNAVAILABLE");
                 // No re-entry, rebind or page reset between discussion and runway.
@@ -58,7 +58,7 @@ class GeminiLiveIT {
             readOnly(page,"Show my configured budgets for this month.","EXPLAIN_BUDGET_STATUS");
             readOnly(page,"How much is left?","EXPLAIN_BUDGET_STATUS");
             readOnly(page,"Where did most of my spending go this month?","EXPLAIN_SPENDING_SUMMARY");
-            page.getByTestId("assistant-language-vi").click();
+            UiLanguageControls.select(page,"vi");
             readOnly(page,"Tháng này tôi chi nhiều nhất vào đâu?","EXPLAIN_SPENDING_SUMMARY");
             readOnly(page,"Nhóm nào tốn nhiều nhất?","EXPLAIN_SPENDING_SUMMARY");
             readOnly(page,"So sánh các kênh học phí rẻ nhất.","COMPARE_TUITION_CHANNELS");
@@ -68,7 +68,7 @@ class GeminiLiveIT {
             readOnly(page,"Nếu đóng học phí thì còn đủ tiền sinh hoạt không?","EXPLAIN_TUITION_AFFORDABILITY");
             } else {
                 System.out.println("GEMINI_LIVE resume=true prior cases retained; only remaining runway/ambiguity/draft/status are submitted");
-                page.getByTestId("assistant-language-vi").click();
+                UiLanguageControls.select(page,"vi");
             }
             readOnly(page,"Sau khi đóng học phí, tiền còn lại đủ sinh hoạt mấy tháng?","EXPLAIN_LIVING_EXPENSE_RUNWAY");
             assertThat(page.getByTestId("runway-monthly-amount")).hasValue("");

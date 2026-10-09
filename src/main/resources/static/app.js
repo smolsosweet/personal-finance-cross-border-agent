@@ -1046,7 +1046,6 @@ function renderAssistantContext() {
     group.hidden = !group.dataset.assistantFor.split(' ').includes(activeTab);
   });
   panel.setAttribute('aria-label', selectedLanguage() === 'vi' ? 'Hỏi FinBridge' : 'Ask FinBridge');
-  panel.querySelector('[role="group"]').setAttribute('aria-label', selectedLanguage() === 'vi' ? 'Ngôn ngữ' : 'Language');
 }
 
 function rememberAssistantPosition() {
@@ -1480,14 +1479,43 @@ function initializeCategoryReviewForms() {
   });
 }
 
+Object.entries({
+  'Select for comparison': 'Chọn để so sánh',
+  'Reference estimate only; payment is unavailable.': 'Chỉ là ước tính tham khảo; không thể thanh toán qua kênh này.',
+  'Account connected, but this demo channel does not support': 'Tài khoản đã liên kết, nhưng kênh mô phỏng này chưa hỗ trợ',
+  '. Reconnecting the account will not enable this route. Choose an eligible channel.': '. Liên kết lại tài khoản không mở được tuyến này. Hãy chọn một kênh đủ điều kiện.'
+}).forEach(([en, vi]) => translationsVi.set(en, vi));
+
 function initializePaymentAccounts() {
   const grid = document.querySelector('[data-testid="payment-account-list"]');
   if (!grid) return;
   const cards = Array.from(grid.querySelectorAll('.connected-payment-card'));
   const filter = document.querySelector('[data-testid="payment-account-filter"]');
   const empty = document.querySelector('[data-testid="payment-account-empty"]');
+  const selectionKey = 'finbridge-comparison-channel-' + grid.dataset.billId;
+  let selectedChannel = sessionStorage.getItem(selectionKey);
+  const renderSelection = () => cards.forEach(card => {
+    const picker = card.querySelector('[data-select-channel]');
+    const selected = picker && !picker.disabled && picker.dataset.selectChannel === selectedChannel;
+    card.classList.toggle('selected-channel', Boolean(selected));
+    picker?.setAttribute('aria-pressed', String(Boolean(selected)));
+    if (picker) picker.querySelector('span').textContent = selectedLanguage() === 'vi'
+      ? (selected ? '✓ Đang chọn để so sánh' : 'Chọn để so sánh')
+      : (selected ? '✓ Selected for comparison' : 'Select for comparison');
+  });
+  grid.addEventListener('click', event => {
+    if (event.target.closest('dialog')) return;
+    const card = event.target.closest('.connected-payment-card');
+    const picker = card?.querySelector('[data-select-channel]');
+    if (!picker || picker.disabled || (event.target.closest('button, a, input, select, form') && !event.target.closest('[data-select-channel]'))) return;
+    selectedChannel = picker.dataset.selectChannel;
+    sessionStorage.setItem(selectionKey, selectedChannel);
+    renderSelection();
+  });
+  renderSelection();
 
   const render = () => {
+    renderSelection();
     const visible = cards.filter((card) => filter.value === 'all' || card.dataset.state === filter.value);
     cards.forEach((card) => { card.hidden = !visible.includes(card); });
     empty.hidden = visible.length !== 0;
@@ -1666,7 +1694,7 @@ function applyLanguage(language) {
   const selected = language === 'vi' ? 'vi' : 'en';
   document.documentElement.lang = selected;
   document.title = selected === 'vi' ? 'FinBridge · Tài chính của bạn' : 'FinBridge · Your finances';
-  document.querySelectorAll('[data-language], [data-assistant-language]').forEach((button) => {
+  document.querySelectorAll('[data-language]').forEach((button) => {
     button.setAttribute('aria-pressed', String((button.dataset.language || button.dataset.assistantLanguage) === selected));
   });
   const languageGroup = document.querySelector('.language-switcher');
@@ -2260,7 +2288,7 @@ document.addEventListener('DOMContentLoaded', () => {
     button.addEventListener('click', () => activateTab(button.dataset.tab));
   });
 
-  document.querySelectorAll('[data-language], [data-assistant-language]').forEach((button) => {
+  document.querySelectorAll('[data-language]').forEach((button) => {
     button.addEventListener('click', () => {
       const language = button.dataset.language || button.dataset.assistantLanguage;
       localStorage.setItem('finbridge-language', language);
@@ -2283,11 +2311,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('input',event => {
     const control=event.target;
     if(control.validity?.valid) {control.removeAttribute('aria-invalid');control.closest('label')?.querySelector('.field-error')?.remove();}
-  });
-  document.querySelector('[data-assistant-navigation]')?.addEventListener('change',event => {
-    const target=event.target.value;
-    if(!target) return;
-    setAssistantOpen(false);activateTab(target);event.target.value='';
   });
   document.addEventListener('submit', submitWorkspaceForm);
   document.addEventListener('click', openPaymentPlan);
