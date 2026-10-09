@@ -1087,10 +1087,6 @@ function initialDashboardView() {
 function renderAssistantContext() {
   const panel = document.querySelector('[data-assistant-panel]');
   if (!panel) return;
-  const label = panel.querySelector('[data-assistant-screen]');
-  label.textContent = tabLabels[activeTab].en;
-  originalText.set(label.firstChild, tabLabels[activeTab].en);
-  label.firstChild.nodeValue = tabLabels[activeTab][selectedLanguage()];
   panel.querySelectorAll('[data-assistant-for]').forEach((group) => {
     group.hidden = !group.dataset.assistantFor.split(' ').includes(activeTab);
   });
@@ -1224,7 +1220,14 @@ function syncAssistant(nextDocument, resetPosition = false) {
   for (const selector of ['[data-testid="assistant-replies"]', '[data-assistant-plan]', '[data-assistant-policy]', '[data-assistant-context-state]', '[data-assistant-runway]', '[data-assistant-actions]']) {
     const current = document.querySelector(selector);
     const next = nextDocument.querySelector(selector);
-    if (current && next) current.replaceChildren(...next.childNodes);
+    if (current && next) {
+      if (selector === '[data-assistant-context-state]') {
+        // Clarification visibility and topic come from the updated server context.
+        current.replaceWith(next);
+      } else {
+        current.replaceChildren(...next.childNodes);
+      }
+    }
   }
   const latestReply = panel?.querySelector('.message.assistant:last-child');
   if (resetPosition) {

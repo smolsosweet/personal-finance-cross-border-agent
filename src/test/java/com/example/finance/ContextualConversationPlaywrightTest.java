@@ -54,7 +54,7 @@ class ContextualConversationPlaywrightTest {
         try(BrowserContext other=browser.newContext()){
             Page second=other.newPage();second.navigate("http://localhost:8103");second.getByTestId("assistant-launcher").click();
             assertThat(second.getByTestId("assistant-replies")).not().containsText("Còn bao nhiêu?");
-            assertThat(second.getByTestId("assistant-context-state")).containsText("Not selected");
+            assertThat(second.getByTestId("assistant-context-state")).hasAttribute("data-topic","NONE");
         }
         assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
         page.screenshot(new Page.ScreenshotOptions().setPath(Path.of("target/context-choices-browser-vi.png")));
@@ -62,7 +62,7 @@ class ContextualConversationPlaywrightTest {
     @Test void contextualEntryPointsBindTheExactBillAndPlanAndDoNotPay(){
         stub(LlmIntent.Intent.EXPLAIN_TUITION_AFFORDABILITY);
         page.getByTestId("tab-student").click();page.getByTestId("assistant-student-help").click();idle();
-        assertThat(page.getByTestId("assistant-context-state")).containsText("Dự kiến sau học phí");
+        assertThat(page.getByTestId("assistant-context-state")).hasAttribute("data-topic","TUITION_AFFORDABILITY");
         assertThat(page.getByTestId("assistant-conversation-input")).hasValue("Nếu đóng học phí thì còn đủ tiền sinh hoạt không?");
         var before=PersonalFinanceAiIntegrationTest.snapshot(db);page.getByTestId("assistant-send-message").click();idle();
         assertThat(page.getByTestId("assistant-replies")).containsText("ƯỚC TÍNH SAU HỌC PHÍ");assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
@@ -117,15 +117,15 @@ class ContextualConversationPlaywrightTest {
         when(llm.classify("How much is left?")).thenAnswer(call->{started.incrementAndGet();assertTrue(release.await(8,TimeUnit.SECONDS));finished.incrementAndGet();return intent(LlmIntent.Intent.EXPLAIN_BUDGET_STATUS);});
         page.getByTestId("assistant-conversation-input").fill("How much is left?");page.getByTestId("assistant-send-message").click();page.waitForCondition(()->started.get()==1);
         page.getByTestId("assistant-close").click();page.getByTestId("tab-student").click();page.getByTestId("assistant-student-help").click();idle();
-        assertThat(page.getByTestId("assistant-context-state")).containsText("Dự kiến sau học phí");
+        assertThat(page.getByTestId("assistant-context-state")).hasAttribute("data-topic","TUITION_AFFORDABILITY");
         release.countDown();page.waitForCondition(()->finished.get()==1);page.waitForTimeout(250);
-        assertThat(page.getByTestId("assistant-context-state")).containsText("Dự kiến sau học phí");assertThat(page.getByTestId("assistant-send-message")).isEnabled();
+        assertThat(page.getByTestId("assistant-context-state")).hasAttribute("data-topic","TUITION_AFFORDABILITY");assertThat(page.getByTestId("assistant-send-message")).isEnabled();
         CountDownLatch draftRelease=new CountDownLatch(1);
         when(llm.classify("Prepare tuition draft")).thenAnswer(call->{started.incrementAndGet();assertTrue(draftRelease.await(8,TimeUnit.SECONDS));finished.incrementAndGet();return intent(LlmIntent.Intent.CREATE_TUITION_PLAN);});
         page.getByTestId("assistant-conversation-input").fill("Prepare tuition draft");page.getByTestId("assistant-send-message").click();page.waitForCondition(()->started.get()==2);
         page.getByTestId("assistant-close").click();page.getByTestId("tab-dashboard").click();page.getByTestId("environment-tools").evaluate("e=>e.open=true");page.getByTestId("reset-demo").click();idle();
         draftRelease.countDown();page.waitForCondition(()->finished.get()==2);page.waitForTimeout(250);page.getByTestId("assistant-launcher").click();
-        assertThat(page.getByTestId("assistant-context-state")).containsText("Chưa chọn");assertThat(page.getByTestId("assistant-context-choice")).hasCount(0);
+        assertThat(page.getByTestId("assistant-context-state")).hasAttribute("data-topic","NONE");assertThat(page.getByTestId("assistant-context-choice")).hasCount(0);
         assertThat(page.getByTestId("assistant-conversation-input")).isEnabled();assertThat(page.getByTestId("assistant-replies")).not().containsText("Prepared tuition-payment plan");
         assertNull(payments.latestAction());assertEquals(0,payments.sandboxTransactionCount());
     }

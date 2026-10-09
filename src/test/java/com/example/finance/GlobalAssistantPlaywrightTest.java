@@ -74,7 +74,7 @@ class GlobalAssistantPlaywrightTest {
         db.update("INSERT INTO payment_source_accounts SELECT 'BANK_A_EXTRA','Bank A','Savings','•••• 7722','CONNECTED','VERIFIED',FALSE,FALSE,9,'BANK_A_EXTRA' FROM payment_source_accounts WHERE account_id='PAYER_VND'");
         var before=PersonalFinanceAiIntegrationTest.snapshot(db);
         send("Hiện Bank A còn bao nhiêu?",LlmIntent.Intent.EXPLAIN_CURRENT_BALANCE,"vi");
-        assertThat(page.getByTestId("assistant-context-state")).containsText("Số dư tài khoản hiện tại");
+        assertThat(page.getByTestId("assistant-context-state")).hasAttribute("data-topic","CURRENT_BALANCE");
         assertThat(page.getByTestId("assistant-pending")).containsText("Chọn tài khoản");
         assertThat(page.getByTestId("assistant-context-choice")).hasCount(3);
         page.getByTestId("assistant-context-choice").filter(new Locator.FilterOptions().setHasText("7722")).click();idle();

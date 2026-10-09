@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>FinBridge · Financial workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261009-notification-center')}">
+  <title>FinBridge · Financial workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261009-compact-chat')}">
 </head>
 <body>
 <a class="skip-link" href="#workspace-content">Skip to main content</a>
@@ -596,11 +596,7 @@
   </div>
   <div class="assistant-notices" data-assistant-notices data-testid="assistant-notices"></div>
   <div class="assistant-body">
-    <section class="assistant-context" aria-label="Current screen">
-      <small>Current screen</small><strong data-assistant-screen data-testid="assistant-screen"></strong>
-      <p>Screen is a hint; you can ask about any supported topic.</p>
-      <div data-assistant-context-state data-testid="assistant-context-state"><small>Conversation choices apply to this chat, not the shared bill selection.</small>
-        <p><span>Conversation topic</span> · <strong th:text="${conversationContext.topic}"></strong></p>
+    <div class="assistant-clarification" data-assistant-context-state data-testid="assistant-context-state" th:attr="data-topic=${conversationContext.topic}" th:hidden="${conversationContext.pending.name() == 'NONE' and #strings.isEmpty(conversationContext.clarification) and #lists.isEmpty(conversationContext.choices)}">
         <p th:if="${conversationContext.pending.name() != 'NONE'}" data-testid="assistant-pending"><span>Waiting for clarification</span> · <strong th:text="${conversationContext.pending}"></strong></p>
         <p th:if="${!#strings.isEmpty(conversationContext.clarification)}" th:text="${conversationContext.clarification}"></p>
         <div class="assistant-context-choices" data-testid="assistant-context-choices">
@@ -608,15 +604,6 @@
         </div>
       </div>
 
-      <div class="assistant-suggestions" data-assistant-for="dashboard transactions"><button type="button" data-assistant-question="balance">Current balances</button>
-        <button type="button" data-assistant-question="spending" data-testid="assistant-question-spending">Spending this month</button>
-        <button type="button" data-assistant-question="budget" data-testid="assistant-question-budget">Remaining budgets</button>
-      </div>
-      <div class="assistant-suggestions" data-assistant-for="student" hidden>
-        <button type="button" data-assistant-question="affordability" data-testid="assistant-question-affordability">Can I afford tuition?</button>
-        <button type="button" data-assistant-question="compare">Compare tuition channels</button>
-        <button type="button" data-assistant-question="unavailable">Why is Bank B unavailable?</button>
-      </div>
       <div data-assistant-plan data-testid="assistant-plan-context">
         <div th:if="${latestAction != null}" data-assistant-for="agent" hidden>
           <details class="assistant-plan-summary">
@@ -644,7 +631,6 @@
           </details>
         </div>
       </div>
-    </section>
     <div class="assistant-message-list" data-testid="assistant-replies" role="log" aria-live="polite" aria-relevant="additions text"><th:block th:replace="~{fragments/conversation :: replies(${conversation})}"></th:block></div>
   </div>
       <section data-assistant-runway data-testid="assistant-runway">
@@ -683,6 +669,6 @@
   </form>
   <p class="assistant-safety">AI helps understand your question. Asking does not authorize a payment.</p>
 </aside>
-<script th:src="@{/app.js(v='20261009-notification-center')}"></script>
+<script th:src="@{/app.js(v='20261009-compact-chat')}"></script>
 </body>
 </html>
