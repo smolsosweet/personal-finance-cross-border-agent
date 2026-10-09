@@ -26,7 +26,7 @@ class UiCleanupPlaywrightTest {
  @AfterEach void close(){browser.close();pw.close();assertTrue(errors.isEmpty(),errors.toString());verify(model,never()).classify(anyString());}
  void navigate(){page.navigate("http://localhost:8156");}
  void finished(){page.waitForFunction("()=>!document.querySelector('.content').hasAttribute('aria-busy')");}
- void screenshot(String name)throws Exception{Path dir=Path.of("docs/ui-ux-cleanup");Files.createDirectories(dir);page.screenshot(new Page.ScreenshotOptions().setPath(dir.resolve(name+".png")));}
+ void screenshot(String name)throws Exception{Path dir=Path.of("target/payment-control-ux");Files.createDirectories(dir);page.screenshot(new Page.ScreenshotOptions().setPath(dir.resolve(name+".png")));}
  @Test void modeAndSimulationRemainVisibleAcrossViewportAndLanguageChanges()throws Exception{
   payments.setMode("DELEGATED");var plan=payments.createTuitionPlan("BANK_A");
   page.navigate("http://localhost:8156/?action="+plan.id()+"#agent-workspace");
@@ -35,7 +35,10 @@ class UiCleanupPlaywrightTest {
    page.setViewportSize(width,844);
    for(String language:new String[]{"en","vi"}){
     page.getByTestId("language-"+language).click();
-    assertThat(page.getByTestId("global-permission-mode")).containsText(language.equals("en")?"Delegated":"Ủy quyền");
+    assertThat(page.getByTestId("global-permission-mode")).hasText(language.equals("en")?"Delegated low-risk actions":"Ủy quyền tác vụ rủi ro thấp");
+    assertThat(page.getByTestId("emergency-stop")).hasText(language.equals("en")?"■ Stop all new payments":"■ Dừng mọi thanh toán mới");
+    assertThat(page.getByTestId("emergency-stop")).isInViewport();
+    assertTrue((Boolean)page.getByTestId("emergency-stop").evaluate("e=>e.scrollWidth<=e.clientWidth+1&&e.scrollHeight<=e.clientHeight+1"));
     assertThat(page.getByTestId("review-permission")).containsText(language.equals("en")?"Approval":"Phê duyệt");
     assertThat(page.getByTestId("agent-state")).isVisible();assertThat(page.getByTestId("environment-label")).isVisible();
     assertFalse((Boolean)page.getByTestId("payment-demo-tools").evaluate("e=>e.open"));
@@ -58,6 +61,7 @@ class UiCleanupPlaywrightTest {
   assertThat(page.getByTestId("approve-action")).hasCount(0);
   page.getByTestId("language-vi").click();assertThat(reason).hasText("Dừng khẩn cấp đang bật, nên các tác vụ mới bị chặn.");
   page.setViewportSize(390,844);
+  assertThat(page.getByTestId("emergency-resume")).hasText("Tiếp tục thanh toán");
   for(String tab:new String[]{"dashboard","transactions","student","agent"}){
    page.locator(".mobile-tabs [data-tab="+tab+"]").click();
    assertThat(page.getByTestId("workspace-paused")).isVisible();assertThat(page.getByTestId("agent-state")).isVisible();
@@ -75,7 +79,7 @@ class UiCleanupPlaywrightTest {
   page.getByTestId("language-en").click();assertThat(reason).hasText("Fixture backend explanation");
  }
  @Test void guidedApprovalAndDelegatedResultKeepModeReceiptAndAuditConsistent()throws Exception{
-  navigate();assertThat(page.getByTestId("global-permission-mode")).containsText("Approval");
+  navigate();assertThat(page.getByTestId("global-permission-mode")).hasText("Payments require approval");
   page.getByTestId("tab-student").click();page.getByTestId("plan-BANK_A").click();finished();
   assertThat(page.getByTestId("latest-action")).hasAttribute("data-status","AWAITING_APPROVAL");
   assertThat(page.getByTestId("payment-summary")).containsText("70,760,800");
@@ -89,8 +93,18 @@ class UiCleanupPlaywrightTest {
   page.getByTestId("audit-log").locator("summary").click();
   assertThat(page.getByTestId("audit-log")).containsText("SANDBOX EXECUTED");screenshot("desktop-receipt-audit-en");
   page.getByTestId("payment-demo-tools").locator("summary").first().click();
+  assertThat(page.locator("#demo-permission-title")).hasText("Demo configuration: low-risk action permissions");
+  assertThat(page.locator("#demo-permission-help")).containsText("Education payments always require separate approval");
+  page.getByTestId("language-vi").click();
+  assertThat(page.getByTestId("global-permission-mode")).hasText("Thanh toán cần phê duyệt");
+  assertThat(page.locator("#demo-permission-title")).hasText("Cấu hình demo: quyền hạn tác vụ rủi ro thấp");
+  assertThat(page.locator("#demo-permission-help")).containsText("Thanh toán giáo dục luôn cần phê duyệt riêng");
+  screenshot("demo-permission-settings-vi");
+  page.getByTestId("language-en").click();
   page.locator("button[name=mode][value=DELEGATED]").click();finished();
   assertThat(page.getByTestId("global-permission-mode")).containsText("Delegated");
+  assertThat(page.locator("button[name=mode][value=DELEGATED]")).hasAttribute("aria-pressed","true");
+  assertEquals(1,payments.sandboxTransactionCount(),"Changing mode does not execute another payment");
   page.getByTestId("create-low-risk").click();finished();
   assertThat(page.getByTestId("review-permission")).containsText("Delegated");
   assertThat(page.getByTestId("latest-action")).hasAttribute("data-status","COMPLETED");

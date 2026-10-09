@@ -446,6 +446,14 @@ button:disabled{opacity:.55;cursor:not-allowed}button[aria-pressed=true]{font-we
 .current-account-grid span,.money-source-card>small,.insight-why,.cashflow-facts small,#transactions td small{color:var(--muted)!important}
 .global-payment-control .stop-button{background:#fff!important;color:var(--status-danger)!important;border:1px solid #d7a8b0!important}
 .global-payment-control .stop-button:hover{background:var(--status-danger-bg)!important;filter:none}
+.global-payment-control{min-width:0}
+.global-payment-control .permission-badge{white-space:normal;line-height:1.4}
+.cancel-plan-help{display:block;max-width:280px;margin-top:6px;font-size:11px;line-height:1.5;color:var(--muted)}
+.demo-permission-settings h3{font-size:14px;margin:16px 0 6px}
+.demo-permission-settings>p{font-size:12px;line-height:1.6;color:var(--muted)}
+.demo-permission-settings .policy-bar{grid-template-columns:minmax(0,1.5fr) minmax(0,.7fr) minmax(0,1fr)}
+.demo-permission-settings .policy-bar form:first-child{flex-wrap:wrap}
+@media(max-width:700px){.global-policy-labels{flex:1;min-width:0}.global-policy-labels .permission-badge{max-width:100%}.global-payment-control>form{flex:none}.global-payment-control .stop-button{max-width:172px;white-space:normal;line-height:1.35}.demo-permission-settings .policy-bar{grid-template-columns:1fr}.demo-permission-settings .policy-bar form:first-child{grid-column:auto}}
 .scroll-track-controls{display:flex;gap:8px;justify-content:flex-end;margin:0 0 12px}
 .scroll-track-controls[hidden]{display:none}
 .scroll-track-controls button{min-height:40px;font-size:12px}

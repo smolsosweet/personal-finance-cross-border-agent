@@ -176,6 +176,11 @@ class PaymentWorkflowPlaywrightE2ETest {
             assertEquals(1, phaseFour.sandboxTransactionCount());
 
             page.onceDialog(dialog -> dialog.accept());
+            assertThat(page.getByTestId("cancel-action")).hasAttribute("aria-describedby","cancel-plan-help");
+            assertThat(page.locator("#cancel-plan-help")).hasText("Only cancels this plan. Other actions are unaffected.");
+            page.getByTestId("language-vi").click();
+            assertThat(page.locator("#cancel-plan-help")).hasText("Chỉ hủy kế hoạch này. Không ảnh hưởng các tác vụ khác.");
+            page.getByTestId("language-en").click();
             page.getByTestId("cancel-action").click();
             assertThat(page.getByTestId("latest-action")).hasAttribute("data-status", "CANCELED");
             assertThat(page.getByTestId("approve-action")).hasCount(0);
