@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>FinBridge · Financial workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261009-chat-header')}">
+  <title>FinBridge · Financial workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261009-notification-timeline')}">
 </head>
 <body>
 <a class="skip-link" href="#workspace-content">Skip to main content</a>
@@ -527,25 +527,26 @@
       <dialog id="notification-center" class="notification-dialog" data-testid="notification-center" aria-labelledby="notification-title">
         <div class="dialog-heading"><div><h2 id="notification-title">Notifications</h2><p>The badge counts unseen updates. Marking as seen does not resolve or approve a task.</p></div><button type="button" data-close-dialog aria-label="Close" autofocus>×</button></div>
         <div class="notification-toolbar"><button type="button" class="secondary" data-notifications-mark-all data-testid="notifications-mark-all">Mark all as seen</button><small data-notification-storage-status data-user-authored>Read status is saved in this browser.</small></div>
+        <div class="notification-filters" role="group" aria-label="Notification filters"><button type="button" data-notification-filter="all" aria-pressed="true">All</button><button type="button" data-notification-filter="ACTION" aria-pressed="false">Action required</button><button type="button" data-notification-filter="UPDATE" aria-pressed="false">Updates & suggestions</button></div>
         <div class="notification-body" tabindex="0" role="region" aria-label="Notifications">
         <section class="notification-group attention-center" data-testid="attention-center">
           <div class="section-title"><div><h3>Action items</h3></div></div>
           <div th:if="${#lists.isEmpty(attentionItems)}" class="empty-state">Nothing urgent. Your current plans and transactions are in order.</div>
-          <div class="attention-list"><div class="attention-item" th:each="item : ${attentionItems}" th:attr="data-notification-key=${item.href == '#transaction-review' ? 'transactions-review' : 'attention-' + item.title},data-notification-version=${item.message}">
+          <div class="attention-list"><div class="attention-item" th:each="item : ${attentionItems}" th:attr="data-notification-key=${item.href == '#transaction-review' ? 'transactions-review' : 'attention-' + item.title},data-notification-version=${item.message},data-notification-kind=${item.notificationKind},data-notification-action-state=${item.actionState},data-notification-time=${item.get('updatedEpoch')}">
             <span class="priority" th:classappend="${#strings.toLowerCase(item.priority)}" th:text="${item.priority}"></span>
             <div><strong th:text="${item.title}"></strong><p th:text="${item.message}"></p></div><a class="text-action" th:href="${item.href}" th:text="${item.action + ' →'}"></a>
           </div>
           </div>
         </section>
         <section class="notification-group" id="feed" data-testid="proactive-feed">
-          <div class="section-title"><div><h3>Current updates</h3></div></div>
-          <div class="insight-list"><div class="insight" th:each="insight : ${insights}" th:attr="data-notification-key=${insight.get('notificationKey') != null ? insight.get('notificationKey') : (insight.title == 'Transactions need your input' ? 'transactions-review' : 'insight-' + insight.title)},data-notification-version=${insight.message + '|' + insight.evidence}">
+          <div class="section-title"><div><h3>Latest first</h3></div></div>
+          <div class="insight-list"><div class="insight" th:each="insight : ${insights}" th:attr="data-notification-key=${insight.get('notificationKey') != null ? insight.get('notificationKey') : (insight.title == 'Transactions need your input' ? 'transactions-review' : 'insight-' + insight.title)},data-notification-version=${insight.message + '|' + insight.evidence},data-notification-kind=${insight.notificationKind},data-notification-action-state=${insight.actionState},data-notification-time=${insight.get('updatedEpoch')}">
             <span class="priority" th:classappend="${#strings.toLowerCase(insight.priority)}" th:text="${insight.priority}"></span>
             <div><strong th:text="${insight.title}"></strong><p th:text="${insight.message}"></p><p class="insight-why" th:text="${insight.get('why') != null ? insight.get('why') : (insight.title == 'Transactions need your input' ? 'Confirming a category keeps your spending report accurate.' : (insight.title == 'Budget progress' ? 'Check category limits before your next expense.' : (insight.title == 'Safety buffer protected' ? 'This insight applies the safety buffer to the recorded checking balance.' : 'Verify the bill and available channels before preparing a payment.')))}"></p><a class="text-action" th:href="${insight.get('href') != null ? insight.get('href') : (insight.title == 'Transactions need your input' ? '#transaction-review' : (insight.title == 'Budget progress' ? '#planning' : (insight.title == 'Safety buffer protected' ? '#accounts' : '#student-finance')))}" th:text="${insight.get('action') != null ? insight.get('action') : (insight.title == 'Transactions need your input' ? 'Review transactions →' : (insight.title == 'Budget progress' ? 'Review budgets →' : (insight.title == 'Safety buffer protected' ? 'Review planning accounts →' : 'Review education bill →')))}"></a><details class="source-details"><summary>Sources and assumptions</summary><small th:text="${'Evidence: ' + insight.evidence}"></small></details></div>
           </div>
           </div>
         </section>
-        <p data-notification-empty hidden>Nothing needs your attention right now.</p>
+        <p data-notification-empty hidden>No updates in this view.</p>
         </div>
       </dialog>
 
@@ -671,6 +672,6 @@
   </form>
   <p class="assistant-safety">AI helps understand your question. Asking does not authorize a payment.</p>
 </aside>
-<script th:src="@{/app.js(v='20261009-chat-header')}"></script>
+<script th:src="@{/app.js(v='20261009-notification-timeline')}"></script>
 </body>
 </html>

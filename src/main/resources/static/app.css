@@ -523,6 +523,14 @@ button:disabled{opacity:.55;cursor:not-allowed}button[aria-pressed=true]{font-we
 .notification-read-controls small{font-size:11px;color:var(--muted)}
 .notification-read-controls button:disabled{opacity:.6;cursor:default}
 .notification-group .priority.info{background:#edf7f4;color:#176556}
+.notification-filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;flex:none}
+.notification-filters button{min-height:40px;padding:8px 12px;background:#f3f7f7;border:1px solid var(--border);border-radius:9px;color:var(--ink);font-size:12px;cursor:pointer}
+.notification-filters button[aria-pressed="true"]{background:#e4f3f1;border-color:#087e84;color:#08676c;font-weight:700}
+.notification-item-meta{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px}
+.notification-item-meta small,.notification-item-meta time{font-size:11px;color:var(--muted)}
+.notification-item-meta small{font-weight:700;color:#385d65}
+.notification-group [data-notification-kind="UPDATE"]{cursor:pointer}
+.notification-group [data-notification-kind="UPDATE"]:focus-visible,.notification-filters button:focus-visible{outline:2px solid #087e84;outline-offset:2px;border-radius:8px}
 
 /* A compact chat identity/status header; payment controls stay in the workspace. */
 .assistant-panel .assistant-heading{padding:12px 16px;align-items:flex-start;border-bottom:1px solid var(--line);gap:10px}

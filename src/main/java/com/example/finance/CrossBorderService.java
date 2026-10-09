@@ -312,17 +312,18 @@ public class CrossBorderService {
         StudentExpense expense = selectedExpense();
         if (expense.executed()) {
             return db.queryForObject("""
-                    SELECT s.id,a.id FROM action_plans a JOIN sandbox_transactions s ON s.action_id=a.id
+                    SELECT s.id,a.id,s.created_at FROM action_plans a JOIN sandbox_transactions s ON s.action_id=a.id
                     WHERE a.expense_id=? AND s.status='COMPLETED'
                     ORDER BY s.created_at DESC,s.id LIMIT 1
-                    """, (rs,n) -> Map.<String,Object>of(
+                    """, (rs,n) -> NotificationMetadata.attach(Map.<String,Object>of(
                             "priority", "INFO", "title", "Student payment completed",
                             "message", "Bill " + tuition.paymentReference() + " has been paid. No further approval is required.",
                             "evidence", "Sandbox receipt " + rs.getString(1) + " · plan " + rs.getString(2),
                             "notificationKey", "education-bill-" + expense.id(),
                             "href", "?action=" + rs.getString(2) + "#agent-workspace",
                             "action", "View receipt →",
-                            "why", "Payment completed; view the immutable Sandbox receipt."), expense.id());
+                            "why", "Payment completed; view the immutable Sandbox receipt."),
+                            "UPDATE", "Payment completed", rs.getTimestamp(3).toLocalDateTime()), expense.id());
         }
         RecipientVerification verification = verifyRecipient();
         ChannelQuote option = rankedQuotes("CHEAPER").stream()
@@ -341,9 +342,10 @@ public class CrossBorderService {
                         + " has a recipient mismatch and is blocked until verification succeeds.";
         String evidence = option == null ? "Education Provider Registry verification" :
                 "Verified Education Provider Registry · " + option.displayName() + " · landed cost " + option.landedCost().toPlainString() + " VND";
-        return Map.of("priority", verification.verified() ? "HIGH" : "BLOCKED",
+        return NotificationMetadata.attach(Map.of("priority", verification.verified() ? "HIGH" : "BLOCKED",
                 "title", title, "message", message, "evidence", evidence,
-                "notificationKey", "education-bill-" + expense.id());
+                "notificationKey", "education-bill-" + expense.id()), "ACTION",
+                verification.verified() ? "Prepare payment" : "Needs verification", expense.updatedAt());
     }
 
     public Map<String,Object> tuitionInsightForPlan(String channelId, String quoteId, BigDecimal landedCost) {

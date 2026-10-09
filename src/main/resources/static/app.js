@@ -52,6 +52,15 @@ const translationsVi = new Map(Object.entries({
   'Payment completed. View its receipt; no further approval is required for this payment.': 'Thanh toán đã hoàn tất. Xem biên nhận; giao dịch này không cần phê duyệt thêm.',
   'The badge counts unseen updates. Marking as seen does not resolve or approve a task.': 'Số trên chuông là nội dung chưa xem. Đã xem không có nghĩa là hoàn tất hoặc phê duyệt tác vụ.',
   'Mark all as seen': 'Đánh dấu tất cả đã xem',
+  'Notification filters': 'Lọc thông báo',
+  'All': 'Tất cả',
+  'Action required': 'Cần xử lý',
+  'Updates & suggestions': 'Cập nhật & gợi ý',
+  'Latest first': 'Mới nhất trước',
+  'No updates in this view.': 'Không có thông báo trong mục này.',
+  'Needs confirmation': 'Cần xác nhận',
+  'Prepare payment': 'Cần chuẩn bị thanh toán',
+  'Information only': 'Thông tin tham khảo',
   'Read status is saved in this browser.': 'Trạng thái đã xem được lưu trong trình duyệt này.',
   'View receipt →': 'Xem biên nhận →',
   'INFO': 'Thông tin',
@@ -2079,6 +2088,16 @@ async function handleDocumentExtraction(event) {
 }
 
 const notificationReadStorageKey = 'finbridge-notifications-seen-v1';
+let notificationFilter = 'all';
+function notificationItems(dialog) {
+  return Array.from(dialog.querySelectorAll('[data-notification-key]')).filter(item => item.dataset.notificationDuplicate !== 'true');
+}
+function renderNotificationFilter(dialog) {
+  const items = notificationItems(dialog);
+  items.forEach(item => { item.hidden = notificationFilter !== 'all' && item.dataset.notificationKind !== notificationFilter; });
+  dialog.querySelectorAll('[data-notification-filter]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.notificationFilter === notificationFilter)));
+  dialog.querySelector('[data-notification-empty]').hidden = items.some(item => !item.hidden);
+}
 let notificationReadState = {};
 let notificationReadLoaded = false;
 let notificationReadPersistent = true;
@@ -2093,7 +2112,7 @@ function loadNotificationReadState() {
 }
 function notificationRevision(item) {
   // A UI-only fingerprint: do not persist financial message text in browser storage.
-  const value = item.dataset.notificationVersion || '';
+  const value = `${item.dataset.notificationVersion || ''}|${item.dataset.notificationTime || ''}`;
   let hash = 2166136261;
   for (let i = 0; i < value.length; i++) hash = Math.imul(hash ^ value.charCodeAt(i), 16777619);
   return `${value.length}:${hash >>> 0}`;
@@ -2109,7 +2128,7 @@ function updateNotificationBadge() {
   const bell=document.querySelector('[data-notifications-open]');
   if (!dialog || !bell) return;
   const state = loadNotificationReadState();
-  const items = Array.from(dialog.querySelectorAll('[data-notification-key]:not([hidden])'));
+  const items = notificationItems(dialog);
   const vi = selectedLanguage() === 'vi';
   const storageStatus = dialog.querySelector('[data-notification-storage-status]');
   if (storageStatus) storageStatus.textContent = notificationReadPersistent
@@ -2126,6 +2145,17 @@ function updateNotificationBadge() {
     if (button) {
       button.textContent = vi ? 'Đánh dấu đã xem' : 'Mark as seen';
       button.disabled = seen;
+      button.hidden = seen;
+    }
+    const actionState = item.querySelector('[data-notification-state-label]');
+    if (actionState) actionState.textContent = vi ? (translationsVi.get(item.dataset.notificationActionState) || item.dataset.notificationActionState) : item.dataset.notificationActionState;
+    if (item.dataset.notificationKind === 'UPDATE') item.setAttribute('aria-label', item.querySelector('strong')?.textContent || '');
+    const time = item.querySelector('[data-notification-timestamp]');
+    const epoch = Number(item.dataset.notificationTime);
+    if (time) {
+      time.title = vi ? 'Thời điểm cập nhật của dữ liệu nguồn' : 'Source data updated at';
+      time.textContent = epoch > 0 ? new Intl.DateTimeFormat(vi ? 'vi-VN' : 'en-GB', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(epoch) : (vi ? 'Chưa có thời gian cập nhật' : 'Update time unavailable');
+      if (epoch > 0) time.dateTime = new Date(epoch).toISOString();
     }
   });
   const badge=bell.querySelector('.notification-count');
@@ -2134,7 +2164,7 @@ function updateNotificationBadge() {
   bell.setAttribute('aria-label',vi?`Thông báo · ${count} nội dung chưa xem`:`Notifications · ${count} unseen updates`);
   const markAll = dialog.querySelector('[data-notifications-mark-all]');
   if (markAll) markAll.disabled = count === 0;
-  dialog.querySelector('[data-notification-empty]').hidden=items.length!==0;
+  renderNotificationFilter(dialog);
 }
 function initializeNotifications() {
   const dialog=document.getElementById('notification-center');
@@ -2144,15 +2174,22 @@ function initializeNotifications() {
   // Prefer the detailed insight when the same transaction review appears in both sources.
   const items=Array.from(dialog.querySelectorAll('[data-notification-key]'));
   items.sort((a,b)=>Number(b.classList.contains('insight'))-Number(a.classList.contains('insight')));
-  items.forEach(item=>{item.hidden=keys.has(item.dataset.notificationKey);keys.add(item.dataset.notificationKey);});
+  items.forEach(item=>{item.dataset.notificationDuplicate=String(keys.has(item.dataset.notificationKey));item.hidden=item.dataset.notificationDuplicate==='true';keys.add(item.dataset.notificationKey);});
   const list=dialog.querySelector('.insight-list');
-  const priority=item=>item.querySelector('.priority')?.classList.contains('blocked')?-1:item.querySelector('.priority')?.classList.contains('high')?0:item.querySelector('.priority')?.classList.contains('medium')?1:2;
-  items.filter(item=>!item.hidden).sort((a,b)=>priority(a)-priority(b)).forEach(item=>list.append(item));
+  items.filter(item=>!item.hidden).sort((a,b)=>Number(b.dataset.notificationTime||0)-Number(a.dataset.notificationTime||0)||a.dataset.notificationKey.localeCompare(b.dataset.notificationKey)).forEach(item=>list.append(item));
   dialog.querySelectorAll('.notification-group').forEach(group=>{
     group.hidden=!group.querySelector('[data-notification-key]:not([hidden])');
   });
   items.filter(item=>!item.hidden).forEach(item=>{
     if (item.querySelector('[data-notification-mark-seen]')) return;
+    const meta=document.createElement('div');meta.className='notification-item-meta';
+    const actionState=document.createElement('small');actionState.dataset.notificationStateLabel='';actionState.dataset.userAuthored='';
+    const time=document.createElement('time');time.dataset.notificationTimestamp='';time.dataset.userAuthored='';
+    meta.append(actionState,time);item.prepend(meta);
+    if(item.dataset.notificationKind==='UPDATE') {
+      item.tabIndex=0;item.setAttribute('role','group');
+      item.setAttribute('aria-label',item.querySelector('strong')?.textContent||'');
+    }
     const controls=document.createElement('div'); controls.className='notification-read-controls';
     const status=document.createElement('small'); status.dataset.notificationReadStatus=''; status.dataset.userAuthored='';
     const button=document.createElement('button'); button.type='button'; button.className='secondary';
@@ -2160,15 +2197,22 @@ function initializeNotifications() {
     controls.append(status,button); item.append(controls);
   });
   dialog.addEventListener('click',event=>{
+    const filter=event.target.closest('[data-notification-filter]');
+    if(filter){notificationFilter=filter.dataset.notificationFilter;renderNotificationFilter(dialog);}
     const button=event.target.closest('[data-notification-mark-seen]');
     if (button) markNotificationsSeen([button.closest('[data-notification-key]')]);
+    const item=event.target.closest('[data-notification-key]');
+    if(item?.dataset.notificationKind==='UPDATE'&&!event.target.closest('button,input,select,details')) markNotificationsSeen([item]);
     if (event.target.closest('[data-notifications-mark-all]'))
-      markNotificationsSeen(Array.from(dialog.querySelectorAll('[data-notification-key]:not([hidden])')));
+      markNotificationsSeen(notificationItems(dialog));
   });
   bell.setAttribute('aria-expanded','false');
   dialog.addEventListener('close',()=>bell.setAttribute('aria-expanded','false'));
   dialog.addEventListener('click',event=>{if(event.target.closest('a[href]'))dialog.close();});
   dialog.addEventListener('keydown',event=>{
+    if(event.target.matches('[data-notification-key][data-notification-kind="UPDATE"]')&&(event.key==='Enter'||event.key===' ')){
+      event.preventDefault();markNotificationsSeen([event.target]);return;
+    }
     if(event.key!=='Tab')return;
     const controls=Array.from(dialog.querySelectorAll('button,a[href],summary,[tabindex="0"]')).filter(e=>e.getClientRects().length&&!e.disabled);
     const first=controls[0],last=controls.at(-1);

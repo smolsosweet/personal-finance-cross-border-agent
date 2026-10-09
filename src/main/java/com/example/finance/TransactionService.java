@@ -569,24 +569,37 @@ public class TransactionService {
         Map<String,Object> dashboard = dashboard();
         int pending = (Integer) dashboard.get("pendingReview");
         if (pending > 0) {
-            insights.add(insight("HIGH", "Transactions need your input",
+            insights.add(NotificationMetadata.attach(insight("HIGH", "Transactions need your input",
                     pending + " transaction(s) need category confirmation or a purpose.",
-                    "Confidence rules: medium and low confidence"));
+                    "Confidence rules: medium and low confidence"), "ACTION", "Needs confirmation",
+                    db.queryForObject("""
+                        SELECT MAX(COALESCE(t.reviewed_at,e.received_at)) FROM transactions t
+                        JOIN bank_events e ON e.id=t.event_id
+                        WHERE t.review_status IN ('CONFIRMATION_REQUIRED','PURPOSE_REQUIRED')
+                        """, LocalDateTime.class)));
         }
 
         Map<String,Object> highest = budgetSummary().stream()
                 .max((a,b) -> ((BigDecimal)a.get("percent")).compareTo((BigDecimal)b.get("percent")))
                 .orElse(null);
         if (highest != null) {
-            insights.add(insight("MEDIUM", "Budget progress",
+            LocalDate start = reportingDate().withDayOfMonth(1);
+            insights.add(NotificationMetadata.attach(insight("MEDIUM", "Budget progress",
                     highest.get("category") + " has used " + highest.get("percent") + "% of its synthetic monthly budget.",
-                    "Confirmed and auto-categorized expenses"));
+                    "Confirmed and auto-categorized expenses"), "UPDATE", "Information only",
+                    db.queryForObject("""
+                        SELECT MAX(COALESCE(t.reviewed_at,e.received_at)) FROM transactions t
+                        JOIN bank_events e ON e.id=t.event_id
+                        WHERE t.category=? AND t.currency='VND' AND t.type='Expense'
+                          AND t.review_status IN ('AUTO','CONFIRMED') AND t.occurred_at>=? AND t.occurred_at<?
+                        """, LocalDateTime.class, highest.get("category"), start.atStartOfDay(), start.plusMonths(1).atStartOfDay())));
         }
 
         BigDecimal surplus = (BigDecimal) dashboard.get("surplus");
-        insights.add(insight("OPPORTUNITY", "Safety buffer protected",
+        insights.add(NotificationMetadata.attach(insight("OPPORTUNITY", "Safety buffer protected",
                 surplus.setScale(0, RoundingMode.HALF_UP) + " VND remains above the 3,000,000 VND safety buffer.",
-                "Demo checking balance minus configured buffer"));
+                "Demo checking balance minus configured buffer"), "UPDATE", "Information only",
+                db.queryForObject("SELECT balance_updated_at FROM financial_accounts WHERE id='CHECKING'", LocalDateTime.class)));
         return insights;
     }
 

@@ -147,7 +147,10 @@ public class FinanceWorkspaceService {
         item.put("message", message);
         item.put("href", href);
         item.put("action", action);
-        return item;
+        return NotificationMetadata.attach(item,
+                "Upcoming money is reserved".equals(title) ? "UPDATE" : "ACTION",
+                "Upcoming money is reserved".equals(title) ? "Information only" : "Needs review",
+                db.queryForObject("SELECT MAX(updated_at) FROM finance_plans", LocalDateTime.class));
     }
 
     @Transactional

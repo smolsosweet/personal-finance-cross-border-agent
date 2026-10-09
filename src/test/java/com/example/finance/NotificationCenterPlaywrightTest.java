@@ -29,7 +29,7 @@ class NotificationCenterPlaywrightTest {
  void bell(){page.getByTestId("notification-bell").click();try{assertThat(center()).isVisible();}catch(AssertionError ex){
   try{screenshot("open-failure");}catch(Exception ignored){};
   System.out.println("NOTIFICATION DEBUG "+page.evaluate("()=>({ready:document.readyState,open:Array.from(document.querySelectorAll('dialog[open]'),e=>e.id),bell:document.querySelector('[data-notifications-open]').outerHTML,active:document.activeElement.outerHTML})"));throw ex;}}
- void screenshot(String name)throws Exception{Path dir=Path.of("docs/notifications");Files.createDirectories(dir);page.screenshot(new Page.ScreenshotOptions().setPath(dir.resolve(name+".png")));}
+ void screenshot(String name)throws Exception{Path dir=Path.of("target/notification-timeline");Files.createDirectories(dir);page.screenshot(new Page.ScreenshotOptions().setPath(dir.resolve(name+".png")));}
  @Test void responsiveBellReplacesOverviewClutterAndShowsUniqueCurrentItems()throws Exception{
   var before=PersonalFinanceAiIntegrationTest.snapshot(db);
   for(int width:new int[]{360,390,768,1366,1920})for(String lang:new String[]{"vi","en"}){
@@ -122,6 +122,9 @@ class NotificationCenterPlaywrightTest {
   var receipt=payments.receiptForAction(draft.id());assertNotNull(receipt);assertEquals(1,payments.sandboxTransactionCount());
   assertEquals("Student payment completed",crossBorder.tuitionInsight().get("title"));
   bell();assertThat(education()).hasAttribute("data-notification-seen","false");
+  assertThat(center().locator(".insight-list > [data-notification-key]:visible").first()).hasAttribute("data-notification-key","education-bill-1");
+  assertThat(education()).hasAttribute("data-notification-kind","UPDATE");
+  assertThat(education()).hasAttribute("data-notification-time",String.valueOf(receipt.createdAt().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()));
   assertThat(education()).containsText("Student payment completed");assertThat(education()).containsText(receipt.transactionId());
   assertThat(education()).not().containsText("Approval Mode is still required");
   assertThat(education().locator("a")).hasAttribute("href","?action="+draft.id()+"#agent-workspace");
@@ -147,5 +150,57 @@ class NotificationCenterPlaywrightTest {
   var before=PersonalFinanceAiIntegrationTest.snapshot(db);bell();page.getByTestId("notifications-mark-all").click();
   assertThat(page.getByTestId("notification-count")).isHidden();assertThat(center().locator("[data-notification-storage-status]")).containsText("lasts only in this tab");page.keyboard().press("Escape");bell();
   assertThat(page.getByTestId("notification-count")).isHidden();assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));assertTrue(posts.isEmpty());
+ }
+
+ @Test void filtersSeparateActionStateFromSeenAndCountAllUnseenItems(){
+  var before=PersonalFinanceAiIntegrationTest.snapshot(db);bell();
+  String count=page.getByTestId("notification-count").textContent();
+  center().locator("[data-notification-filter='UPDATE']").click();
+  assertThat(center().locator("[data-notification-kind='ACTION']:visible")).hasCount(0);
+  assertThat(center().locator("[data-notification-kind='UPDATE']:visible")).hasCount(3);
+  assertThat(page.getByTestId("notification-count")).hasText(count);
+  assertThat(center().locator("[data-notification-key='attention-Upcoming money is reserved']")).hasAttribute("data-notification-kind","UPDATE");
+  center().locator("[data-notification-filter='ACTION']").click();
+  assertThat(center().locator("[data-notification-kind='UPDATE']:visible")).hasCount(0);
+  education().locator("[data-notification-mark-seen]").click();
+  assertThat(education()).isVisible();assertThat(education().locator("[data-notification-state-label]")).hasText("Prepare payment");
+  assertThat(education().locator("[data-notification-mark-seen]")).isHidden();
+  page.getByTestId("notifications-mark-all").click();
+  center().locator("[data-notification-filter='all']").click();
+  assertThat(center().locator("[data-notification-seen='false']:visible")).hasCount(0);
+  assertThat(page.getByTestId("notification-count")).isHidden();
+  assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));assertTrue(posts.isEmpty());
+ }
+
+ @Test void informationalBodyAndKeyboardMarkSeenButActionAndDetailsDoNot(){
+  var before=PersonalFinanceAiIntegrationTest.snapshot(db);bell();
+  Locator budget=center().locator("[data-notification-key='insight-Budget progress']");
+  budget.locator("summary").click();assertThat(budget).hasAttribute("data-notification-seen","false");
+  budget.locator("strong").click();assertThat(budget).hasAttribute("data-notification-seen","true");
+  assertThat(budget.locator("[data-notification-mark-seen]")).isHidden();
+  Locator safety=center().locator("[data-notification-key='insight-Safety buffer protected']");
+  safety.focus();page.keyboard().press("Enter");assertThat(safety).hasAttribute("data-notification-seen","true");
+  education().locator("strong").click();assertThat(education()).hasAttribute("data-notification-seen","false");
+  assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));assertTrue(posts.isEmpty());
+ }
+
+ @Test void recordedTimeControlsOrderAndRemainsStableAcrossReloadSeenAndLanguage()throws Exception{
+  db.update("UPDATE financial_accounts SET balance_updated_at=? WHERE id='CHECKING'",java.time.LocalDateTime.now().plusMinutes(1));
+  page.reload();bell();
+  Locator items=center().locator(".insight-list > [data-notification-key]:visible");
+  assertThat(items.first()).hasAttribute("data-notification-key","insight-Safety buffer protected");
+  @SuppressWarnings("unchecked") List<String> order=(List<String>)items.evaluateAll("es=>es.map(e=>e.dataset.notificationKey+'|'+(e.dataset.notificationTime||''))");
+  var before=PersonalFinanceAiIntegrationTest.snapshot(db);
+  assertTrue((Boolean)items.evaluateAll("es=>es.every((e,i)=>!i||Number(es[i-1].dataset.notificationTime||0)>=Number(e.dataset.notificationTime||0))"));
+  page.getByTestId("notifications-mark-all").click();
+  page.getByTestId("language-vi").evaluate("e=>e.click()");
+  assertThat(center().locator("[data-notification-filter='UPDATE']")).hasText("Cập nhật & gợi ý");
+  assertThat(items.first().locator("[data-notification-state-label]")).hasText("Thông tin tham khảo");
+  assertEquals(order,items.evaluateAll("es=>es.map(e=>e.dataset.notificationKey+'|'+(e.dataset.notificationTime||''))"));
+  page.keyboard().press("Escape");page.reload();bell();
+  assertEquals(order,items.evaluateAll("es=>es.map(e=>e.dataset.notificationKey+'|'+(e.dataset.notificationTime||''))"));
+  assertThat(page.getByTestId("notification-count")).isHidden();
+  page.setViewportSize(390,844);screenshot("seen-timeline-mobile-vi");
+  assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));assertTrue(posts.isEmpty());
  }
 }
