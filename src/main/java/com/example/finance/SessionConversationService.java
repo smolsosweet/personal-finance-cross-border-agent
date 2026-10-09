@@ -535,7 +535,8 @@ public class SessionConversationService {
                     && topic==Topic.NONE&&!personalTopic(message)&&matches(message,"còn bao nhiêu|how much.*left|what about|kênh đó|that channel|trạng thái thế|what'?s its status"))return clarifyTopic();
             if(intent.confidence().compareTo(new BigDecimal("0.80"))<0||intent.intent()==LlmIntent.Intent.NEED_CLARIFICATION)return clarifyTopic();
             if(intent.intent()==LlmIntent.Intent.EXPLAIN_LIVING_EXPENSE_RUNWAY)return runwayResponse(intent);
-            if((intent.intent()==LlmIntent.Intent.EXPLAIN_BUDGET_STATUS||intent.intent()==LlmIntent.Intent.EXPLAIN_SPENDING_SUMMARY)&&FinanceChatService.scopedQuestion(message)&&!insights.isSupportedSpendingScope(message))
+            if((intent.intent()==LlmIntent.Intent.EXPLAIN_BUDGET_STATUS||intent.intent()==LlmIntent.Intent.EXPLAIN_SPENDING_SUMMARY)&&FinanceChatService.scopedQuestion(message)
+                    && !(intent.intent()==LlmIntent.Intent.EXPLAIN_SPENDING_SUMMARY&&insights.isSupportedSpendingScope(message)))
                 return clarify(Pending.TOPIC,FinanceChatService.clarification(vi),List.of(),List.of());
             if(intent.intent()==LlmIntent.Intent.EXPLAIN_TUITION_AFFORDABILITY&&customScenario())
                 return clarify(Pending.BILL,vi?"Chỉ tính hóa đơn và số tiền đã ghi nhận; không thay đổi amount hoặc currency qua câu hỏi.":"Only recorded bills and amounts are used; a question cannot change amount or currency.",List.of(),List.of());

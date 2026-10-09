@@ -45,7 +45,7 @@ public class PersonalFinanceInsights {
         };
     }
 
-    /** Recognize safe read-only queries so financial facts come from the backend, not model guesses. */
+    /** Filter scope only after intent classification; tuition and balance questions can share these words. */
     public boolean isCategorySpendingQuestion(String question) {
         return !requestedCategories(question).isEmpty();
     }
@@ -53,7 +53,6 @@ public class PersonalFinanceInsights {
     public boolean isSupportedSpendingScope(String question) {
         return isPendingReviewQuestion(question)
                 || isCategorySpendingQuestion(question) && isSpendingRequest(question) || isSpendingDatesQuestion(question)
-                || isExpenseQuestion(question) && isSpendingRequest(question)
                 || requestedDate(question) != null && (isExpenseQuestion(question) || isDailyActivityQuestion(question));
     }
 

@@ -1,0 +1,99 @@
+{
+  "commit": "2d161f9e0608f83102c387738c86b72e20f358e7",
+  "baseUrl": "http://localhost:8158",
+  "verificationType": "Playwright browser automation, not manual or physical mobile",
+  "LLM": "disabled",
+  "scenarios": [
+    {
+      "evidence": "seed total VND",
+      "value": "Total balance · VND\n315,000,000\n\nAll active personal sources · VND"
+    },
+    {
+      "scenario": "Overview/header and a single global chat",
+      "status": "PASS",
+      "url": "http://localhost:8158/#overview",
+      "observedAt": "2026-10-05T09:30:56.128893300Z"
+    },
+    {
+      "evidence": "pagination label",
+      "value": "Page 1 of 5"
+    },
+    {
+      "scenario": "Transaction pagination: five rows, no nested vertical scroll",
+      "status": "PASS",
+      "url": "http://localhost:8158/#transactions",
+      "observedAt": "2026-10-05T09:30:57.141962600Z"
+    },
+    {
+      "evidence": "chat scroll before/after reopen",
+      "value": [
+        682.0,
+        682
+      ]
+    },
+    {
+      "scenario": "Long chat reopening keeps scroll and unsent text",
+      "status": "PASS",
+      "url": "http://localhost:8158/#overview",
+      "observedAt": "2026-10-05T09:30:58.472531800Z"
+    },
+    {
+      "evidence": "draft",
+      "value": {
+        "total": "70,760,800.00 VND",
+        "source": "Bank A Everyday · Bank A · •••• 2048",
+        "channel": "Bank A International Transfer",
+        "id": "ACT-37EFB1E5-01B",
+        "beneficiary": "Shenzhen Demo University Tuition Office"
+      }
+    },
+    {
+      "scenario": "Create locked draft, review, and dismiss approval confirmation",
+      "status": "PASS",
+      "url": "http://localhost:8158/?action=ACT-37EFB1E5-01B#agent-workspace",
+      "observedAt": "2026-10-05T09:30:59.301519800Z"
+    },
+    {
+      "scenario": "Desktop/mobile simulated layouts and bilingual draft/chat",
+      "status": "PASS",
+      "url": "http://localhost:8158/?action=ACT-37EFB1E5-01B#agent-workspace",
+      "observedAt": "2026-10-05T09:31:01.312208600Z"
+    },
+    {
+      "evidence": "receipt after idempotent replay",
+      "value": {
+        "action": "ACT-37EFB1E5-01B",
+        "receipt": "SBOX-6F343E08-40F",
+        "remaining": "29,239,200 VND"
+      }
+    },
+    {
+      "scenario": "Approval receipt, audit and retry idempotency",
+      "status": "PASS",
+      "url": "http://localhost:8158/?action=ACT-37EFB1E5-01B#agent-workspace",
+      "observedAt": "2026-10-05T09:31:02.910807800Z"
+    },
+    {
+      "evidence": "blocked reason",
+      "value": "AGENT PAUSED"
+    },
+    {
+      "scenario": "Emergency Stop and backend reason in EN/VI; resume does not execute",
+      "status": "PASS",
+      "url": "http://localhost:8158/?action=ACT-159D7ED7-F6C#agent-workspace",
+      "observedAt": "2026-10-05T09:31:10.236820300Z"
+    },
+    {
+      "evidence": "requests outside localhost",
+      "value": []
+    },
+    {
+      "scenario": "Browser errors and external traffic",
+      "status": "PASS",
+      "url": "http://localhost:8158/?action=ACT-159D7ED7-F6C#agent-workspace",
+      "observedAt": "2026-10-05T09:31:10.237812600Z"
+    }
+  ],
+  "pageErrors": [],
+  "externalRequests": []
+}

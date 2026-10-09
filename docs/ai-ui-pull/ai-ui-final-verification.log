@@ -1,0 +1,231 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ----------< com.example:personal-finance-cross-border-agent >-----------
+[INFO] Building personal-finance-cross-border-agent 1.0.0
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ personal-finance-cross-border-agent ---
+[INFO] Copying 5 resources from src\main\resources to target\classes
+[INFO] Copying 5 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ personal-finance-cross-border-agent ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 30 source files with javac [debug parameters release 21] to target\classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ personal-finance-cross-border-agent ---
+[INFO] skip non existing resourceDirectory D:\personal-finance-cross-border-agent\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ personal-finance-cross-border-agent ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 53 source files with javac [debug parameters release 21] to target\test-classes
+[INFO] /D:/personal-finance-cross-border-agent/src/test/java/com/example/finance/DeployedAcceptanceIT.java: D:\personal-finance-cross-border-agent\src\test\java\com\example\finance\DeployedAcceptanceIT.java uses or overrides a deprecated API.
+[INFO] /D:/personal-finance-cross-border-agent/src/test/java/com/example/finance/DeployedAcceptanceIT.java: Recompile with -Xlint:deprecation for details.
+[INFO] /D:/personal-finance-cross-border-agent/src/test/java/com/example/finance/DeployedAcceptanceIT.java: Some input files use unchecked or unsafe operations.
+[INFO] /D:/personal-finance-cross-border-agent/src/test/java/com/example/finance/DeployedAcceptanceIT.java: Recompile with -Xlint:unchecked for details.
+[INFO] 
+[INFO] --- surefire:3.5.4:test (default-test) @ personal-finance-cross-border-agent ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.example.finance.GeminiDocumentExtractionServiceTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.822 s -- in com.example.finance.GeminiDocumentExtractionServiceTest
+[INFO] Running com.example.finance.GeminiIntentClientTest
+Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
+Java HotSpot(TM) 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+WARNING: A Java agent has been loaded dynamically (C:\Users\ADMIN\.m2\repository\net\bytebuddy\byte-buddy-agent\1.17.7\byte-buddy-agent-1.17.7.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+[INFO] Tests run: 38, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.094 s -- in com.example.finance.GeminiIntentClientTest
+[INFO] Running com.example.finance.GlobalAssistantIntegrationTest
+09:36:12.169 [main] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.example.finance.GlobalAssistantIntegrationTest]: GlobalAssistantIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+09:36:13.289 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.example.finance.FinanceApplication for test class com.example.finance.GlobalAssistantIntegrationTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2026-10-09T09:36:13.789+07:00  INFO 26148 --- [           main] c.e.f.GlobalAssistantIntegrationTest     : Starting GlobalAssistantIntegrationTest using Java 21.0.6 with PID 26148 (started by ADMIN in D:\personal-finance-cross-border-agent)
+2026-10-09T09:36:13.790+07:00  INFO 26148 --- [           main] c.e.f.GlobalAssistantIntegrationTest     : No active profile set, falling back to 1 default profile: "default"
+2026-10-09T09:36:14.948+07:00  INFO 26148 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-10-09T09:36:15.189+07:00  INFO 26148 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:global_assistant user=SA
+2026-10-09T09:36:15.191+07:00  INFO 26148 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-10-09T09:36:16.746+07:00  INFO 26148 --- [           main] c.e.f.GlobalAssistantIntegrationTest     : Started GlobalAssistantIntegrationTest in 3.289 seconds (process running for 8.532)
+[INFO] Tests run: 28, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 7.064 s -- in com.example.finance.GlobalAssistantIntegrationTest
+[INFO] Running com.example.finance.GlobalAssistantPlaywrightTest
+2026-10-09T09:36:19.077+07:00  INFO 26148 --- [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.example.finance.GlobalAssistantPlaywrightTest]: GlobalAssistantPlaywrightTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-09T09:36:19.081+07:00  INFO 26148 --- [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.example.finance.FinanceApplication for test class com.example.finance.GlobalAssistantPlaywrightTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2026-10-09T09:36:19.158+07:00  INFO 26148 --- [           main] c.e.f.GlobalAssistantPlaywrightTest      : Starting GlobalAssistantPlaywrightTest using Java 21.0.6 with PID 26148 (started by ADMIN in D:\personal-finance-cross-border-agent)
+2026-10-09T09:36:19.159+07:00  INFO 26148 --- [           main] c.e.f.GlobalAssistantPlaywrightTest      : No active profile set, falling back to 1 default profile: "default"
+2026-10-09T09:36:19.907+07:00  INFO 26148 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8131 (http)
+2026-10-09T09:36:19.923+07:00  INFO 26148 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-10-09T09:36:19.923+07:00  INFO 26148 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.46]
+2026-10-09T09:36:19.997+07:00  INFO 26148 --- [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-10-09T09:36:19.997+07:00  INFO 26148 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 834 ms
+2026-10-09T09:36:20.064+07:00  INFO 26148 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Starting...
+2026-10-09T09:36:20.067+07:00  INFO 26148 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-2 - Added connection conn10: url=jdbc:h2:mem:global_browser user=SA
+2026-10-09T09:36:20.067+07:00  INFO 26148 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Start completed.
+2026-10-09T09:36:20.389+07:00  INFO 26148 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8131 (http) with context path '/'
+2026-10-09T09:36:20.393+07:00  INFO 26148 --- [           main] c.e.f.GlobalAssistantPlaywrightTest      : Started GlobalAssistantPlaywrightTest in 1.306 seconds (process running for 12.179)
+2026-10-09T09:36:25.778+07:00  INFO 26148 --- [nio-8131-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-09T09:36:25.778+07:00  INFO 26148 --- [nio-8131-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-10-09T09:36:25.779+07:00  INFO 26148 --- [nio-8131-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 38.09 s -- in com.example.finance.GlobalAssistantPlaywrightTest
+[INFO] Running com.example.finance.LlmProviderConfigurationTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.009 s -- in com.example.finance.LlmProviderConfigurationTest
+[INFO] Running com.example.finance.PersonalFinanceAiIntegrationTest
+2026-10-09T09:36:57.175+07:00  INFO 26148 --- [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.example.finance.PersonalFinanceAiIntegrationTest]: PersonalFinanceAiIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-09T09:36:57.178+07:00  INFO 26148 --- [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.example.finance.FinanceApplication for test class com.example.finance.PersonalFinanceAiIntegrationTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2026-10-09T09:36:57.199+07:00  INFO 26148 --- [           main] c.e.f.PersonalFinanceAiIntegrationTest   : Starting PersonalFinanceAiIntegrationTest using Java 21.0.6 with PID 26148 (started by ADMIN in D:\personal-finance-cross-border-agent)
+2026-10-09T09:36:57.200+07:00  INFO 26148 --- [           main] c.e.f.PersonalFinanceAiIntegrationTest   : No active profile set, falling back to 1 default profile: "default"
+2026-10-09T09:36:57.415+07:00  INFO 26148 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-3 - Starting...
+2026-10-09T09:36:57.417+07:00  INFO 26148 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-3 - Added connection conn20: url=jdbc:h2:mem:personal_ai user=SA
+2026-10-09T09:36:57.417+07:00  INFO 26148 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-3 - Start completed.
+2026-10-09T09:36:57.645+07:00  INFO 26148 --- [           main] c.e.f.PersonalFinanceAiIntegrationTest   : Started PersonalFinanceAiIntegrationTest in 0.464 seconds (process running for 49.43)
+[ERROR] Tests run: 14, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.853 s <<< FAILURE! -- in com.example.finance.PersonalFinanceAiIntegrationTest
+[ERROR] com.example.finance.PersonalFinanceAiIntegrationTest.classifiedDailyCategoryAndPendingQueriesKeepNewSpendingFeaturesAndConfidenceChecks -- Time elapsed: 0.030 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+Transactions needing your review: 0.
+There are no transactions awaiting review. ==> expected: <true> but was: <false>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertTrue.failNotTrue(AssertTrue.java:63)
+	at org.junit.jupiter.api.AssertTrue.assertTrue(AssertTrue.java:36)
+	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:214)
+	at com.example.finance.PersonalFinanceAiIntegrationTest.classifiedDailyCategoryAndPendingQueriesKeepNewSpendingFeaturesAndConfidenceChecks(PersonalFinanceAiIntegrationTest.java:190)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Running com.example.finance.SessionConversationIntegrationTest
+2026-10-09T09:36:58.032+07:00  INFO 26148 --- [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.example.finance.SessionConversationIntegrationTest]: SessionConversationIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-09T09:36:58.034+07:00  INFO 26148 --- [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.example.finance.FinanceApplication for test class com.example.finance.SessionConversationIntegrationTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2026-10-09T09:36:58.059+07:00  INFO 26148 --- [           main] c.e.f.SessionConversationIntegrationTest : Starting SessionConversationIntegrationTest using Java 21.0.6 with PID 26148 (started by ADMIN in D:\personal-finance-cross-border-agent)
+2026-10-09T09:36:58.059+07:00  INFO 26148 --- [           main] c.e.f.SessionConversationIntegrationTest : No active profile set, falling back to 1 default profile: "default"
+2026-10-09T09:36:58.301+07:00  INFO 26148 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-4 - Starting...
+2026-10-09T09:36:58.303+07:00  INFO 26148 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-4 - Added connection conn30: url=jdbc:h2:mem:context_integration user=SA
+2026-10-09T09:36:58.303+07:00  INFO 26148 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-4 - Start completed.
+2026-10-09T09:36:58.438+07:00  INFO 26148 --- [           main] c.e.f.SessionConversationIntegrationTest : Started SessionConversationIntegrationTest in 0.4 seconds (process running for 50.223)
+[INFO] Tests run: 22, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.842 s -- in com.example.finance.SessionConversationIntegrationTest
+[INFO] Running com.example.finance.UiCleanupDefectRegressionPlaywrightTest
+2026-10-09T09:36:58.875+07:00  INFO 26148 --- [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.example.finance.UiCleanupDefectRegressionPlaywrightTest]: UiCleanupDefectRegressionPlaywrightTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-09T09:36:58.877+07:00  INFO 26148 --- [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.example.finance.FinanceApplication for test class com.example.finance.UiCleanupDefectRegressionPlaywrightTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2026-10-09T09:36:58.901+07:00  INFO 26148 --- [           main] .UiCleanupDefectRegressionPlaywrightTest : Starting UiCleanupDefectRegressionPlaywrightTest using Java 21.0.6 with PID 26148 (started by ADMIN in D:\personal-finance-cross-border-agent)
+2026-10-09T09:36:58.901+07:00  INFO 26148 --- [           main] .UiCleanupDefectRegressionPlaywrightTest : No active profile set, falling back to 1 default profile: "default"
+2026-10-09T09:36:59.128+07:00  INFO 26148 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8159 (http)
+2026-10-09T09:36:59.130+07:00  INFO 26148 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-10-09T09:36:59.130+07:00  INFO 26148 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.46]
+2026-10-09T09:36:59.166+07:00  INFO 26148 --- [           main] o.a.c.c.C.[Tomcat-1].[localhost].[/]     : Initializing Spring embedded WebApplicationContext
+2026-10-09T09:36:59.166+07:00  INFO 26148 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 262 ms
+2026-10-09T09:36:59.180+07:00  INFO 26148 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-5 - Starting...
+2026-10-09T09:36:59.182+07:00  INFO 26148 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-5 - Added connection conn40: url=jdbc:h2:mem:ux_cleanup_defects user=SA
+2026-10-09T09:36:59.182+07:00  INFO 26148 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-5 - Start completed.
+2026-10-09T09:36:59.317+07:00  INFO 26148 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8159 (http) with context path '/'
+2026-10-09T09:36:59.319+07:00  INFO 26148 --- [           main] .UiCleanupDefectRegressionPlaywrightTest : Started UiCleanupDefectRegressionPlaywrightTest in 0.439 seconds (process running for 51.104)
+2026-10-09T09:37:00.106+07:00  INFO 26148 --- [nio-8159-exec-1] o.a.c.c.C.[Tomcat-1].[localhost].[/]     : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-09T09:37:00.106+07:00  INFO 26148 --- [nio-8159-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-10-09T09:37:00.107+07:00  INFO 26148 --- [nio-8159-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 36.55 s -- in com.example.finance.UiCleanupDefectRegressionPlaywrightTest
+[INFO] Running com.example.finance.UiCleanupPlaywrightTest
+2026-10-09T09:37:35.425+07:00  INFO 26148 --- [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.example.finance.UiCleanupPlaywrightTest]: UiCleanupPlaywrightTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-09T09:37:35.427+07:00  INFO 26148 --- [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.example.finance.FinanceApplication for test class com.example.finance.UiCleanupPlaywrightTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2026-10-09T09:37:35.442+07:00  INFO 26148 --- [           main] c.e.finance.UiCleanupPlaywrightTest      : Starting UiCleanupPlaywrightTest using Java 21.0.6 with PID 26148 (started by ADMIN in D:\personal-finance-cross-border-agent)
+2026-10-09T09:37:35.442+07:00  INFO 26148 --- [           main] c.e.finance.UiCleanupPlaywrightTest      : No active profile set, falling back to 1 default profile: "default"
+2026-10-09T09:37:35.599+07:00  INFO 26148 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8156 (http)
+2026-10-09T09:37:35.600+07:00  INFO 26148 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-10-09T09:37:35.600+07:00  INFO 26148 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.46]
+2026-10-09T09:37:35.634+07:00  INFO 26148 --- [           main] o.a.c.c.C.[Tomcat-2].[localhost].[/]     : Initializing Spring embedded WebApplicationContext
+2026-10-09T09:37:35.635+07:00  INFO 26148 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 192 ms
+2026-10-09T09:37:35.646+07:00  INFO 26148 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-6 - Starting...
+2026-10-09T09:37:35.648+07:00  INFO 26148 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-6 - Added connection conn50: url=jdbc:h2:mem:ux_cleanup user=SA
+2026-10-09T09:37:35.648+07:00  INFO 26148 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-6 - Start completed.
+2026-10-09T09:37:35.749+07:00  INFO 26148 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8156 (http) with context path '/'
+2026-10-09T09:37:35.751+07:00  INFO 26148 --- [           main] c.e.finance.UiCleanupPlaywrightTest      : Started UiCleanupPlaywrightTest in 0.322 seconds (process running for 87.537)
+2026-10-09T09:37:36.557+07:00  INFO 26148 --- [nio-8156-exec-1] o.a.c.c.C.[Tomcat-2].[localhost].[/]     : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-09T09:37:36.557+07:00  INFO 26148 --- [nio-8156-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-10-09T09:37:36.558+07:00  INFO 26148 --- [nio-8156-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 9.835 s -- in com.example.finance.UiCleanupPlaywrightTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   PersonalFinanceAiIntegrationTest.classifiedDailyCategoryAndPendingQueriesKeepNewSpendingFeaturesAndConfidenceChecks:190 Transactions needing your review: 0.
+There are no transactions awaiting review. ==> expected: <true> but was: <false>
+[INFO] 
+[ERROR] Tests run: 122, Failures: 1, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  01:47 min
+[INFO] Finished at: 2026-10-09T09:37:45+07:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.4:test (default-test) on project personal-finance-cross-border-agent: There are test failures.
+[ERROR] 
+[ERROR] See D:\personal-finance-cross-border-agent\target\surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

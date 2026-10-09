@@ -49,7 +49,6 @@ public class FinanceChatService {
         if (message.length() > 500) throw new IllegalArgumentException("Message must be 500 characters or fewer");
         boolean vi = "vi".equals(language) || (language == null && VI.matcher(message).find());
         String requestId = "CHAT-" + UUID.randomUUID().toString().substring(0, 12);
-        boolean scopedSpending = insights.isSupportedSpendingScope(message);
         boolean online = Boolean.TRUE.equals(tx.execute(status -> {
             lock();
             if (turn == null) addMessage("USER", message); else turn.record("USER", message);
@@ -72,9 +71,6 @@ public class FinanceChatService {
         } else if (OTHER_PERIOD.matcher(message.replaceAll("(?iu)\\b(?:ACT|SBOX|SZDU)-[A-Z0-9-]+\\b","")).find() && !insights.isDailySpendingQuestion(message)) {
             early = clarification(vi);
             reason = "UNSUPPORTED PERIOD";
-        } else if (scopedSpending) {
-            intent = new LlmIntent(LlmIntent.Intent.EXPLAIN_SPENDING_SUMMARY, LlmIntent.ChannelPreference.NONE, BigDecimal.ONE, LlmIntent.ClarificationCode.NONE);
-            reason = "DETERMINISTIC_SPENDING_SCOPE";
         } else if (lower.contains("surplus")) {
             early=payments.deterministicFallback(message);
             reason="GUIDED SURPLUS";
@@ -126,7 +122,8 @@ public class FinanceChatService {
                     answer = turn.respond(classified, vi);
                 } else if (isReadOnly(classified.intent())) {
                     if (classified.confidence().compareTo(new BigDecimal("0.80")) < 0
-                            || (scopedQuestion(message) && !insights.isSupportedSpendingScope(message))) {
+                            || (scopedQuestion(message) && !(classified.intent() == LlmIntent.Intent.EXPLAIN_SPENDING_SUMMARY
+                                && insights.isSupportedSpendingScope(message)))) {
                         answer = clarification(vi);
                         audit("FINANCE_READ_ONLY", "READ_ONLY_CLARIFICATION", requestId, "CLARIFICATION",
                                 "AMBIGUOUS_REQUEST", "Confidence or scope requires clarification");

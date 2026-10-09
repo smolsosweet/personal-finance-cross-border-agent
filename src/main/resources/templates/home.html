@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>FinBridge · Financial workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261005-ux-cleanup')}">
+  <title>FinBridge · Financial workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261009-ai-ui-local')}">
 </head>
 <body>
 <a class="skip-link" href="#workspace-content">Skip to main content</a>
@@ -32,6 +32,7 @@
         </div>
         <button type="button" class="assistant-launcher" data-open-assistant data-testid="assistant-launcher" aria-controls="finbridge-assistant" aria-expanded="false"><span aria-hidden="true">✦</span><span>Ask FinBridge</span></button>
       </div>
+      <div class="workspace-notices" data-workspace-notices data-testid="workspace-notices"></div>
     </header>
     <nav class="mobile-tabs" aria-label="Main sections">
       <button type="button" data-tab="dashboard" aria-pressed="true">Overview</button>
@@ -367,16 +368,16 @@
             <dl class="payment-summary-parties"><div><dt>Funding account</dt><dd data-user-authored th:text="${paymentReview != null ? paymentReview.sourceDisplayName : latestAction.sourceAccountId}"></dd></div><div><dt>Beneficiary</dt><dd data-user-authored th:text="${paymentReview != null ? paymentReview.recipientName : latestAction.recipient}"></dd></div><div><dt>Payment channel</dt><dd th:text="${paymentReview != null ? paymentReview.channelName : (latestAction.channelId ?: 'Internal sandbox')}"></dd></div></dl>
           </section>
           <ol class="payment-steps" aria-label="Payment progress">
-            <li class="complete"><span>1</span> Review plan</li>
-            <li th:classappend="${latestAction.status == 'COMPLETED' ? ' complete' : (latestAction.status == 'CANCELED' or latestAction.status == 'INVALIDATED' ? '' : ' current')}"><span>2</span> <span th:text="${latestAction.requiredPermission == 'DELEGATED' ? 'Delegated' : 'Approval'}"></span></li>
-            <li th:classappend="${latestAction.status == 'COMPLETED' ? ' complete' : ''}"><span>3</span> Sandbox execution</li>
-            <li th:classappend="${latestReceipt != null ? ' complete' : ''}"><span>4</span> Receipt</li>
+            <li class="complete"><span class="payment-step-number">1</span><span class="payment-step-label">Review plan</span></li>
+            <li th:classappend="${latestAction.status == 'COMPLETED' ? ' complete' : (latestAction.status == 'CANCELED' or latestAction.status == 'INVALIDATED' ? '' : ' current')}"><span class="payment-step-number">2</span><span class="payment-step-label" th:text="${latestAction.requiredPermission == 'DELEGATED' ? 'Delegated' : 'Approval'}"></span></li>
+            <li th:classappend="${latestAction.status == 'COMPLETED' ? ' complete' : ''}"><span class="payment-step-number">3</span><span class="payment-step-label">Sandbox execution</span></li>
+            <li th:classappend="${latestReceipt != null ? ' complete' : ''}"><span class="payment-step-number">4</span><span class="payment-step-label">Receipt</span></li>
           </ol>
           <p class="simulation-disclosure">No real money is transferred.</p>
           <div th:if="${latestAction.actionType == 'TUITION' and (latestReceipt != null or (latestAction.status == 'AWAITING_APPROVAL' and paymentDecision != null and paymentDecision.decision != 'BLOCKED'))}" class="payment-approval-note" data-testid="approval-note"><strong th:text="${latestReceipt != null ? 'You approved this education payment.' : 'Your approval is required for this education payment.'}"></strong><p th:text="${latestReceipt != null ? 'The receipt records the exact locked plan. Its beneficiary, amounts and quote cannot be edited.' : 'Delegated mode cannot bypass this approval. Amount, beneficiary, account, channel and quote are locked to this plan.'}"></p></div>
           <div th:if="${latestAction.status == 'INVALIDATED'}" class="payment-warning" role="status" data-testid="invalidated-plan"><strong>This plan is no longer valid</strong><p>The bill or payment details changed. Review the updated bill and create a new plan; the previous approval cannot be reused.</p><a href="#student-finance" data-return-to-comparison>Review bill and create a new plan</a></div>
-          <div th:if="${latestAction.status == 'CANCELED'}" class="payment-warning" role="status"><strong>Plan canceled</strong><p>No payment was made. You can create a new plan for an active bill.</p></div>
-          <div th:if="${paymentDecision != null and paymentDecision.decision == 'BLOCKED' and latestReceipt == null and latestAction.status != 'INVALIDATED' and latestAction.status != 'CANCELED'}" class="payment-warning" role="alert" data-testid="payment-blocked"><strong>Payment blocked</strong><p data-payment-reason th:attr="data-reason=${paymentDecision.reasonCode},data-backend-explanation=${paymentDecision.explanation}" th:text="${paymentDecision.explanation}"></p><p class="reason-code"><span>Reason</span> · <code data-user-authored data-testid="payment-reason-code" th:text="${paymentDecision.reasonCode}"></code></p><a href="#student-finance" data-return-to-comparison>Return to the bill or refresh quotes before creating a new plan.</a></div>
+          <div th:if="${latestAction.status == 'CANCELED'}" class="payment-warning" role="status"><strong>Plan canceled</strong><p th:text="${latestAction.actionType == 'TUITION' ? 'No payment was made. You can create a new plan for an active bill.' : 'No transfer was made. Review the source account and recipient before creating a new transfer plan.'}"></p></div>
+          <div th:if="${paymentDecision != null and paymentDecision.decision == 'BLOCKED' and latestReceipt == null and latestAction.status != 'INVALIDATED' and latestAction.status != 'CANCELED'}" class="payment-warning" role="alert" data-testid="payment-blocked"><strong>Payment blocked</strong><p data-payment-reason th:attr="data-reason=${paymentDecision.reasonCode},data-backend-explanation=${paymentDecision.explanation}" th:text="${paymentDecision.explanation}"></p><p class="reason-code"><span>Reason</span> · <code data-user-authored data-testid="payment-reason-code" th:text="${paymentDecision.reasonCode}"></code></p><a th:if="${latestAction.actionType == 'TUITION'}" href="#student-finance" data-return-to-comparison>Return to the bill or refresh quotes before creating a new plan.</a><p th:if="${latestAction.actionType != 'TUITION'}" data-testid="internal-blocked-guidance">Review the source account, recipient and policy status before creating a new transfer plan.</p></div>
           <div th:if="${paymentDecision != null and paymentDecision.decision == 'DEADLINE_RISK' and latestReceipt == null}" class="deadline-warning" role="status"><strong data-user-authored th:text="${paymentDecision.reasonCode}"></strong><p data-payment-reason th:attr="data-reason=${paymentDecision.reasonCode},data-backend-explanation=${paymentDecision.explanation}" th:text="${paymentDecision.explanation}"></p></div>
 
           <article th:if="${latestReceipt != null}" class="receipt-card payment-receipt">
@@ -396,19 +397,19 @@
               <small th:text="${#temporals.format(latestReceipt.createdAt,'dd MMM yyyy HH:mm:ss')}"></small>
             </div>
           </article>
-          <details class="payment-info" th:open="${latestReceipt == null}"><summary th:text="${latestReceipt != null ? 'Payment details and quote used' : 'Review payment details'}"></summary>
+          <details class="payment-info" th:open="${latestReceipt == null}"><summary th:text="${latestAction.actionType == 'TUITION' ? (latestReceipt != null ? 'Payment details and quote used' : 'Review payment details') : 'Review transfer details'}"></summary>
           <div class="payment-review-grid" data-testid="payment-review">
             <article class="payment-review-section">
-              <h3>Bill and beneficiary</h3>
+              <h3 data-testid="review-recipient-heading" th:text="${latestAction.actionType == 'TUITION' ? 'Bill and beneficiary' : 'Internal transfer and recipient'}"></h3>
               <dl class="payment-facts" th:if="${paymentReview != null}">
-                <div><dt>Bill name</dt><dd data-testid="review-bill" data-user-authored th:text="${paymentReview.billTitle}"></dd></div>
-                <div><dt>School or education provider</dt><dd data-user-authored th:text="${paymentReview.institution}"></dd></div>
-                <div><dt>Payment reference</dt><dd th:text="${paymentReview.paymentReference}"></dd></div>
+                <div><dt th:text="${latestAction.actionType == 'TUITION' ? 'Bill name' : 'Transfer purpose'}"></dt><dd data-testid="review-bill" data-user-authored th:text="${paymentReview.billTitle}"></dd></div>
+                <div th:if="${latestAction.actionType == 'TUITION'}"><dt>School or education provider</dt><dd data-user-authored th:text="${paymentReview.institution}"></dd></div>
+                <div th:if="${latestAction.actionType == 'TUITION'}"><dt>Payment reference</dt><dd th:text="${paymentReview.paymentReference}"></dd></div>
                 <div th:if="${paymentReview.dueDate != null}"><dt>Due date</dt><dd th:text="${paymentReview.dueDate}"></dd></div>
-                <div><dt>Beneficiary legal name</dt><dd data-testid="review-beneficiary" data-user-authored th:text="${paymentReview.recipientName}"></dd></div>
+                <div><dt th:text="${latestAction.actionType == 'TUITION' ? 'Beneficiary legal name' : 'Recipient'}"></dt><dd data-testid="review-beneficiary" data-user-authored th:text="${paymentReview.recipientName}"></dd></div>
                 <div th:if="${paymentReview.recipientBankName != null}"><dt>Receiving bank or payment provider</dt><dd data-user-authored th:text="${paymentReview.recipientBankName}"></dd></div>
                 <div th:if="${paymentReview.recipientBankCode != null}"><dt>SWIFT/BIC or bank routing code</dt><dd th:text="${paymentReview.recipientBankCode}"></dd></div>
-                <div><dt>Beneficiary account / provider ID</dt><dd th:text="${latestAction.recipient}"></dd></div>
+                <div><dt th:text="${latestAction.actionType == 'TUITION' ? 'Beneficiary account / provider ID' : 'Recipient account'}"></dt><dd th:text="${latestAction.recipient}"></dd></div>
               </dl>
               <dl th:if="${paymentReview == null}" class="payment-facts"><div><dt>Recipient</dt><dd th:text="${latestAction.recipient}"></dd></div></dl>
             </article>
@@ -420,7 +421,7 @@
                 <div th:if="${paymentReview != null and paymentReview.rate != null and latestAction.actionType == 'TUITION'}"><dt>Rate</dt><dd th:text="${#numbers.formatDecimal(paymentReview.rate,1,'COMMA',4,'POINT') + ' VND/' + latestAction.destinationCurrency}"></dd></div>
                 <div><dt>Source amount</dt><dd th:text="${#numbers.formatDecimal(latestAction.conversionAmount,1,'COMMA',2,'POINT') + ' VND'}"></dd></div>
                 <div><dt>Transfer fee</dt><dd th:text="${#numbers.formatDecimal(latestAction.transferFee,1,'COMMA',2,'POINT') + ' VND'}"></dd></div>
-                <div><dt>FX markup</dt><dd th:text="${#numbers.formatDecimal(latestAction.fxMarkup,1,'COMMA',2,'POINT') + ' VND'}"></dd></div>
+                <div th:if="${latestAction.actionType == 'TUITION'}"><dt>FX markup</dt><dd th:text="${#numbers.formatDecimal(latestAction.fxMarkup,1,'COMMA',2,'POINT') + ' VND'}"></dd></div>
                 <div class="payment-total"><dt>Total debit</dt><dd data-testid="review-total" th:text="${#numbers.formatDecimal(latestAction.debitAmount,1,'COMMA',2,'POINT') + ' VND'}"></dd></div>
                 <div><dt th:text="${latestReceipt != null ? 'Amount credited in Sandbox' : 'Expected received'}"></dt><dd th:text="${#numbers.formatDecimal(latestAction.destinationAmount,1,'COMMA',2,'POINT') + ' ' + latestAction.destinationCurrency}"></dd></div>
                 <div th:if="${paymentReview != null}"><dt th:text="${latestReceipt == null ? 'Current balance' : 'Source balance before payment'}"></dt><dd th:text="${#numbers.formatDecimal(paymentReview.sourceBalance,1,'COMMA',2,'POINT') + ' VND'}"></dd></div>
@@ -444,15 +445,15 @@
           </div>
           </details>
           <div th:if="${latestReceipt == null}" class="payment-actions">
-            <p>Before payment, the system rechecks the bill, beneficiary, quote, account, limits, safety buffer and Emergency Stop.</p>
+            <p data-testid="payment-safety-checks" th:text="${latestAction.actionType == 'TUITION' ? 'Before payment, the system rechecks the bill, beneficiary, quote, account, limits, safety buffer and Emergency Stop.' : 'Before transfer, the system rechecks the source account, recipient, limits, safety buffer and Emergency Stop.'}"></p>
             <div>
-              <form th:if="${latestAction.status != 'CANCELED' and latestAction.status != 'INVALIDATED' and paymentDecision != null and paymentDecision.decision != 'BLOCKED'}" th:action="@{'/agent/actions/' + ${latestAction.id} + '/approve'}" method="post" data-next-anchor="#agent-workspace" data-confirm-en="Approve the displayed locked beneficiary, amount, account, channel and quote, and execute this payment in the Sandbox?" data-confirm-vi="Phê duyệt đúng người thụ hưởng, số tiền, tài khoản, kênh và báo giá đang hiển thị, rồi thực thi trong Sandbox?"><button class="primary-button" data-testid="approve-action">Approve and pay in Sandbox</button></form>
-              <form th:if="${latestAction.status != 'CANCELED' and latestAction.status != 'INVALIDATED'}" th:action="@{'/agent/actions/' + ${latestAction.id} + '/cancel'}" method="post" data-confirm-en="Cancel this unexecuted plan? The bill will remain available." data-confirm-vi="Hủy kế hoạch chưa thực thi này? Hóa đơn vẫn được giữ lại."><button class="secondary" data-testid="cancel-action">Cancel plan</button></form>
+              <form th:if="${latestAction.status != 'CANCELED' and latestAction.status != 'INVALIDATED' and paymentDecision != null and paymentDecision.decision != 'BLOCKED'}" th:action="@{'/agent/actions/' + ${latestAction.id} + '/approve'}" method="post" data-next-anchor="#agent-workspace" th:attr="data-confirm-en=${latestAction.actionType == 'TUITION' ? 'Approve the displayed locked beneficiary, amount, account, channel and quote, and execute this payment in the Sandbox?' : 'Approve the displayed recipient, amount and source account, and execute this internal transfer in the Sandbox?'},data-confirm-vi=${latestAction.actionType == 'TUITION' ? 'Phê duyệt đúng người thụ hưởng, số tiền, tài khoản, kênh và báo giá đang hiển thị, rồi thực thi trong Sandbox?' : 'Phê duyệt đúng người nhận, số tiền và tài khoản nguồn đang hiển thị, rồi thực thi chuyển nội bộ trong Sandbox?'}"><button class="primary-button" data-testid="approve-action">Approve and pay in Sandbox</button></form>
+              <form th:if="${latestAction.status != 'CANCELED' and latestAction.status != 'INVALIDATED'}" th:action="@{'/agent/actions/' + ${latestAction.id} + '/cancel'}" method="post" th:attr="data-confirm-en=${latestAction.actionType == 'TUITION' ? 'Cancel this unexecuted plan? The bill will remain available.' : 'Cancel this unexecuted internal transfer plan?'},data-confirm-vi=${latestAction.actionType == 'TUITION' ? 'Hủy kế hoạch chưa thực thi này? Hóa đơn vẫn được giữ lại.' : 'Hủy kế hoạch chuyển nội bộ chưa thực thi này?'}"><button class="secondary" data-testid="cancel-action">Cancel plan</button></form>
             </div>
           </div>
           <div class="payment-processing" data-payment-processing hidden role="status">Processing in Payment Sandbox. Please wait; do not submit another payment.</div>
 
-          <details class="payment-technical"><summary>Plan references</summary><dl class="payment-facts"><div><dt>Plan ID</dt><dd th:text="${latestAction.id}"></dd></div><div><dt>Source account</dt><dd th:text="${latestAction.sourceAccountId}"></dd></div><div><dt>Channel / quote</dt><dd th:text="${(latestAction.channelId ?: 'Internal sandbox') + ' · ' + (latestAction.quoteId ?: 'No FX quote')}"></dd></div><div><dt>Permission</dt><dd th:text="${latestAction.requiredPermission}"></dd></div><div><dt>Idempotency</dt><dd th:text="${latestAction.idempotencyKey}"></dd></div></dl></details>
+          <details class="payment-technical"><summary>Plan references</summary><dl class="payment-facts"><div><dt>Plan ID</dt><dd th:text="${latestAction.id}"></dd></div><div><dt>Source account</dt><dd th:text="${latestAction.sourceAccountId}"></dd></div><div><dt th:text="${latestAction.actionType == 'TUITION' ? 'Channel / quote' : 'Transfer channel'}"></dt><dd th:text="${latestAction.actionType == 'TUITION' ? (latestAction.channelId ?: 'Internal sandbox') + ' · ' + (latestAction.quoteId ?: 'No FX quote') : 'Internal Sandbox transfer'}"></dd></div><div><dt>Permission</dt><dd th:text="${latestAction.requiredPermission}"></dd></div><div><dt>Idempotency</dt><dd th:text="${latestAction.idempotencyKey}"></dd></div></dl></details>
           <details class="audit-panel payment-audit" data-testid="audit-log"><summary>Audit Log for this plan <span th:text="${#lists.size(auditEvents)}"></span></summary><div class="table-scroll"><table><thead><tr><th>Time / actor</th><th>Event</th><th>Status</th><th>Reason</th><th>Evidence</th></tr></thead><tbody><tr th:each="event : ${auditEvents}"><td><strong th:text="${#temporals.format(event.occurredAt,'HH:mm:ss')}"></strong><small th:text="${event.actor}"></small></td><td th:text="${#strings.replace(event.eventType,'_',' ')}"></td><td><span class="status-chip" data-payment-status th:attr="data-status=${event.status}" th:text="${event.status}"></span></td><td th:text="${event.reasonCode ?: '—'}"></td><td th:text="${event.details}"></td></tr></tbody></table></div></details>
         </div>
 
@@ -561,6 +562,7 @@
       <strong th:if="${agentPolicy.state == 'PAUSED'}">Emergency Stop is active</strong>
     </div>
   </div>
+  <div class="assistant-notices" data-assistant-notices data-testid="assistant-notices"></div>
   <div class="assistant-body">
     <section class="assistant-context" aria-label="Current screen">
       <small>Current screen</small><strong data-assistant-screen data-testid="assistant-screen"></strong>
@@ -594,7 +596,7 @@
               <div><dt>Funding account</dt><dd th:text="${paymentReview != null ? paymentReview.sourceDisplayName : latestAction.sourceAccountId}"></dd></div>
               <div><dt>Source amount</dt><dd th:text="${#numbers.formatDecimal(latestAction.conversionAmount,1,'COMMA',2,'POINT') + ' VND'}"></dd></div>
               <div><dt>Transfer fee</dt><dd th:text="${#numbers.formatDecimal(latestAction.transferFee,1,'COMMA',2,'POINT') + ' VND'}"></dd></div>
-              <div><dt>FX markup</dt><dd th:text="${#numbers.formatDecimal(latestAction.fxMarkup,1,'COMMA',2,'POINT') + ' VND'}"></dd></div>
+              <div th:if="${latestAction.actionType == 'TUITION'}"><dt>FX markup</dt><dd th:text="${#numbers.formatDecimal(latestAction.fxMarkup,1,'COMMA',2,'POINT') + ' VND'}"></dd></div>
               <div><dt>Total debit</dt><dd data-testid="assistant-plan-total" th:text="${#numbers.formatDecimal(latestAction.debitAmount,1,'COMMA',2,'POINT') + ' VND'}"></dd></div>
               <div th:if="${paymentReview != null}"><dt th:text="${latestReceipt == null ? 'Estimated balance after payment' : 'Balance immediately after this payment'}"></dt><dd data-testid="assistant-plan-remaining" th:text="${#numbers.formatDecimal(paymentReview.balanceAfter,1,'COMMA',2,'POINT') + ' VND'}"></dd></div>
             </dl>
@@ -649,6 +651,6 @@
   </form>
   <p class="assistant-safety">AI helps understand your question. Asking does not authorize a payment.</p>
 </aside>
-<script th:src="@{/app.js(v='20261006-local-bill-ai-v1')}"></script>
+<script th:src="@{/app.js(v='20261009-ai-ui-local')}"></script>
 </body>
 </html>

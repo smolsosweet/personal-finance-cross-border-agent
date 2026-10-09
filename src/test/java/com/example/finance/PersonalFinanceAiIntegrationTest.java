@@ -160,10 +160,58 @@ class PersonalFinanceAiIntegrationTest {
         stub(LlmIntent.Intent.EXPLAIN_SPENDING_SUMMARY);
         assertTrue(payments.sendMessage("Show spending last month").startsWith("Please clarify"));
         assertTrue(payments.sendMessage("Show spending for another account").startsWith("Please clarify"));
-        assertTrue(payments.sendMessage("Show only my food spending").startsWith("Please clarify"));
+        assertTrue(payments.sendMessage("Show only my food spending").contains("Food & Drinks"));
         stub(LlmIntent.Intent.EXPLAIN_TUITION_AFFORDABILITY);
         assertTrue(payments.sendMessage("What if I pay 10000 for tuition?").startsWith("Please clarify"));
         assertNull(payments.latestAction());
+    }
+
+    @Test void classifiedDailyCategoryAndPendingQueriesKeepNewSpendingFeaturesAndConfidenceChecks() {
+        db.update("DELETE FROM transactions");
+        fixture("food-scope", "Expense", "Food & Drinks", "VND", "120000", "AUTO", 0);
+        fixture("transport-scope", "Expense", "Transport", "VND", "50000", "CONFIRMED", 0);
+        String pendingId = transactions.simulate("low");
+        db.update("UPDATE transactions SET amount=800000 WHERE id=?", pendingId);
+        String day = LocalDate.now().withDayOfMonth(1).toString();
+        stub(LlmIntent.Intent.EXPLAIN_SPENDING_SUMMARY);
+        var before = snapshot(db);
+        for (String question : List.of("Show my food and transport spending", "Tháng này ăn uống và đi lại hết bao nhiêu?")) {
+            String answer = payments.sendMessage(question);
+            assertTrue(answer.contains("120000.00 VND"), answer);
+            assertTrue(answer.contains("50000.00 VND"), answer);
+            assertFalse(answer.contains("800000.00"), answer);
+            verify(llm).classify(question);
+        }
+        String question = "What did I buy on " + day + "?";
+        String daily = payments.sendMessage(question);
+        assertTrue(daily.startsWith("Expenses on " + day), daily);
+        assertTrue(daily.contains("Total VND: 170000.00"), daily);
+        verify(llm).classify(question);
+        String pending = payments.sendMessage("Which transactions need pending review?");
+        assertTrue(pending.startsWith("Transactions needing your review: 1"), pending);
+        assertTrue(pending.contains("800000.00 VND"), pending);
+        when(llm.classify(anyString())).thenReturn(structured(LlmIntent.Intent.EXPLAIN_SPENDING_SUMMARY, "0.60"));
+        assertTrue(payments.sendMessage("Show my food spending").startsWith("Please clarify"));
+        assertEquals(before, snapshot(db));
+    }
+
+    @Test void vietnameseTuitionQueriesUseProjectionThenHistoricalReceiptWithoutDoubleDebit() {
+        stub(LlmIntent.Intent.EXPLAIN_TUITION_AFFORDABILITY);
+        var before = snapshot(db);
+        String projected = payments.sendMessage("Nếu đóng học phí thì còn đủ tiền sinh hoạt không?");
+        assertTrue(projected.contains("29239200.00 VND"), projected);
+        assertEquals(before, snapshot(db));
+        var plan = payments.createTuitionPlan("BANK_A");
+        var receipt = payments.approveAndExecute(plan.id());
+        db.update("UPDATE fx_quotes SET expires_at=CURRENT_TIMESTAMP-INTERVAL '1' MINUTE");
+        before = snapshot(db);
+        String actual = payments.sendMessage("Sau khi đã thanh toán học phí tôi còn bao nhiêu tiền?");
+        assertTrue(actual.contains("29239200.00 VND"), actual);
+        assertTrue(actual.contains(receipt.transactionId()), actual);
+        assertFalse(actual.contains("Tổng các danh mục"), actual);
+        verify(llm).classify("Sau khi đã thanh toán học phí tôi còn bao nhiêu tiền?");
+        assertEquals(before, snapshot(db));
+        assertEquals(1, payments.sandboxTransactionCount());
     }
 
     @Test void schemaStillRejectsModelFinancialParametersAndWrongPreference() {

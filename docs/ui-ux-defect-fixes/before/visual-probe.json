@@ -1,0 +1,35 @@
+{
+  "progressLabel": {
+    "text": "Phê duyệt",
+    "width": 25,
+    "height": 25,
+    "scrollWidth": 29,
+    "scrollHeight": 33,
+    "font": "700 11px / 16.5px Arial, sans-serif"
+  },
+  "toastVsHeader": {
+    "toast": {
+      "x": 12,
+      "y": 80,
+      "width": 354,
+      "height": 68
+    },
+    "mode": {
+      "x": 12,
+      "y": 74.75,
+      "width": 171.375,
+      "height": 26.5
+    },
+    "state": {
+      "x": 189.375,
+      "y": 79.75,
+      "width": 45.25,
+      "height": 16.5
+    },
+    "modeOverlapArea": 3641.71875,
+    "stateOverlapArea": 735.3125,
+    "toastText": "Dừng khẩn cấp đang bật. Các tác vụ mới sẽ nhận trạng thái TÁC VỤ ĐÃ TẠM DỪNG.×"
+  },
+  "toastDismissedWithin6seconds": true,
+  "mobileHistoryRows": 5
+}

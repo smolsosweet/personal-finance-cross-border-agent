@@ -730,6 +730,13 @@ Object.entries({
   'Delegated mode cannot bypass this approval. Amount, beneficiary, account, channel and quote are locked to this plan.': 'Chế độ ủy quyền không bỏ qua bước phê duyệt này. Số tiền, người thụ hưởng, tài khoản, kênh và báo giá đã được khóa theo kế hoạch.',
   'Payment blocked': 'Thanh toán bị chặn',
   'Return to the bill or refresh quotes before creating a new plan.': 'Quay lại kiểm tra hóa đơn hoặc làm mới báo giá trước khi tạo kế hoạch mới.',
+  'Internal transfer and recipient': 'Chuyển nội bộ và người nhận',
+  'Review transfer details': 'Xem chi tiết chuyển tiền',
+  'No transfer was made. Review the source account and recipient before creating a new transfer plan.': 'Chưa chuyển tiền. Kiểm tra tài khoản nguồn và người nhận trước khi tạo kế hoạch chuyển tiền mới.',
+  'Before transfer, the system rechecks the source account, recipient, limits, safety buffer and Emergency Stop.': 'Trước khi chuyển tiền, hệ thống kiểm tra lại tài khoản nguồn, người nhận, hạn mức, đệm an toàn và Dừng khẩn cấp.',
+  'Internal Sandbox transfer': 'Chuyển nội bộ trong Sandbox', 'Transfer channel': 'Kênh chuyển tiền',
+  'Transfer purpose': 'Mục đích chuyển tiền', 'Recipient account': 'Tài khoản người nhận',
+  'Review the source account, recipient and policy status before creating a new transfer plan.': 'Kiểm tra tài khoản nguồn, người nhận và trạng thái chính sách trước khi tạo kế hoạch chuyển tiền mới.',
   'Bill and beneficiary': 'Hóa đơn và người thụ hưởng', 'Funding and total cost': 'Nguồn tiền và tổng chi phí',
   'Payment channel': 'Kênh thanh toán', 'Total debit': 'Tổng tiền trừ',
   'Current source balance': 'Số dư tài khoản hiện tại', 'Source balance before payment': 'Số dư trước thanh toán',
@@ -1119,6 +1126,7 @@ function setAssistantOpen(open, opener) {
   const launcher = document.querySelector('[data-testid="assistant-launcher"]');
   launcher.hidden = open;
   syncAssistantAccessibility();
+  placeWorkspaceNotices();
   if (open) {
     updateAssistantViewport();
     renderAssistantContext();
@@ -1722,6 +1730,26 @@ function applyLanguage(language) {
   renderResponseQuotes();
 }
 
+// Give status messages their own layout row; never float over approval or chat controls.
+function placeWorkspaceNotices() {
+  const panel = document.querySelector('[data-assistant-panel]');
+  const workspace = document.querySelector('[data-workspace-notices]');
+  const assistant = document.querySelector('[data-assistant-notices]');
+  const host = panel && !panel.hidden ? assistant : workspace;
+  if (!host) return;
+  document.querySelectorAll('.notice.in-place-notice').forEach(notice => {
+    if (notice.parentElement === host) return;
+    // Content replacement previously discarded the old notification too.
+    if (!notice.closest('[data-workspace-notices], [data-assistant-notices]')) {
+      host.querySelectorAll('.notice').forEach(old => {
+        window.clearTimeout(noticeTimers.get(old));
+        old.remove();
+      });
+    }
+    host.append(notice);
+  });
+}
+
 function initializeWorkspaceNotices(root = document) {
   root.querySelectorAll('.notice').forEach((notice) => {
     if (notice.querySelector('[data-dismiss-notice]')) return;
@@ -1742,6 +1770,7 @@ function initializeWorkspaceNotices(root = document) {
       noticeTimers.set(notice, window.setTimeout(() => notice.remove(), 4000));
     }
   });
+  placeWorkspaceNotices();
 }
 
 function captureWorkspaceState() {
