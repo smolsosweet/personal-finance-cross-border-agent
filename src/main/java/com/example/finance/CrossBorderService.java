@@ -308,6 +308,7 @@ public class CrossBorderService {
     }
 
     public Map<String,Object> tuitionInsight() {
+        if (selectedExpenseOrNull() == null) return Map.of();
         TuitionBill tuition = bill();
         StudentExpense expense = selectedExpense();
         if (expense.executed()) {
@@ -376,8 +377,7 @@ public class CrossBorderService {
     }
 
     public TuitionBill bill() {
-        Integer id = db.queryForObject("SELECT id FROM international_bills WHERE selected=TRUE AND lifecycle_status='ACTIVE' ORDER BY id LIMIT 1", Integer.class);
-        return bill(id);
+        return bill(selectedExpense().id());
     }
 
     public TuitionBill bill(int id) {
@@ -421,8 +421,33 @@ public class CrossBorderService {
     }
 
     public StudentExpense selectedExpense() {
-        return expenses().stream().filter(StudentExpense::selected).findFirst()
-                .orElseThrow(() -> new IllegalStateException("No student expense is selected"));
+        StudentExpense selected = selectedExpenseOrNull();
+        if (selected == null) throw new IllegalStateException("No student expense is selected");
+        return selected;
+    }
+
+    public StudentExpense selectedExpenseOrNull() {
+        return expenses().stream().filter(item -> item.selected() && item.active()).findFirst().orElse(null);
+    }
+
+    @Transactional
+    public boolean clearExpenseSelection(int expectedId) {
+        lockPaymentWorkflow();
+        // A stale browser must never clear a different bill selected by another teammate.
+        return db.update("UPDATE international_bills SET selected=FALSE WHERE id=? AND selected=TRUE", expectedId) > 0
+                || selectedExpenseOrNull() == null;
+    }
+
+    /** Saving a bill is separate from choosing a bill for payment comparison. */
+    @Transactional
+    public int addExpenseForReview(String expenseType, String title, String institution, BigDecimal amount,
+                          String destinationCountry, String currency, String recipientName,
+                          String recipientBankName, String recipientBankCode, String recipientAccount,
+                          String paymentReference, LocalDate dueDate,
+                          String documentName, String documentContentType, Long documentSize) {
+        return insertExpense(expenseType, title, institution, amount, destinationCountry, currency,
+                recipientName, recipientBankName, recipientBankCode, recipientAccount, paymentReference,
+                dueDate, documentName, documentContentType, documentSize, false);
     }
 
     @Transactional
@@ -431,6 +456,17 @@ public class CrossBorderService {
                           String recipientBankName, String recipientBankCode, String recipientAccount,
                           String paymentReference, LocalDate dueDate,
                           String documentName, String documentContentType, Long documentSize) {
+        return insertExpense(expenseType, title, institution, amount, destinationCountry, currency,
+                recipientName, recipientBankName, recipientBankCode, recipientAccount, paymentReference,
+                dueDate, documentName, documentContentType, documentSize, true);
+    }
+
+    private int insertExpense(String expenseType, String title, String institution, BigDecimal amount,
+                          String destinationCountry, String currency, String recipientName,
+                          String recipientBankName, String recipientBankCode, String recipientAccount,
+                          String paymentReference, LocalDate dueDate,
+                          String documentName, String documentContentType, Long documentSize,
+                          boolean selectForComparison) {
         lockPaymentWorkflow();
         String normalizedType = expenseType == null ? "" : expenseType.trim().toUpperCase();
         if (!List.of("TUITION", "DORMITORY", "INSURANCE", "VISA", "LIVING", "OTHER").contains(normalizedType))
@@ -458,7 +494,7 @@ public class CrossBorderService {
         boolean verified = recipientProfileVerified(cleanedInstitution, cleanedRecipientName, cleanedRecipientBank,
                 cleanedRecipientBankCode, cleanedRecipient, cleanedCountry, cleanedCurrency);
         Integer id = db.queryForObject("SELECT COALESCE(MAX(id),0)+1 FROM international_bills", Integer.class);
-        if (verified) db.update("UPDATE international_bills SET selected=FALSE");
+        if (verified || !selectForComparison) db.update("UPDATE international_bills SET selected=FALSE");
         db.update("""
                 INSERT INTO international_bills
                 (id,expense_type,title,institution,amount,currency,destination_country,recipient_name,recipient_bank_name,
@@ -467,9 +503,9 @@ public class CrossBorderService {
                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,'User-provided expense',?,?,?,?,'ACTIVE',?,?)
                 """, id, normalizedType, cleanedTitle, cleanedInstitution, amount.setScale(2), cleanedCurrency,
                 cleanedCountry, cleanedRecipientName, cleanedRecipientBank, cleanedRecipientBankCode, cleanedRecipient,
-                cleanedReference, dueDate, documentName, documentContentType, documentSize, verified,
+                cleanedReference, dueDate, documentName, documentContentType, documentSize, verified && selectForComparison,
                 LocalDateTime.now(), LocalDateTime.now());
-        if (verified) applySelectedCorridor(cleanedCountry, cleanedCurrency);
+        if (verified && selectForComparison) applySelectedCorridor(cleanedCountry, cleanedCurrency);
         return id;
     }
 
@@ -693,6 +729,7 @@ public class CrossBorderService {
     }
 
     public List<ChannelQuote> rankedQuotes(String preference) {
+        if (selectedExpenseOrNull() == null) return List.of();
         String normalizedPreference = preference == null ? "CHEAPER" : preference.toUpperCase();
         return rankedQuotesForBill(bill(), normalizedPreference);
     }

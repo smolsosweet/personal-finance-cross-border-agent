@@ -27,6 +27,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 class AssistantPanelPlaywrightTest {
     @Autowired DemoDataService demo;
     @Autowired PhaseFourService payments;
+    @Autowired CrossBorderService crossBorder;
     @Autowired JdbcTemplate db;
     @MockitoBean LlmIntentClient llm;
     private Playwright playwright;
@@ -319,9 +320,9 @@ class AssistantPanelPlaywrightTest {
         page.navigate("http://localhost:8101/?action=" + completedPlan.id() + "#agent-workspace");
         page.getByTestId("assistant-launcher").click();
         UiLanguageControls.select(page,"vi");
-        when(llm.classify(anyString())).thenReturn(intent(LlmIntent.Intent.EXPLAIN_BUDGET_STATUS));
+        when(llm.classify(anyString())).thenReturn(intent(LlmIntent.Intent.EXPLAIN_RECEIPT_BALANCE));
         for (int i = 0; i < 6; i++) {
-            send("Show remaining budgets this month.");
+            send("Show the balance immediately after transaction " + receipt.transactionId());
             idle();
         }
         var beforeNavigation = PersonalFinanceAiIntegrationTest.snapshot(db);
@@ -389,5 +390,51 @@ class AssistantPanelPlaywrightTest {
     private void idle() { page.waitForFunction("() => !document.querySelector('.content').hasAttribute('aria-busy')"); }
     private LlmIntent intent(LlmIntent.Intent value) {
         return new LlmIntent(value, LlmIntent.ChannelPreference.NONE, new BigDecimal("0.95"), LlmIntent.ClarificationCode.NONE);
+    }
+
+    @Test void billHelpCannotPinAnotherBillsReceiptAndShortcutCanBeDismissedAcrossReopening() throws Exception {
+        var paid = payments.createTuitionPlan("BANK_A");
+        payments.approveAndExecute(paid.id());
+        int second = crossBorder.addExpense("TUITION", "Second tuition", CrossBorderService.SCHOOL_NAME,
+                new BigDecimal("1000"), "China", "CNY", CrossBorderService.SCHOOL_RECIPIENT_NAME,
+                CrossBorderService.SCHOOL_RECIPIENT_BANK, CrossBorderService.SCHOOL_RECIPIENT_BANK_CODE,
+                CrossBorderService.SCHOOL_RECIPIENT, "SECOND-HELP", java.time.LocalDate.now().plusDays(30), null, null, null);
+        var before = PersonalFinanceAiIntegrationTest.snapshot(db);
+        page.navigate("http://localhost:8101/?action=" + paid.id() + "#student-finance");
+        page.getByTestId("assistant-student-help").click(); idle();
+        assertThat(page.getByTestId("assistant-review-plan")).hasCount(0);
+        page.getByTestId("assistant-close").click();
+        page.getByTestId("expense-1").locator(".student-bill-select").click(); idle();
+        page.getByTestId("assistant-student-help").click(); idle();
+        assertThat(page.getByTestId("assistant-review-plan")).hasAttribute("data-action-id", paid.id());
+        java.nio.file.Files.createDirectories(Path.of("target/bill-workflow"));
+        for (int width : new int[]{1440, 390, 360}) {
+            page.setViewportSize(width, 844);
+            for (String language : new String[]{"vi", "en"}) {
+                UiLanguageControls.select(page, language);
+                assertThat(page.getByTestId("assistant-dismiss-action")).isInViewport();
+                assertThat(page.getByTestId("assistant-send-message")).isInViewport();
+                panel().screenshot(new Locator.ScreenshotOptions().setPath(
+                        Path.of("target/bill-workflow/shortcut-" + width + "-" + language + ".png")));
+            }
+        }
+        page.getByTestId("assistant-dismiss-action").click();
+        assertThat(page.getByTestId("assistant-actions")).isHidden();
+        page.getByTestId("assistant-close").click(); page.getByTestId("assistant-launcher").click();
+        assertThat(page.getByTestId("assistant-actions")).isHidden();
+        page.reload(); page.getByTestId("assistant-launcher").click();
+        assertThat(page.getByTestId("assistant-actions")).isHidden();
+        when(llm.classify(anyString())).thenReturn(intent(LlmIntent.Intent.EXPLAIN_BUDGET_STATUS));
+        send("Show remaining budgets this month."); idle();
+        assertThat(page.getByTestId("assistant-review-plan")).hasCount(0);
+        assertNotNull(payments.receiptForAction(paid.id()));
+        assertEquals(1, payments.sandboxTransactionCount());
+        var after = PersonalFinanceAiIntegrationTest.snapshot(db);
+        for (String table : before.keySet()) {
+            // Selecting a bill intentionally refreshes quotes and changes comparison scope.
+            if (!java.util.Set.of("international_bills", "student_profiles", "fx_quotes").contains(table))
+                assertEquals(before.get(table), after.get(table), table + " must not change when dismissing or viewing a shortcut");
+        }
+        assertTrue(crossBorder.expenses().stream().anyMatch(b -> b.id() == second));
     }
 }

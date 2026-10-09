@@ -1,4 +1,14 @@
 const translationsVi = new Map(Object.entries({
+  'Deselect bill': 'Bỏ chọn hóa đơn',
+  'The selected bill changed. Your current selection was kept; review it before continuing.': 'Hóa đơn đang chọn đã thay đổi. Lựa chọn hiện tại được giữ nguyên; hãy kiểm tra trước khi tiếp tục.',
+  'This bill already has a plan awaiting review. Open that exact plan to continue; creating another bill does not approve it.': 'Hóa đơn này đã có kế hoạch chờ xem lại. Mở đúng kế hoạch để tiếp tục; thêm hóa đơn khác không phê duyệt kế hoạch này.',
+  'Select a bill to start. Click the selected bill again to clear your selection. Existing plans and receipts remain unchanged.': 'Chọn hóa đơn để bắt đầu. Bấm lại hóa đơn đang chọn để bỏ chọn. Kế hoạch và biên nhận đã có được giữ nguyên.',
+  'Step 2 is completed automatically when the beneficiary matches the trusted registry.': 'Bước 2 tự hoàn tất khi thông tin người thụ hưởng khớp danh bạ đã xác minh.',
+  'Confirm channel and create plan': 'Xác nhận kênh và tạo kế hoạch',
+  'Confirm this channel to create a plan for review. No payment is made until you approve it separately.': 'Xác nhận kênh này để tạo kế hoạch xem lại. Chỉ thanh toán sau khi bạn phê duyệt riêng.',
+  'Dismiss payment shortcut': 'Đóng thẻ kế hoạch hoặc biên nhận',
+  'Hide this shortcut. The plan and receipt are unchanged.': 'Ẩn thẻ này. Kế hoạch và biên nhận được giữ nguyên.',
+  'Bill selection cleared. Select a bill to continue; existing plans and receipts are unchanged.': 'Đã bỏ chọn hóa đơn. Chọn hóa đơn để tiếp tục; kế hoạch và biên nhận đã có được giữ nguyên.',
   'SHARED DEMO · SYNTHETIC DATA': 'DEMO DÙNG CHUNG · DỮ LIỆU MÔ PHỎNG',
   'Finance and Payment Sandbox data are shared by the team. Reset affects everyone. Restart restores the seed data. No real money or bank connection.': 'Dữ liệu tài chính và Payment Sandbox dùng chung cho cả team. Reset ảnh hưởng mọi người. Restart đưa dữ liệu về seed. Không dùng tiền thật hoặc kết nối ngân hàng.',
   'About this estimate': 'Giải thích về ước tính',
@@ -1206,6 +1216,13 @@ function setAssistantOpen(open, opener) {
   }
 }
 
+let dismissedAssistantAction = null;
+try { dismissedAssistantAction = sessionStorage.getItem('finbridge-dismissed-assistant-action'); } catch (_) {}
+function renderAssistantActions() {
+  const actions = document.querySelector('[data-assistant-actions]');
+  const id = actions?.querySelector('[data-assistant-review-plan]')?.dataset.actionId;
+  if (actions) actions.hidden = !id || id === dismissedAssistantAction;
+}
 function handleAssistantClick(event) {
   const opener = event.target.closest('[data-open-assistant]');
   const question = event.target.closest('[data-assistant-question]');
@@ -1228,6 +1245,12 @@ function handleAssistantClick(event) {
   }
   if (event.target.closest('[data-dismiss-runway]')) {
     document.querySelector('[data-assistant-runway]')?.setAttribute('hidden', '');
+  }
+  if (event.target.closest('[data-dismiss-assistant-action]')) {
+    dismissedAssistantAction = document.querySelector('[data-assistant-review-plan]')?.dataset.actionId || null;
+    try { sessionStorage.setItem('finbridge-dismissed-assistant-action', dismissedAssistantAction || ''); } catch (_) {}
+    renderAssistantActions();
+    document.querySelector('[data-testid="assistant-conversation-input"]')?.focus({preventScroll:true});
   }
   if (event.target.closest('[data-close-assistant]')) setAssistantOpen(false);
   if (event.target.closest('[data-assistant-review-plan]')) {
@@ -1832,6 +1855,7 @@ function applyLanguage(language) {
   renderPaymentWorkflow();
   renderAssistantContext();
   renderResponseQuotes();
+  renderAssistantActions();
   updateNotificationBadge();
 }
 
@@ -1910,7 +1934,31 @@ const paymentStatusLabels = {
   VERIFIED: ['Verified', 'Đã xác minh'], SELECTED: ['Selected', 'Đang chọn'], DEADLINE_RISK: ['Deadline risk', 'Rủi ro trễ hạn'],
   BLOCKED: ['Blocked', 'Bị chặn'], INVALIDATED: ['No longer valid', 'Không còn hiệu lực'], CANCELED: ['Canceled', 'Đã hủy']
 };
+function renderTuitionProgress() {
+  const progress = document.querySelector('[data-testid="tuition-progress"]');
+  if (!progress) return;
+  const dialog = document.querySelector('[data-payment-confirm-dialog]');
+  const approvalOpen = dialog?.open && dialog.dataset.actionId === progress.dataset.workflowAction;
+  const stage = approvalOpen ? 5 : Number(progress.dataset.stage);
+  Array.from(progress.children).forEach((step, index) => {
+    const current = index + 1 === stage;
+    step.classList.toggle('complete', index + 1 < stage);
+    step.classList.toggle('current', current);
+    if (current) step.setAttribute('aria-current', 'step'); else step.removeAttribute('aria-current');
+  });
+  const marker = stage + ':' + selectedLanguage();
+  if (progress.clientWidth > 0 && progress.dataset.renderedStage !== marker) {
+    progress.dataset.renderedStage = marker;
+    const step = progress.querySelector('[aria-current="step"]');
+    if (step) {
+      const area = progress.getBoundingClientRect(), active = step.getBoundingClientRect();
+      if (active.right > area.right) progress.scrollLeft += active.right - area.right + 8;
+      else if (active.left < area.left) progress.scrollLeft -= area.left - active.left + 8;
+    }
+  }
+}
 function renderPaymentWorkflow() {
+  renderTuitionProgress();
   const vietnamese = selectedLanguage() === 'vi';
   const index = vietnamese ? 1 : 0;
   document.querySelectorAll('[data-payment-status]').forEach((label) => {
@@ -2362,6 +2410,7 @@ function confirmPaymentPlan(form) {
       window.clearInterval(timer);
       pendingPaymentConfirmation = false;
       if (dialog.open) dialog.close();
+      renderTuitionProgress();
       if (opener?.isConnected) opener.focus({preventScroll:true});
       resolve(approved);
     };
@@ -2393,6 +2442,7 @@ function confirmPaymentPlan(form) {
     }, {signal:listeners.signal});
     valid();
     dialog.showModal();
+    renderTuitionProgress();
     dialog.scrollTop = 0;
     dialog.querySelector('.confirmation-body')?.scrollTo({top:0});
   });
@@ -2417,7 +2467,6 @@ async function submitWorkspaceForm(event) {
   }
   if (!window.fetch || !window.DOMParser) return;
   event.preventDefault();
-  if (form.dataset.billSelected === 'true') return;
   // Emergency Stop must remain available while another request is pending.
   const changesContext = ['/reset', '/agent/emergency-stop', '/agent/context', '/agent/context/choice', '/agent/runway/monthly-expense', '/student/expenses/select', '/student/source-account', '/student/quotes/refresh'].includes(action.pathname);
   if (pendingUpdate && !changesContext) return;
@@ -2429,6 +2478,7 @@ async function submitWorkspaceForm(event) {
   const processing = form.closest('[data-testid="latest-action"]')?.querySelector('[data-payment-processing]');
   if (processing && action.pathname.endsWith('/approve')) processing.hidden = false;
   const restoreBillFocus = event.submitter?.matches('.student-bill-select:focus-visible');
+  const submittedBillId = action.pathname === '/student/expenses/select' ? form.elements.id.value : null;
   const requestId = ++updateSequence;
   pendingUpdate = requestId;
   const isContext = action.pathname === '/agent/context' || action.pathname === '/agent/context/choice' || action.pathname === '/agent/runway/monthly-expense';
@@ -2557,7 +2607,7 @@ async function submitWorkspaceForm(event) {
         document.querySelector('[data-testid="' + CSS.escape(focusTestId) + '"]')
           ?.focus({ preventScroll: true });
       } else if (action.pathname === '/student/expenses/select' && restoreBillFocus) {
-        document.querySelector('.student-bill-select[aria-pressed="true"]')?.focus({ preventScroll: true });
+        document.querySelector('[data-bill-row="' + CSS.escape(submittedBillId) + '"] .student-bill-select')?.focus({ preventScroll: true });
       }
       window.scrollTo({ left: preservePosition ? state.left : 0, top: preservePosition ? state.top : 0, behavior: 'instant' });
     };

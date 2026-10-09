@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>FinBridge · Financial workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261009-payment-controls')}">
+  <title>FinBridge · Financial workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261009-bill-workflow')}">
 </head>
 <body>
 <a class="skip-link" href="#workspace-content">Skip to main content</a>
@@ -189,15 +189,17 @@
           <div class="section-help-actions"><button type="button" class="secondary" data-open-assistant data-assistant-question="affordability" th:attr="data-assistant-context-token=${conversationContext.studentToken}" data-testid="assistant-student-help">Ask about tuition</button><button class="primary-button" type="button" data-open-dialog="add-student-expense">+ Add student bill</button></div>
         </div>
 
-        <ol class="tuition-progress" data-testid="tuition-progress" aria-label="Education payment progress" th:with="stage=${selectedExpense.executed ? 6 : (!recipientVerification.verified ? 2 : (latestAction != null and latestAction.expenseId == selectedExpense.id and latestAction.status == 'AWAITING_APPROVAL' ? 4 : 3))}">
-          <li th:classappend="${stage > 1 ? ' complete' : ' current'}"><span>1</span>Select bill</li>
-          <li th:classappend="${stage > 2 ? ' complete' : (stage == 2 ? ' current' : '')}"><span>2</span>Verify beneficiary</li>
-          <li th:classappend="${stage > 3 ? ' complete' : (stage == 3 ? ' current' : '')}"><span>3</span>Compare channels</li>
-          <li th:classappend="${stage > 4 ? ' complete' : (stage == 4 ? ' current' : '')}"><span>4</span>Review plan</li>
-          <li th:classappend="${stage > 5 ? ' complete' : ''}"><span>5</span>Approve</li>
-          <li th:classappend="${stage == 6 ? ' current' : ''}"><span>6</span>Receipt</li>
+        <ol class="tuition-progress" data-testid="tuition-progress" aria-label="Education payment progress" th:with="stage=${studentWorkflowStage}" th:attr="data-stage=${studentWorkflowStage},data-workflow-action=${studentWorkflowPlan != null ? studentWorkflowPlan.id : null},data-workflow-bill=${selectedExpense != null ? selectedExpense.id : null}">
+          <li th:classappend="${stage > 1 ? ' complete' : ' current'}" th:attr="aria-current=${stage == 1 ? 'step' : null}"><span>1</span>Select bill</li>
+          <li th:classappend="${stage > 2 ? ' complete' : (stage == 2 ? ' current' : '')}" th:attr="aria-current=${stage == 2 ? 'step' : null}"><span>2</span>Verify beneficiary</li>
+          <li th:classappend="${stage > 3 ? ' complete' : (stage == 3 ? ' current' : '')}" th:attr="aria-current=${stage == 3 ? 'step' : null}"><span>3</span>Compare channels</li>
+          <li th:classappend="${stage > 4 ? ' complete' : (stage == 4 ? ' current' : '')}" th:attr="aria-current=${stage == 4 ? 'step' : null}"><span>4</span>Review plan</li>
+          <li th:classappend="${stage > 5 ? ' complete' : (stage == 5 ? ' current' : '')}" th:attr="aria-current=${stage == 5 ? 'step' : null}"><span>5</span>Approve</li>
+          <li th:classappend="${stage == 6 ? ' current' : ''}" th:attr="aria-current=${stage == 6 ? 'step' : null}"><span>6</span>Receipt</li>
         </ol>
-        <div class="corridor-strip">
+        <div class="payment-approval-note" th:if="${studentWorkflowPlan != null and studentWorkflowStage == 4}"><p>This bill already has a plan awaiting review. Open that exact plan to continue; creating another bill does not approve it.</p><a class="secondary link-button" data-open-payment-plan data-testid="student-workflow-plan" th:href="@{/(action=${studentWorkflowPlan.id})} + '#agent-workspace'">View payment plan</a></div>
+        <p class="payment-approval-note" data-testid="student-no-selection" th:if="${selectedExpense == null}">Select a bill to start. Click the selected bill again to clear your selection. Existing plans and receipts remain unchanged.</p>
+        <div class="corridor-strip" th:if="${selectedExpense != null}">
           <div><small>Student</small><strong th:text="${studentProfile.name}"></strong></div>
           <div data-testid="student-corridor"><small>Corridor</small><strong th:text="${studentProfile.sourceCountry + ' → ' + studentProfile.destinationCountry}"></strong></div>
           <div data-testid="student-currencies"><small>Currencies</small><strong th:text="${studentProfile.sourceCurrency + ' → ' + studentProfile.destinationCurrency}"></strong></div>
@@ -221,9 +223,10 @@
             <th:block th:each="expense : ${studentExpenses}">
               <article class="student-expense-card student-bill-row" th:classappend="${(expense.selected ? ' selected' : '') + (!expense.active ? ' inactive' : '')}"
                        th:attr="data-testid=${'expense-' + expense.id},data-bill-row=${expense.id},data-bill-status=${expense.executed ? 'PAID' : expense.lifecycleStatus},data-bill-lifecycle=${expense.lifecycleStatus},data-bill-verification=${expense.verificationStatus},data-bill-due=${expense.dueDate},data-bill-created=${expense.createdAt},data-bill-amount=${expense.amount},data-bill-provider=${expense.institution}">
-                <form th:if="${expense.active and !expense.executed and expense.verificationStatus == 'VERIFIED'}" class="student-bill-select-form" th:action="@{/student/expenses/select}" method="post" th:attr="data-bill-selected=${expense.selected}">
+                <form th:if="${expense.active and expense.verificationStatus == 'VERIFIED'}" class="student-bill-select-form" th:action="@{/student/expenses/select}" method="post" th:attr="data-bill-selected=${expense.selected}">
                   <input type="hidden" name="id" th:value="${expense.id}">
-                  <button class="student-bill-select" type="submit" th:attr="aria-pressed=${expense.selected}"><span class="visually-hidden">Select bill</span> <span class="visually-hidden" data-user-authored th:text="${expense.title}"></span></button>
+                  <input type="hidden" name="deselect" th:value="${expense.selected}">
+                  <button class="student-bill-select" type="submit" th:attr="aria-pressed=${expense.selected}"><span class="visually-hidden" th:text="${expense.selected ? 'Deselect bill' : 'Select bill'}"></span> <span class="visually-hidden" data-user-authored th:text="${expense.title}"></span></button>
                 </form>
                 <div class="student-bill-identity"><div class="expense-card-top"><span class="expense-type" th:text="${expense.expenseType}"></span><span th:if="${expense.selected}" class="selected-expense-label">Selected</span></div><strong data-user-authored th:text="${expense.title}"></strong><small data-user-authored th:text="${expense.institution}"></small><small th:text="${'Reference · ' + expense.paymentReference}"></small></div>
                 <div class="student-bill-beneficiary"><small>Beneficiary</small><strong data-user-authored th:text="${expense.recipientName}"></strong><span th:text="${expense.recipientBankName + ' · ' + expense.recipientBankCode}"></span><span th:text="${'Account · ' + expense.recipientAccount}"></span></div>
@@ -262,6 +265,7 @@
           <div class="student-bill-list-meta"><span data-testid="student-bill-visible-count"></span><span>Only verified active bills can be selected for comparison.</span></div>
           <nav class="student-bill-pagination" aria-label="Education bill pages"><button type="button" class="secondary" data-testid="student-bill-prev">Previous</button><span data-testid="student-bill-page" aria-live="polite"></span><button type="button" class="secondary" data-testid="student-bill-next">Next</button></nav>
         </section>
+        <th:block th:if="${selectedExpense != null}">
         <div class="selected-expense-grid">
           <article class="selected-expense-summary" data-testid="tuition-bill">
             <div class="bill-heading"><span class="school-mark">S</span><div><small>SELECTED EXPENSE</small><h3 data-user-authored th:text="${selectedExpense.title}"></h3></div></div>
@@ -270,7 +274,7 @@
           </article>
           <article class="verification-card" data-testid="recipient-verification" th:classappend="${recipientVerification.verified ? ' verified' : ' mismatch'}">
             <div class="verification-icon" th:text="${recipientVerification.verified ? '✓' : '!'}"></div>
-            <div><small>BENEFICIARY VERIFICATION</small><h3 th:text="${recipientVerification.verified ? 'Beneficiary verified' : 'Beneficiary mismatch'}"></h3><p th:text="${recipientVerification.reason}"></p><strong th:if="${recipientVerification.verified}" th:text="${recipientVerification.registryBankName + ' · ' + recipientVerification.registryBankCode + ' · ' + recipientVerification.registryAccount}"></strong><strong th:if="${!recipientVerification.verified}">No matching trusted beneficiary profile</strong></div>
+            <div><small>BENEFICIARY VERIFICATION</small><h3 th:text="${recipientVerification.verified ? 'Beneficiary verified' : 'Beneficiary mismatch'}"></h3><p th:text="${recipientVerification.reason}"></p><p th:if="${recipientVerification.verified}">Step 2 is completed automatically when the beneficiary matches the trusted registry.</p><strong th:if="${recipientVerification.verified}" th:text="${recipientVerification.registryBankName + ' · ' + recipientVerification.registryBankCode + ' · ' + recipientVerification.registryAccount}"></strong><strong th:if="${!recipientVerification.verified}">No matching trusted beneficiary profile</strong></div>
           </article>
         </div>
 
@@ -300,7 +304,8 @@
                 <p class="channel-recovery" th:if="${!quote.eligible}"><span>Account connected, but this channel does not support</span> <strong th:text="${studentProfile.sourceCountry + ' → ' + selectedExpense.destinationCountry + ' · VND → ' + selectedExpense.currency}"></strong><span>. Reconnecting the account will not enable this route. Choose an eligible channel.</span></p>
                 <p class="channel-recovery" th:if="${quote.eligible and !canFund}">This account cannot cover the total cost and safety buffer. Choose another account.</p>
                 <p class="channel-recovery" th:if="${!recipientVerification.verified}">Verify the bill beneficiary before creating a plan.</p>
-                <div class="channel-row-actions"><button class="secondary" type="button" th:attr="data-open-dialog=${'quote-detail-' + quote.channelId}">Details</button><form th:if="${canFund and !quote.expired and recipientVerification.verified}" th:action="@{/agent/plans/tuition}" method="post" class="planning-form" data-next-anchor="#agent-workspace"><input type="hidden" name="channel" th:value="${quote.channelId}"><input type="hidden" name="sourceAccountId" th:value="${sourceAccount.accountId}"><input type="hidden" name="expenseId" th:value="${selectedExpense.id}"><input type="hidden" name="billVersion" th:value="${selectedExpense.updatedAt}"><input type="hidden" name="quoteId" th:value="${quote.quoteId}"><button class="planning-only" type="submit" th:attr="data-testid=${'plan-' + quote.channelId}">Create plan</button></form></div>
+                <div class="channel-row-actions"><button class="secondary" type="button" th:attr="data-open-dialog=${'quote-detail-' + quote.channelId}">Details</button><form th:if="${canFund and !quote.expired and recipientVerification.verified}" th:action="@{/agent/plans/tuition}" method="post" class="planning-form" data-next-anchor="#agent-workspace"><input type="hidden" name="channel" th:value="${quote.channelId}"><input type="hidden" name="sourceAccountId" th:value="${sourceAccount.accountId}"><input type="hidden" name="expenseId" th:value="${selectedExpense.id}"><input type="hidden" name="billVersion" th:value="${selectedExpense.updatedAt}"><input type="hidden" name="quoteId" th:value="${quote.quoteId}"><button class="planning-only" type="submit" th:attr="data-testid=${'plan-' + quote.channelId}">Confirm channel and create plan</button></form></div>
+                <small th:if="${canFund and recipientVerification.verified}">Confirm this channel to create a plan for review. No payment is made until you approve it separately.</small>
                 <div class="quote-live-status compact" data-quote-live-status aria-live="polite"></div>
                 <form th:action="@{/student/quotes/refresh}" method="post" data-channel-refresh hidden><button type="submit" class="secondary">Refresh expired quote</button><small>Refresh is manual. Review the new cost before creating a plan.</small></form>
                 <dialog class="quote-detail-dialog" th:id="${'quote-detail-' + quote.channelId}"><div class="dialog-heading"><div><small>QUOTE DETAILS · SIMULATION</small><h3 th:text="${quote.displayName}"></h3></div><button type="button" data-close-dialog aria-label="Close">×</button></div><p th:text="${quote.eligibilityReason}"></p><dl class="fee-breakdown"><div><dt>Funding account</dt><dd th:text="${sourceAccount.displayName + ' · ' + @conversationPresentation.money(sourceAccount.balance) + ' VND'}"></dd></div><div><dt>Rate</dt><dd th:text="${@conversationPresentation.money(quote.rateVndPerCny) + ' VND/' + selectedExpense.currency}"></dd></div><div><dt>Source amount</dt><dd th:text="${@conversationPresentation.money(quote.sourceAmount) + ' VND'}"></dd></div><div><dt>Transfer fee</dt><dd th:text="${@conversationPresentation.money(quote.transferFee) + ' VND'}"></dd></div><div><dt>FX markup</dt><dd th:text="${@conversationPresentation.money(quote.fxMarkup) + ' VND'}"></dd></div><div><dt>Expected received</dt><dd th:text="${@conversationPresentation.money(quote.expectedReceived) + ' ' + selectedExpense.currency}"></dd></div><div><dt>Latest safe date</dt><dd th:text="${quote.latestSafeDate}"></dd></div><div><dt>Safety score</dt><dd th:text="${quote.safetyScore + '/100 synthetic'}"></dd></div></dl><div class="quote-meta"><span th:text="${quote.quoteSource}"></span><br><span th:text="${'Quoted ' + #temporals.format(quote.quotedAt,'dd MMM yyyy HH:mm:ss')}"></span><br><span th:text="${'Expires ' + #temporals.format(quote.expiresAt,'dd MMM yyyy HH:mm:ss')}"></span></div></dialog>
@@ -312,6 +317,7 @@
 
         <div th:if="${!selectedExpense.executed}" class="market-suggestion-list"><div class="suggestion-heading"><div><div class="eyebrow">MARKET SUGGESTIONS · REFERENCE ONLY</div><h3>Potentially better alternatives</h3><p>These are not linked to your accounts and cannot be selected or executed.</p></div></div><article class="market-suggestion-row" th:each="quote : ${suggestedChannelQuotes}" th:attr="data-testid=${'channel-' + quote.channelId}"><div><strong th:text="${quote.displayName}"></strong><small th:text="${quote.eligibilityReason}"></small></div><div><small>Total cost</small><strong th:text="${@conversationPresentation.money(quote.landedCost) + ' VND'}"></strong></div><div class="suggestion-benefit" th:if="${quote.landedCost.compareTo(cheapestEligibleCost) < 0}"><strong th:text="${@conversationPresentation.money(cheapestEligibleCost.subtract(quote.landedCost)) + ' VND less'}"></strong><span>Reference saving only</span></div><span class="eligibility unavailable-tag">Not connected</span><details class="reference-quote-details"><summary>Quote details</summary><dl class="channel-essential-facts"><div><dt>Expected received</dt><dd th:text="${@conversationPresentation.money(quote.expectedReceived) + ' ' + selectedExpense.currency}"></dd></div><div><dt>Transfer fee</dt><dd th:text="${@conversationPresentation.money(quote.transferFee) + ' VND'}"></dd></div><div><dt>FX markup</dt><dd th:text="${@conversationPresentation.money(quote.fxMarkup) + ' VND'}"></dd></div><div><dt>Settlement</dt><dd th:text="${quote.settlementMinDays + '–' + quote.settlementMaxDays + ' day(s)'}"></dd></div></dl><div class="quote-meta"><span th:text="${quote.quoteSource}"></span><br><span th:text="${'Quoted ' + #temporals.format(quote.quotedAt,'dd MMM yyyy HH:mm:ss')}"></span><br><span th:text="${'Expires ' + #temporals.format(quote.expiresAt,'dd MMM yyyy HH:mm:ss')}"></span></div><p>Reference only. This channel cannot create or execute a payment.</p></details></article></div>
 
+        </th:block>
         <dialog id="add-student-expense" class="student-expense-dialog">
           <div class="dialog-heading"><div><small>NEW EDUCATION BILL</small><h3>Add a school or provider bill</h3></div><button type="button" data-close-dialog aria-label="Close">×</button></div>
           <p>Enter beneficiary details from the official bill or authenticated provider portal. The demo verifies them against a synthetic trusted registry; it does not contact the bank or school.</p>
@@ -662,9 +668,10 @@
       </section>
   <form th:action="@{/agent/context}" method="post" data-assistant-context-form data-context-form data-chat-timeout="10000" hidden><input type="hidden" name="token"><button type="submit">Update conversation context</button></form>
   <div class="assistant-actions" data-assistant-actions data-testid="assistant-actions">
-    <th:block th:if="${latestAction != null}">
-      <small th:text="${latestAction.id}"></small>
-      <a class="secondary link-button" th:href="@{/(action=${latestAction.id})} + '#agent-workspace'" data-open-payment-plan data-assistant-review-plan data-testid="assistant-review-plan" th:attr="data-action-id=${latestAction.id},data-assistant-review-receipt=${latestReceipt != null ? 'true' : null}" th:text="${latestReceipt != null ? 'View receipt' : 'View payment plan'}"></a>
+    <th:block th:if="${assistantAction != null}">
+      <small th:text="${assistantAction.id}"></small>
+      <a class="secondary link-button" th:href="@{/(action=${assistantAction.id})} + '#agent-workspace'" data-open-payment-plan data-assistant-review-plan data-testid="assistant-review-plan" th:attr="data-action-id=${assistantAction.id},data-assistant-review-receipt=${assistantReceipt != null ? 'true' : null}" th:text="${assistantReceipt != null ? 'View receipt' : 'View payment plan'}"></a>
+      <button type="button" class="assistant-action-dismiss" data-dismiss-assistant-action data-testid="assistant-dismiss-action" aria-label="Dismiss payment shortcut" title="Hide this shortcut. The plan and receipt are unchanged.">×</button>
     </th:block>
   </div>
   <form class="composer assistant-composer" th:action="@{/agent/message}" method="post" data-chat-form th:attr="data-chat-timeout=${chatTimeoutMillis}" data-chat-unavailable-en="The request timed out or the connection failed. No automatic retry was sent. Reload to check the current state before retrying." data-chat-unavailable-vi="Yêu cầu hết thời gian chờ hoặc mất kết nối. Chưa tự động gửi lại. Hãy tải lại để kiểm tra trạng thái trước khi thử lại.">
@@ -674,6 +681,6 @@
   </form>
   <p class="assistant-safety">AI helps understand your question. Asking does not authorize a payment.</p>
 </aside>
-<script th:src="@{/app.js(v='20261009-payment-controls')}"></script>
+<script th:src="@{/app.js(v='20261009-bill-workflow')}"></script>
 </body>
 </html>

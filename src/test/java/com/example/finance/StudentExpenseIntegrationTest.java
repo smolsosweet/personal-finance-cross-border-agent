@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -106,12 +107,19 @@ class StudentExpenseIntegrationTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/#student-finance"));
 
-        assertEquals("dormitory-invoice.pdf", crossBorder.selectedExpense().documentName());
+        assertNull(crossBorder.selectedExpenseOrNull());
+        assertEquals("dormitory-invoice.pdf", expense(2).documentName());
         String html = mvc.perform(get("/")).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         assertTrue(html.contains("Dormitory deposit"));
         assertTrue(html.contains("data-open-dialog=\"add-student-expense\""));
-        assertTrue(html.contains("quote-detail-BANK_A"));
+        assertTrue(html.contains("data-testid=\"student-no-selection\""));
+        assertFalse(html.contains("id=\"quote-detail-BANK_A\""));
+        mvc.perform(post("/student/expenses/select").param("id", "2"))
+                .andExpect(status().is3xxRedirection());
+        assertEquals(2, crossBorder.selectedExpense().id());
+        html = mvc.perform(get("/")).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertTrue(html.contains("id=\"quote-detail-BANK_A\""));
     }
 
     @Test void invalidExpenseAndUnsafeDocumentTypeAreRejected() {
@@ -240,5 +248,69 @@ class StudentExpenseIntegrationTest {
 
     private CrossBorderService.StudentExpense expense(int id) {
         return crossBorder.expenses().stream().filter(item -> item.id() == id).findFirst().orElseThrow();
+    }
+
+    @Test void deselectingTheOnlyBillRendersStepOneAndDoesNotInvalidateItsLockedPlan() throws Exception {
+        var plan = phaseFour.createTuitionPlan("BANK_A");
+        mvc.perform(post("/student/expenses/select").param("id", "1").param("deselect", "true"))
+                .andExpect(status().is3xxRedirection());
+        assertNull(crossBorder.selectedExpenseOrNull());
+        assertTrue(crossBorder.rankedQuotes().isEmpty());
+        assertTrue(crossBorder.tuitionInsight().isEmpty());
+        assertThrows(IllegalStateException.class, crossBorder::bill);
+        assertFalse(phaseFour.matchesCurrentStudentSelection(plan));
+        var model = mvc.perform(get("/")).andExpect(status().isOk()).andReturn().getModelAndView().getModel();
+        assertEquals(1, model.get("studentWorkflowStage"));
+        assertEquals("AWAITING_APPROVAL", phaseFour.action(plan.id()).status());
+        assertEquals(0, phaseFour.sandboxTransactionCount());
+        var receipt = phaseFour.approveAndExecute(plan.id());
+        assertTrue(receipt != null && receipt.actionId().equals(plan.id()));
+        assertEquals(1, phaseFour.sandboxTransactionCount());
+    }
+
+    @Test void savingAnotherBillForReviewDoesNotReplaceTheQuoteOfAnExistingPlan() {
+        var plan = phaseFour.createTuitionPlan("BANK_A");
+        crossBorder.addExpenseForReview("TUITION", "New USD tuition", CrossBorderService.US_SCHOOL_NAME,
+                new BigDecimal("1000"), "United States", "USD", CrossBorderService.US_SCHOOL_RECIPIENT_NAME,
+                CrossBorderService.US_SCHOOL_RECIPIENT_BANK, CrossBorderService.US_SCHOOL_RECIPIENT_BANK_CODE,
+                CrossBorderService.US_SCHOOL_RECIPIENT, "REVIEW-USD", LocalDate.now().plusDays(30), null, null, null);
+        assertNull(crossBorder.selectedExpenseOrNull());
+        var sameQuote = crossBorder.rankedQuotesForExpense(1).stream()
+                .filter(q -> q.channelId().equals("BANK_A")).findFirst().orElseThrow();
+        assertEquals(plan.quoteId(), sameQuote.quoteId());
+        assertEquals("AWAITING_APPROVAL", phaseFour.action(plan.id()).status());
+        assertEquals(0, phaseFour.sandboxTransactionCount());
+        var receipt = phaseFour.approveAndExecute(plan.id());
+        assertTrue(receipt != null && receipt.actionId().equals(plan.id()));
+        assertEquals("CNY", receipt.destinationCurrency());
+        assertFalse(expense(2).executed());
+    }
+
+    @Test void staleDeselectCannotClearAnotherBillAndProgressCannotBorrowAnotherBillsReceipt() throws Exception {
+        var paid = phaseFour.createTuitionPlan("BANK_A");
+        phaseFour.approveAndExecute(paid.id());
+        int second = crossBorder.addExpense("TUITION", "Second tuition", CrossBorderService.SCHOOL_NAME,
+                new BigDecimal("1000"), "China", "CNY", CrossBorderService.SCHOOL_RECIPIENT_NAME,
+                CrossBorderService.SCHOOL_RECIPIENT_BANK, CrossBorderService.SCHOOL_RECIPIENT_BANK_CODE,
+                CrossBorderService.SCHOOL_RECIPIENT, "SECOND", LocalDate.now().plusDays(30), null, null, null);
+        assertFalse(crossBorder.clearExpenseSelection(1));
+        var stale = mvc.perform(post("/student/expenses/select").param("id", "1").param("deselect", "true"))
+                .andExpect(status().is3xxRedirection()).andReturn();
+        assertEquals("The selected bill changed. Your current selection was kept; review it before continuing.",
+                stale.getFlashMap().get("message"));
+        assertEquals(second, crossBorder.selectedExpense().id());
+        var model = mvc.perform(get("/").param("action", paid.id())).andExpect(status().isOk())
+                .andReturn().getModelAndView().getModel();
+        assertEquals(3, model.get("studentWorkflowStage"));
+        assertNull(model.get("studentWorkflowPlan"));
+        var pending = phaseFour.createTuitionPlan("BANK_A");
+        model = mvc.perform(get("/").param("action", paid.id())).andExpect(status().isOk())
+                .andReturn().getModelAndView().getModel();
+        assertEquals(4, model.get("studentWorkflowStage"));
+        assertEquals(pending.id(), ((PhaseFourService.ActionPlan) model.get("studentWorkflowPlan")).id());
+        phaseFour.cancel(pending.id());
+        model = mvc.perform(get("/")).andExpect(status().isOk()).andReturn().getModelAndView().getModel();
+        assertEquals(3, model.get("studentWorkflowStage"));
+        assertEquals(1, phaseFour.sandboxTransactionCount());
     }
 }

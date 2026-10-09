@@ -69,13 +69,22 @@ public class PhaseOneController {
                 ((Number) transactions.dashboard().get("pendingReview")).intValue()));
         Map<String,Object> defaultTuitionInsight = crossBorder.tuitionInsight();
         var insights = new ArrayList<>(transactions.proactiveFeed());
-        insights.add(defaultTuitionInsight);
+        if (!defaultTuitionInsight.isEmpty()) insights.add(defaultTuitionInsight);
         model.addAttribute("insights", insights);
         model.addAttribute("studentProfile", crossBorder.profile());
-        model.addAttribute("tuitionBill", crossBorder.bill());
+        var selectedExpense = crossBorder.selectedExpenseOrNull();
+        model.addAttribute("tuitionBill", selectedExpense == null ? null : crossBorder.bill(selectedExpense.id()));
         model.addAttribute("studentExpenses", crossBorder.expenses());
-        model.addAttribute("selectedExpense", crossBorder.selectedExpense());
-        model.addAttribute("recipientVerification", crossBorder.verifyRecipient());
+        model.addAttribute("selectedExpense", selectedExpense);
+        var verification = selectedExpense == null ? null : crossBorder.verifyRecipient(selectedExpense.id());
+        model.addAttribute("recipientVerification", verification);
+        var workflowPlan = selectedExpense == null ? null : phaseFour.workflowPlanForExpense(selectedExpense.id());
+        var workflowReceipt = workflowPlan == null ? null : phaseFour.receiptForAction(workflowPlan.id());
+        int studentStage = selectedExpense == null ? 1 : workflowReceipt != null ? 6
+                : !verification.verified() ? 2 : workflowPlan == null ? 3
+                : "APPROVED".equals(workflowPlan.status()) ? 5 : 4;
+        model.addAttribute("studentWorkflowStage", studentStage);
+        model.addAttribute("studentWorkflowPlan", workflowPlan);
         var channelQuotes = crossBorder.rankedQuotes();
         var eligibleQuotes = channelQuotes.stream().filter(CrossBorderService.ChannelQuote::eligible).toList();
         var connectedQuotes = channelQuotes.stream().filter(quote -> quote.sourceAccountId() != null).toList();
@@ -135,7 +144,10 @@ public class PhaseOneController {
         model.addAttribute("demoAuditEvents", phaseFour.auditEvents());
         model.addAttribute("demoToolsEnabled", demoToolsEnabled);
         model.addAttribute("sharedDemo", sharedDemo);
-        var conversationView=conversations.view(request.getSession(),crossBorder.selectedExpense(),latestAction);
+        var conversationView=conversations.view(request.getSession(),selectedExpense,latestAction);
+        String assistantPlanId = conversations.assistantPlanId(request.getSession());
+        model.addAttribute("assistantAction", assistantPlanId == null ? null : phaseFour.action(assistantPlanId));
+        model.addAttribute("assistantReceipt", assistantPlanId == null ? null : phaseFour.receiptForAction(assistantPlanId));
         model.addAttribute("conversation",conversationView.messages());
         model.addAttribute("conversationContext",conversationView);
         model.addAttribute("newTransaction", newTransaction);
@@ -372,17 +384,25 @@ public class PhaseOneController {
             contentType = document.getContentType();
             size = document.getSize();
         }
-        int id = crossBorder.addExpense(expenseType, title, institution, amount, destinationCountry,
+        int id = crossBorder.addExpenseForReview(expenseType, title, institution, amount, destinationCountry,
                 currency, recipientName, recipientBankName, recipientBankCode, recipientAccount,
                 paymentReference, dueDate, fileName, contentType, size);
-        flash.addFlashAttribute("message", "Student bill added: #" + id + ". Only a verified beneficiary can be selected for comparison.");
+        flash.addFlashAttribute("message", "Student bill added: #" + id + ". Select a bill to start comparing payment channels.");
         return "redirect:/#student-finance";
     }
 
     @PostMapping("/student/expenses/select")
-    public String selectStudentExpense(@RequestParam int id, RedirectAttributes flash) {
-        crossBorder.selectExpense(id);
-        flash.addFlashAttribute("message", "Selected student expense updated. Channel costs were recalculated.");
+    public String selectStudentExpense(@RequestParam int id,
+                                      @RequestParam(defaultValue="false") boolean deselect, RedirectAttributes flash) {
+        if (deselect) {
+            boolean cleared = crossBorder.clearExpenseSelection(id);
+            flash.addFlashAttribute("message", cleared
+                    ? "Bill selection cleared. Select a bill to continue; existing plans and receipts are unchanged."
+                    : "The selected bill changed. Your current selection was kept; review it before continuing.");
+        } else {
+            crossBorder.selectExpense(id);
+            flash.addFlashAttribute("message", "Selected student expense updated. Channel costs were recalculated.");
+        }
         return "redirect:/#student-finance";
     }
 

@@ -175,6 +175,17 @@ public class SessionConversationService {
                     ? state.binding.plan() : null;
         }
     }
+
+    /** The chat shortcut belongs to its verified conversation, not the workspace's last payment. */
+    public String assistantPlanId(HttpSession session) {
+        State state = state(session);
+        synchronized (state) {
+            if (state.binding == null || !Set.of(Topic.TUITION_PLAN, Topic.TUITION_STATUS,
+                    Topic.RECEIPT_BALANCE, Topic.TUITION_AFFORDABILITY, Topic.LIVING_EXPENSE_RUNWAY)
+                    .contains(state.topic) || validate(state.binding) != null) return null;
+            return state.binding.plan();
+        }
+    }
     private static String monthlyPrompt(boolean vi){return vi
             ?"Bạn dự kiến cần bao nhiêu VND mỗi tháng để sinh hoạt? Xác nhận trong form, gồm tiền thuê nhà, ăn uống, đi lại và tiện ích. Đây chỉ là giả định kịch bản, không phải ngân sách hoặc quyền thanh toán."
             :"How much VND do you expect to need each month for living expenses? Confirm the form, including rent, food, transport and utilities. This is a scenario assumption, not a budget or payment authorization.";}

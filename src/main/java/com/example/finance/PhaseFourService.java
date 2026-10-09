@@ -865,6 +865,15 @@ public class PhaseFourService {
                 .stream().map(this::action).toList();
     }
 
+    public ActionPlan workflowPlanForExpense(int expenseId) {
+        var ids = db.query("""
+                SELECT id FROM action_plans WHERE action_type='TUITION' AND expense_id=?
+                  AND status IN ('AWAITING_APPROVAL','APPROVED','COMPLETED')
+                ORDER BY created_at DESC,id FETCH FIRST 1 ROW ONLY
+                """, (rs,n) -> rs.getString(1), expenseId);
+        return ids.isEmpty() ? null : action(ids.getFirst());
+    }
+
     public Map<Integer,ActionPlan> completedPlansByExpense() {
         return db.query("""
                 SELECT a.id FROM action_plans a
@@ -947,6 +956,7 @@ public class PhaseFourService {
 
     public boolean matchesCurrentStudentSelection(ActionPlan plan) {
         if (plan == null || !"TUITION".equals(plan.actionType())) return true;
+        if (crossBorder.selectedExpenseOrNull() == null) return false;
         var bill = crossBorder.bill();
         if (plan.expenseId() == null || plan.expenseId() != bill.id()
                 || !bill.recipientAccount().equals(plan.recipient())

@@ -34,6 +34,7 @@ class StudentExpensePlaywrightE2ETest {
     private static final String BASE_URL="http://localhost:8096";
     @Autowired DemoDataService demoData;
     @Autowired CrossBorderService crossBorder;
+    @Autowired PhaseFourService phaseFour;
     @Autowired JdbcTemplate db;
     private Playwright playwright;
     private Browser browser;
@@ -132,6 +133,9 @@ class StudentExpensePlaywrightE2ETest {
             assertThat(page.getByTestId("tuition-bill")).containsText("20,000");
             assertEquals(1, crossBorder.selectedExpense().id());
             page.getByTestId("expense-1").click();
+            assertThat(page.getByTestId("student-no-selection")).isVisible();
+            assertEquals(null, crossBorder.selectedExpenseOrNull());
+            assertThat(page.getByTestId("tuition-progress").locator("[aria-current='step']")).containsText("Select bill");
 
             var otherSelect = page.getByTestId("expense-" + otherBill).locator(".student-bill-select");
             otherSelect.focus();
@@ -150,7 +154,7 @@ class StudentExpensePlaywrightE2ETest {
             assertThat(page.getByTestId("expense-1")).hasClass(java.util.regex.Pattern.compile(".*selected.*"));
             page.locator("#edit-student-expense-" + otherBill + " [data-close-dialog]").click();
 
-            assertEquals(3, selections.size(), "Selecting the current card or clicking Edit must not submit selection");
+            assertEquals(4, selections.size(), "Clicking the selected card clears selection; Edit does not submit selection");
             assertEquals(1, crossBorder.selectedExpense().id());
             assertTrue(navigations.isEmpty(), "Bill selection must not reload the main document: " + navigations);
             assertTrue(errors.isEmpty(), String.join(" | ", errors));
@@ -453,18 +457,24 @@ class StudentExpensePlaywrightE2ETest {
             });
 
             page.getByTestId("plan-BANK_A").click();
+            assertThat(page.getByTestId("tuition-progress")).hasAttribute("data-stage", "4");
             assertThat(page.getByTestId("tab-agent")).hasAttribute("aria-pressed", "true");
             assertThat(page.getByTestId("latest-action")).hasAttribute("data-status", "AWAITING_APPROVAL");
             assertThat(page.getByTestId("review-channel")).containsText("Bank A");
             assertThat(page.getByTestId("latest-receipt")).hasCount(0);
 
-            PaymentApprovalControls.cancel(page);
+            page.getByTestId("approve-action").click();
+            assertThat(page.getByTestId("tuition-progress").locator("[aria-current='step']")).containsText("Approve");
+            page.getByTestId("payment-confirm-cancel").click();
+            assertThat(page.getByTestId("tuition-progress").locator("[aria-current='step']")).containsText("Review plan");
             assertEquals(0, approvals.size(), "Dismissing approval must not submit a payment request");
             assertThat(page.getByTestId("latest-action")).hasAttribute("data-status", "AWAITING_APPROVAL");
             assertThat(page.getByTestId("latest-receipt")).hasCount(0);
 
             PaymentApprovalControls.approve(page);
             assertThat(page.getByTestId("latest-action")).hasAttribute("data-status", "COMPLETED");
+            assertThat(page.getByTestId("tuition-progress")).hasAttribute("data-stage", "6");
+            assertThat(page.getByTestId("tuition-progress").locator("[aria-current='step']")).containsText("Receipt");
             assertThat(page.getByTestId("latest-receipt")).isVisible();
             assertThat(page.getByTestId("receipt-vnd-debit")).containsText("70,760,800.00 VND");
             assertThat(page.getByTestId("receipt-credit")).containsText("20,000.00 CNY");
@@ -486,6 +496,73 @@ class StudentExpensePlaywrightE2ETest {
                     "A blocked new plan must preserve the completed plan's receipt");
             assertEquals("approval-sandbox-test", page.evaluate("() => window.__inPlaceDocumentMarker"));
             assertTrue(navigationRequests.isEmpty(), "Controlled actions must update in place: " + navigationRequests);
+            assertTrue(errors.isEmpty(), String.join(" | ", errors));
+        }
+    }
+
+    @Test void soleBillCanBeDeselectedAndReselectedWithoutPaymentOnDesktopAndMobile() throws Exception {
+        java.nio.file.Files.createDirectories(Path.of("target/bill-workflow"));
+        for (int width : new int[]{1440, 390, 360}) {
+            try (BrowserContext context = browser.newContext(new Browser.NewContextOptions().setViewportSize(width, 844))) {
+                Page page = context.newPage();
+                var errors = new ArrayList<String>();
+                page.onPageError(errors::add);
+                page.navigate(BASE_URL + "/#student-finance");
+                for (String language : List.of("vi", "en")) {
+                    UiLanguageControls.select(page, language);
+                    var card = page.getByTestId("expense-1");
+                    card.locator(".student-bill-select").click();
+                    assertThat(page.getByTestId("tuition-progress")).hasAttribute("data-stage", "1");
+                    assertThat(page.getByTestId("student-no-selection")).isVisible();
+                    assertThat(card.locator(".student-bill-select")).hasAttribute("aria-pressed", "false");
+                    assertThat(page.getByTestId("plan-BANK_A")).hasCount(0);
+                    assertEquals(null, crossBorder.selectedExpenseOrNull());
+                    page.reload();
+                    assertThat(page.getByTestId("tuition-progress")).hasAttribute("data-stage", "1");
+                    page.getByTestId("tuition-progress").screenshot(new com.microsoft.playwright.Locator.ScreenshotOptions()
+                            .setPath(Path.of("target/bill-workflow/selection-" + width + "-" + language + ".png")));
+                    card.locator(".student-bill-select").click();
+                    assertThat(page.getByTestId("tuition-progress")).hasAttribute("data-stage", "3");
+                    assertThat(page.getByTestId("tuition-progress").locator("li.complete")).hasCount(2);
+                    assertThat(page.getByTestId("plan-BANK_A")).hasText(language.equals("vi")
+                            ? "Xác nhận kênh và tạo kế hoạch" : "Confirm channel and create plan");
+                    assertEquals(0, phaseFour.sandboxTransactionCount());
+                }
+                assertTrue(errors.isEmpty(), String.join(" | ", errors));
+            }
+        }
+    }
+
+    @Test void selectedBillResumesItsOwnDraftInsteadOfTheReceiptPinnedByThePageUrl() throws Exception {
+        var paid = phaseFour.createTuitionPlan("BANK_A");
+        phaseFour.approveAndExecute(paid.id());
+        int second = crossBorder.addExpenseForReview("TUITION", "Second tuition", CrossBorderService.SCHOOL_NAME,
+                new BigDecimal("1000"), "China", "CNY", CrossBorderService.SCHOOL_RECIPIENT_NAME,
+                CrossBorderService.SCHOOL_RECIPIENT_BANK, CrossBorderService.SCHOOL_RECIPIENT_BANK_CODE,
+                CrossBorderService.SCHOOL_RECIPIENT, "SECOND-RESUME", LocalDate.now().plusDays(30), null, null, null);
+        try (BrowserContext context = browser.newContext()) {
+            Page page = context.newPage();
+            var errors = new ArrayList<String>(); page.onPageError(errors::add);
+            page.navigate(BASE_URL + "/?action=" + paid.id() + "#student-finance");
+            assertThat(page.getByTestId("tuition-progress")).hasAttribute("data-stage", "1");
+            page.getByTestId("expense-" + second).locator(".student-bill-select").click();
+            assertThat(page.getByTestId("tuition-progress")).hasAttribute("data-stage", "3");
+            assertThat(page.getByTestId("student-workflow-plan")).hasCount(0);
+            page.getByTestId("plan-BANK_A").click();
+            assertThat(page.getByTestId("latest-action")).hasAttribute("data-status", "AWAITING_APPROVAL");
+            String draft = page.getByTestId("latest-action").getAttribute("data-action-id");
+            page.navigate(BASE_URL + "/?action=" + paid.id() + "#student-finance");
+            assertThat(page.getByTestId("tuition-progress")).hasAttribute("data-stage", "4");
+            assertThat(page.getByTestId("student-workflow-plan")).hasAttribute("href", "/?action=" + draft + "#agent-workspace");
+            java.nio.file.Files.createDirectories(Path.of("target/bill-workflow"));
+            page.getByTestId("tuition-progress").screenshot(new com.microsoft.playwright.Locator.ScreenshotOptions()
+                    .setPath(Path.of("target/bill-workflow/draft-progress.png")));
+            page.getByTestId("student-workflow-plan").click();
+            assertThat(page.getByTestId("latest-action")).hasAttribute("data-action-id", draft);
+            assertThat(page.getByTestId("latest-receipt")).hasCount(0);
+            assertThat(page.getByTestId("review-bill")).containsText("Second tuition");
+            assertEquals(second, phaseFour.action(draft).expenseId());
+            assertEquals(1, phaseFour.sandboxTransactionCount());
             assertTrue(errors.isEmpty(), String.join(" | ", errors));
         }
     }
@@ -540,6 +617,11 @@ class StudentExpensePlaywrightE2ETest {
             dialog.getByRole(AriaRole.BUTTON, new com.microsoft.playwright.Locator.GetByRoleOptions()
                     .setName("Add and verify bill")).click();
 
+            assertThat(page.getByTestId("student-no-selection")).isVisible();
+            assertThat(page.getByTestId("tuition-progress")).hasAttribute("data-stage", "1");
+            assertThat(page.locator(".student-expense-card.selected")).hasCount(0);
+            page.getByTestId("expense-2").locator(".student-bill-select").click();
+            assertThat(page.getByTestId("tuition-progress")).hasAttribute("data-stage", "3");
             assertThat(page.locator(".student-expense-card.selected")).containsText("Dormitory deposit");
             assertThat(page.locator(".student-expense-card.selected")).containsText("VERIFIED BENEFICIARY");
             page.getByTestId("student-bill-search").fill("Pacific Demo College");
