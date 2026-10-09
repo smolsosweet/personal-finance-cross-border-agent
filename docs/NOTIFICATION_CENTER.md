@@ -1,5 +1,7 @@
 # Chuông thông báo FinBridge
 
+> Báo cáo lịch sử cho phiên bản chuông ban đầu. Trạng thái đã xem và thông báo sau thanh toán đã được bổ sung; xem [NOTIFICATION_STATE.md](NOTIFICATION_STATE.md).
+
 Ngày kiểm chứng: 09/10/2026. Commit nền: `29c88bb`.
 
 ## Thay đổi

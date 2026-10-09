@@ -310,6 +310,20 @@ public class CrossBorderService {
     public Map<String,Object> tuitionInsight() {
         TuitionBill tuition = bill();
         StudentExpense expense = selectedExpense();
+        if (expense.executed()) {
+            return db.queryForObject("""
+                    SELECT s.id,a.id FROM action_plans a JOIN sandbox_transactions s ON s.action_id=a.id
+                    WHERE a.expense_id=? AND s.status='COMPLETED'
+                    ORDER BY s.created_at DESC,s.id LIMIT 1
+                    """, (rs,n) -> Map.<String,Object>of(
+                            "priority", "INFO", "title", "Student payment completed",
+                            "message", "Bill " + tuition.paymentReference() + " has been paid. No further approval is required.",
+                            "evidence", "Sandbox receipt " + rs.getString(1) + " · plan " + rs.getString(2),
+                            "notificationKey", "education-bill-" + expense.id(),
+                            "href", "?action=" + rs.getString(2) + "#agent-workspace",
+                            "action", "View receipt →",
+                            "why", "Payment completed; view the immutable Sandbox receipt."), expense.id());
+        }
         RecipientVerification verification = verifyRecipient();
         ChannelQuote option = rankedQuotes("CHEAPER").stream()
                 .filter(ChannelQuote::eligible).findFirst().orElse(null);
@@ -328,7 +342,8 @@ public class CrossBorderService {
         String evidence = option == null ? "Education Provider Registry verification" :
                 "Verified Education Provider Registry · " + option.displayName() + " · landed cost " + option.landedCost().toPlainString() + " VND";
         return Map.of("priority", verification.verified() ? "HIGH" : "BLOCKED",
-                "title", title, "message", message, "evidence", evidence);
+                "title", title, "message", message, "evidence", evidence,
+                "notificationKey", "education-bill-" + expense.id());
     }
 
     public Map<String,Object> tuitionInsightForPlan(String channelId, String quoteId, BigDecimal landedCost) {

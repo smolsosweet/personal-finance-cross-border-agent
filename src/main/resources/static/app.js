@@ -50,6 +50,11 @@ const translationsVi = new Map(Object.entries({
   'ACCOUNT': 'Chọn tài khoản', 'BILL': 'Chọn hóa đơn', 'PLAN': 'Chọn kế hoạch',
   'CHANNEL': 'Chọn kênh', 'TOPIC': 'Chọn chủ đề', 'MONTHLY_EXPENSE': 'Xác nhận mức chi sinh hoạt',
   'Payment completed. View its receipt; no further approval is required for this payment.': 'Thanh toán đã hoàn tất. Xem biên nhận; giao dịch này không cần phê duyệt thêm.',
+  'The badge counts unseen updates. Marking as seen does not resolve or approve a task.': 'Số trên chuông là nội dung chưa xem. Đã xem không có nghĩa là hoàn tất hoặc phê duyệt tác vụ.',
+  'Mark all as seen': 'Đánh dấu tất cả đã xem',
+  'Read status is saved in this browser.': 'Trạng thái đã xem được lưu trong trình duyệt này.',
+  'View receipt →': 'Xem biên nhận →',
+  'INFO': 'Thông tin',
   'Student payment completed': 'Thanh toán du học đã hoàn tất',
   'Student payment plan needs controlled execution': 'Kế hoạch thanh toán du học cần thực thi có kiểm soát',
   'Payment completed; view the immutable Sandbox receipt.': 'Thanh toán đã hoàn tất; xem biên nhận Sandbox không thể chỉnh sửa.',
@@ -1720,6 +1725,7 @@ function translateDynamic(text) {
     [/^Selected plan uses (.+) for bill (.+) of (.+) ([A-Z]{3}), due (.+), with latest safe date (.+)\. Approval Mode is required before payment\.$/, 'Kế hoạch đã chọn sử dụng $1 cho hóa đơn $2 trị giá $3 $4, hạn thanh toán $5, với ngày an toàn cuối cùng $6. Cần phê duyệt trước khi thanh toán.'],
     [/^Selected (.+) plan is ready for review$/, 'Kế hoạch $1 đã chọn đang chờ xem xét'],
     [/^(.+) needs a controlled plan$/, '$1 cần một kế hoạch có kiểm soát'],
+    [/^Bill (.+) has been paid\. No further approval is required\.$/, 'Hóa đơn $1 đã được thanh toán. Không cần phê duyệt thêm.'],
     [/^Bill (.+) for (.+) ([A-Z]{3}) is verified, due (.+), with latest safe date (.+)\. Approval Mode is still required before payment\.$/, 'Hóa đơn $1 trị giá $2 $3 đã được xác minh, hạn thanh toán $4, với ngày an toàn cuối cùng $5. Vẫn cần phê duyệt trước khi thanh toán.'],
     [/^Low-risk plan status: (.+)\.$/, 'Trạng thái kế hoạch rủi ro thấp: $1.'],
     [/^Payment Sandbox completed: (.+)$/, 'Payment Sandbox đã hoàn tất: $1'],
@@ -2072,16 +2078,63 @@ async function handleDocumentExtraction(event) {
   } finally { button.disabled = false; }
 }
 
+const notificationReadStorageKey = 'finbridge-notifications-seen-v1';
+let notificationReadState = {};
+let notificationReadLoaded = false;
+let notificationReadPersistent = true;
+function loadNotificationReadState() {
+  if (notificationReadLoaded) return notificationReadState;
+  notificationReadLoaded = true;
+  try {
+    const saved = JSON.parse(localStorage.getItem(notificationReadStorageKey) || '{}');
+    if (saved && typeof saved === 'object' && !Array.isArray(saved)) notificationReadState = saved;
+  } catch (_) { notificationReadPersistent = false; /* Keep this tab usable without storage. */ }
+  return notificationReadState;
+}
+function notificationRevision(item) {
+  // A UI-only fingerprint: do not persist financial message text in browser storage.
+  const value = item.dataset.notificationVersion || '';
+  let hash = 2166136261;
+  for (let i = 0; i < value.length; i++) hash = Math.imul(hash ^ value.charCodeAt(i), 16777619);
+  return `${value.length}:${hash >>> 0}`;
+}
+function markNotificationsSeen(items) {
+  const state = loadNotificationReadState();
+  items.forEach(item => { state[item.dataset.notificationKey] = notificationRevision(item); });
+  try { localStorage.setItem(notificationReadStorageKey, JSON.stringify(state)); } catch (_) { notificationReadPersistent = false; }
+  updateNotificationBadge();
+}
 function updateNotificationBadge() {
   const dialog=document.getElementById('notification-center');
   const bell=document.querySelector('[data-notifications-open]');
   if (!dialog || !bell) return;
-  const count=dialog.querySelectorAll('[data-notification-key]:not([hidden])').length;
+  const state = loadNotificationReadState();
+  const items = Array.from(dialog.querySelectorAll('[data-notification-key]:not([hidden])'));
+  const vi = selectedLanguage() === 'vi';
+  const storageStatus = dialog.querySelector('[data-notification-storage-status]');
+  if (storageStatus) storageStatus.textContent = notificationReadPersistent
+    ? (vi ? 'Trạng thái đã xem được lưu trong trình duyệt này.' : 'Read status is saved in this browser.')
+    : (vi ? 'Trình duyệt không cho lưu; trạng thái đã xem chỉ giữ trong tab này.' : 'Browser storage unavailable; seen status lasts only in this tab.');
+  let count = 0;
+  items.forEach(item => {
+    const seen = state[item.dataset.notificationKey] === notificationRevision(item);
+    item.dataset.notificationSeen = String(seen);
+    if (!seen) count++;
+    const status = item.querySelector('[data-notification-read-status]');
+    const button = item.querySelector('[data-notification-mark-seen]');
+    if (status) status.textContent = seen ? (vi ? 'Đã xem' : 'Seen') : (vi ? 'Chưa xem' : 'Unseen');
+    if (button) {
+      button.textContent = vi ? 'Đánh dấu đã xem' : 'Mark as seen';
+      button.disabled = seen;
+    }
+  });
   const badge=bell.querySelector('.notification-count');
   badge.textContent=count>99?'99+':String(count);
   badge.hidden=count===0;
-  bell.setAttribute('aria-label',selectedLanguage()==='vi'?`Thông báo · ${count} nội dung cần xem xét`:`Notifications · ${count} current items`);
-  dialog.querySelector('[data-notification-empty]').hidden=count!==0;
+  bell.setAttribute('aria-label',vi?`Thông báo · ${count} nội dung chưa xem`:`Notifications · ${count} unseen updates`);
+  const markAll = dialog.querySelector('[data-notifications-mark-all]');
+  if (markAll) markAll.disabled = count === 0;
+  dialog.querySelector('[data-notification-empty]').hidden=items.length!==0;
 }
 function initializeNotifications() {
   const dialog=document.getElementById('notification-center');
@@ -2093,17 +2146,31 @@ function initializeNotifications() {
   items.sort((a,b)=>Number(b.classList.contains('insight'))-Number(a.classList.contains('insight')));
   items.forEach(item=>{item.hidden=keys.has(item.dataset.notificationKey);keys.add(item.dataset.notificationKey);});
   const list=dialog.querySelector('.insight-list');
-  const priority=item=>item.querySelector('.priority')?.classList.contains('high')?0:item.querySelector('.priority')?.classList.contains('medium')?1:2;
+  const priority=item=>item.querySelector('.priority')?.classList.contains('blocked')?-1:item.querySelector('.priority')?.classList.contains('high')?0:item.querySelector('.priority')?.classList.contains('medium')?1:2;
   items.filter(item=>!item.hidden).sort((a,b)=>priority(a)-priority(b)).forEach(item=>list.append(item));
   dialog.querySelectorAll('.notification-group').forEach(group=>{
     group.hidden=!group.querySelector('[data-notification-key]:not([hidden])');
+  });
+  items.filter(item=>!item.hidden).forEach(item=>{
+    if (item.querySelector('[data-notification-mark-seen]')) return;
+    const controls=document.createElement('div'); controls.className='notification-read-controls';
+    const status=document.createElement('small'); status.dataset.notificationReadStatus=''; status.dataset.userAuthored='';
+    const button=document.createElement('button'); button.type='button'; button.className='secondary';
+    button.dataset.notificationMarkSeen=''; button.dataset.userAuthored='';
+    controls.append(status,button); item.append(controls);
+  });
+  dialog.addEventListener('click',event=>{
+    const button=event.target.closest('[data-notification-mark-seen]');
+    if (button) markNotificationsSeen([button.closest('[data-notification-key]')]);
+    if (event.target.closest('[data-notifications-mark-all]'))
+      markNotificationsSeen(Array.from(dialog.querySelectorAll('[data-notification-key]:not([hidden])')));
   });
   bell.setAttribute('aria-expanded','false');
   dialog.addEventListener('close',()=>bell.setAttribute('aria-expanded','false'));
   dialog.addEventListener('click',event=>{if(event.target.closest('a[href]'))dialog.close();});
   dialog.addEventListener('keydown',event=>{
     if(event.key!=='Tab')return;
-    const controls=Array.from(dialog.querySelectorAll('button,a[href],summary,[tabindex="0"]')).filter(e=>e.getClientRects().length);
+    const controls=Array.from(dialog.querySelectorAll('button,a[href],summary,[tabindex="0"]')).filter(e=>e.getClientRects().length&&!e.disabled);
     const first=controls[0],last=controls.at(-1);
     if((event.shiftKey&&document.activeElement===first)||(!event.shiftKey&&document.activeElement===last)){
       event.preventDefault();(event.shiftKey?last:first)?.focus();
@@ -2478,6 +2545,7 @@ async function submitWorkspaceForm(event) {
 
 document.addEventListener('DOMContentLoaded', () => {
   initializeWorkspaceContent();
+  window.addEventListener('storage', event => { if (event.key === notificationReadStorageKey) { notificationReadLoaded = false; updateNotificationBadge(); } });
   renderIntroduction();
   document.addEventListener('click',event=>{
     const bell=event.target.closest('[data-notifications-open]');

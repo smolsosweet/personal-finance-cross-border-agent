@@ -16,7 +16,7 @@ import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertTha
  "server.port=8164","spring.datasource.url=jdbc:h2:mem:notification_ui;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1","app.demo-tools-enabled=true"})
 class NotificationCenterPlaywrightTest {
  @Autowired DemoDataService demo; @Autowired TransactionService transactions;
- @Autowired PhaseFourService payments; @Autowired JdbcTemplate db;
+ @Autowired CrossBorderService crossBorder; @Autowired PhaseFourService payments; @Autowired JdbcTemplate db;
  @MockitoBean LlmIntentClient model;
  Playwright pw; Browser browser; Page page; List<String> errors; List<String> posts;
  @BeforeEach void open(){demo.resetAll();when(model.enabled()).thenReturn(false);errors=new ArrayList<>();posts=new ArrayList<>();
@@ -51,7 +51,7 @@ class NotificationCenterPlaywrightTest {
   var before=PersonalFinanceAiIntegrationTest.snapshot(db);
   for(String tab:List.of("dashboard","transactions","student","agent")){
    page.getByTestId("tab-"+tab).click();bell();
-   center().locator("[data-notification-key='transactions-review'] a").click();
+   center().locator("[data-notification-key='transactions-review']:visible a").click();
    assertThat(center()).isHidden();assertThat(page.getByTestId("notification-bell")).hasAttribute("aria-expanded","false");
    assertThat(page.getByTestId("transaction-view-review")).hasAttribute("aria-pressed","true");
   }
@@ -77,5 +77,75 @@ class NotificationCenterPlaywrightTest {
   bell();page.mouse().click(2,2);assertThat(center()).isHidden();
   assertThat(page.getByTestId("workspace-paused")).isVisible();assertThat(page.getByTestId("payment-blocked")).isVisible();
   assertThat(page.getByTestId("approve-action")).hasCount(0);assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));assertTrue(posts.isEmpty());
+ }
+
+ Locator education(){return center().locator("[data-notification-key='education-bill-1']:visible");}
+ void idle(){page.waitForFunction("()=>!document.querySelector('.content').hasAttribute('aria-busy')");}
+ @Test void seenPersistsOnlyInThisBrowserAndNeverApprovesThePendingPlan(){
+  var draft=payments.createTuitionPlan("BANK_A");page.navigate("http://localhost:8164/?action="+draft.id()+"#agent-workspace");
+  var before=PersonalFinanceAiIntegrationTest.snapshot(db);bell();
+  int unread=Integer.parseInt(page.getByTestId("notification-count").textContent());
+  education().locator("[data-notification-mark-seen]").click();
+  assertThat(education()).hasAttribute("data-notification-seen","true");
+  assertThat(page.getByTestId("notification-count")).hasText(String.valueOf(unread-1));
+  page.keyboard().press("Escape");assertThat(page.getByTestId("approve-action")).isVisible();
+  assertEquals("AWAITING_APPROVAL",payments.action(draft.id()).status());assertEquals(0,payments.sandboxTransactionCount());
+  page.reload();bell();assertThat(education()).hasAttribute("data-notification-seen","true");
+  assertThat(education().locator("[data-notification-mark-seen]")).isDisabled();
+  try(BrowserContext other=browser.newContext()){
+   Page second=other.newPage();second.navigate("http://localhost:8164");second.getByTestId("notification-bell").click();
+   assertThat(second.locator("[data-notification-key='education-bill-1']:visible")).hasAttribute("data-notification-seen","false");
+  }
+  assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));assertTrue(posts.isEmpty());
+ }
+ @Test void markAllKeepsTasksVisibleAndChangedTransactionUpdatesBecomeUnseenAgain()throws Exception{
+  bell();var before=PersonalFinanceAiIntegrationTest.snapshot(db);
+  page.getByTestId("notifications-mark-all").click();assertThat(page.getByTestId("notification-count")).isHidden();
+  assertThat(education()).isVisible();assertThat(page.getByTestId("notifications-mark-all")).isDisabled();
+  assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
+  for(int i=0;i<18;i++){page.keyboard().press("Tab");assertTrue((Boolean)center().evaluate("e=>e.contains(document.activeElement)"));}
+  page.getByTestId("language-vi").evaluate("e=>e.click()");
+  assertThat(education().locator("[data-notification-read-status]")).hasText("Đã xem");
+  page.keyboard().press("Escape");page.getByTestId("tab-transactions").click();page.getByTestId("transaction-view-demo").click();
+  page.getByTestId("simulate-medium").click();idle();bell();
+  assertThat(center().locator("[data-notification-key='transactions-review']:visible")).hasAttribute("data-notification-seen","false");
+  assertThat(education()).hasAttribute("data-notification-seen","true");assertThat(page.getByTestId("notification-count")).isVisible();
+  assertEquals(1,posts.size());assertEquals(0,payments.sandboxTransactionCount());
+  Path dir=Path.of("target/notification-state");Files.createDirectories(dir);
+  page.setViewportSize(390,844);page.screenshot(new Page.ScreenshotOptions().setPath(dir.resolve("changed-unseen-mobile-vi.png")));
+ }
+ @Test void actualVcbApprovalReplacesTheStaleReminderWithTheExactReceiptAndANewUnseenUpdate()throws Exception{
+  var draft=payments.createTuitionPlan("VCB");page.navigate("http://localhost:8164/?action="+draft.id()+"#agent-workspace");
+  bell();education().locator("[data-notification-mark-seen]").click();page.keyboard().press("Escape");
+  assertEquals(0,payments.sandboxTransactionCount());PaymentApprovalControls.approve(page);idle();
+  assertThat(page.getByTestId("latest-receipt")).isVisible();assertEquals("COMPLETED",payments.action(draft.id()).status());
+  var receipt=payments.receiptForAction(draft.id());assertNotNull(receipt);assertEquals(1,payments.sandboxTransactionCount());
+  assertEquals("Student payment completed",crossBorder.tuitionInsight().get("title"));
+  bell();assertThat(education()).hasAttribute("data-notification-seen","false");
+  assertThat(education()).containsText("Student payment completed");assertThat(education()).containsText(receipt.transactionId());
+  assertThat(education()).not().containsText("Approval Mode is still required");
+  assertThat(education().locator("a")).hasAttribute("href","?action="+draft.id()+"#agent-workspace");
+  var completed=PersonalFinanceAiIntegrationTest.snapshot(db);
+  Path dir=Path.of("target/notification-state");Files.createDirectories(dir);
+  education().scrollIntoViewIfNeeded();page.screenshot(new Page.ScreenshotOptions().setPath(dir.resolve("completed-desktop-en.png")));
+  page.getByTestId("language-vi").evaluate("e=>e.click()");
+  assertThat(education()).containsText("Thanh toán du học đã hoàn tất");assertThat(education()).containsText("Không cần phê duyệt thêm");
+  assertThat(education().locator("a")).hasText("Xem biên nhận →");
+  page.setViewportSize(360,780);education().scrollIntoViewIfNeeded();page.screenshot(new Page.ScreenshotOptions().setPath(dir.resolve("completed-mobile-vi.png")));
+  education().locator("[data-notification-mark-seen]").click();education().locator("a").click();
+  assertThat(center()).isHidden();assertThat(page.getByTestId("latest-receipt")).containsText(receipt.transactionId());
+  assertThat(page.getByTestId("approve-action")).hasCount(0);assertEquals(completed,PersonalFinanceAiIntegrationTest.snapshot(db));
+  assertEquals(1,posts.stream().filter(url->url.endsWith("/approve")).count());
+ }
+ @Test void unavailableBrowserStorageStillAllowsSeenWithoutChangingFinancialState(){
+  page.evaluate("""
+    () => { const original=Storage.prototype.setItem;Storage.prototype.setItem=function(key,value){
+      if(key==='finbridge-notifications-seen-v1') throw new Error('Storage disabled');
+      return original.call(this,key,value);
+    }; }
+    """);
+  var before=PersonalFinanceAiIntegrationTest.snapshot(db);bell();page.getByTestId("notifications-mark-all").click();
+  assertThat(page.getByTestId("notification-count")).isHidden();assertThat(center().locator("[data-notification-storage-status]")).containsText("lasts only in this tab");page.keyboard().press("Escape");bell();
+  assertThat(page.getByTestId("notification-count")).isHidden();assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));assertTrue(posts.isEmpty());
  }
 }

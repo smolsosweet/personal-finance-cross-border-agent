@@ -1,0 +1,5 @@
+Excerpt from target/notification-state-tests.log
+Caused by: org.springframework.expression.spel.SpelEvaluationException: EL1008E: Property or field 'notificationKey' cannot be found on object of type 'java.util.LinkedHashMap' - maybe not public or not valid?
+[ERROR] Tests run: 8, Failures: 0, Errors: 8, Skipped: 0, Time elapsed: 96.51 s <<< FAILURE! -- in com.example.finance.NotificationCenterPlaywrightTest
+[ERROR] Tests run: 8, Failures: 0, Errors: 8, Skipped: 0
+[INFO] BUILD FAILURE
