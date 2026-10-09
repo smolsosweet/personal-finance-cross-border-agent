@@ -927,6 +927,48 @@ Object.entries({
   "Settlement time plus the one-day safety margin may miss the tuition due date.": "Thời gian quyết toán cộng thêm một ngày dự phòng có thể vượt hạn học phí.",
   "Processing…": "Đang xử lý…"
 }).forEach(([key,value]) => translationsVi.set(key,value));
+Object.entries({
+  'YOUR MONEY': 'TIỀN CỦA BẠN',
+  'Your money, your decisions.': 'Tiền của bạn, quyết định của bạn.',
+  'FinBridge · Your money, your decisions.': 'FinBridge · Tiền của bạn, quyết định của bạn.',
+  'Confirm the category or add the payment purpose.': 'Xác nhận danh mục hoặc bổ sung mục đích giao dịch.',
+  'Upcoming money is reserved': 'Đã giữ tiền cho các khoản sắp tới',
+  'Review the date or mark the item complete.': 'Kiểm tra ngày dự kiến hoặc đánh dấu khoản đã hoàn tất.',
+  'Confirming a category keeps your spending report accurate.': 'Xác nhận danh mục giúp báo cáo chi tiêu chính xác.',
+  'Check category limits before your next expense.': 'Kiểm tra hạn mức danh mục trước khoản chi tiếp theo.',
+  'This insight applies the safety buffer to the recorded checking balance.': 'Thông tin này áp dụng đệm an toàn cho số dư tài khoản thanh toán đã ghi nhận.',
+  'Verify the bill and available channels before preparing a payment.': 'Xác minh hóa đơn và kênh khả dụng trước khi chuẩn bị thanh toán.',
+  'Review planning accounts →': 'Xem tài khoản dùng cho kế hoạch →',
+  'Review education bill →': 'Xem hóa đơn giáo dục →',
+  'Quote valid until': 'Báo giá còn hiệu lực đến',
+  'Balances and planning': 'Số dư và kế hoạch',
+  'Your account balances and upcoming commitments, in one place.': 'Số dư tài khoản và các khoản dự kiến chi, tại một nơi.',
+  'Reservations do not move money': 'Giữ trước không làm chuyển tiền',
+  'Kept aside in this planning estimate': 'Được giữ lại trong ước tính kế hoạch',
+  'Planning estimate · VND': 'Ước tính kế hoạch · VND',
+  'Balances by account': 'Số dư từng tài khoản',
+  'Total VND balance minus upcoming reservations and the safety buffer. This includes savings and manually maintained cash; it is not a guarantee that every source can fund an online payment. Payment availability is checked separately for the selected account and channel. Other currencies are not added to VND.': 'Tổng số dư VND trừ khoản giữ trước và đệm an toàn. Bao gồm tiền tiết kiệm và tiền mặt nhập tay; không có nghĩa mọi nguồn tiền đều dùng được để thanh toán trực tuyến. Khả năng thanh toán được kiểm tra riêng theo tài khoản và kênh đã chọn. Không cộng tiền tệ khác vào VND.',
+  'Technical reference': 'Thông tin kỹ thuật',
+  'FINAL REVIEW': 'XÁC NHẬN CUỐI CÙNG',
+  'Confirm education payment': 'Xác nhận thanh toán giáo dục',
+  'Confirm internal transfer': 'Xác nhận chuyển nội bộ',
+  'Check these locked details. Confirming approves this plan and executes it immediately.': 'Kiểm tra các thông tin đã khóa dưới đây. Xác nhận sẽ phê duyệt kế hoạch này và thực thi ngay.',
+  'I checked the beneficiary and total amount.': 'Tôi đã kiểm tra người nhận và tổng số tiền.',
+  'Go back': 'Quay lại',
+  'Review and approve': 'Xem lại và phê duyệt',
+  'Confirm and pay': 'Xác nhận và thanh toán',
+  'Stop all new payments': 'Dừng mọi thanh toán mới',
+  'Plan reference': 'Mã kế hoạch',
+  'Bill / reference': 'Hóa đơn / mã tham chiếu',
+  'Payment details': 'Chi tiết thanh toán',
+  'Previous items': 'Các mục trước',
+  'Next items': 'Các mục tiếp theo',
+  'Account connected, but this channel does not support': 'Tài khoản đã liên kết, nhưng kênh này chưa hỗ trợ',
+  'Quote expired. Go back and refresh the quote before approving.': 'Báo giá đã hết hạn. Quay lại làm mới báo giá trước khi phê duyệt.',
+  'Payment is paused or this plan changed. Go back and review its current status.': 'Thanh toán đã tạm dừng hoặc kế hoạch thay đổi. Quay lại kiểm tra trạng thái mới nhất.',
+  'The payment details will be checked again before execution.': 'Thông tin thanh toán sẽ được kiểm tra lại trước khi thực thi.'
+}).forEach(([key,value]) => translationsVi.set(key,value));
+
 const originalText = new WeakMap();
 const originalPlaceholder = new WeakMap();
 const englishDisplayLabels = new Map(Object.entries({
@@ -1911,6 +1953,41 @@ async function openPaymentPlan(event) {
     renderPaymentWorkflow();
   }
 }
+function initializeHorizontalLists() {
+  document.querySelectorAll('.student-bill-list,.channel-list').forEach((track,index) => {
+    if (track.dataset.horizontalControls) return;
+    track.dataset.horizontalControls = 'true';
+    track.id ||= 'comparison-track-'+index;
+    const controls = document.createElement('div');
+    controls.className = 'scroll-track-controls';
+    const buttons = [-1,1].map(direction => {
+      const button = document.createElement('button');
+      button.type = 'button'; button.className = 'secondary';
+      button.setAttribute('aria-controls',track.id);
+      const label = direction < 0 ? 'Previous items' : 'Next items';
+      button.textContent = label;
+      button.addEventListener('click', () => track.scrollBy({
+        left:direction*Math.max(240,track.clientWidth*.75),
+        behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'
+      }));
+      controls.append(button);
+      return button;
+    });
+    track.before(controls);
+    const update = () => {
+      const overflow = track.clientWidth > 0 && track.scrollWidth > track.clientWidth+2;
+      controls.hidden = !overflow;
+      buttons[0].disabled = track.scrollLeft <= 1;
+      buttons[1].disabled = track.scrollLeft+track.clientWidth >= track.scrollWidth-2;
+    };
+    track.addEventListener('scroll',update,{passive:true});
+    const size = new ResizeObserver(update); size.observe(track);
+    const changes = new MutationObserver(update);
+    changes.observe(track,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden','style']});
+    update();
+  });
+}
+
 // Bound growing lists while keeping headers and primary actions outside their scroll area.
 function initializeBoundedLists() {
   const selectors='.current-account-grid,.money-source-grid,.plan-list,.budget-snapshot-list,.transaction-review-list,.custom-category-list,.payment-history-list,.insight-list,.attention-list,.budget-edit-list,.payment-audit .table-scroll';
@@ -1994,6 +2071,7 @@ function initializeWorkspaceContent(state) {
   initializeStudentBillList(state?.billPage);
   initializeCategoryReviewForms();
   initializePaymentAccounts();
+  initializeHorizontalLists();
   initializeStudentExpenseCorridor();
   initializeQuoteExpiryStatuses();
   state?.filters.forEach((value, selector) => {
@@ -2073,12 +2151,92 @@ function showWorkspaceUpdateError(form) {
   initializeWorkspaceNotices(container);
 }
 
+let pendingPaymentConfirmation = false;
+// Confirmation displays server-rendered plan fields. It never calculates amounts or grants authority.
+function confirmPaymentPlan(form) {
+  const dialog = document.querySelector('[data-payment-confirm-dialog]');
+  if (!dialog || typeof dialog.showModal !== 'function' || pendingPaymentConfirmation
+      || dialog.dataset.actionId !== form.dataset.paymentApproval) return Promise.resolve(false);
+  pendingPaymentConfirmation = true;
+  const check = dialog.querySelector('[data-payment-confirm-check]');
+  const confirm = dialog.querySelector('[data-payment-confirm-submit]');
+  const quoteLabel = dialog.querySelector('[data-confirm-quote-status]');
+  check.checked = false;
+  const opener = form.querySelector('[data-testid="approve-action"]');
+  return new Promise(resolve => {
+    const listeners = new AbortController();
+    let completed = false;
+    const valid = () => {
+      const expiry = dialog.dataset.quoteExpires;
+      const expired = dialog.dataset.actionType === 'TUITION' && (!expiry || !Number.isFinite(Number(expiry)) || Number(expiry) <= Date.now());
+      const changed = !form.isConnected || document.querySelector('[data-testid="latest-action"]')?.dataset.actionId !== form.dataset.paymentApproval;
+      const paused = document.querySelector('[data-global-policy]')?.dataset.agentState !== 'ACTIVE';
+      const message = expired ? 'Quote expired. Go back and refresh the quote before approving.'
+        : changed || paused ? 'Payment is paused or this plan changed. Go back and review its current status.'
+        : 'The payment details will be checked again before execution.';
+      let statusText = translateValue(message, selectedLanguage());
+      if (!expired && !changed && !paused && dialog.dataset.actionType === 'TUITION') {
+        statusText = translateValue('Quote valid until', selectedLanguage())+' '+new Intl.DateTimeFormat(selectedLanguage()==='vi'?'vi-VN':'en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(Number(expiry)));
+      }
+      if (quoteLabel.textContent !== statusText) quoteLabel.textContent = statusText;
+      quoteLabel.classList.toggle('quote-expired', expired || changed || paused);
+      confirm.disabled = !check.checked || expired || changed || paused;
+      return !expired && !changed && !paused;
+    };
+    const finish = approved => {
+      if (completed) return;
+      completed = true;
+      listeners.abort();
+      window.clearInterval(timer);
+      pendingPaymentConfirmation = false;
+      if (dialog.open) dialog.close();
+      if (opener?.isConnected) opener.focus({preventScroll:true});
+      resolve(approved);
+    };
+    const timer = window.setInterval(valid, 500);
+    check.addEventListener('change', valid, {signal:listeners.signal});
+    dialog.querySelectorAll('[data-payment-confirm-cancel]').forEach(button =>
+      button.addEventListener('click', () => finish(false), {signal:listeners.signal}));
+    dialog.addEventListener('keydown', event => {
+      if (event.key !== 'Tab') return;
+      const controls = Array.from(dialog.querySelectorAll('button:not(:disabled),input:not(:disabled),summary,a[href]'))
+        .filter(control => control.getClientRects().length);
+      const first = controls[0], last = controls.at(-1);
+      if ((event.shiftKey && document.activeElement === first) || (!event.shiftKey && document.activeElement === last)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first)?.focus({preventScroll:true});
+      }
+    }, {signal:listeners.signal});
+    dialog.addEventListener('cancel', event => { event.preventDefault(); finish(false); }, {signal:listeners.signal});
+    dialog.addEventListener('close', () => finish(false), {signal:listeners.signal});
+    confirm.addEventListener('click', () => {
+      if (!check.checked || !valid()) return;
+      confirm.disabled = true;
+      finish(true);
+    }, {signal:listeners.signal});
+    dialog.querySelector('[data-payment-confirm-stop]')?.addEventListener('click', () => {
+      const stop = document.querySelector('[data-testid="emergency-stop"]')?.closest('form');
+      finish(false);
+      stop?.requestSubmit();
+    }, {signal:listeners.signal});
+    valid();
+    dialog.showModal();
+    dialog.scrollTop = 0;
+    dialog.querySelector('.confirmation-body')?.scrollTo({top:0});
+  });
+}
+
 async function submitWorkspaceForm(event) {
   const form = event.target;
   if (!(form instanceof HTMLFormElement) || form.method.toLowerCase() !== 'post') return;
   const action = new URL(form.getAttribute('action') || window.location.href, window.location.href);
   if (action.origin !== window.location.origin) return;
-  if (form.dataset.confirmEn) {
+  if (form.dataset.paymentApproval) {
+    event.preventDefault();
+    if (pendingUpdate || pendingPaymentConfirmation || form.getAttribute('aria-busy') === 'true') return;
+    if (!await confirmPaymentPlan(form)) return;
+    if (!form.isConnected || pendingUpdate) return;
+  } else if (form.dataset.confirmEn) {
     const message = selectedLanguage() === 'vi' ? form.dataset.confirmVi : form.dataset.confirmEn;
     if (!window.confirm(message)) {
       event.preventDefault();

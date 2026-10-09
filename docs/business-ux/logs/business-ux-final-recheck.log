@@ -1,0 +1,282 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ----------< com.example:personal-finance-cross-border-agent >-----------
+[INFO] Building personal-finance-cross-border-agent 1.0.0
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ personal-finance-cross-border-agent ---
+[INFO] Copying 5 resources from src\main\resources to target\classes
+[INFO] Copying 5 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ personal-finance-cross-border-agent ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ personal-finance-cross-border-agent ---
+[INFO] skip non existing resourceDirectory D:\personal-finance-cross-border-agent\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ personal-finance-cross-border-agent ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 56 source files with javac [debug parameters release 21] to target\test-classes
+[INFO] /D:/personal-finance-cross-border-agent/src/test/java/com/example/finance/DeployedAcceptanceIT.java: D:\personal-finance-cross-border-agent\src\test\java\com\example\finance\DeployedAcceptanceIT.java uses or overrides a deprecated API.
+[INFO] /D:/personal-finance-cross-border-agent/src/test/java/com/example/finance/DeployedAcceptanceIT.java: Recompile with -Xlint:deprecation for details.
+[INFO] /D:/personal-finance-cross-border-agent/src/test/java/com/example/finance/DeployedAcceptanceIT.java: Some input files use unchecked or unsafe operations.
+[INFO] /D:/personal-finance-cross-border-agent/src/test/java/com/example/finance/DeployedAcceptanceIT.java: Recompile with -Xlint:unchecked for details.
+[INFO] 
+[INFO] --- surefire:3.5.4:test (default-test) @ personal-finance-cross-border-agent ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.example.finance.BusinessUxPlaywrightTest
+16:01:16.005 [main] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.example.finance.BusinessUxPlaywrightTest]: BusinessUxPlaywrightTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+16:01:16.270 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.example.finance.FinanceApplication for test class com.example.finance.BusinessUxPlaywrightTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2026-10-09T16:01:16.706+07:00  INFO 5472 --- [           main] c.e.finance.BusinessUxPlaywrightTest     : Starting BusinessUxPlaywrightTest using Java 21.0.6 with PID 5472 (started by ADMIN in D:\personal-finance-cross-border-agent)
+2026-10-09T16:01:16.707+07:00  INFO 5472 --- [           main] c.e.finance.BusinessUxPlaywrightTest     : No active profile set, falling back to 1 default profile: "default"
+Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
+Java HotSpot(TM) 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+WARNING: A Java agent has been loaded dynamically (C:\Users\ADMIN\.m2\repository\net\bytebuddy\byte-buddy-agent\1.17.7\byte-buddy-agent-1.17.7.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+2026-10-09T16:01:19.378+07:00  INFO 5472 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8163 (http)
+2026-10-09T16:01:19.400+07:00  INFO 5472 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-10-09T16:01:19.401+07:00  INFO 5472 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.46]
+2026-10-09T16:01:19.502+07:00  INFO 5472 --- [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-10-09T16:01:19.504+07:00  INFO 5472 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2778 ms
+2026-10-09T16:01:19.717+07:00  INFO 5472 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-10-09T16:01:20.043+07:00  INFO 5472 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:business_ux user=SA
+2026-10-09T16:01:20.047+07:00  INFO 5472 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-10-09T16:01:21.904+07:00  INFO 5472 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8163 (http) with context path '/'
+2026-10-09T16:01:21.916+07:00  INFO 5472 --- [           main] c.e.finance.BusinessUxPlaywrightTest     : Started BusinessUxPlaywrightTest in 5.521 seconds (process running for 6.664)
+2026-10-09T16:01:25.670+07:00  INFO 5472 --- [nio-8163-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-09T16:01:25.670+07:00  INFO 5472 --- [nio-8163-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-10-09T16:01:25.672+07:00  INFO 5472 --- [nio-8163-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 27.92 s -- in com.example.finance.BusinessUxPlaywrightTest
+[INFO] Running com.example.finance.UiCleanupDefectRegressionPlaywrightTest
+2026-10-09T16:01:43.768+07:00  INFO 5472 --- [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.example.finance.UiCleanupDefectRegressionPlaywrightTest]: UiCleanupDefectRegressionPlaywrightTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-09T16:01:43.772+07:00  INFO 5472 --- [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.example.finance.FinanceApplication for test class com.example.finance.UiCleanupDefectRegressionPlaywrightTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2026-10-09T16:01:43.880+07:00  INFO 5472 --- [           main] .UiCleanupDefectRegressionPlaywrightTest : Starting UiCleanupDefectRegressionPlaywrightTest using Java 21.0.6 with PID 5472 (started by ADMIN in D:\personal-finance-cross-border-agent)
+2026-10-09T16:01:43.880+07:00  INFO 5472 --- [           main] .UiCleanupDefectRegressionPlaywrightTest : No active profile set, falling back to 1 default profile: "default"
+2026-10-09T16:01:44.766+07:00  INFO 5472 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8159 (http)
+2026-10-09T16:01:44.767+07:00  INFO 5472 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-10-09T16:01:44.767+07:00  INFO 5472 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.46]
+2026-10-09T16:01:44.821+07:00  INFO 5472 --- [           main] o.a.c.c.C.[Tomcat-1].[localhost].[/]     : Initializing Spring embedded WebApplicationContext
+2026-10-09T16:01:44.821+07:00  INFO 5472 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 938 ms
+2026-10-09T16:01:44.850+07:00  INFO 5472 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Starting...
+2026-10-09T16:01:44.854+07:00  INFO 5472 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-2 - Added connection conn10: url=jdbc:h2:mem:ux_cleanup_defects user=SA
+2026-10-09T16:01:44.854+07:00  INFO 5472 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Start completed.
+2026-10-09T16:01:45.070+07:00  INFO 5472 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8159 (http) with context path '/'
+2026-10-09T16:01:45.073+07:00  INFO 5472 --- [           main] .UiCleanupDefectRegressionPlaywrightTest : Started UiCleanupDefectRegressionPlaywrightTest in 1.296 seconds (process running for 29.822)
+2026-10-09T16:01:45.830+07:00  INFO 5472 --- [nio-8159-exec-1] o.a.c.c.C.[Tomcat-1].[localhost].[/]     : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-09T16:01:45.830+07:00  INFO 5472 --- [nio-8159-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-10-09T16:01:45.831+07:00  INFO 5472 --- [nio-8159-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+[ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 9.057 s <<< FAILURE! -- in com.example.finance.UiCleanupDefectRegressionPlaywrightTest
+[ERROR] com.example.finance.UiCleanupDefectRegressionPlaywrightTest.internalTransferReviewUsesRecipientAndTransferGuidanceNotSchoolOrFx -- Time elapsed: 7.724 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: 
+Locator expected to contain text
+Expected: Confirm internal transfer
+Received: 
+        X�C NH?N CU?I C�NGX�c nh?n chuy?n n?i b?�
+        
+        Ki?m tra c�c th�ng tin ?� kh�a d??i ?�y. X�c nh?n s? ph� duy?t k? ho?ch n�y v� th?c thi ngay.
+        T?ng ti?n tr?250,000 VND
+        
+          
+          Ng??i th? h??ngEmergency Fund
+          T�i kho?n ng??i nh?nEMERGENCY-FUND
+          T�i kho?n ngu?nBank A Everyday � ���� 2048
+          K�nh thanh to�nInternal Sandbox transfer
+          S? ti?n ngu?n250,000 VND
+          Ph� chuy?n ti?n0 VND
+          
+          D? ki?n nh?n250,000 VND
+          S? d? d? ki?n sau thanh to�n99,750,000 VND
+        
+        Th�ng tin thanh to�n s? ???c ki?m tra l?i tr??c khi th?c thi.
+        M�i tr??ng m� ph?ng � Kh�ng c� ti?n th?t ???c chuy?n.
+        M� k? ho?chACT-4D73B9AC-D82
+        
+        
+        T�i ?� ki?m tra ng??i nh?n v� t?ng s? ti?n.
+        Quay l?iX�c nh?n v� thanh to�n
+        D?ng m?i thanh to�n m?i
+        
+      
+
+Call log:
+  - Assert "containsText" getByTestId("payment-confirm-dialog") with timeout 5000ms
+  - waiting for getByTestId("payment-confirm-dialog")
+    14 � locator resolved to <dialog open="" data-action-type="LOW_RISK" class="payment-confirm-dialog" data-payment-confirm-dialog="" data-action-id="ACT-4D73B9AC-D82" data-testid="payment-confirm-dialog" aria-labelledby="payment-confirm-title" aria-describedby="payment-confirm-description">�</dialog>
+       - unexpected value "
+        X�C NH?N CU?I C�NGX�c nh?n chuy?n n?i b?�
+        
+        Ki?m tra c�c th�ng tin ?� kh�a d??i ?�y. X�c nh?n s? ph� duy?t k? ho?ch n�y v� th?c thi ngay.
+        T?ng ti?n tr?250,000 VND
+        
+          
+          Ng??i th? h??ngEmergency Fund
+          T�i kho?n ng??i nh?nEMERGENCY-FUND
+          T�i kho?n ngu?nBank A Everyday � ���� 2048
+          K�nh thanh to�nInternal Sandbox transfer
+          S? ti?n ngu?n250,000 VND
+          Ph� chuy?n ti?n0 VND
+          
+          D? ki?n nh?n250,000 VND
+          S? d? d? ki?n sau thanh to�n99,750,000 VND
+        
+        Th�ng tin thanh to�n s? ???c ki?m tra l?i tr??c khi th?c thi.
+        M�i tr??ng m� ph?ng � Kh�ng c� ti?n th?t ???c chuy?n.
+        M� k? ho?chACT-4D73B9AC-D82
+        
+        
+        T�i ?� ki?m tra ng??i nh?n v� t?ng s? ti?n.
+        Quay l?iX�c nh?n v� thanh to�n
+        D?ng m?i thanh to�n m?i
+        
+      "
+	at com.microsoft.playwright.impl.AssertionsBase.expectImpl(AssertionsBase.java:81)
+	at com.microsoft.playwright.impl.AssertionsBase.expectImpl(AssertionsBase.java:47)
+	at com.microsoft.playwright.impl.AssertionsBase.expectImpl(AssertionsBase.java:39)
+	at com.microsoft.playwright.impl.LocatorAssertionsImpl.containsText(LocatorAssertionsImpl.java:75)
+	at com.microsoft.playwright.assertions.LocatorAssertions.containsText(LocatorAssertions.java:1024)
+	at com.example.finance.UiCleanupDefectRegressionPlaywrightTest.internalTransferReviewUsesRecipientAndTransferGuidanceNotSchoolOrFx(UiCleanupDefectRegressionPlaywrightTest.java:113)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+
+[INFO] Running com.example.finance.UiReviewFollowupPlaywrightTest
+2026-10-09T16:01:52.827+07:00  INFO 5472 --- [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.example.finance.UiReviewFollowupPlaywrightTest]: UiReviewFollowupPlaywrightTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-09T16:01:52.829+07:00  INFO 5472 --- [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.example.finance.FinanceApplication for test class com.example.finance.UiReviewFollowupPlaywrightTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2026-10-09T16:01:52.852+07:00  INFO 5472 --- [           main] c.e.f.UiReviewFollowupPlaywrightTest     : Starting UiReviewFollowupPlaywrightTest using Java 21.0.6 with PID 5472 (started by ADMIN in D:\personal-finance-cross-border-agent)
+2026-10-09T16:01:52.853+07:00  INFO 5472 --- [           main] c.e.f.UiReviewFollowupPlaywrightTest     : No active profile set, falling back to 1 default profile: "default"
+2026-10-09T16:01:53.116+07:00  INFO 5472 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8137 (http)
+2026-10-09T16:01:53.117+07:00  INFO 5472 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-10-09T16:01:53.117+07:00  INFO 5472 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.46]
+2026-10-09T16:01:53.164+07:00  INFO 5472 --- [           main] o.a.c.c.C.[Tomcat-2].[localhost].[/]     : Initializing Spring embedded WebApplicationContext
+2026-10-09T16:01:53.164+07:00  INFO 5472 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 310 ms
+2026-10-09T16:01:53.186+07:00  INFO 5472 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-3 - Starting...
+2026-10-09T16:01:53.188+07:00  INFO 5472 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-3 - Added connection conn20: url=jdbc:h2:mem:ux_review_followup user=SA
+2026-10-09T16:01:53.188+07:00  INFO 5472 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-3 - Start completed.
+2026-10-09T16:01:53.400+07:00  INFO 5472 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8137 (http) with context path '/'
+2026-10-09T16:01:53.404+07:00  INFO 5472 --- [           main] c.e.f.UiReviewFollowupPlaywrightTest     : Started UiReviewFollowupPlaywrightTest in 0.572 seconds (process running for 38.152)
+2026-10-09T16:01:54.162+07:00  INFO 5472 --- [nio-8137-exec-1] o.a.c.c.C.[Tomcat-2].[localhost].[/]     : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-09T16:01:54.162+07:00  INFO 5472 --- [nio-8137-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-10-09T16:01:54.163+07:00  INFO 5472 --- [nio-8137-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.878 s -- in com.example.finance.UiReviewFollowupPlaywrightTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Failures: 
+[ERROR]   UiCleanupDefectRegressionPlaywrightTest.internalTransferReviewUsesRecipientAndTransferGuidanceNotSchoolOrFx:113 Locator expected to contain text
+Expected: Confirm internal transfer
+Received: 
+        X�C NH?N CU?I C�NGX�c nh?n chuy?n n?i b?�
+        
+        Ki?m tra c�c th�ng tin ?� kh�a d??i ?�y. X�c nh?n s? ph� duy?t k? ho?ch n�y v� th?c thi ngay.
+        T?ng ti?n tr?250,000 VND
+        
+          
+          Ng??i th? h??ngEmergency Fund
+          T�i kho?n ng??i nh?nEMERGENCY-FUND
+          T�i kho?n ngu?nBank A Everyday � ���� 2048
+          K�nh thanh to�nInternal Sandbox transfer
+          S? ti?n ngu?n250,000 VND
+          Ph� chuy?n ti?n0 VND
+          
+          D? ki?n nh?n250,000 VND
+          S? d? d? ki?n sau thanh to�n99,750,000 VND
+        
+        Th�ng tin thanh to�n s? ???c ki?m tra l?i tr??c khi th?c thi.
+        M�i tr??ng m� ph?ng � Kh�ng c� ti?n th?t ???c chuy?n.
+        M� k? ho?chACT-4D73B9AC-D82
+        
+        
+        T�i ?� ki?m tra ng??i nh?n v� t?ng s? ti?n.
+        Quay l?iX�c nh?n v� thanh to�n
+        D?ng m?i thanh to�n m?i
+        
+      
+
+Call log:
+  - Assert "containsText" getByTestId("payment-confirm-dialog") with timeout 5000ms
+  - waiting for getByTestId("payment-confirm-dialog")
+    14 � locator resolved to <dialog open="" data-action-type="LOW_RISK" class="payment-confirm-dialog" data-payment-confirm-dialog="" data-action-id="ACT-4D73B9AC-D82" data-testid="payment-confirm-dialog" aria-labelledby="payment-confirm-title" aria-describedby="payment-confirm-description">�</dialog>
+       - unexpected value "
+        X�C NH?N CU?I C�NGX�c nh?n chuy?n n?i b?�
+        
+        Ki?m tra c�c th�ng tin ?� kh�a d??i ?�y. X�c nh?n s? ph� duy?t k? ho?ch n�y v� th?c thi ngay.
+        T?ng ti?n tr?250,000 VND
+        
+          
+          Ng??i th? h??ngEmergency Fund
+          T�i kho?n ng??i nh?nEMERGENCY-FUND
+          T�i kho?n ngu?nBank A Everyday � ���� 2048
+          K�nh thanh to�nInternal Sandbox transfer
+          S? ti?n ngu?n250,000 VND
+          Ph� chuy?n ti?n0 VND
+          
+          D? ki?n nh?n250,000 VND
+          S? d? d? ki?n sau thanh to�n99,750,000 VND
+        
+        Th�ng tin thanh to�n s? ???c ki?m tra l?i tr??c khi th?c thi.
+        M�i tr??ng m� ph?ng � Kh�ng c� ti?n th?t ???c chuy?n.
+        M� k? ho?chACT-4D73B9AC-D82
+        
+        
+        T�i ?� ki?m tra ng??i nh?n v� t?ng s? ti?n.
+        Quay l?iX�c nh?n v� thanh to�n
+        D?ng m?i thanh to�n m?i
+        
+      "
+[INFO] 
+[ERROR] Tests run: 9, Failures: 1, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  49.397 s
+[INFO] Finished at: 2026-10-09T16:01:56+07:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.4:test (default-test) on project personal-finance-cross-border-agent: There are test failures.
+[ERROR] 
+[ERROR] See D:\personal-finance-cross-border-agent\target\surefire-reports for the individual test results.
+[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

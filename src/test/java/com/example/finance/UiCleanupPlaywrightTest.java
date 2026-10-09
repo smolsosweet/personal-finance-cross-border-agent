@@ -82,8 +82,8 @@ class UiCleanupPlaywrightTest {
   assertThat(page.getByTestId("payment-summary")).containsText("Bank A International Transfer");
   assertThat(page.getByTestId("payment-summary")).containsText(CrossBorderService.SCHOOL_RECIPIENT_NAME);
   assertEquals(0,payments.sandboxTransactionCount());
-  page.onceDialog(Dialog::dismiss);page.getByTestId("approve-action").click();assertEquals(0,payments.sandboxTransactionCount());
-  page.onceDialog(Dialog::accept);page.getByTestId("approve-action").click();finished();
+  PaymentApprovalControls.cancel(page);assertEquals(0,payments.sandboxTransactionCount());
+  PaymentApprovalControls.approve(page);finished();
   assertThat(page.getByTestId("latest-action")).hasAttribute("data-status","COMPLETED");
   assertThat(page.getByTestId("latest-receipt")).containsText("29,239,200.00");
   page.getByTestId("audit-log").locator("summary").click();

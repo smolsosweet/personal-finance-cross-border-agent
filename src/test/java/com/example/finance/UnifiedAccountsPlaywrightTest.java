@@ -66,7 +66,7 @@ class UnifiedAccountsPlaywrightTest {
         page.navigate("http://localhost:8150/?action="+plan.id()+"#agent-workspace");
         assertThat(page.getByTestId("latest-action")).hasAttribute("data-status","AWAITING_APPROVAL");
         assertThat(page.getByTestId("latest-receipt")).hasCount(0);
-        page.getByTestId("approve-action").click();page.waitForFunction("()=>!document.querySelector('.content').hasAttribute('aria-busy')");
+        PaymentApprovalControls.approve(page);page.waitForFunction("()=>!document.querySelector('.content').hasAttribute('aria-busy')");
         assertThat(page.getByTestId("latest-receipt")).containsText("29,239,200.00");
         page.getByTestId("audit-log").locator("summary").click();
         assertTrue(((Number)page.getByTestId("audit-log").locator(".table-scroll").evaluate("e=>e.clientHeight")).intValue()<=320);

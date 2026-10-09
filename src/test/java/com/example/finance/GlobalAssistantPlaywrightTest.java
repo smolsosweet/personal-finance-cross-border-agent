@@ -113,7 +113,7 @@ class GlobalAssistantPlaywrightTest {
         assertThat(page.getByTestId("assistant-plan-state")).containsText("requires explicit approval");
         assertThat(page.getByTestId("assistant-panel")).containsText("TUITION-B-DEMO");
         if(page.getByTestId("assistant-panel").isVisible())page.getByTestId("assistant-close").click();
-        page.getByTestId("approve-action").click();idle();
+        PaymentApprovalControls.approve(page);idle();
         assertEquals(1,payments.sandboxTransactionCount());assertNotNull(payments.receiptForAction(draft.id()));
         assertFalse(border.expense(a).executed());assertTrue(border.expense(b).executed());
         assertEquals(a,border.selectedExpense().id());assertEquals(source,payments.selectedPaymentSource().accountId());

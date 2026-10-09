@@ -94,7 +94,7 @@ class UiProductRefinementPlaywrightTest {
         assertThat(page.getByTestId("payment-review")).containsText("Current balance");
         assertThat(page.getByTestId("payment-review")).containsText("Estimated balance after payment");
         assertEquals(0,payments.sandboxTransactionCount());assertNull(payments.receiptForAction(plan.id()));
-        page.getByTestId("approve-action").click();
+        PaymentApprovalControls.approve(page);
         page.waitForFunction("() => !document.querySelector('.content').hasAttribute('aria-busy')");
         assertThat(page.getByTestId("latest-receipt")).isVisible();
         assertThat(page.getByTestId("latest-action")).hasAttribute("data-status","COMPLETED");
@@ -144,7 +144,7 @@ class UiProductRefinementPlaywrightTest {
         db.update("UPDATE international_bills SET title='Active Tuition Budget Test' WHERE selected=TRUE");
         page.reload();page.getByTestId("language-vi").click();
         assertThat(page.getByTestId("environment-label")).hasText("Môi trường mô phỏng");
-        assertThat(page.getByTestId("current-account-balances")).containsText("Số dư tài khoản hiện tại");
+        assertThat(page.getByTestId("current-account-balances")).containsText("Số dư và kế hoạch");
         page.getByTestId("tab-student").click();
         assertThat(page.getByTestId("tuition-bill")).containsText("Active Tuition Budget Test");
         assertThat(page.getByTestId("tuition-progress").locator(".current")).containsText("So sánh kênh");

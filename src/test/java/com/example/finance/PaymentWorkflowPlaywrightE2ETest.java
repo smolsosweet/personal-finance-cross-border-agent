@@ -76,7 +76,7 @@ class PaymentWorkflowPlaywrightE2ETest {
             assertThat(page.getByTestId("review-source")).containsText("Alipay");
             assertThat(page.getByTestId("review-total")).containsText("71,032,100");
             assertThat(page.getByTestId("review-remaining")).containsText("3,967,900");
-            assertThat(page.getByTestId("approve-action")).containsText("Phê duyệt");
+            assertThat(page.getByTestId("approve-action")).containsText("phê duyệt");
             assertThat(page.getByTestId("approve-action")).isEnabled();
             assertThat(page.getByTestId("latest-receipt")).hasCount(0);
             assertEquals(0, phaseFour.sandboxTransactionCount(), "Delegated mode must not execute education payments");
@@ -117,13 +117,11 @@ class PaymentWorkflowPlaywrightE2ETest {
             page.screenshot(new Page.ScreenshotOptions().setFullPage(true)
                     .setPath(Path.of("target", "payment-review-desktop.png")));
 
-            page.onceDialog(dialog -> dialog.dismiss());
-            page.getByTestId("approve-action").click();
+            PaymentApprovalControls.cancel(page);
             assertEquals(0, approvals.size(), "Dismissing confirmation must not submit approval");
             assertThat(page.getByTestId("latest-action")).hasAttribute("data-status", "AWAITING_APPROVAL");
 
-            page.onceDialog(dialog -> dialog.accept());
-            page.getByTestId("approve-action").click();
+            PaymentApprovalControls.approve(page);
             assertThat(page.getByTestId("latest-action")).hasAttribute("data-status", "COMPLETED");
             assertThat(page.getByTestId("latest-receipt")).hasAttribute("data-action-id", actionId);
             assertThat(page.getByTestId("receipt-vnd-debit")).containsText("70,760,800.00 VND");
@@ -161,8 +159,7 @@ class PaymentWorkflowPlaywrightE2ETest {
             page.getByTestId("tab-student").click();
             page.getByTestId("plan-BANK_A").click();
             String completedAction = page.getByTestId("latest-action").getAttribute("data-action-id");
-            page.onceDialog(dialog -> dialog.accept());
-            page.getByTestId("approve-action").click();
+            PaymentApprovalControls.approve(page);
             assertThat(page.getByTestId("latest-receipt")).hasAttribute("data-action-id", completedAction);
             String completedTransaction = page.getByTestId("latest-receipt").getAttribute("data-transaction-id");
 
@@ -254,8 +251,7 @@ class PaymentWorkflowPlaywrightE2ETest {
             assertThat(page.getByTestId("agent-state")).containsText("Active");
             assertThat(page.getByTestId("latest-action")).hasAttribute("data-action-id", actionId);
             assertThat(page.getByTestId("approve-action")).isEnabled();
-            page.onceDialog(dialog -> dialog.accept());
-            page.getByTestId("approve-action").click();
+            PaymentApprovalControls.approve(page);
             assertThat(page.getByTestId("latest-action")).hasAttribute("data-status", "COMPLETED");
             assertEquals(1, phaseFour.sandboxTransactionCount());
             assertTrue(errors.isEmpty(), String.join(" | ", errors));

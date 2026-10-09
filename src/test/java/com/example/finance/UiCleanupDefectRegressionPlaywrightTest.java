@@ -109,7 +109,12 @@ class UiCleanupDefectRegressionPlaywrightTest {
    }
   }
   payments.resumeAgent();plan(payments.createLowRiskPlan(new BigDecimal("250000")));
-  assertFalse(page.getByTestId("approve-action").locator("..").getAttribute("data-confirm-en").matches("(?is).*(bill|quote).*"));
+  language("en");
+  page.getByTestId("approve-action").click();
+  assertThat(page.getByTestId("payment-confirm-dialog")).containsText("Confirm internal transfer");
+  assertFalse(page.getByTestId("payment-confirm-dialog").innerText().matches("(?is).*(bill|quote|FX markup).*"));
+  page.getByTestId("payment-confirm-cancel").click();
+  assertEquals(0,payments.sandboxTransactionCount());
   // Tuition keeps its verified school information and its existing bill/quote guidance.
   payments.emergencyStop();plan(payments.createTuitionPlan("BANK_A"));language("en");
   assertThat(page.getByTestId("review-recipient-heading")).hasText("Bill and beneficiary");

@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>FinBridge · Financial workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261009-channel-chat')}">
+  <title>FinBridge · Financial workspace</title><link rel="stylesheet" th:href="@{/app.css(v='20261009-business-ux')}">
 </head>
 <body>
 <a class="skip-link" href="#workspace-content">Skip to main content</a>
@@ -15,7 +15,7 @@
       <button type="button" data-tab="student" data-testid="tab-student" aria-pressed="false"><span>◎</span> Student finance</button>
       <button type="button" data-tab="agent" data-payment-entry data-testid="tab-agent" aria-pressed="false"><span>◇</span> Payments & history</button>
     </nav>
-    <div class="side-foot"><span>Simulation environment</span><strong>No real money is transferred.</strong></div>
+    <div class="side-foot"><span>FinBridge</span><strong>Your money, your decisions.</strong></div>
   </aside>
   <main>
     <header>
@@ -66,7 +66,15 @@
       </nav>
 
       <section class="card account-snapshot" data-tab-panel="dashboard" data-dashboard-view-panel="summary" data-testid="current-account-balances">
-        <div class="section-title"><div><div class="eyebrow">YOUR MONEY SOURCES</div><h2>Current account balances</h2><p>The same account balances are used across Overview, planning, chat and payments. Currencies remain separate.</p></div><a class="text-action" href="#student-finance">Compare payment options →</a></div>
+        <div class="section-title"><div><div class="eyebrow">YOUR MONEY</div><h2>Balances and planning</h2><p>Your account balances and upcoming commitments, in one place.</p></div><a class="text-action" href="#student-finance">Compare payment options →</a></div>
+        <div class="stats overview-stats liquidity-summary" data-testid="liquidity-summary">
+          <article data-testid="total-personal-balance"><small>Total balance · VND</small><strong th:text="${@conversationPresentation.money(financeSummary.totalBalance)}"></strong><p>All active personal sources · VND</p></article>
+          <article data-testid="reserved-next-30"><small>Reserved for next 30 days</small><strong th:text="${@conversationPresentation.money(financeSummary.reservedNext30Days)}"></strong><p>Reservations do not move money</p></article>
+          <article data-testid="planning-safety-buffer"><small>Safety buffer</small><strong th:text="${@conversationPresentation.money(financeSummary.safetyBuffer)}"></strong><p>Kept aside in this planning estimate</p></article>
+          <article data-testid="available-to-allocate"><small>Available after reservations</small><strong th:classappend="${financeSummary.availableToAllocate.signum() < 0 ? ' negative-money' : ''}" th:text="${@conversationPresentation.money(financeSummary.availableToAllocate)}"></strong><p>Planning estimate · VND</p></article>
+        </div>
+        <details class="planning-explanation"><summary data-testid="planning-source-heading">Money available for planning</summary><p>Total VND balance minus upcoming reservations and the safety buffer. This includes savings and manually maintained cash; it is not a guarantee that every source can fund an online payment. Payment availability is checked separately for the selected account and channel. Other currencies are not added to VND.</p></details>
+        <h3>Balances by account</h3>
         <div class="current-account-grid"><article th:each="account : ${paymentAccounts}">
           <small th:text="${account.displayName}" data-user-authored></small><strong th:text="${@conversationPresentation.money(account.balance) + ' ' + account.currency}"></strong><span th:text="${account.maskedNumber}"></span><span th:if="${account.connectionStatus == 'MANUAL'}">Manually maintained</span><span th:if="${account.connectionStatus != 'CONNECTED' and account.connectionStatus != 'MANUAL'}" th:text="${account.connectionStatus}"></span>
         </article></div>
@@ -75,17 +83,6 @@
       <section class="finance-month-snapshot" data-tab-panel="dashboard" data-dashboard-view-panel="summary" data-testid="monthly-finance-snapshot">
         <article class="card monthly-spending"><div><small>Monthly spending</small><strong th:text="${@conversationPresentation.money(financeSummary.monthlySpent) + ' VND'}"></strong><span><span>Reporting period</span> · <span th:text="${#temporals.format(#temporals.createNow(),'MM/yyyy')}"></span></span><p>Confirmed and automatically categorized expenses. Refunds are shown separately.</p></div><a class="text-action" href="#transactions">View transactions →</a></article>
         <article class="card budget-snapshot"><h3>Category budget remaining</h3><p>Budget limits are not money in your account.</p><div class="budget-snapshot-list"><div th:each="budget : ${budgets}"><span th:text="${budget.category}"></span><strong th:text="${@conversationPresentation.money(budget.remaining) + ' VND'}"></strong></div></div><button type="button" class="text-action" data-dashboard-view-target="planning">Manage budgets →</button></article>
-      </section>
-
-      <section class="planning-source-heading" data-tab-panel="dashboard" data-dashboard-view-panel="summary">
-        <h2 data-testid="planning-source-heading">Money available for planning</h2>
-        <p>Planning uses the same accounts shown above, including manually maintained cash. Reservations do not move money.</p>
-      </section>
-      <section class="stats overview-stats" data-tab-panel="dashboard" data-dashboard-view-panel="summary">
-        <article data-testid="total-personal-balance"><span class="icon blue">◫</span><small>Total balance · VND</small><strong th:text="${@conversationPresentation.money(financeSummary.totalBalance)}"></strong><p>All active personal sources · VND</p></article>
-        <article data-testid="reserved-next-30"><span class="icon orange">⌛</span><small>Reserved for next 30 days</small><strong th:text="${@conversationPresentation.money(financeSummary.reservedNext30Days)}"></strong><p>Recurring and one-time plans</p></article>
-        <article data-testid="available-to-allocate"><span class="icon green">✓</span><small>Available after reservations</small><strong th:classappend="${financeSummary.availableToAllocate.signum() < 0 ? ' negative-money' : ''}" th:text="${@conversationPresentation.money(financeSummary.availableToAllocate)}"></strong><p>Planning estimate after reservations and safety buffer</p></article>
-        <article><span class="icon violet">?</span><small>Needs review</small><strong th:text="${dashboard.pendingReview}"></strong><p>Transactions waiting for your input</p></article>
       </section>
 
       <section class="intro" data-tab-panel="transactions" hidden><div><div class="eyebrow">YOUR ACTIVITY</div><h1>Transactions</h1><p>Review incoming activity, confirm categories and find past payments.</p></div><button type="button" class="primary-button" data-open-dialog="add-transaction">+ Add transaction</button></section>
@@ -318,7 +315,7 @@
                 <div><small>Settlement</small><strong th:text="${quote.settlementMinDays + '–' + quote.settlementMaxDays + ' day(s)'}"></strong></div>
                 <dl class="channel-essential-facts"><div><dt>Current balance</dt><dd th:text="${@conversationPresentation.money(sourceAccount.balance) + ' ' + sourceAccount.currency}"></dd></div><div><dt>Expected received</dt><dd th:text="${@conversationPresentation.money(quote.expectedReceived) + ' ' + selectedExpense.currency}"></dd></div><div><dt>Transfer fee</dt><dd th:text="${@conversationPresentation.money(quote.transferFee) + ' VND'}"></dd></div><div><dt>FX markup</dt><dd th:text="${@conversationPresentation.money(quote.fxMarkup) + ' VND'}"></dd></div></dl>
                 <p class="channel-recovery" th:if="${!quote.eligible}" th:text="${quote.eligibilityReason}"></p>
-                <p class="channel-recovery" th:if="${!quote.eligible}"><span>Account connected, but this demo channel does not support</span> <strong th:text="${studentProfile.sourceCountry + ' → ' + selectedExpense.destinationCountry + ' · VND → ' + selectedExpense.currency}"></strong><span>. Reconnecting the account will not enable this route. Choose an eligible channel.</span></p>
+                <p class="channel-recovery" th:if="${!quote.eligible}"><span>Account connected, but this channel does not support</span> <strong th:text="${studentProfile.sourceCountry + ' → ' + selectedExpense.destinationCountry + ' · VND → ' + selectedExpense.currency}"></strong><span>. Reconnecting the account will not enable this route. Choose an eligible channel.</span></p>
                 <p class="channel-recovery" th:if="${quote.eligible and !canFund}">This account cannot cover the total cost and safety buffer. Choose another account.</p>
                 <p class="channel-recovery" th:if="${!recipientVerification.verified}">Verify the bill beneficiary before creating a plan.</p>
                 <div class="channel-row-actions"><button class="secondary" type="button" th:attr="data-open-dialog=${'quote-detail-' + quote.channelId}">Details</button><form th:if="${canFund and !quote.expired and recipientVerification.verified}" th:action="@{/agent/plans/tuition}" method="post" class="planning-form" data-next-anchor="#agent-workspace"><input type="hidden" name="channel" th:value="${quote.channelId}"><input type="hidden" name="sourceAccountId" th:value="${sourceAccount.accountId}"><input type="hidden" name="expenseId" th:value="${selectedExpense.id}"><input type="hidden" name="billVersion" th:value="${selectedExpense.updatedAt}"><input type="hidden" name="quoteId" th:value="${quote.quoteId}"><button class="planning-only" type="submit" th:attr="data-testid=${'plan-' + quote.channelId}">Create plan</button></form></div>
@@ -380,7 +377,7 @@
           <div th:if="${latestAction.actionType == 'TUITION' and (latestReceipt != null or (latestAction.status == 'AWAITING_APPROVAL' and paymentDecision != null and paymentDecision.decision != 'BLOCKED'))}" class="payment-approval-note" data-testid="approval-note"><strong th:text="${latestReceipt != null ? 'You approved this education payment.' : 'Your approval is required for this education payment.'}"></strong><p th:text="${latestReceipt != null ? 'The receipt records the exact locked plan. Its beneficiary, amounts and quote cannot be edited.' : 'Delegated mode cannot bypass this approval. Amount, beneficiary, account, channel and quote are locked to this plan.'}"></p></div>
           <div th:if="${latestAction.status == 'INVALIDATED'}" class="payment-warning" role="status" data-testid="invalidated-plan"><strong>This plan is no longer valid</strong><p>The bill or payment details changed. Review the updated bill and create a new plan; the previous approval cannot be reused.</p><a href="#student-finance" data-return-to-comparison>Review bill and create a new plan</a></div>
           <div th:if="${latestAction.status == 'CANCELED'}" class="payment-warning" role="status"><strong>Plan canceled</strong><p th:text="${latestAction.actionType == 'TUITION' ? 'No payment was made. You can create a new plan for an active bill.' : 'No transfer was made. Review the source account and recipient before creating a new transfer plan.'}"></p></div>
-          <div th:if="${paymentDecision != null and paymentDecision.decision == 'BLOCKED' and latestReceipt == null and latestAction.status != 'INVALIDATED' and latestAction.status != 'CANCELED'}" class="payment-warning" role="alert" data-testid="payment-blocked"><strong>Payment blocked</strong><p data-payment-reason th:attr="data-reason=${paymentDecision.reasonCode},data-backend-explanation=${paymentDecision.explanation}" th:text="${paymentDecision.explanation}"></p><p class="reason-code"><span>Reason</span> · <code data-user-authored data-testid="payment-reason-code" th:text="${paymentDecision.reasonCode}"></code></p><a th:if="${latestAction.actionType == 'TUITION'}" href="#student-finance" data-return-to-comparison>Return to the bill or refresh quotes before creating a new plan.</a><p th:if="${latestAction.actionType != 'TUITION'}" data-testid="internal-blocked-guidance">Review the source account, recipient and policy status before creating a new transfer plan.</p></div>
+          <div th:if="${paymentDecision != null and paymentDecision.decision == 'BLOCKED' and latestReceipt == null and latestAction.status != 'INVALIDATED' and latestAction.status != 'CANCELED'}" class="payment-warning" role="alert" data-testid="payment-blocked"><strong>Payment blocked</strong><p data-payment-reason th:attr="data-reason=${paymentDecision.reasonCode},data-backend-explanation=${paymentDecision.explanation}" th:text="${paymentDecision.explanation}"></p><details class="reason-reference"><summary>Technical reference</summary><code data-user-authored data-testid="payment-reason-code" th:text="${paymentDecision.reasonCode}"></code></details><a th:if="${latestAction.actionType == 'TUITION'}" href="#student-finance" data-return-to-comparison>Return to the bill or refresh quotes before creating a new plan.</a><p th:if="${latestAction.actionType != 'TUITION'}" data-testid="internal-blocked-guidance">Review the source account, recipient and policy status before creating a new transfer plan.</p></div>
           <div th:if="${paymentDecision != null and paymentDecision.decision == 'DEADLINE_RISK' and latestReceipt == null}" class="deadline-warning" role="status"><strong data-user-authored th:text="${paymentDecision.reasonCode}"></strong><p data-payment-reason th:attr="data-reason=${paymentDecision.reasonCode},data-backend-explanation=${paymentDecision.explanation}" th:text="${paymentDecision.explanation}"></p></div>
 
           <article th:if="${latestReceipt != null}" class="receipt-card payment-receipt">
@@ -450,13 +447,13 @@
           <div th:if="${latestReceipt == null}" class="payment-actions">
             <p data-testid="payment-safety-checks" th:text="${latestAction.actionType == 'TUITION' ? 'Before payment, the system rechecks the bill, beneficiary, quote, account, limits, safety buffer and Emergency Stop.' : 'Before transfer, the system rechecks the source account, recipient, limits, safety buffer and Emergency Stop.'}"></p>
             <div>
-              <form th:if="${latestAction.status != 'CANCELED' and latestAction.status != 'INVALIDATED' and paymentDecision != null and paymentDecision.decision != 'BLOCKED'}" th:action="@{'/agent/actions/' + ${latestAction.id} + '/approve'}" method="post" data-next-anchor="#agent-workspace" th:attr="data-confirm-en=${latestAction.actionType == 'TUITION' ? 'Approve the displayed locked beneficiary, amount, account, channel and quote, and execute this payment in the Sandbox?' : 'Approve the displayed recipient, amount and source account, and execute this internal transfer in the Sandbox?'},data-confirm-vi=${latestAction.actionType == 'TUITION' ? 'Phê duyệt đúng người thụ hưởng, số tiền, tài khoản, kênh và báo giá đang hiển thị, rồi thực thi trong Sandbox?' : 'Phê duyệt đúng người nhận, số tiền và tài khoản nguồn đang hiển thị, rồi thực thi chuyển nội bộ trong Sandbox?'}"><button class="primary-button" data-testid="approve-action">Approve and pay in Sandbox</button></form>
+              <form th:if="${latestAction.status != 'CANCELED' and latestAction.status != 'INVALIDATED' and paymentDecision != null and paymentDecision.decision != 'BLOCKED'}" th:action="@{'/agent/actions/' + ${latestAction.id} + '/approve'}" method="post" data-next-anchor="#agent-workspace" th:attr="data-payment-approval=${latestAction.id}"><button class="primary-button" data-testid="approve-action">Review and approve</button></form>
               <form th:if="${latestAction.status != 'CANCELED' and latestAction.status != 'INVALIDATED'}" th:action="@{'/agent/actions/' + ${latestAction.id} + '/cancel'}" method="post" th:attr="data-confirm-en=${latestAction.actionType == 'TUITION' ? 'Cancel this unexecuted plan? The bill will remain available.' : 'Cancel this unexecuted internal transfer plan?'},data-confirm-vi=${latestAction.actionType == 'TUITION' ? 'Hủy kế hoạch chưa thực thi này? Hóa đơn vẫn được giữ lại.' : 'Hủy kế hoạch chuyển nội bộ chưa thực thi này?'}"><button class="secondary" data-testid="cancel-action">Cancel plan</button></form>
             </div>
           </div>
           <div class="payment-processing" data-payment-processing hidden role="status">Processing in Payment Sandbox. Please wait; do not submit another payment.</div>
 
-          <details class="payment-technical"><summary>Plan references</summary><dl class="payment-facts"><div><dt>Plan ID</dt><dd th:text="${latestAction.id}"></dd></div><div><dt>Source account</dt><dd th:text="${latestAction.sourceAccountId}"></dd></div><div><dt th:text="${latestAction.actionType == 'TUITION' ? 'Channel / quote' : 'Transfer channel'}"></dt><dd th:text="${latestAction.actionType == 'TUITION' ? (latestAction.channelId ?: 'Internal sandbox') + ' · ' + (latestAction.quoteId ?: 'No FX quote') : 'Internal Sandbox transfer'}"></dd></div><div><dt>Permission</dt><dd th:text="${latestAction.requiredPermission}"></dd></div><div><dt>Idempotency</dt><dd th:text="${latestAction.idempotencyKey}"></dd></div></dl></details>
+          <details class="payment-technical"><summary>Plan references</summary><dl class="payment-facts"><div><dt>Plan ID</dt><dd th:text="${latestAction.id}"></dd></div><div><dt>Source account</dt><dd th:text="${latestAction.sourceAccountId}"></dd></div><div><dt th:text="${latestAction.actionType == 'TUITION' ? 'Channel / quote' : 'Transfer channel'}"></dt><dd th:text="${latestAction.actionType == 'TUITION' ? (latestAction.channelId ?: 'Internal sandbox') + ' · ' + (latestAction.quoteId ?: 'No FX quote') : 'Internal Sandbox transfer'}"></dd></div><div><dt>Permission</dt><dd th:text="${latestAction.requiredPermission == 'DELEGATED' ? 'Delegated' : 'Approval'}"></dd></div><div><dt>Idempotency</dt><dd th:text="${latestAction.idempotencyKey}"></dd></div></dl></details>
           <details class="audit-panel payment-audit" data-testid="audit-log"><summary>Audit Log for this plan <span th:text="${#lists.size(auditEvents)}"></span></summary><div class="table-scroll"><table><thead><tr><th>Time / actor</th><th>Event</th><th>Status</th><th>Reason</th><th>Evidence</th></tr></thead><tbody><tr th:each="event : ${auditEvents}"><td><strong th:text="${#temporals.format(event.occurredAt,'HH:mm:ss')}"></strong><small th:text="${event.actor}"></small></td><td th:text="${#strings.replace(event.eventType,'_',' ')}"></td><td><span class="status-chip" data-payment-status th:attr="data-status=${event.status}" th:text="${event.status}"></span></td><td th:text="${event.reasonCode ?: '—'}"></td><td th:text="${event.details}"></td></tr></tbody></table></div></details>
         </div>
 
@@ -545,8 +542,36 @@
         <nav class="transaction-pagination" aria-label="Transaction pages"><button type="button" class="secondary" data-testid="transaction-prev">Previous</button><span data-testid="transaction-page" aria-live="polite"></span><button type="button" class="secondary" data-testid="transaction-next">Next</button></nav>
       </section>
 
+      <dialog th:if="${latestAction != null and latestReceipt == null}" class="payment-confirm-dialog" data-payment-confirm-dialog data-testid="payment-confirm-dialog" aria-labelledby="payment-confirm-title" aria-describedby="payment-confirm-description" th:attr="data-action-id=${latestAction.id},data-action-type=${latestAction.actionType},data-quote-expires=${paymentReview != null and paymentReview.expiresAt != null ? paymentReview.expiresAtEpochMillis : ''}">
+        <div class="dialog-heading"><div><small>FINAL REVIEW</small><h2 id="payment-confirm-title" th:text="${latestAction.actionType == 'TUITION' ? 'Confirm education payment' : 'Confirm internal transfer'}"></h2></div><button type="button" data-payment-confirm-cancel aria-label="Close" autofocus>×</button></div>
+        <div class="confirmation-body" tabindex="0" role="region" aria-label="Payment details">
+        <div class="confirmation-total"><small>Total debit</small><strong data-testid="confirm-total" th:text="${@conversationPresentation.money(latestAction.debitAmount) + ' ' + latestAction.sourceCurrency}"></strong></div>
+        <p id="payment-confirm-description">Check these locked details. Confirming approves this plan and executes it immediately.</p>
+        <dl class="payment-facts confirmation-facts">
+          <div th:if="${paymentReview != null and latestAction.actionType == 'TUITION'}"><dt>Bill / reference</dt><dd data-testid="confirm-bill" data-user-authored th:text="${paymentReview.billTitle + ' · ' + paymentReview.paymentReference}"></dd></div>
+          <div><dt>Beneficiary</dt><dd data-testid="confirm-beneficiary" data-user-authored th:text="${paymentReview != null ? paymentReview.recipientName : latestAction.recipient}"></dd></div>
+          <div><dt>Recipient account</dt><dd data-user-authored th:text="${latestAction.recipient}"></dd></div>
+          <div><dt>Funding account</dt><dd data-testid="confirm-source" data-user-authored th:text="${paymentReview != null ? paymentReview.sourceDisplayName + ' · ' + paymentReview.sourceMaskedNumber : latestAction.sourceAccountId}"></dd></div>
+          <div><dt>Payment channel</dt><dd data-testid="confirm-channel" data-user-authored th:text="${paymentReview != null ? paymentReview.channelName : 'Internal transfer'}"></dd></div>
+          <div><dt>Source amount</dt><dd th:text="${@conversationPresentation.money(latestAction.conversionAmount) + ' ' + latestAction.sourceCurrency}"></dd></div>
+          <div><dt>Transfer fee</dt><dd th:text="${@conversationPresentation.money(latestAction.transferFee) + ' ' + latestAction.sourceCurrency}"></dd></div>
+          <div th:if="${latestAction.actionType == 'TUITION'}"><dt>FX markup</dt><dd th:text="${@conversationPresentation.money(latestAction.fxMarkup) + ' ' + latestAction.sourceCurrency}"></dd></div>
+          <div><dt>Expected received</dt><dd th:text="${@conversationPresentation.money(latestAction.destinationAmount) + ' ' + latestAction.destinationCurrency}"></dd></div>
+          <div th:if="${paymentReview != null}"><dt>Estimated balance after payment</dt><dd th:text="${@conversationPresentation.money(paymentReview.balanceAfter) + ' ' + latestAction.sourceCurrency}"></dd></div>
+        </dl>
+        <details class="confirmation-reference"><summary>Plan reference</summary><code data-user-authored th:text="${latestAction.id}"></code></details>
+        </div>
+        <div class="confirmation-footer">
+        <p class="confirmation-quote-status" data-confirm-quote-status role="status"></p>
+        <p class="simulation-disclosure">Simulation environment · No real money is transferred.</p>
+        <label class="confirmation-check"><input type="checkbox" data-payment-confirm-check data-testid="payment-confirm-check"><span>I checked the beneficiary and total amount.</span></label>
+        <div class="confirmation-actions"><button type="button" class="secondary" data-payment-confirm-cancel data-testid="payment-confirm-cancel">Go back</button><button type="button" class="primary-button" data-payment-confirm-submit data-testid="payment-confirm-submit" disabled>Confirm and pay</button></div>
+        <button th:if="${agentPolicy.state == 'ACTIVE'}" type="button" class="text-action confirmation-stop" data-payment-confirm-stop data-testid="payment-confirm-stop">Stop all new payments</button>
+        </div>
+      </dialog>
+
       <details class="environment-tools" data-testid="environment-tools"><summary>Environment tools</summary><p>These controls change shared synthetic data used by the team. They are not restricted administrator controls.</p>        <form method="post" th:action="@{/reset}" th:attr="data-confirm-en=${sharedDemo ? 'Reset shared synthetic data for the whole team? This affects everyone.' : 'Reset shared synthetic financial data? All team members will lose workspace changes, plans and payment history.'},data-confirm-vi=${sharedDemo ? 'Đặt lại dữ liệu mô phỏng dùng chung của cả team? Thao tác này ảnh hưởng mọi người.' : 'Đặt lại dữ liệu tài chính mô phỏng dùng chung? Mọi thành viên sẽ mất các thay đổi, kế hoạch và lịch sử thanh toán.'}"><button class="secondary" data-testid="reset-demo">Reset environment data</button></form></details>
-      <footer>Simulation environment · No real money is transferred.</footer>
+      <footer>FinBridge · Your money, your decisions.</footer>
     </div>
   </main>
 </div>
@@ -652,6 +677,6 @@
   </form>
   <p class="assistant-safety">AI helps understand your question. Asking does not authorize a payment.</p>
 </aside>
-<script th:src="@{/app.js(v='20261009-channel-chat')}"></script>
+<script th:src="@{/app.js(v='20261009-business-ux')}"></script>
 </body>
 </html>

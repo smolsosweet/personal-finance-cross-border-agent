@@ -94,7 +94,7 @@ class StudentExpensePlaywrightE2ETest {
             Page page=context.newPage();page.navigate(BASE_URL);page.getByTestId("tab-student").click();
             var momo=page.getByTestId("channel-MOMO");
             assertThat(momo.locator("[data-select-channel]")).isDisabled();
-            assertThat(momo).containsText("Account connected, but this demo channel does not support");
+            assertThat(momo).containsText("Account connected, but this channel does not support");
             assertThat(momo).containsText("Vietnam → United States · VND → USD");
             assertThat(momo).containsText("Reference estimate only");
             assertEquals(0,momo.getByTestId("plan-MOMO").count());
@@ -458,14 +458,12 @@ class StudentExpensePlaywrightE2ETest {
             assertThat(page.getByTestId("review-channel")).containsText("Bank A");
             assertThat(page.getByTestId("latest-receipt")).hasCount(0);
 
-            page.onceDialog(confirm -> confirm.dismiss());
-            page.getByTestId("approve-action").click();
+            PaymentApprovalControls.cancel(page);
             assertEquals(0, approvals.size(), "Dismissing approval must not submit a payment request");
             assertThat(page.getByTestId("latest-action")).hasAttribute("data-status", "AWAITING_APPROVAL");
             assertThat(page.getByTestId("latest-receipt")).hasCount(0);
 
-            page.onceDialog(confirm -> confirm.accept());
-            page.getByTestId("approve-action").click();
+            PaymentApprovalControls.approve(page);
             assertThat(page.getByTestId("latest-action")).hasAttribute("data-status", "COMPLETED");
             assertThat(page.getByTestId("latest-receipt")).isVisible();
             assertThat(page.getByTestId("receipt-vnd-debit")).containsText("70,760,800.00 VND");

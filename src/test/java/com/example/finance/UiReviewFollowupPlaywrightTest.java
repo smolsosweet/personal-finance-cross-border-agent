@@ -120,7 +120,8 @@ class UiReviewFollowupPlaywrightTest {
             assertThat(page.getByTestId("planning-source-heading")).hasText(language.equals("vi")?"Tiền dành cho kế hoạch":"Money available for planning");
             assertThat(page.getByTestId("environment-label")).hasText(language.equals("vi")?"Môi trường mô phỏng":"Simulation environment");
             tab("transactions");
-            assertThat(page.getByTestId("transaction-history-scope")).containsText(language.equals("vi")?"Tất cả thời gian":"All time");
+            page.getByTestId("transaction-period-filter").selectOption("all");
+            assertThat(page.getByTestId("transaction-history-scope")).containsText(language.equals("vi")?"Toàn bộ thời gian":"All time");
             page.getByTestId("transaction-type-filter").selectOption("Expense");
             assertThat(page.getByTestId("transaction-history-scope")).containsText(language.equals("vi")?"Bộ lọc":"Filters");
             page.getByTestId("transaction-clear-filters").click();

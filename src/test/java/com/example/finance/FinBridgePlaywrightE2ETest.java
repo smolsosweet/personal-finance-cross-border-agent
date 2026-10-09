@@ -240,8 +240,7 @@ class FinBridgePlaywrightE2ETest {
         page.getByTestId("plan-BANK_A").click();
         assertThat(page.getByTestId("latest-action")).hasAttribute("data-status", "AWAITING_APPROVAL");
         db.update("UPDATE international_bills SET recipient_account='UNKNOWN-ACCOUNT' WHERE id=1");
-        page.onceDialog(dialog -> dialog.accept());
-        page.getByTestId("approve-action").click();
+        PaymentApprovalControls.approve(page);
         assertThat(page.getByTestId("latest-action")).hasAttribute("data-status", "BLOCKED");
         assertThat(page.getByTestId("payment-blocked")).isVisible();
         assertThat(page.getByTestId("audit-log")).containsText("RECIPIENT MISMATCH");
@@ -254,8 +253,7 @@ class FinBridgePlaywrightE2ETest {
         page.getByTestId("plan-BANK_A").click();
         assertThat(page.getByTestId("latest-action")).hasAttribute("data-status", "AWAITING_APPROVAL");
         db.update("UPDATE fx_quotes SET expires_at=?", LocalDateTime.now().minusMinutes(1));
-        page.onceDialog(dialog -> dialog.accept());
-        page.getByTestId("approve-action").click();
+        PaymentApprovalControls.approve(page);
         assertThat(page.getByTestId("latest-action")).hasAttribute("data-status", "BLOCKED");
         assertThat(page.getByTestId("audit-log")).containsText("FX QUOTE EXPIRED");
         assertThat(page.getByTestId("latest-receipt")).hasCount(0);
@@ -272,8 +270,7 @@ class FinBridgePlaywrightE2ETest {
         String actionId = action.getAttribute("data-action-id");
         assertNotNull(actionId);
 
-        page.onceDialog(dialog -> dialog.accept());
-        page.getByTestId("approve-action").click();
+        PaymentApprovalControls.approve(page);
 
         Locator receipt = page.getByTestId("latest-receipt");
         assertThat(receipt).isVisible();
