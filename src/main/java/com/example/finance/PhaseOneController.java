@@ -68,7 +68,6 @@ public class PhaseOneController {
         model.addAttribute("attentionItems", financeWorkspace.attentionItems(
                 ((Number) transactions.dashboard().get("pendingReview")).intValue()));
         Map<String,Object> defaultTuitionInsight = crossBorder.tuitionInsight();
-        var insights = new ArrayList<>(transactions.proactiveFeed());
         model.addAttribute("studentProfile", crossBorder.profile());
         var selectedExpense = crossBorder.selectedExpenseOrNull();
         model.addAttribute("tuitionBill", selectedExpense == null ? null : crossBorder.bill(selectedExpense.id()));
@@ -83,30 +82,7 @@ public class PhaseOneController {
                 : "APPROVED".equals(workflowPlan.status()) ? 5 : 4;
         model.addAttribute("studentWorkflowStage", studentStage);
         model.addAttribute("studentWorkflowPlan", workflowPlan);
-        if (workflowPlan == null || workflowReceipt != null) {
-            if (!defaultTuitionInsight.isEmpty()) insights.add(defaultTuitionInsight);
-        } else {
-            var workflowReview = phaseFour.paymentReview(workflowPlan);
-            var workflowDecision = phaseFour.evaluate(workflowPlan, false);
-            long daysToSafeDate = workflowReview == null || workflowReview.latestSafeDate() == null ? 0
-                    : java.time.temporal.ChronoUnit.DAYS.between(LocalDate.now(), workflowReview.latestSafeDate());
-            boolean blocked = "BLOCKED".equals(workflowDecision.decision());
-            boolean urgent = !blocked && daysToSafeDate <= 2;
-            boolean dueSoon = !blocked && daysToSafeDate <= 7;
-            String state = blocked ? "Review blocked plan" : urgent ? "Action soon" : dueSoon ? "Approve payment" : "Plan ready";
-            String title = blocked ? "Tuition payment plan is blocked" : urgent ? "Tuition payment approval is due now"
-                    : dueSoon ? "Tuition payment approval is due soon" : "Tuition payment plan is ready for review";
-            String message = blocked ? workflowDecision.explanation()
-                    : "Plan " + workflowPlan.id() + " is ready for bill " + workflowReview.paymentReference()
-                    + ". It has not moved money and still requires separate approval.";
-            insights.add(NotificationMetadata.attach(Map.of("priority", blocked ? "BLOCKED" : urgent ? "HIGH" : dueSoon ? "MEDIUM" : "INFO",
-                    "title", title, "message", message,
-                    "evidence", "Locked plan · " + workflowReview.channelName() + " · quote " + workflowPlan.quoteId(),
-                    "notificationKey", "education-bill-" + selectedExpense.id(),
-                    "href", "?action=" + workflowPlan.id() + "#agent-workspace", "action", "Review payment plan →"),
-                    blocked || urgent || dueSoon ? "ACTION" : "UPDATE", state, workflowPlan.createdAt()));
-        }
-        model.addAttribute("insights", insights);
+        model.addAttribute("insights", notificationInsights(defaultTuitionInsight, selectedExpense, workflowPlan, workflowReceipt != null));
         var channelQuotes = crossBorder.rankedQuotes();
         var eligibleQuotes = channelQuotes.stream().filter(CrossBorderService.ChannelQuote::eligible).toList();
         var connectedQuotes = channelQuotes.stream().filter(quote -> quote.sourceAccountId() != null).toList();
@@ -175,6 +151,48 @@ public class PhaseOneController {
         model.addAttribute("newTransaction", newTransaction);
         if (review != null && !review.isBlank()) model.addAttribute("reviewTransactionId", review);
         return "home";
+    }
+
+    /** Read-only refresh: no context tokens, financial writes or model calls. */
+    @GetMapping("/notifications")
+    public String notifications(Model model) {
+        model.addAttribute("attentionItems", financeWorkspace.attentionItems(
+                ((Number) transactions.dashboard().get("pendingReview")).intValue()));
+        var expense = crossBorder.selectedExpenseOrNull();
+        var plan = expense == null ? null : phaseFour.workflowPlanForExpense(expense.id());
+        model.addAttribute("insights", notificationInsights(crossBorder.tuitionInsight(), expense, plan,
+                plan != null && phaseFour.receiptForAction(plan.id()) != null));
+        return "home :: notificationCenter";
+    }
+
+    private java.util.List<Map<String,Object>> notificationInsights(Map<String,Object> defaultTuitionInsight,
+            CrossBorderService.StudentExpense selectedExpense, PhaseFourService.ActionPlan workflowPlan,
+            boolean receiptExists) {
+        var insights = new ArrayList<>(transactions.proactiveFeed());
+        if (workflowPlan == null || receiptExists) {
+            if (!defaultTuitionInsight.isEmpty()) insights.add(defaultTuitionInsight);
+        } else {
+            var workflowReview = phaseFour.paymentReview(workflowPlan);
+            var workflowDecision = phaseFour.evaluate(workflowPlan, false);
+            long daysToSafeDate = workflowReview == null || workflowReview.latestSafeDate() == null ? 0
+                    : java.time.temporal.ChronoUnit.DAYS.between(LocalDate.now(), workflowReview.latestSafeDate());
+            boolean blocked = "BLOCKED".equals(workflowDecision.decision());
+            boolean urgent = !blocked && daysToSafeDate <= 2;
+            boolean dueSoon = !blocked && daysToSafeDate <= 7;
+            String state = blocked ? "Review blocked plan" : urgent ? "Action soon" : dueSoon ? "Approve payment" : "Plan ready";
+            String title = blocked ? "Tuition payment plan is blocked" : urgent ? "Tuition payment approval is due now"
+                    : dueSoon ? "Tuition payment approval is due soon" : "Tuition payment plan is ready for review";
+            String message = blocked ? workflowDecision.explanation()
+                    : "Plan " + workflowPlan.id() + " is ready for bill " + workflowReview.paymentReference()
+                    + ". It has not moved money and still requires separate approval.";
+            insights.add(NotificationMetadata.attach(Map.of("priority", blocked ? "BLOCKED" : urgent ? "HIGH" : dueSoon ? "MEDIUM" : "INFO",
+                    "title", title, "message", message,
+                    "evidence", "Locked plan · " + workflowReview.channelName() + " · quote " + workflowPlan.quoteId(),
+                    "notificationKey", "education-bill-" + selectedExpense.id(),
+                    "href", "?action=" + workflowPlan.id() + "#agent-workspace", "action", "Review payment plan →"),
+                    blocked || urgent || dueSoon ? "ACTION" : "UPDATE", state, workflowPlan.createdAt()));
+        }
+        return insights;
     }
 
     @PostMapping("/transactions/manual")

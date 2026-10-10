@@ -618,7 +618,7 @@ public class CrossBorderService {
         lockPaymentWorkflow();
         StudentExpense expense = expense(id);
         if (!expense.active()) throw new IllegalArgumentException("Only active student bills can be archived");
-        Integer fallbackId = fallbackExpenseId(expense);
+        Integer fallbackId = fallbackExpenseId(expense, true);
         invalidatePendingPlans(id, "Student bill archived");
         db.update("UPDATE international_bills SET lifecycle_status='ARCHIVED',selected=FALSE,updated_at=? WHERE id=?",
                 LocalDateTime.now(), id);
@@ -635,7 +635,7 @@ public class CrossBorderService {
         if (!expense.active()) throw new IllegalArgumentException("Only active student bills can be cancelled");
         if (expense.executed())
             throw new IllegalArgumentException("An executed student bill cannot be cancelled or deleted; archive it instead");
-        Integer fallbackId = fallbackExpenseId(expense);
+        Integer fallbackId = fallbackExpenseId(expense, true);
         invalidatePendingPlans(id, "Student bill cancelled");
         db.update("UPDATE international_bills SET lifecycle_status='CANCELLED',selected=FALSE,updated_at=? WHERE id=?",
                 LocalDateTime.now(), id);
@@ -660,6 +660,10 @@ public class CrossBorderService {
     }
 
     private Integer fallbackExpenseId(StudentExpense expense) {
+        return fallbackExpenseId(expense, false);
+    }
+
+    private Integer fallbackExpenseId(StudentExpense expense, boolean allowEmptySelection) {
         if (!expense.selected()) return null;
         List<Integer> candidates = db.query("""
                 SELECT b.id FROM international_bills b
@@ -674,8 +678,10 @@ public class CrossBorderService {
                 )
                 ORDER BY b.due_date,b.id FETCH FIRST 1 ROWS ONLY
                 """, (rs,n) -> rs.getInt(1), expense.id());
-        if (candidates.isEmpty())
+        if (candidates.isEmpty()) {
+            if (allowEmptySelection) return null;
             throw new IllegalArgumentException("Create or restore another verified active student bill before removing the selected bill");
+        }
         return candidates.getFirst();
     }
 

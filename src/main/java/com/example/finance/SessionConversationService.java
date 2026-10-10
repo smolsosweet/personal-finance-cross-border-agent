@@ -180,7 +180,9 @@ public class SessionConversationService {
     public String assistantPlanId(HttpSession session) {
         State state = state(session);
         synchronized (state) {
-            if (state.binding == null || !Set.of(Topic.TUITION_PLAN, Topic.TUITION_STATUS,
+            // Immutable receipts remain queryable, but a shortcut must track the current workspace.
+            if (state.binding == null || !Objects.equals(state.binding.workspaceBill(), selectedBill())
+                    || !Objects.equals(state.binding.workspaceAccount(), selectedAccount()) || !Set.of(Topic.TUITION_PLAN, Topic.TUITION_STATUS,
                     Topic.RECEIPT_BALANCE, Topic.TUITION_AFFORDABILITY, Topic.LIVING_EXPENSE_RUNWAY)
                     .contains(state.topic) || validate(state.binding) != null) return null;
             return state.binding.plan();

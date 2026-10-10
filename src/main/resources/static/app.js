@@ -2246,6 +2246,13 @@ function updateNotificationBadge() {
   if (storageStatus) storageStatus.textContent = notificationReadPersistent
     ? (vi ? 'Trạng thái đã xem được lưu trong trình duyệt này.' : 'Read status is saved in this browser.')
     : (vi ? 'Trình duyệt không cho lưu; trạng thái đã xem chỉ giữ trong tab này.' : 'Browser storage unavailable; seen status lasts only in this tab.');
+  const refreshStatus = dialog.querySelector('[data-notification-refresh-status]');
+  if (refreshStatus) {
+    refreshStatus.hidden = dialog.dataset.notificationStale !== 'true';
+    refreshStatus.textContent = vi
+      ? 'Không làm mới được thông báo. Đang hiển thị trạng thái lần tải trước; đóng và mở lại để thử lại.'
+      : 'Could not refresh notifications. Showing the last loaded state; close and reopen to try again.';
+  }
   let count = 0;
   items.forEach(item => {
     const seen = state[item.dataset.notificationKey] === notificationRevision(item);
@@ -2278,10 +2285,7 @@ function updateNotificationBadge() {
   if (markAll) markAll.disabled = count === 0;
   renderNotificationFilter(dialog);
 }
-function initializeNotifications() {
-  const dialog=document.getElementById('notification-center');
-  const bell=document.querySelector('[data-notifications-open]');
-  if (!dialog || !bell) return;
+function prepareNotificationItems(dialog) {
   const keys=new Set();
   // Prefer the detailed insight when the same transaction review appears in both sources.
   const items=Array.from(dialog.querySelectorAll('[data-notification-key]'));
@@ -2308,6 +2312,12 @@ function initializeNotifications() {
     button.dataset.notificationMarkSeen=''; button.dataset.userAuthored='';
     controls.append(status,button); item.append(controls);
   });
+}
+function initializeNotifications() {
+  const dialog=document.getElementById('notification-center');
+  const bell=document.querySelector('[data-notifications-open]');
+  if (!dialog || !bell) return;
+  prepareNotificationItems(dialog);
   dialog.addEventListener('click',event=>{
     const filter=event.target.closest('[data-notification-filter]');
     if(filter){notificationFilter=filter.dataset.notificationFilter;renderNotificationFilter(dialog);}
@@ -2333,6 +2343,45 @@ function initializeNotifications() {
     }
   });
   updateNotificationBadge();
+}
+
+let notificationRefreshPending = false;
+async function openNotificationCenter(bell) {
+  const dialog = document.getElementById('notification-center');
+  if (!dialog || dialog.open || notificationRefreshPending || pendingUpdate) return;
+  notificationRefreshPending = true;
+  bell.disabled = true;
+  bell.setAttribute('aria-busy', 'true');
+  const sequence = updateSequence;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
+  try {
+    const response = await fetch('/notifications', { credentials: 'same-origin', cache: 'no-store',
+      headers: { Accept: 'text/html' }, signal: controller.signal });
+    if (!response.ok) throw new Error('Notifications unavailable');
+    const next = new DOMParser().parseFromString(await response.text(), 'text/html');
+    const body = next.querySelector('#notification-center .notification-body');
+    if (!body) throw new Error('Notification response missing');
+    // A concurrent workspace update replaces the dialog; never reinsert an old response.
+    if (dialog !== document.getElementById('notification-center') || sequence !== updateSequence) return;
+    dialog.querySelector('.notification-body').replaceChildren(...body.childNodes);
+    delete dialog.dataset.notificationStale;
+    prepareNotificationItems(dialog);
+  } catch (_) {
+    // Retain the previous items with an explicit freshness warning. No action is resolved.
+    dialog.dataset.notificationStale = 'true';
+  } finally {
+    clearTimeout(timer);
+    notificationRefreshPending = false;
+    bell.disabled = false;
+    bell.removeAttribute('aria-busy');
+  }
+  if (dialog !== document.getElementById('notification-center') || sequence !== updateSequence) return;
+  applyLanguage(selectedLanguage());
+  dialogOpeners.set(dialog, bell);
+  bell.setAttribute('aria-expanded', 'true');
+  dialog.showModal();
+  dialog.querySelector('.notification-body').scrollTop = 0;
 }
 
 function initializeWorkspaceContent(state) {
@@ -2708,12 +2757,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('click',event=>{
     const bell=event.target.closest('[data-notifications-open]');
     if(!bell)return;
-    const dialog=document.getElementById('notification-center');
-    if(!dialog||dialog.open)return;
-    dialogOpeners.set(dialog,bell);
-    bell.setAttribute('aria-expanded','true');
-    dialog.showModal();
-    dialog.querySelector('.notification-body').scrollTop=0;
+    openNotificationCenter(bell);
   });
   document.addEventListener('click', event => {
     if (event.target.closest('[data-dismiss-intro]')) {

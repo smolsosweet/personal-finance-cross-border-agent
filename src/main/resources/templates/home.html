@@ -535,9 +535,10 @@
         <nav class="transaction-pagination" aria-label="Transaction pages"><button type="button" class="secondary" data-testid="transaction-prev">Previous</button><span data-testid="transaction-page" aria-live="polite"></span><button type="button" class="secondary" data-testid="transaction-next">Next</button></nav>
       </section>
 
-      <dialog id="notification-center" class="notification-dialog" data-testid="notification-center" aria-labelledby="notification-title">
+      <dialog id="notification-center" th:fragment="notificationCenter" class="notification-dialog" data-testid="notification-center" aria-labelledby="notification-title">
         <div class="dialog-heading"><div><h2 id="notification-title">Notifications</h2><p>The badge counts unseen updates. Marking as seen does not resolve or approve a task.</p></div><button type="button" data-close-dialog aria-label="Close" autofocus>×</button></div>
         <div class="notification-toolbar"><button type="button" class="secondary" data-notifications-mark-all data-testid="notifications-mark-all">Mark all as seen</button><small data-notification-storage-status data-user-authored>Read status is saved in this browser.</small></div>
+        <p data-notification-refresh-status data-user-authored role="status" hidden></p>
         <div class="notification-filters" role="group" aria-label="Notification filters"><button type="button" data-notification-filter="all" aria-pressed="true">All</button><button type="button" data-notification-filter="ACTION" aria-pressed="false">Action required</button><button type="button" data-notification-filter="UPDATE" aria-pressed="false">Updates & suggestions</button></div>
         <div class="notification-body" tabindex="0" role="region" aria-label="Notifications">
         <section class="notification-group attention-center" data-testid="attention-center">
