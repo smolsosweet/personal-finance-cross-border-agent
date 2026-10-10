@@ -30,7 +30,7 @@ class UiCleanupDefectRegressionPlaywrightTest {
  void plan(PhaseFourService.ActionPlan plan){page.navigate("http://localhost:8159/?action="+plan.id()+"#agent-workspace");}
  void language(String lang){page.getByTestId("language-"+lang).click();}
  void finished(){page.waitForFunction("()=>!document.querySelector('.content').hasAttribute('aria-busy')");}
- void capture(String name)throws Exception{Path dir=Path.of("docs/ui-ux-defect-fixes/after");Files.createDirectories(dir);
+ void capture(String name)throws Exception{Path dir=TestEvidence.path("docs/ui-ux-defect-fixes/after");Files.createDirectories(dir);
   page.screenshot(new Page.ScreenshotOptions().setPath(dir.resolve(name+".png")));}
  void separate(Locator a,Locator b){
   BoundingBox x=a.boundingBox(),y=b.boundingBox();assertNotNull(x);assertNotNull(y);

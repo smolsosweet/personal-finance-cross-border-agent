@@ -50,7 +50,7 @@ class BusinessUxPlaywrightTest {
     void plan(PhaseFourService.ActionPlan plan) {page.navigate(BASE+"/?action="+plan.id()+"#agent-workspace");}
     void idle() {page.waitForFunction("()=>!document.querySelector('.content').hasAttribute('aria-busy')");}
     void capture(String name)throws Exception {
-        Path dir=Path.of("docs/business-ux");Files.createDirectories(dir);
+        Path dir=TestEvidence.path("docs/business-ux");Files.createDirectories(dir);
         page.screenshot(new Page.ScreenshotOptions().setPath(dir.resolve(name+".png")));
     }
     void fits(Page target) {

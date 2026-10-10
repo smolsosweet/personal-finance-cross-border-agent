@@ -82,7 +82,7 @@ class GeminiLiveIT {
                 assertEquals("PAYER_VND",db.queryForObject("SELECT account_id FROM payment_source_accounts WHERE selected=TRUE",String.class));
                 readOnly(page,"So sánh các kênh học phí rẻ nhất.","COMPARE_TUITION_CHANNELS");
             } else readOnly(page,"Vậy đủ mấy tháng?","EXPLAIN_LIVING_EXPENSE_RUNWAY");
-            page.screenshot(new Page.ScreenshotOptions().setPath(Path.of("target/gemini-live-runway.png")));
+            page.screenshot(new Page.ScreenshotOptions().setPath(TestEvidence.path("target/gemini-live-runway.png")));
             // New browser context proves ambiguity has no hidden prior topic.
             if(!stability) try(BrowserContext separate=browser.newContext()) {
                 Page fresh=separate.newPage();fresh.setDefaultTimeout(90000);fresh.navigate(base);fresh.getByTestId("language-en").click();fresh.getByTestId("assistant-launcher").click();
@@ -101,7 +101,7 @@ class GeminiLiveIT {
             assertEquals("CONTEXT_UNSAFE_INPUT",latest("CONTEXT_TURN"));
             System.out.println("GEMINI_LIVE injection=PREFILTER_BLOCKED model_called=false (not counted as model success)");
             assertTrue(errors.isEmpty(),"Unexpected browser JavaScript errors");
-            page.screenshot(new Page.ScreenshotOptions().setPath(Path.of("target/gemini-live-awaiting-approval.png")));
+            page.screenshot(new Page.ScreenshotOptions().setPath(TestEvidence.path("target/gemini-live-awaiting-approval.png")));
             System.out.printf("GEMINI_LIVE_RESULT requests_total=%d provider=gemini readonly_snapshots=PASS plan=AWAITING_APPROVAL approvals=0 payments=0 ledger=0 receipts=0 js_errors=0%n",requests);
         } finally {System.out.printf("GEMINI_LIVE_REQUEST_BUDGET used=%d max=%d (submissions counted even if provider fails)%n",requests,maxRequests);}
     }

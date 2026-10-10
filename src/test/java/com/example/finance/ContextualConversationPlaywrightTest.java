@@ -57,7 +57,7 @@ class ContextualConversationPlaywrightTest {
             assertThat(second.getByTestId("assistant-context-state")).hasAttribute("data-topic","NONE");
         }
         assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
-        page.screenshot(new Page.ScreenshotOptions().setPath(Path.of("target/context-choices-browser-vi.png")));
+        page.screenshot(new Page.ScreenshotOptions().setPath(TestEvidence.path("target/context-choices-browser-vi.png")));
     }
     @Test void contextualEntryPointsBindTheExactBillAndPlanAndDoNotPay(){
         stub(LlmIntent.Intent.EXPLAIN_TUITION_AFFORDABILITY);

@@ -170,7 +170,7 @@ class GlobalAssistantGeminiLiveIT {
             page.getByTestId("assistant-send-message").click();idle();
             assertEquals(classifications,classifiedCount());assertTrue(last().contains("cannot change"));assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
             results.add(Map.of("case","injection","actual","PREFILTER_BLOCKED","generationAttempts",0));
-            page.screenshot(new Page.ScreenshotOptions().setPath(Path.of("target/global-assistant-live-final.png")));
+            page.screenshot(new Page.ScreenshotOptions().setPath(TestEvidence.path("target/global-assistant-live-final.png")));
         }finally{
             Files.writeString(evidence,mapper.writerWithDefaultPrettyPrinter().writeValueAsString(Map.of("submissions",submissions,"cap",20,"results",results)));
             System.out.println("GLOBAL_GEMINI_LIVE_RESUME submissions="+submissions+" cap=20 evidence="+evidence);

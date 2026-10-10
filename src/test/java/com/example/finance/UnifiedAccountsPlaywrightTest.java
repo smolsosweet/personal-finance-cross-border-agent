@@ -48,11 +48,11 @@ class UnifiedAccountsPlaywrightTest {
         page.waitForFunction("()=>document.querySelector('.money-source-grid').scrollTop>100");
         assertEquals(top,((Number)page.evaluate("()=>window.scrollY")).doubleValue(),1);
         region.focus();page.keyboard().press("End");assertThat(region).isFocused();
-        page.screenshot(new Page.ScreenshotOptions().setPath(Path.of("target/unified-accounts-desktop.png")));
+        page.screenshot(new Page.ScreenshotOptions().setPath(TestEvidence.path("target/unified-accounts-desktop.png")));
         page.setViewportSize(390,844);assertEquals(420,((Number)region.evaluate("e=>e.clientHeight")).intValue());
         assertTrue((Boolean)page.evaluate("()=>document.documentElement.scrollWidth<=window.innerWidth"));
         page.getByTestId("language-vi").click();assertThat(button).hasText("Cuộn xuống");
-        page.screenshot(new Page.ScreenshotOptions().setPath(Path.of("target/unified-accounts-mobile.png")));
+        page.screenshot(new Page.ScreenshotOptions().setPath(TestEvidence.path("target/unified-accounts-mobile.png")));
         region.evaluate("e=>e.scrollTop=150");
         when(model.classify(anyString())).thenReturn(new LlmIntent(LlmIntent.Intent.EXPLAIN_CURRENT_BALANCE,LlmIntent.ChannelPreference.NONE,new BigDecimal("0.95"),LlmIntent.ClarificationCode.NONE));
         page.getByTestId("assistant-launcher").click();page.getByTestId("assistant-conversation-input").fill("Tổng số dư tất cả tài khoản");page.getByTestId("assistant-send-message").click();

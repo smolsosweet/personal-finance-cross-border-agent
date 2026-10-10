@@ -46,7 +46,7 @@ class HostedDemoSmokeIT {
             assertEquals(classified,latest(page,"INTENT CLASSIFIED",2));assertEquals(initial,balances(page));
             assertThat(page.getByTestId("assistant-replies")).containsText("Khoảng 3.27 tháng");assertThat(page.getByTestId("assistant-replies")).containsText("Bank A");
             send(page,"So sánh các kênh học phí rẻ nhất.","COMPARE_TUITION_CHANNELS");assertEquals(initial,balances(page));
-            page.screenshot(new Page.ScreenshotOptions().setPath(Path.of("target/render-smoke-runway.png")));
+            page.screenshot(new Page.ScreenshotOptions().setPath(TestEvidence.path("target/render-smoke-runway.png")));
             send(page,"Chuẩn bị kế hoạch học phí rẻ nhất.","CREATE_TUITION_PLAN");
             assertThat(page.getByTestId("latest-action")).hasAttribute("data-status","AWAITING_APPROVAL");
             String plan=page.getByTestId("latest-action").getAttribute("data-action-id");assertNotNull(plan);
@@ -65,7 +65,7 @@ class HostedDemoSmokeIT {
             assertThat(other.getByTestId("runway-monthly-amount")).isHidden();
             assertThat(other.getByTestId("assistant-context-state").locator("strong")).hasText("NONE");
             assertTrue(errors.isEmpty(),"JavaScript errors: "+errors);
-            page.screenshot(new Page.ScreenshotOptions().setPath(Path.of("target/render-smoke-awaiting-approval.png")));
+            page.screenshot(new Page.ScreenshotOptions().setPath(TestEvidence.path("target/render-smoke-awaiting-approval.png")));
             System.out.printf("HOSTED_SMOKE_RESULT url=%s requests=%d source_balances_unchanged=PASS pending_plan=%s status=AWAITING_APPROVAL receipt_visible=false injection=PREFILTER_BLOCKED shared_finance=PASS separate_chat=PASS js_errors=0%n",base,submissions,plan);
         }
     }

@@ -34,7 +34,7 @@ class UiBusinessStatePlaywrightTest {
     void stage(int n){assertThat(page.getByTestId("tuition-progress")).hasAttribute("data-stage",String.valueOf(n));}
     Locator center(){return page.getByTestId("notification-center");}
     void bell(){page.getByTestId("notification-bell").click();assertThat(center()).isVisible();}
-    void shot(String name)throws Exception{Path p=Path.of("target/ui-business-state");Files.createDirectories(p);page.screenshot(new Page.ScreenshotOptions().setPath(p.resolve(name+".png")));}
+    void shot(String name)throws Exception{Path p=TestEvidence.path("target/ui-business-state");Files.createDirectories(p);page.screenshot(new Page.ScreenshotOptions().setPath(p.resolve(name+".png")));}
     void createBill(String name){
         page.locator("[data-open-dialog='add-student-expense']").click();
         Locator form=page.locator("#add-student-expense form");

@@ -28,7 +28,7 @@ class RecipientMatchLabelsPlaywrightTest {
     }
     @AfterEach void close(){browser.close();pw.close();assertTrue(errors.isEmpty(),errors.toString());}
     void idle(){page.waitForFunction("()=>!document.querySelector('.content').hasAttribute('aria-busy')");}
-    void capture(String name)throws Exception{Path dir=Path.of("docs/recipient-labels/evidence");Files.createDirectories(dir);page.screenshot(new Page.ScreenshotOptions().setPath(dir.resolve(name+".png")));
+    void capture(String name)throws Exception{Path dir=TestEvidence.path("docs/recipient-labels/evidence");Files.createDirectories(dir);page.screenshot(new Page.ScreenshotOptions().setPath(dir.resolve(name+".png")));
         if(name.startsWith("bill-") || name.startsWith("mismatch-")) page.getByTestId("recipient-verification").screenshot(new Locator.ScreenshotOptions().setPath(dir.resolve(name+"-status.png")));
         if(name.startsWith("bill-")) page.locator(".student-expense-card.selected").screenshot(new Locator.ScreenshotOptions().setPath(dir.resolve(name+"-card.png")));
         if(name.contains("audit-")) page.getByTestId("audit-log").locator("tr").filter(new Locator.FilterOptions().setHas(page.locator("[data-recipient-match=true][data-status=VERIFIED]"))).first().screenshot(new Locator.ScreenshotOptions().setPath(dir.resolve(name+"-match-row.png")));}

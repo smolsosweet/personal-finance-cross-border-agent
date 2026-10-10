@@ -56,7 +56,7 @@ class UnifiedAccountsGeminiLiveIT {
             read("What is my current Bank A Everyday balance?","en","EXPLAIN_CURRENT_BALANCE","30139200.00");
             assertEquals(1,count("sandbox_transactions"));
             assertEquals(0,new java.math.BigDecimal("29239200").compareTo(db.queryForObject("SELECT vnd_balance_after FROM sandbox_transactions",java.math.BigDecimal.class)));
-            page.screenshot(new Page.ScreenshotOptions().setPath(Path.of("target/unified-gemini-final.png")));
+            page.screenshot(new Page.ScreenshotOptions().setPath(TestEvidence.path("target/unified-gemini-final.png")));
         } finally {
             Files.writeString(evidence,mapper.writerWithDefaultPrettyPrinter().writeValueAsString(Map.of("generationSubmissions",submissions,"cap",20,"results",results)));
             System.out.println("UNIFIED_GEMINI_LIVE submissions="+submissions+" evidence="+evidence);

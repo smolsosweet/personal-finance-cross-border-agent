@@ -26,7 +26,7 @@ class UiCleanupPlaywrightTest {
  @AfterEach void close(){browser.close();pw.close();assertTrue(errors.isEmpty(),errors.toString());verify(model,never()).classify(anyString());}
  void navigate(){page.navigate("http://localhost:8156");}
  void finished(){page.waitForFunction("()=>!document.querySelector('.content').hasAttribute('aria-busy')");}
- void screenshot(String name)throws Exception{Path dir=Path.of("target/payment-control-ux");Files.createDirectories(dir);page.screenshot(new Page.ScreenshotOptions().setPath(dir.resolve(name+".png")));}
+ void screenshot(String name)throws Exception{Path dir=TestEvidence.path("target/payment-control-ux");Files.createDirectories(dir);page.screenshot(new Page.ScreenshotOptions().setPath(dir.resolve(name+".png")));}
  @Test void modeAndSimulationRemainVisibleAcrossViewportAndLanguageChanges()throws Exception{
   payments.setMode("DELEGATED");var plan=payments.createTuitionPlan("BANK_A");
   page.navigate("http://localhost:8156/?action="+plan.id()+"#agent-workspace");

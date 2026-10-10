@@ -30,7 +30,7 @@ class UiProductRefinementPlaywrightTest {
     }
     @AfterEach void close(){if(browser!=null)browser.close();if(pw!=null)pw.close();}
     void shot(String stage,String name,int width) throws Exception {
-        Path path=Path.of("docs/ui-ux/"+stage+"/"+name+"-"+width+".png");
+        Path path=TestEvidence.path("docs/ui-ux/"+stage+"/"+name+"-"+width+".png");
         Files.createDirectories(path.getParent());page.evaluate("() => window.scrollTo({top:0,behavior:'instant'})");page.screenshot(new Page.ScreenshotOptions().setPath(path));
     }
     @Test void navigationIntroductionAndEnvironmentToolsAreDiscoverable() {

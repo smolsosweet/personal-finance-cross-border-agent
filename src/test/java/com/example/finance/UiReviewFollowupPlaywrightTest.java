@@ -34,7 +34,7 @@ class UiReviewFollowupPlaywrightTest {
     }
     void tab(String value){page.locator("[data-tab='"+value+"']:visible").first().click();}
     void capture(String name) throws Exception {
-        Path dir=Path.of("docs/ui-ux-followup/"+System.getProperty("ux.review.stage","after"));
+        Path dir=TestEvidence.path("docs/ui-ux-followup/"+System.getProperty("ux.review.stage","after"));
         Files.createDirectories(dir);page.screenshot(new Page.ScreenshotOptions().setPath(dir.resolve(name+".png")));
     }
     @Test void stickyTabsRemainClickableAfterScrollingInBothLanguages() {

@@ -62,7 +62,7 @@ class AssistantAnswerPresentationPlaywrightTest {
         UiLanguageControls.select(page,"vi");
         assertThat(reply().getByTestId("response-warning")).containsText("Remaining budget is not an account balance");
         assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
-        page.getByTestId("assistant-panel").screenshot(new Locator.ScreenshotOptions().setPath(Path.of("target/answer-ux-budget.png")));
+        page.getByTestId("assistant-panel").screenshot(new Locator.ScreenshotOptions().setPath(TestEvidence.path("target/answer-ux-budget.png")));
     }
     @Test void spendingKeepsCurrenciesAndRefundsSeparateWithoutRoundingAmounts(){
         db.update("UPDATE transactions SET occurred_at=?",LocalDateTime.of(2019,1,1,12,0));
@@ -93,14 +93,14 @@ class AssistantAnswerPresentationPlaywrightTest {
         confirm("10000000");assertThat(reply().getByTestId("response-conclusion")).hasText("Đủ khoảng 2,62 tháng");
         assertThat(page.getByTestId("assistant-replies").getByTestId("response-conclusion")).hasCount(2);
         page.setViewportSize(390,844);
-        page.getByTestId("assistant-panel").screenshot(new Locator.ScreenshotOptions().setPath(Path.of("target/answer-ux-runway-mobile.png")));
+        page.getByTestId("assistant-panel").screenshot(new Locator.ScreenshotOptions().setPath(TestEvidence.path("target/answer-ux-runway-mobile.png")));
         // Emulate keyboard viewport geometry; this is not a physical-device keyboard test.
         for(int height:new int[]{430,337}){
         page.evaluate("""
           height => {const viewport=new EventTarget();Object.assign(viewport,{height,width:390,offsetTop:18,offsetLeft:0});
             Object.defineProperty(window,'visualViewport',{value:viewport,configurable:true});window.dispatchEvent(new Event('resize'));}
           """,height);
-        page.getByTestId("assistant-panel").screenshot(new Locator.ScreenshotOptions().setPath(Path.of("target/answer-ux-keyboard-geometry-"+height+".png")));
+        page.getByTestId("assistant-panel").screenshot(new Locator.ScreenshotOptions().setPath(TestEvidence.path("target/answer-ux-keyboard-geometry-"+height+".png")));
         for(String testId:new String[]{"runway-monthly-amount","runway-confirm","assistant-conversation-input","assistant-send-message"}){
             assertTrue((Boolean)page.getByTestId(testId).evaluate("node => { const r=node.getBoundingClientRect(),v=window.visualViewport; const at=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);return r.top>=v.offsetTop && r.bottom<=v.offsetTop+v.height && (at===node || node.contains(at)); }"),testId+" is inside the visible viewport and not covered");
         }
@@ -136,7 +136,7 @@ class AssistantAnswerPresentationPlaywrightTest {
         UiLanguageControls.select(page,"vi");stub(LlmIntent.Intent.COMPARE_TUITION_CHANNELS,LlmIntent.ChannelPreference.FASTEST);send("So sánh các kênh học phí nhanh nhất");
         assertThat(reply().getByTestId("response-conclusion")).containsText("Hiển thị 3 kênh đủ điều kiện · nhanh nhất");
         assertThat(reply().getByTestId("response-channel").first()).containsText("Alipay");
-        page.getByTestId("assistant-panel").screenshot(new Locator.ScreenshotOptions().setPath(Path.of("target/answer-ux-comparison.png")));
+        page.getByTestId("assistant-panel").screenshot(new Locator.ScreenshotOptions().setPath(TestEvidence.path("target/answer-ux-comparison.png")));
         // Browser clock only: verify countdown becomes a visible expired warning without F5.
         page.clock().install();page.clock().fastForward(6*60*1000);
         assertThat(reply().locator("[data-response-quote]").first()).containsText("Báo giá đã hết hạn");

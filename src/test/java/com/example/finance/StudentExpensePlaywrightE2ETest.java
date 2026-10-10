@@ -523,7 +523,7 @@ class StudentExpensePlaywrightE2ETest {
                     page.reload();
                     assertThat(page.getByTestId("tuition-progress")).hasAttribute("data-stage", "1");
                     page.getByTestId("tuition-progress").screenshot(new com.microsoft.playwright.Locator.ScreenshotOptions()
-                            .setPath(Path.of("target/bill-workflow/selection-" + width + "-" + language + ".png")));
+                            .setPath(TestEvidence.path("target/bill-workflow/selection-" + width + "-" + language + ".png")));
                     card.locator(".student-bill-select").click();
                     assertThat(page.getByTestId("tuition-progress")).hasAttribute("data-stage", "3");
                     assertThat(page.getByTestId("tuition-progress").locator("li.complete")).hasCount(2);
@@ -559,7 +559,7 @@ class StudentExpensePlaywrightE2ETest {
             assertThat(page.getByTestId("student-workflow-plan")).hasAttribute("href", "/?action=" + draft + "#agent-workspace");
             java.nio.file.Files.createDirectories(Path.of("target/bill-workflow"));
             page.getByTestId("tuition-progress").screenshot(new com.microsoft.playwright.Locator.ScreenshotOptions()
-                    .setPath(Path.of("target/bill-workflow/draft-progress.png")));
+                    .setPath(TestEvidence.path("target/bill-workflow/draft-progress.png")));
             page.getByTestId("student-workflow-plan").click();
             assertThat(page.getByTestId("latest-action")).hasAttribute("data-action-id", draft);
             assertThat(page.getByTestId("latest-receipt")).hasCount(0);
@@ -637,7 +637,7 @@ class StudentExpensePlaywrightE2ETest {
             assertTrue(secondBill.x > firstBill.x, "Bills should be arranged horizontally on desktop");
             assertTrue(Math.abs(secondBill.y - firstBill.y) < 2, "Bills should share one row");
             bills.screenshot(new com.microsoft.playwright.Locator.ScreenshotOptions()
-                    .setPath(Path.of("target", "student-bills-desktop.png")));
+                    .setPath(TestEvidence.path("target", "student-bills-desktop.png")));
 
             page.setViewportSize(390, 844);
             firstBill = page.locator("[data-bill-row]:visible").nth(0).boundingBox();
@@ -656,7 +656,7 @@ class StudentExpensePlaywrightE2ETest {
             page.getByTestId("language-vi").click();
             assertThat(page.locator("#student-finance")).containsText("Cuộn ngang để xem hóa đơn và nhà cung cấp");
             bills.screenshot(new com.microsoft.playwright.Locator.ScreenshotOptions()
-                    .setPath(Path.of("target", "student-bills-mobile-vi.png")));
+                    .setPath(TestEvidence.path("target", "student-bills-mobile-vi.png")));
             page.getByTestId("language-en").click();
             bills.evaluate("element => { element.scrollLeft = 0; }");
             page.setViewportSize(1440, 1000);

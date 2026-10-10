@@ -85,7 +85,7 @@ class PaymentWorkflowPlaywrightE2ETest {
                     "The mobile payment review must fit the viewport");
             dismissNotices(page);
             page.screenshot(new Page.ScreenshotOptions().setFullPage(true)
-                    .setPath(Path.of("target", "payment-review-mobile-vi.png")));
+                    .setPath(TestEvidence.path("target", "payment-review-mobile-vi.png")));
             assertTrue(errors.isEmpty(), String.join(" | ", errors));
         }
     }
@@ -115,7 +115,7 @@ class PaymentWorkflowPlaywrightE2ETest {
             assertThat(page.getByTestId("latest-receipt")).hasCount(0);
             dismissNotices(page);
             page.screenshot(new Page.ScreenshotOptions().setFullPage(true)
-                    .setPath(Path.of("target", "payment-review-desktop.png")));
+                    .setPath(TestEvidence.path("target", "payment-review-desktop.png")));
 
             PaymentApprovalControls.cancel(page);
             assertEquals(0, approvals.size(), "Dismissing confirmation must not submit approval");
@@ -129,7 +129,7 @@ class PaymentWorkflowPlaywrightE2ETest {
             String transactionId = page.getByTestId("latest-receipt").getAttribute("data-transaction-id");
             dismissNotices(page);
             page.screenshot(new Page.ScreenshotOptions().setFullPage(true)
-                    .setPath(Path.of("target", "payment-receipt-desktop.png")));
+                    .setPath(TestEvidence.path("target", "payment-receipt-desktop.png")));
             assertEquals(1, approvals.size());
             assertEquals(1, phaseFour.sandboxTransactionCount());
             assertEquals("unchanged", page.evaluate("() => window.__paymentReviewDocument"));

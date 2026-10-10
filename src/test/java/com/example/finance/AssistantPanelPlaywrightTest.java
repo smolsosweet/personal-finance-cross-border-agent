@@ -80,7 +80,7 @@ class AssistantPanelPlaywrightTest {
         page.getByTestId("assistant-student-help").click();
         assertThat(input()).hasValue("Nếu đóng học phí thì còn đủ tiền sinh hoạt không?");
         assertEquals(top, ((Number) page.evaluate("() => window.scrollY")).doubleValue(), 1);
-        panel().screenshot(new Locator.ScreenshotOptions().setPath(Path.of("target/assistant-student-desktop-vi.png")));
+        panel().screenshot(new Locator.ScreenshotOptions().setPath(TestEvidence.path("target/assistant-student-desktop-vi.png")));
         verify(llm, never()).classify(anyString());
         assertEquals(before, PersonalFinanceAiIntegrationTest.snapshot(db));
     }
@@ -172,7 +172,7 @@ class AssistantPanelPlaywrightTest {
         assertThat(page.getByTestId("payment-demo-tools")).hasCount(0);
         assertEquals(beforeExplanation, PersonalFinanceAiIntegrationTest.snapshot(db));
         verify(llm, times(1)).classify(anyString());
-        panel().screenshot(new Locator.ScreenshotOptions().setPath(Path.of("target/assistant-plan-desktop-en.png")));
+        panel().screenshot(new Locator.ScreenshotOptions().setPath(TestEvidence.path("target/assistant-plan-desktop-en.png")));
     }
 
     @Test void mobilePanelFitsLanguageAndKeyboardWorkWithoutExposingDemoControls() {
@@ -192,7 +192,7 @@ class AssistantPanelPlaywrightTest {
         assertThat(page.locator("#assistant-title")).hasText("Ask FinBridge");
         assertThat(input()).hasValue("Câu hỏi chưa gửi");
         UiLanguageControls.select(page,"vi");
-        page.screenshot(new Page.ScreenshotOptions().setPath(Path.of("target/assistant-mobile-vi.png")));
+        page.screenshot(new Page.ScreenshotOptions().setPath(TestEvidence.path("target/assistant-mobile-vi.png")));
         page.keyboard().press("Escape");
         assertThat(panel()).isHidden();
         assertThat(page.getByTestId("assistant-launcher")).isFocused();
@@ -280,7 +280,7 @@ class AssistantPanelPlaywrightTest {
         assertEquals(offset, ((Number) anchoredReply.evaluate("node => node.getBoundingClientRect().top-node.closest('.assistant-body').getBoundingClientRect().top")).doubleValue(), 2);
         assertEquals(before, PersonalFinanceAiIntegrationTest.snapshot(db));
         assertNull(payments.latestAction());
-        panel().screenshot(new Locator.ScreenshotOptions().setPath(Path.of("target/assistant-scroll-restored.png")));
+        panel().screenshot(new Locator.ScreenshotOptions().setPath(TestEvidence.path("target/assistant-scroll-restored.png")));
     }
 
     @Test void aReplyArrivingWhileChatIsClosedIsVisibleWhenReopened() {
@@ -337,7 +337,7 @@ class AssistantPanelPlaywrightTest {
                   const hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);
                   return !node.closest('.assistant-body') && r.top>=p.top && r.bottom<=p.bottom && r.right<=innerWidth && (hit===node || node.contains(hit));}
                 """));
-            panel().screenshot(new Locator.ScreenshotOptions().setPath(Path.of("target/assistant-receipt-shortcut-" + width + ".png")));
+            panel().screenshot(new Locator.ScreenshotOptions().setPath(TestEvidence.path("target/assistant-receipt-shortcut-" + width + ".png")));
         }
         UiLanguageControls.select(page,"en");
         assertThat(page.getByTestId("assistant-review-plan")).hasText("View receipt");
@@ -370,7 +370,7 @@ class AssistantPanelPlaywrightTest {
                 assertTrue((Boolean) panel().evaluate("p=>{const h=p.querySelector('.assistant-heading'),r=h.getBoundingClientRect();return r.height<=96 && h.scrollWidth<=h.clientWidth+1;}"),"Compact header fits and is at most 96px");
                 assertTrue((Boolean) panel().evaluate("p=>p.querySelector('.assistant-body').clientHeight>=p.clientHeight*.55"),"Conversation keeps most of the available space");
                 assertThat(input()).isInViewport();assertThat(page.getByTestId("assistant-close")).isInViewport();
-                panel().screenshot(new Locator.ScreenshotOptions().setPath(Path.of("target/chat-header/header-"+width+"-"+language+".png")));
+                panel().screenshot(new Locator.ScreenshotOptions().setPath(TestEvidence.path("target/chat-header/header-"+width+"-"+language+".png")));
             }
             page.getByTestId("assistant-close").click();
         }
