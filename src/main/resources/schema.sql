@@ -349,3 +349,29 @@ CREATE TABLE IF NOT EXISTS conversation_messages (
   message VARCHAR(1000) NOT NULL,
   created_at TIMESTAMP NOT NULL
 );
+
+-- Reviewed receipt origin and outcome, separate from protected financial columns.
+CREATE TABLE IF NOT EXISTS receipt_submissions (
+  capability VARCHAR(40) PRIMARY KEY,
+  session_owner VARCHAR(40) NOT NULL,
+  origin_hash VARCHAR(64) NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  state VARCHAR(20) NOT NULL,
+  evidence_hash VARCHAR(64),
+  merchant VARCHAR(120),
+  amount DECIMAL(20,2),
+  currency VARCHAR(3),
+  receipt_date DATE,
+  payment_method VARCHAR(80),
+  category VARCHAR(80),
+  reference VARCHAR(120),
+  description VARCHAR(160),
+  transaction_id VARCHAR(40),
+  override_operation VARCHAR(40) NOT NULL
+);
+CREATE TABLE IF NOT EXISTS receipt_evidence (
+  identity_key VARCHAR(110) PRIMARY KEY,
+  evidence_hash VARCHAR(64) NOT NULL,
+  transaction_id VARCHAR(40) NOT NULL,
+  created_at TIMESTAMP NOT NULL
+);

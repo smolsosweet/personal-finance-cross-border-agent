@@ -459,11 +459,29 @@
           <article class="sandbox-accounts"><h3>Sandbox balances</h3><div th:each="account : ${sandboxAccounts}" class="sandbox-account"><div><strong th:text="${account.display_name}"></strong><small th:text="${account.id}"></small></div><b th:text="${#numbers.formatDecimal(account.balance,1,'COMMA',2,'POINT') + ' ' + account.currency}"></b></div></article>
         </details>
       </section>
+      <section th:if="${receiptOutcome != null}" class="card" id="receipt-result" data-tab-panel="transactions" data-testid="receipt-result" aria-live="polite">
+        <h3>Receipt review</h3>
+        <p th:text="${receiptOutcome.message()}"></p>
+        <p th:if="${receiptOutcome.transactionId != null}"><span>Linked expense</span> · <span data-user-authored th:text="${receiptOutcome.transactionId}"></span></p>
+        <form th:each="candidate : ${receiptOutcome.candidates}" th:action="@{/transactions/receipt/link}" method="post" data-next-anchor="#receipt-result">
+          <input type="hidden" name="receiptCapability" th:value="${receiptOutcome.capability}">
+          <input type="hidden" name="transactionId" th:value="${candidate.id}">
+          <span data-user-authored th:text="${candidate.merchant + ' · ' + candidate.date + ' · ' + candidate.amount + ' ' + candidate.currency}"></span>
+          <button class="secondary" type="submit">Link this expense</button>
+        </form>
+        <form th:if="${receiptOutcome.actionable()}" th:action="@{/transactions/receipt/different-purchase}" method="post" data-next-anchor="#receipt-result"
+              data-confirm-en="Record one additional expense for this different purchase?"
+              data-confirm-vi="Ghi thêm một khoản chi cho lần mua khác này?">
+          <input type="hidden" name="receiptCapability" th:value="${receiptOutcome.capability}">
+          <button class="secondary" type="submit" data-testid="receipt-different-purchase">This is a different purchase</button>
+        </form>
+      </section>
       <dialog id="add-transaction" class="finance-dialog ai-entry-dialog">
         <div class="dialog-heading"><div><small>NEW TRANSACTION</small><h3>Add transaction</h3></div><button type="button" data-close-dialog aria-label="Close">×</button></div>
         <div class="entry-choice" data-entry-choice><button type="button" class="secondary" data-entry-manual>Manual entry</button><button type="button" class="secondary" data-entry-ai>Read receipt with AI</button></div>
-        <section class="ai-upload-flow" data-ai-upload hidden><label><span>Receipt image</span><input type="file" accept="image/jpeg,image/png,image/webp" data-ai-file><small>JPG, PNG or WEBP · max 5 MB</small></label><button type="button" class="secondary" data-ai-extract data-ai-kind="transaction">Read receipt with Gemini</button><p class="ai-extraction-status" data-ai-status role="status"></p></section>
+        <section class="ai-upload-flow" data-ai-upload hidden><label><span>Receipt image</span><input type="file" accept="image/jpeg,image/png,image/webp" data-ai-file><small>JPG, PNG or WEBP · max 5 MB</small></label><button type="button" class="secondary" data-ai-extract data-ai-kind="transaction">Read receipt with Gemini</button><button th:if="${demoToolsEnabled}" type="button" class="secondary" data-receipt-sample data-ai-kind="transaction">Use synthetic sample receipt</button><p class="ai-extraction-status" data-ai-status role="status"></p></section>
         <form th:action="@{/transactions/manual}" method="post" class="finance-form transaction-manual-form" data-manual-transaction data-next-anchor="transaction-event" hidden>
+          <input type="hidden" name="receiptCapability" data-receipt-capability disabled>
           <p class="wide ai-review-note" data-ai-review-note hidden>AI recognized these details. Please review them before saving.</p>
           <label><span>Merchant</span><input name="merchant" maxlength="120" required></label><label><span>Amount</span><input name="amount" type="number" min="0.01" step="0.01" required></label>
           <label><span>Currency</span><input name="currency" value="VND" minlength="3" maxlength="3" pattern="[A-Za-z]{3}" required></label><label><span>Date</span><input name="occurredAt" type="date" required></label>

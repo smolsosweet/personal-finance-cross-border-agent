@@ -799,6 +799,19 @@ Object.entries({
   'This is the quote used for the completed payment. Refreshing quotes does not change this receipt.': 'Đây là báo giá đã dùng cho khoản thanh toán hoàn tất. Làm mới báo giá không thay đổi biên nhận này.',
   'Policy Guard rechecks the bill, recipient, quote, account, safe balance and Emergency Stop before executing.': 'Policy Guard kiểm tra lại hóa đơn, người nhận, báo giá, tài khoản, số dư an toàn và Dừng khẩn cấp trước khi thực thi.',
   'Approve and pay in Sandbox': 'Phê duyệt và thanh toán trong Sandbox', 'Cancel plan': 'Hủy kế hoạch',
+  'Use synthetic sample receipt': 'Dùng biên lai mẫu mô phỏng',
+  'Sample receipt details. Review before saving.': 'Thông tin biên lai mẫu. Hãy kiểm tra trước khi lưu.',
+  'Synthetic sample unavailable. Use a local seeded workspace.': 'Biên lai mẫu chưa sẵn có. Hãy dùng workspace local có dữ liệu seed.',
+  'Receipt review': 'Xem lại biên lai',
+  'Linked expense': 'Khoản chi đã liên kết',
+  'Link this expense': 'Liên kết khoản chi này',
+  'This is a different purchase': 'Đây là khoản chi khác',
+  'Receipt linked to the existing expense. No new expense was created.': 'Biên lai đã liên kết với khoản chi hiện có. Không tạo khoản chi mới.',
+  'Similar expenses found. Choose the matching expense or confirm a different purchase. Nothing was added.': 'Có khoản chi tương tự. Chọn khoản chi phù hợp hoặc xác nhận lần mua khác. Chưa ghi thêm khoản chi.',
+  'A different purchase was recorded once and linked to this receipt.': 'Đã ghi một khoản chi cho lần mua khác và liên kết với biên lai này.',
+  'Receipt saved and linked to the recorded expense.': 'Đã lưu biên lai và liên kết với khoản chi được ghi nhận.',
+  'Receipt request rejected. Reopen and review the receipt. No financial data changed.': 'Yêu cầu biên lai bị từ chối. Hãy mở và xem lại biên lai. Không thay đổi dữ liệu tài chính.',
+  'Receipt origin unavailable. Read the image again.': 'Chưa xác nhận được nguồn biên lai. Hãy đọc lại ảnh.',
   'Processing in Payment Sandbox. Please wait; do not submit another payment.': 'Đang xử lý trong Payment Sandbox. Vui lòng chờ; không gửi thêm thanh toán.',
   'Payment completed': 'Thanh toán hoàn tất',
   'This receipt belongs to the displayed plan. No real money was moved.': 'Biên nhận thuộc đúng kế hoạch đang hiển thị. Không có tiền thật được chuyển.',
@@ -2161,24 +2174,32 @@ function initializeBoundedLists() {
 }
 
 async function handleDocumentExtraction(event) {
-  const button = event.target.closest('[data-ai-extract]');
+  const button = event.target.closest('[data-ai-extract], [data-receipt-sample]');
   if (!button || button.disabled) return;
   const section = button.closest('[data-ai-upload]') || button.closest('[data-student-ai-upload]');
+  const sample = button.hasAttribute('data-receipt-sample');
   const file = section?.querySelector('[data-ai-file]')?.files?.[0];
   const status = section?.querySelector('[data-ai-status]');
   const form = button.dataset.aiKind === 'transaction'
     ? button.closest('dialog')?.querySelector('[data-manual-transaction]')
     : document.querySelector('#add-student-expense [data-corridor-form]');
-  if (!file || !status || !form) { if (status) status.textContent = 'Choose an image first.'; return; }
-  if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size > 5 * 1024 * 1024) {
+  if ((!file && !sample) || !status || !form) { if (status) status.textContent = 'Choose an image first.'; return; }
+  if (!sample && (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size > 5 * 1024 * 1024)) {
     status.textContent = 'Choose a JPG, PNG or WEBP image up to 5 MB.'; return;
   }
-  const data = new FormData(); data.append('file', file); data.append('kind', button.dataset.aiKind);
+  const data = new FormData(); if (!sample) { data.append('file', file); data.append('kind', button.dataset.aiKind); }
   button.disabled = true; status.textContent = 'Reading image…';
   try {
-    const response = await fetch('/api/ai/extract-document', { method: 'POST', body: data, headers: { Accept: 'application/json' } });
+    const response = await fetch(sample ? '/transactions/receipt/sample' : '/api/ai/extract-document', { method: 'POST', body: data, headers: { Accept: 'application/json' } });
     const result = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(result.message || 'AI/OCR extraction is not configured on this server yet.');
+    if (button.dataset.aiKind === 'transaction') {
+      const capability = response.headers.get('X-FinBridge-Receipt-Capability');
+      if (!capability) throw new Error('Receipt origin unavailable. Read the image again.');
+      const marker = form.querySelector('[data-receipt-capability]');
+      marker.value = capability; marker.disabled = false;
+      form.action = '/transactions/receipt'; form.dataset.nextAnchor = '#receipt-result';
+    }
     const fields = result.fields || {};
     Object.entries(fields).forEach(([key, value]) => {
       const input = form.elements.namedItem(key);
@@ -2188,14 +2209,16 @@ async function handleDocumentExtraction(event) {
         input.dispatchEvent(new Event('change', { bubbles: true }));
       }
     });
-    const note = button.closest('[data-ai-upload], [data-student-ai-upload]')?.querySelector('[data-ai-review-note]');
-    if (note) note.hidden = false;
+    const note = form.querySelector('[data-ai-review-note]') || button.closest('[data-ai-upload], [data-student-ai-upload]')?.querySelector('[data-ai-review-note]');
+    if (note) { note.hidden = false; note.textContent = translateValue(sample ? 'Sample receipt details. Review before saving.' : 'AI recognized these details. Please review them before saving.', selectedLanguage()); }
     if (button.dataset.aiKind === 'transaction') form.hidden = false;
     const confidence = Number.isFinite(Number(result.confidence)) ? ` · ${Math.round(Number(result.confidence) * 100)}% confidence` : '';
-    const provider = result.provider === 'local' ? 'Local AI' : 'Gemini';
-    status.textContent = `${provider} recognized the available details${confidence}. Please review and edit before saving.`;
+    const provider = result.provider === 'synthetic' ? 'Synthetic sample' : result.provider === 'local' ? 'Local AI' : 'Gemini';
+    status.textContent = sample
+      ? (selectedLanguage() === 'vi' ? 'Biên lai mẫu mô phỏng. Hãy xem và sửa trước khi lưu; không gọi Gemini.' : 'Synthetic sample receipt. Review and edit before saving; no Gemini request.')
+      : provider + ' recognized the available details' + confidence + '. Please review and edit before saving.';
   } catch (error) {
-    status.textContent = error.message;
+    status.textContent = translateValue(error.message, selectedLanguage());
   } finally { button.disabled = false; }
 }
 
@@ -2414,14 +2437,25 @@ function initializeWorkspaceContent(state) {
   }
   applyLanguage(selectedLanguage());
 
+  document.querySelectorAll('[data-ai-file]').forEach(input => input.addEventListener('change', () => {
+    const form = input.closest('#add-transaction')?.querySelector('[data-manual-transaction]');
+    if (form) { form.hidden = true; const marker = form.querySelector('[data-receipt-capability]'); marker.disabled = true; marker.value = ''; }
+  }));
   document.querySelectorAll('[data-entry-manual]').forEach(button => button.addEventListener('click', () => {
     const dialog = button.closest('dialog');
+    const form = dialog.querySelector('[data-manual-transaction]');
+    form.action = '/transactions/manual'; form.dataset.nextAnchor = 'transaction-event';
+    const marker = form.querySelector('[data-receipt-capability]');
+    marker.value = ''; marker.disabled = true;
     dialog.querySelector('[data-ai-upload]').hidden = true;
     dialog.querySelector('[data-manual-transaction]').hidden = false;
     dialog.querySelector('[data-manual-transaction] input[name="merchant"]').focus();
   }));
   document.querySelectorAll('[data-entry-ai]').forEach(button => button.addEventListener('click', () => {
     const dialog = button.closest('dialog');
+    const form = dialog.querySelector('[data-manual-transaction]');
+    const marker = form.querySelector('[data-receipt-capability]');
+    marker.value = ''; marker.disabled = true;
     dialog.querySelector('[data-ai-upload]').hidden = false;
     dialog.querySelector('[data-manual-transaction]').hidden = true;
   }));
@@ -2646,7 +2680,7 @@ async function submitWorkspaceForm(event) {
     }
     const destinationTabs = {
       '#overview': 'dashboard', '#accounts': 'dashboard', '#planning': 'dashboard',
-      '#transactions': 'transactions',
+      '#transactions': 'transactions', '#receipt-result': 'transactions',
       '#transaction-review': 'transactions', '#transaction-categories': 'transactions',
       '#transaction-tools': 'transactions', '#student-finance': 'student',
       '#agent-workspace': 'agent'

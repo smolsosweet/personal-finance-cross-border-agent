@@ -13,13 +13,30 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 public class DocumentExtractionController {
     private final GeminiDocumentExtractionService gemini;
+    private final ReceiptLinkService receipts;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public DocumentExtractionController(GeminiDocumentExtractionService gemini, ReceiptLinkService receipts) {
+        this.gemini=gemini; this.receipts=receipts;
+    }
 
     public DocumentExtractionController(GeminiDocumentExtractionService gemini) {
-        this.gemini = gemini;
+        this.gemini = gemini; this.receipts=null;
     }
 
     @PostMapping(path = "/api/ai/extract-document", consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
                  produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> extractWithOrigin(@RequestParam("file") MultipartFile file,
+                                               @RequestParam("kind") String kind,
+                                               jakarta.servlet.http.HttpServletRequest request) throws java.io.IOException {
+        var response=extract(file,kind);
+        if (response.getStatusCode().is2xxSuccessful() && "transaction".equals(kind)) {
+            String capability=receipts.issue(request.getSession(),file.getBytes());
+            return ResponseEntity.ok().header("X-FinBridge-Receipt-Capability",capability).body(response.getBody());
+        }
+        return response;
+    }
+
     public ResponseEntity<?> extract(@RequestParam("file") MultipartFile file,
                                      @RequestParam("kind") String kind) {
         if (file == null || file.isEmpty())

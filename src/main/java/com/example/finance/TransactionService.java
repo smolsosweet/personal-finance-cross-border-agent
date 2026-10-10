@@ -56,6 +56,8 @@ public class TransactionService {
 
     @Transactional
     public void reset() {
+        db.update("DELETE FROM receipt_evidence");
+        db.update("DELETE FROM receipt_submissions");
         db.update("DELETE FROM transactions");
         db.update("DELETE FROM bank_events");
         db.update("DELETE FROM transaction_categories");
@@ -151,6 +153,10 @@ public class TransactionService {
 
     @Transactional
     private String ingest(BankEvent event, String currency, String selectedCategory) {
+        return ingest(event, currency, selectedCategory, null);
+    }
+
+    private String ingest(BankEvent event, String currency, String selectedCategory, String receiptOperation) {
         Normalized normalized = normalize(event);
         String cleanCurrency = currency == null ? "" : currency.trim().toUpperCase();
         if (!cleanCurrency.matches("[A-Z]{3}")) throw new IllegalArgumentException("Currency must be a three-letter code");
@@ -169,6 +175,7 @@ public class TransactionService {
         if (!byReference.isEmpty()) return db.queryForObject("SELECT id FROM transactions WHERE event_id=?", String.class, byReference.getFirst());
 
         String fingerprint = sha256(accountId+"|" + tx.direction() + "|" + tx.amount() + "|" + tx.merchant().toLowerCase() + "|" + tx.occurredAt().truncatedTo(ChronoUnit.MINUTES));
+        if (receiptOperation != null) fingerprint = sha256("RECEIPT_OVERRIDE|" + receiptOperation + "|" + fingerprint);
         List<String> duplicate = db.query("SELECT id FROM transactions WHERE fingerprint=? AND currency=?", (rs,n) -> rs.getString(1), fingerprint, tx.currency());
         if (!duplicate.isEmpty()) return duplicate.getFirst();
 
@@ -210,6 +217,20 @@ public class TransactionService {
     @Transactional
     public String recordManualTransaction(String merchant, BigDecimal amount, String currency,
                                          LocalDate date, String paymentMethod, String category, String reference, String details) {
+        return saveManual(merchant, amount, currency, date, paymentMethod, category, reference, details, null);
+    }
+
+    /** Only ReceiptLinkService may supply its persisted, server-generated purchase identity. */
+    @Transactional
+    String recordReceiptOverride(String merchant, BigDecimal amount, String currency, LocalDate date,
+                                 String paymentMethod, String category, String reference, String details, String operation) {
+        if (operation == null || !operation.matches("[0-9a-f-]{36}"))
+            throw new IllegalArgumentException("Invalid receipt operation");
+        return saveManual(merchant, amount, currency, date, paymentMethod, category, reference, details, operation);
+    }
+
+    private String saveManual(String merchant, BigDecimal amount, String currency, LocalDate date,
+                              String paymentMethod, String category, String reference, String details, String operation) {
         if (merchant == null || merchant.isBlank() || merchant.trim().length() > 120)
             throw new IllegalArgumentException("Merchant is required and must be at most 120 characters");
         if (amount == null || amount.signum() <= 0) throw new IllegalArgumentException("Amount must be positive");
@@ -227,9 +248,9 @@ public class TransactionService {
         if (!cleanPaymentMethod.isBlank()) descriptionParts.add("Payment method: " + cleanPaymentMethod);
         if (!cleanReference.isBlank()) descriptionParts.add("Reference: " + cleanReference);
         String description = String.join(" · ", descriptionParts);
-        BankEvent event = new BankEvent(cleanReference.isBlank() ? "MANUAL-" + UUID.randomUUID() : cleanReference,
+        BankEvent event = new BankEvent(operation != null ? "RECEIPT-PURCHASE-" + operation : cleanReference.isBlank() ? "MANUAL-" + UUID.randomUUID() : cleanReference,
                 date.atStartOfDay(), merchant.trim(), description, amount, "OUT", "CHECKING", null, "Manual Entry");
-        return ingest(event, currency, category);
+        return ingest(event, currency, category, operation);
     }
     /**
      * Records a completed Payment Sandbox debit in the personal transaction history.

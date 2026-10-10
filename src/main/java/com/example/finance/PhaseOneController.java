@@ -22,6 +22,7 @@ import jakarta.servlet.http.HttpServletRequest;
 @Controller
 public class PhaseOneController {
     private final TransactionService transactions;
+    private final ReceiptLinkService receipts;
     private final CrossBorderService crossBorder;
     private final PhaseFourService phaseFour;
     private final DemoDataService demoData;
@@ -30,12 +31,12 @@ public class PhaseOneController {
     private final boolean demoToolsEnabled;
     private final boolean sharedDemo;
 
-    public PhaseOneController(TransactionService transactions, CrossBorderService crossBorder,
+    public PhaseOneController(TransactionService transactions, ReceiptLinkService receipts, CrossBorderService crossBorder,
                               PhaseFourService phaseFour, DemoDataService demoData,
                               FinanceWorkspaceService financeWorkspace, SessionConversationService conversations,
                               @Value("${app.demo-tools-enabled:true}") boolean demoToolsEnabled,
                               @Value("${app.shared-demo:false}") boolean sharedDemo) {
-        this.transactions = transactions;
+        this.transactions = transactions; this.receipts=receipts;
         this.crossBorder = crossBorder;
         this.phaseFour = phaseFour;
         this.demoData = demoData;
@@ -148,6 +149,7 @@ public class PhaseOneController {
         model.addAttribute("assistantReceipt", assistantPlanId == null ? null : phaseFour.receiptForAction(assistantPlanId));
         model.addAttribute("conversation",conversationView.messages());
         model.addAttribute("conversationContext",conversationView);
+        if (!model.containsAttribute("receiptOutcome")) model.addAttribute("receiptOutcome", receipts.view(request.getSession()));
         model.addAttribute("newTransaction", newTransaction);
         if (review != null && !review.isBlank()) model.addAttribute("reviewTransactionId", review);
         return "home";
@@ -193,6 +195,43 @@ public class PhaseOneController {
                     blocked || urgent || dueSoon ? "ACTION" : "UPDATE", state, workflowPlan.createdAt()));
         }
         return insights;
+    }
+
+    @PostMapping("/transactions/receipt/sample")
+    @org.springframework.web.bind.annotation.ResponseBody
+    public org.springframework.http.ResponseEntity<?> sampleReceipt(HttpServletRequest request) {
+        if (!demoToolsEnabled) return org.springframework.http.ResponseEntity.notFound().build();
+        try {
+            var sample=receipts.sample();
+            String cap=receipts.issue(request.getSession(),"FINBRIDGE-SYNTHETIC-RECEIPT-SEED-15".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            return org.springframework.http.ResponseEntity.ok().header("X-FinBridge-Receipt-Capability",cap).body(sample);
+        } catch (IllegalStateException unavailable) {
+            return org.springframework.http.ResponseEntity.status(409).body(Map.of("message",unavailable.getMessage()));
+        }
+    }
+    @PostMapping("/transactions/receipt")
+    public String saveReceipt(@RequestParam String receiptCapability, @RequestParam String merchant,
+            @RequestParam BigDecimal amount, @RequestParam String currency, @RequestParam LocalDate occurredAt,
+            @RequestParam(required=false) String paymentMethod, @RequestParam String category,
+            @RequestParam(required=false) String reference, @RequestParam(required=false) String description,
+            HttpServletRequest request, RedirectAttributes flash) {
+        var result=receipts.save(request.getSession(),receiptCapability,
+                new ReceiptLinkService.Draft(merchant,amount,currency,occurredAt,paymentMethod,category,reference,description));
+        flash.addFlashAttribute("receiptOutcome",result);
+        return "redirect:/#transactions";
+    }
+
+    @PostMapping("/transactions/receipt/different-purchase")
+    public String differentPurchase(@RequestParam String receiptCapability, HttpServletRequest request, RedirectAttributes flash) {
+        flash.addFlashAttribute("receiptOutcome",receipts.differentPurchase(request.getSession(),receiptCapability));
+        return "redirect:/#transactions";
+    }
+
+    @PostMapping("/transactions/receipt/link")
+    public String linkReceipt(@RequestParam String receiptCapability, @RequestParam String transactionId,
+                              HttpServletRequest request, RedirectAttributes flash) {
+        flash.addFlashAttribute("receiptOutcome",receipts.chooseExisting(request.getSession(),receiptCapability,transactionId));
+        return "redirect:/#transactions";
     }
 
     @PostMapping("/transactions/manual")
