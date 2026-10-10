@@ -13,7 +13,7 @@ import static org.mockito.Mockito.*;
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 
 @SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.DEFINED_PORT,properties={
- "server.port=8153","spring.datasource.url=jdbc:h2:mem:list_scroll_ui;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1"})
+ "server.port=8154","spring.datasource.url=jdbc:h2:mem:list_scroll_ui;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1"})
 class WorkspaceListScrollPlaywrightTest {
  @Autowired DemoDataService demo; @Autowired FinanceWorkspaceService workspace;
  @Autowired org.springframework.jdbc.core.JdbcTemplate db; @MockitoBean LlmIntentClient model;
@@ -23,7 +23,7 @@ class WorkspaceListScrollPlaywrightTest {
   page=browser.newPage(new Browser.NewPageOptions().setViewportSize(1594,900));page.setDefaultTimeout(10000);page.onPageError(errors::add);
  }
  @AfterEach void close(){if(browser!=null)browser.close();if(pw!=null)pw.close();assertTrue(errors.isEmpty(),errors.toString());verify(model,never()).classify(anyString());}
- void navigate(){page.navigate("http://localhost:8153");}
+ void navigate(){page.navigate("http://localhost:8154");}
  Locator accounts(){return page.locator(".money-source-grid");}
  void accountView(){page.locator("[data-dashboard-view=accounts]").click();}
  void fixture(){for(int i=0;i<15;i++)workspace.addManualAccount("Travel cash "+i,"Cash","CASH",null,BigDecimal.TEN);}
