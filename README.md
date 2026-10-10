@@ -31,6 +31,12 @@ The current `hosting` profile is a shared synthetic demo using in-memory H2 data
 
 In **Transactions → Add transaction → Read receipt with AI**, or when adding an education bill, choose an image and click **Read**. That action sends the selected image to Gemini. The validated extraction fills the existing review form; the user can edit it and must still save through the existing transaction flow. The backend retains existing validation, duplicate detection, persistence, categorization, and budget logic. Beneficiary details must still be checked against the original bill.
 
+## Recipient registry match
+
+The label **Matched against simulated School Registry** (VI: **Khớp Danh bạ Nhà trường mô phỏng**) means seven beneficiary fields match the seeded **Simulated School Registry**. It is not verification with a school, bank or payment partner, nor proof of an institution's legal status, bank-account ownership or invoice authenticity. AI extraction does not establish a registry match.
+
+The current check does not record a dedicated last-checked timestamp, so the UI shows no such time. Internal `VERIFIED` values and historical audit records are unchanged. See [label inspection and acceptance](docs/recipient-labels/VERIFICATION.md).
+
 ## Verification
 
 Build and run the test suite:

@@ -1,0 +1,378 @@
+{
+  "baseCommit": "9bdf2ad",
+  "liveGeminiRequests": 0,
+  "renderRequests": 0,
+  "fullSuite": {
+    "command": "mvn -Dtest=Test*,*Test,*Tests,*TestCase,!ScreenshotEvidenceCollectorTest test",
+    "tests": 385,
+    "failures": 0,
+    "errors": 1,
+    "skipped": 1,
+    "error": "Windows user-mapped PNG file blocked BilingualLayoutAcceptancePlaywrightTest screenshot",
+    "classes": [
+      {
+        "tests": "7",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.AssistantAnswerPresentationPlaywrightTest"
+      },
+      {
+        "tests": "11",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.AssistantPanelPlaywrightTest"
+      },
+      {
+        "tests": "3",
+        "failures": "0",
+        "errors": "1",
+        "skipped": "0",
+        "class": "com.example.finance.BilingualLayoutAcceptancePlaywrightTest"
+      },
+      {
+        "tests": "7",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.BusinessUxPlaywrightTest"
+      },
+      {
+        "tests": "3",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.CategorizationServiceTest"
+      },
+      {
+        "tests": "5",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.ContextualConversationPlaywrightTest"
+      },
+      {
+        "tests": "1",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.FinanceOverviewPlaywrightE2ETest"
+      },
+      {
+        "tests": "5",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.FinanceWorkspaceIntegrationTest"
+      },
+      {
+        "tests": "10",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.FinBridgePlaywrightE2ETest"
+      },
+      {
+        "tests": "4",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.GeminiDocumentExtractionServiceTest"
+      },
+      {
+        "tests": "4",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.GeminiIntegrationTest"
+      },
+      {
+        "tests": "38",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.GeminiIntentClientTest"
+      },
+      {
+        "tests": "1",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "1",
+        "class": "com.example.finance.GeminiProviderLiveSmokeTest"
+      },
+      {
+        "tests": "1",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.GeminiStartupScriptTest"
+      },
+      {
+        "tests": "28",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.GlobalAssistantIntegrationTest"
+      },
+      {
+        "tests": "5",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.GlobalAssistantPlaywrightTest"
+      },
+      {
+        "tests": "2",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.HostingDemoPlaywrightTest"
+      },
+      {
+        "tests": "3",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.LivingExpenseRunwayTest"
+      },
+      {
+        "tests": "7",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.LlmIntentIntegrationTest"
+      },
+      {
+        "tests": "3",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.LlmProviderConfigurationTest"
+      },
+      {
+        "tests": "12",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.NotificationCenterPlaywrightTest"
+      },
+      {
+        "tests": "3",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.NotificationRiskIntegrationTest"
+      },
+      {
+        "tests": "4",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.PaymentSourceIntegrationTest"
+      },
+      {
+        "tests": "1",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.PaymentSourcePlaywrightE2ETest"
+      },
+      {
+        "tests": "19",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.PaymentWorkflowIntegrationTest"
+      },
+      {
+        "tests": "5",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.PaymentWorkflowPlaywrightE2ETest"
+      },
+      {
+        "tests": "14",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.PersonalFinanceAiIntegrationTest"
+      },
+      {
+        "tests": "4",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.PersonalFinanceAiPlaywrightTest"
+      },
+      {
+        "tests": "9",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.PhaseFiveIntegrationTest"
+      },
+      {
+        "tests": "17",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.PhaseFourIntegrationTest"
+      },
+      {
+        "tests": "12",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.PhaseThreeIntegrationTest"
+      },
+      {
+        "tests": "11",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.PhaseTwoIntegrationTest"
+      },
+      {
+        "tests": "1",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.ProductionUiIntegrationTest"
+      },
+      {
+        "tests": "3",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.RecipientMatchLabelsPlaywrightTest"
+      },
+      {
+        "tests": "2",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.RecipientMatchPresentationTest"
+      },
+      {
+        "tests": "18",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.RunwayIntegrationTest"
+      },
+      {
+        "tests": "3",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.RunwayPlaywrightTest"
+      },
+      {
+        "tests": "22",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.SessionConversationIntegrationTest"
+      },
+      {
+        "tests": "3",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.StrictLlmIntentParserTest"
+      },
+      {
+        "tests": "12",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.StudentExpenseIntegrationTest"
+      },
+      {
+        "tests": "14",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.StudentExpensePlaywrightE2ETest"
+      },
+      {
+        "tests": "11",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.TransactionServiceTest"
+      },
+      {
+        "tests": "3",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.UiCleanupDefectRegressionPlaywrightTest"
+      },
+      {
+        "tests": "5",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.UiCleanupPlaywrightTest"
+      },
+      {
+        "tests": "6",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.UiProductRefinementPlaywrightTest"
+      },
+      {
+        "tests": "4",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.UiReviewFollowupPlaywrightTest"
+      },
+      {
+        "tests": "11",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.UnifiedAccountLedgerIntegrationTest"
+      },
+      {
+        "tests": "3",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.UnifiedAccountsPlaywrightTest"
+      },
+      {
+        "tests": "5",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "class": "com.example.finance.WorkspaceListScrollPlaywrightTest"
+      }
+    ]
+  },
+  "layoutRetry": {
+    "status": "passed",
+    "command": "mvn -Dtest=BilingualLayoutAcceptancePlaywrightTest -Dfinbridge.layout.evidence.dir=docs/recipient-labels/layout-regression test",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "consolidated": {
+    "distinctExecutedPassed": 384,
+    "skipped": 1,
+    "unresolvedFailures": 0,
+    "note": "Full invocation had a Windows screenshot file-write error; affected layout class passed on retry. No single full-run success claimed."
+  },
+  "targeted": {
+    "tests": 22,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  }
+}

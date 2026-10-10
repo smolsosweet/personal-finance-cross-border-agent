@@ -1,5 +1,7 @@
 # Kiểm chứng Gemini FinBridge — 2026-10-04
 
+> Recipient wording clarification (2026-10-10): in this historical report, recipient/bill "verified" means a seven-field match against the **Simulated School Registry**, not independent school or bank verification. Recorded evidence and internal values are preserved; current UI says **Matched against simulated School Registry**.
+
 > Các phần 1–6 lưu bằng chứng lịch sử của đợt adapter tại e7de535. Phần 7 ghi kết quả ổn định context và chuẩn bị hosting; không dùng gate adapter để tuyên bố context hoặc deployment đã đạt.
 
 ## 1. File thay đổi

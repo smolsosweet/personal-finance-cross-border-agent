@@ -618,7 +618,7 @@ class StudentExpensePlaywrightE2ETest {
             dialog.getByLabel("Payment reference").fill("DORM-2026-MINH");
             dialog.getByLabel("Due date").fill(LocalDate.now().plusDays(20).toString());
             dialog.getByRole(AriaRole.BUTTON, new com.microsoft.playwright.Locator.GetByRoleOptions()
-                    .setName("Add and verify bill")).click();
+                    .setName("Add bill and check simulated registry match")).click();
 
             assertThat(page.getByTestId("student-no-selection")).isVisible();
             assertThat(page.getByTestId("tuition-progress")).hasAttribute("data-stage", "1");
@@ -626,7 +626,7 @@ class StudentExpensePlaywrightE2ETest {
             page.getByTestId("expense-2").locator(".student-bill-select").click();
             assertThat(page.getByTestId("tuition-progress")).hasAttribute("data-stage", "3");
             assertThat(page.locator(".student-expense-card.selected")).containsText("Dormitory deposit");
-            assertThat(page.locator(".student-expense-card.selected")).containsText("VERIFIED BENEFICIARY");
+            assertThat(page.locator(".student-expense-card.selected")).containsText("Matched against simulated School Registry");
             page.getByTestId("student-bill-search").fill("Pacific Demo College");
             assertEquals(1,page.locator("[data-bill-row]:visible").count());
             page.getByTestId("student-bill-clear").click();

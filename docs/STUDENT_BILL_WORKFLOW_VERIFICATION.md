@@ -1,5 +1,7 @@
 # Xác minh luồng hóa đơn và shortcut chat
 
+> Recipient wording clarification (2026-10-10): in this historical report, recipient/bill "verified" means a seven-field match against the **Simulated School Registry**, not independent school or bank verification. Recorded evidence and internal values are preserved; current UI says **Matched against simulated School Registry**.
+
 Ngày: 09/10/2026. Bản nền: `0682ca8`; các thay đổi trong commit chứa báo cáo này.
 
 ## Hành vi đã sửa

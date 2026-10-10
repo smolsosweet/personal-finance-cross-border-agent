@@ -6,7 +6,7 @@ Hoàn thiện luồng giao diện production trên dữ liệu mô phỏng: ch�
 
 ## Cách sử dụng
 
-1. Vào **Tài chính du học**, chọn hóa đơn đang hoạt động và đã xác minh.
+1. Vào **Tài chính du học**, chọn hóa đơn đang hoạt động và khớp Danh bạ Nhà trường mô phỏng.
 2. Chọn **Tạo kế hoạch** tại kênh có đủ số dư và giữ được vùng an toàn. Màn hình thanh toán mở sau bước này; chưa trừ tiền.
 3. Kiểm tra tên người thụ hưởng, ngân hàng/mã định tuyến, tài khoản nhận, mã tham chiếu, tài khoản nguồn và kênh. Hai cột thông tin hiển thị phí, tỷ giá, tổng tiền trừ và số dư dự kiến còn lại.
 4. Kiểm tra đếm ngược báo giá, thời gian quyết toán và cảnh báo hạn thanh toán. Báo giá hết hạn khóa nút phê duyệt ngay, không cần F5.

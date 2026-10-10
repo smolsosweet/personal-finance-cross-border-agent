@@ -1,5 +1,7 @@
 # Nghiệm thu Global Assistant Workflow
 
+> Recipient wording clarification (2026-10-10): in this historical report, recipient/bill "verified" means a seven-field match against the **Simulated School Registry**, not independent school or bank verification. Recorded evidence and internal values are preserved; current UI says **Matched against simulated School Registry**.
+
 Ngày 05/10/2026 (UTC+7). Baseline: 6096bbf.
 Chỉ local, synthetic và Payment Sandbox. Không push, deploy hoặc thao tác Render.
 

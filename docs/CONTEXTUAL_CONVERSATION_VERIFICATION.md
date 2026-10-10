@@ -1,5 +1,7 @@
 # Task A — Hội thoại nhiều lượt an toàn
 
+> Recipient wording clarification (2026-10-10): in this historical report, recipient/bill "verified" means a seven-field match against the **Simulated School Registry**, not independent school or bank verification. Recorded evidence and internal values are preserved; current UI says **Matched against simulated School Registry**.
+
 Mốc đối chiếu: `c5c6aa5`, cây Git sạch trước triển khai. Ngày kiểm chứng: 02/10/2026 (+07).
 Môi trường: Windows, Java 21.0.6, Maven 3.9.16, Chrome headless qua Playwright có sẵn,
 Ollama local `http://localhost:11434`, `qwen3:4b` (Q4_K_M). Các app test dùng H2 in-memory riêng

@@ -1,5 +1,7 @@
 # Kiểm chứng AI Personal Finance chỉ đọc
 
+> Recipient wording clarification (2026-10-10): in this historical report, recipient/bill "verified" means a seven-field match against the **Simulated School Registry**, not independent school or bank verification. Recorded evidence and internal values are preserved; current UI says **Matched against simulated School Registry**.
+
 Ngày kiểm chứng: **02/10/2026**, múi giờ Asia/Bangkok (+07). Mốc đối chiếu: `661d2bc5baaabc8078a7a47dd0582dbe15ba6507`.
 
 ## 1. Tệp thay đổi và hành vi đã triển khai

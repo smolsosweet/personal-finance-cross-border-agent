@@ -57,7 +57,7 @@ class GlobalAssistantGeminiLiveIT {
             read("Show my remaining budgets this month","en","EXPLAIN_BUDGET_STATUS","Budget remaining is not an account balance");
             read("Tháng này tôi chi nhiều nhất vào đâu?","vi","EXPLAIN_SPENDING_SUMMARY","Tổng chi tiêu");
             read("Vì sao không dùng được Bank B?","vi","EXPLAIN_CHANNEL_UNAVAILABLE","không thể thực thi");
-            read("Compare the tuition channels","en","COMPARE_TUITION_CHANNELS","Verified tuition-channel comparison");
+            read("Compare the tuition channels","en","COMPARE_TUITION_CHANNELS","Tuition-channel comparison · Matched against simulated School Registry");
             read("Nếu đóng học phí bằng Vietcombank thì còn bao nhiêu?","vi","EXPLAIN_TUITION_AFFORDABILITY","11153028.00");
             read("How many months of living costs after tuition using Bank A Everyday?","en","EXPLAIN_LIVING_EXPENSE_RUNWAY","each month");
             var before=PersonalFinanceAiIntegrationTest.snapshot(db);

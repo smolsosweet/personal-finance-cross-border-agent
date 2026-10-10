@@ -26,7 +26,7 @@ class BilingualLayoutAcceptancePlaywrightTest {
         page.setDefaultTimeout(10000);
     }
     @AfterEach void close(){browser.close();pw.close();assertTrue(errors.isEmpty(),errors.toString());verify(model,never()).classify(anyString());}
-    void capture(String name)throws Exception{Path dir=Path.of("docs/notification-layout/evidence");Files.createDirectories(dir);
+    void capture(String name)throws Exception{Path dir=Path.of(System.getProperty("finbridge.layout.evidence.dir","docs/notification-layout/evidence"));Files.createDirectories(dir);
         page.screenshot(new Page.ScreenshotOptions().setFullPage(true).setPath(dir.resolve(name+".png")));}
     void noPageOverflow(){assertTrue((Boolean)page.evaluate("()=>document.documentElement.scrollWidth<=innerWidth+1"));}
     void tab(String name){page.locator("[data-tab='"+name+"']:visible").first().click();}
@@ -50,7 +50,7 @@ class BilingualLayoutAcceptancePlaywrightTest {
             assertThat(page.getByTestId("assistant-send-message")).isVisible();
             assertThat(page.getByTestId("assistant-panel")).isVisible();noPageOverflow();
             assertEquals(0,page.locator("[data-assistant-navigation], [data-assistant-language], [data-assistant-emergency]").count());
-            if(width==390||width==1440){Path dir=Path.of("docs/notification-layout/evidence");page.getByTestId("assistant-panel").screenshot(new Locator.ScreenshotOptions().setPath(dir.resolve("chat-"+width+"-"+lang+".png")));}
+            if(width==390||width==1440){Path dir=Path.of(System.getProperty("finbridge.layout.evidence.dir","docs/notification-layout/evidence"));page.getByTestId("assistant-panel").screenshot(new Locator.ScreenshotOptions().setPath(dir.resolve("chat-"+width+"-"+lang+".png")));}
             page.getByTestId("assistant-close").click();
         }
         assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));assertEquals(0,payments.sandboxTransactionCount());
@@ -69,7 +69,7 @@ class BilingualLayoutAcceptancePlaywrightTest {
                 double low=positions.stream().mapToDouble(n->((Number)n).doubleValue()).min().orElseThrow();
                 double high=positions.stream().mapToDouble(n->((Number)n).doubleValue()).max().orElseThrow();
                 assertEquals(low,high,2,"comparison action alignment: "+lang+" expired="+expired);
-                Path evidence=Path.of("docs/notification-layout/evidence");Files.createDirectories(evidence);
+                Path evidence=Path.of(System.getProperty("finbridge.layout.evidence.dir","docs/notification-layout/evidence"));Files.createDirectories(evidence);
                 page.screenshot(new Page.ScreenshotOptions().setPath(evidence.resolve("channels-1440-"+lang+(expired?"-expired":"-fresh")+".png")));
                 assertEquals("none",page.getByTestId("channel-BANK_A").locator(".channel-card-footer>small").evaluate("e=>getComputedStyle(e).textTransform"));
                 assertTrue(((Number)page.getByTestId("channel-BANK_A").locator("[data-open-dialog]").evaluate("e=>parseFloat(getComputedStyle(e).fontSize)")).doubleValue()>=12);

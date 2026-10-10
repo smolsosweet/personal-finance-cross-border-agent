@@ -146,6 +146,6 @@ public class ConversationPresentation {
             for(String value:text.split("\n"))if(value.startsWith("THIẾU TIỀN:")||value.startsWith("SHORTFALL:")||value.contains("không đủ đệm an toàn")||value.contains("safety buffer is not covered"))warnings.add(value);
         }
         long expiry=epoch(find(text," · (?:hết hạn|expires) ([0-9T:.\\-]+)\\.\\s*$",1));
-        return new Reply(id,role,text,conclusion,subtitle,estimate,vi?"vi":"en",List.copyOf(warnings),List.copyOf(facts),columns,List.copyOf(rows),List.copyOf(channels),expiry);
+        return new Reply(id,role,"ASSISTANT".equals(role)?RecipientMatchPresentation.display(text):text,conclusion,subtitle,estimate,vi?"vi":"en",List.copyOf(warnings),List.copyOf(facts),columns,List.copyOf(rows),List.copyOf(channels),expiry);
     }
 }

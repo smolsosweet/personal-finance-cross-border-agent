@@ -156,7 +156,7 @@ class FinBridgePlaywrightE2ETest {
         page.getByTestId("simulate-high").click();
         assertThat(page.locator("html")).hasAttribute("lang", "vi");
         assertThat(page.getByTestId("language-vi")).hasAttribute("aria-pressed", "true");
-        assertThat(page.locator("[role='status']")).containsText("Sự kiện ngân hàng mô phỏng");
+        assertThat(page.locator(".notice[role='status']")).containsText("Sự kiện ngân hàng mô phỏng");
         assertThat(page.getByTestId("transaction-row").first()).containsText("Ăn uống");
 
         page.getByTestId("language-en").click();
@@ -206,7 +206,7 @@ class FinBridgePlaywrightE2ETest {
         assertThat(page.getByTestId("student-currencies")).containsText("VND → CNY");
         assertThat(page.getByTestId("tuition-bill")).containsText("20,000");
         assertThat(page.getByTestId("tuition-bill")).containsText("CNY");
-        assertThat(page.getByTestId("recipient-verification")).containsText("Beneficiary verified");
+        assertThat(page.getByTestId("recipient-verification")).containsText("Matched against simulated School Registry");
         assertThat(page.getByTestId("channel-BANK_A")).hasAttribute("data-balance", "100000000.00");
         assertThat(page.getByTestId("channel-ALIPAY")).containsText("Ready to pay");
         assertThat(page.getByTestId("channel-BANK_A")).containsText("Ready to pay");

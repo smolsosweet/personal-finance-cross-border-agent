@@ -47,7 +47,7 @@ class GlobalAssistantPlaywrightTest {
             for(String tab:tabs){
                 page.getByTestId("tab-"+tab).click();
                 String actual=send(row.text(),row.intent(),row.language());
-                assertTrue(actual.contains(row.evidence()),tab+" "+row.text()+" => "+actual);
+                assertTrue(actual.contains(RecipientMatchPresentation.display(row.evidence())),tab+" "+row.text()+" => "+actual);
                 String result=financialText(actual);
                 if(first==null)first=result;else assertEquals(first,result,tab+" "+row.text());
                 assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));

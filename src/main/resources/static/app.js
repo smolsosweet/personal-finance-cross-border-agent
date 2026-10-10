@@ -24,7 +24,7 @@ const translationsVi = new Map(Object.entries({
   'Review blocked plan': 'Xem kế hoạch bị chặn',
   'Plan ready': 'Kế hoạch sẵn sàng',
   'Select a bill to start. Click the selected bill again to clear your selection. Existing plans and receipts remain unchanged.': 'Chọn hóa đơn để bắt đầu. Bấm lại hóa đơn đang chọn để bỏ chọn. Kế hoạch và biên nhận đã có được giữ nguyên.',
-  'Step 2 is completed automatically when the beneficiary matches the trusted registry.': 'Bước 2 tự hoàn tất khi thông tin người thụ hưởng khớp danh bạ đã xác minh.',
+  'Step 2 is completed automatically when the beneficiary matches the simulated School Registry.': 'Bước 2 tự hoàn tất khi thông tin người thụ hưởng khớp Danh bạ Nhà trường mô phỏng.',
   'Confirm channel and create plan': 'Xác nhận kênh và tạo kế hoạch',
   'Confirm this channel to create a plan for review. No payment is made until you approve it separately.': 'Xác nhận kênh này để tạo kế hoạch xem lại. Chỉ thanh toán sau khi bạn phê duyệt riêng.',
   'Dismiss payment shortcut': 'Đóng thẻ kế hoạch hoặc biên nhận',
@@ -176,7 +176,7 @@ const translationsVi = new Map(Object.entries({
   'Each item opens the workspace where you can resolve it.': 'Mỗi mục mở đúng khu vực để bạn xử lý.',
   'Nothing urgent. Your current plans and transactions are in order.': 'Không có việc khẩn cấp. Các kế hoạch và giao dịch hiện đang ổn.',
   'Education payments': 'Thanh toán giáo dục',
-  'Verify a provider bill and compare eligible payment channels.': 'Xác minh hóa đơn nhà cung cấp và so sánh các kênh thanh toán hợp lệ.',
+  'Check a provider bill against the simulated School Registry and compare eligible payment channels.': 'Đối chiếu hóa đơn với Danh bạ Nhà trường mô phỏng và so sánh các kênh thanh toán hợp lệ.',
   'Open student finance →': 'Mở tài chính du học →',
   'Controlled payment plans': 'Kế hoạch thanh toán có kiểm soát',
   'Review approvals, Sandbox receipts and the Audit Log.': 'Xem phê duyệt, biên nhận Sandbox và Nhật ký kiểm toán.',
@@ -387,9 +387,9 @@ const translationsVi = new Map(Object.entries({
   'CROSS BORDER STUDENT FINANCE · SYNTHETIC DATA': 'TÀI CHÍNH DU HỌC XUYÊN BIÊN GIỚI · DỮ LIỆU MÔ PHỎNG',
   'Study expense planning': 'Lập kế hoạch chi phí du học',
   'EDUCATION BILLS': 'HÓA ĐƠN GIÁO DỤC',
-  'Manage and verify provider bills': 'Quản lý và xác minh hóa đơn nhà cung cấp',
+  'Manage bills and simulated registry matches': 'Quản lý hóa đơn và đối chiếu danh bạ mô phỏng',
   '← Scroll horizontally to view bills and providers →': '← Cuộn ngang để xem hóa đơn và nhà cung cấp →',
-  'Verification belongs to each bill. Select a verified active bill before comparing payment channels.': 'Mỗi hóa đơn có trạng thái xác minh riêng. Hãy chọn hóa đơn đang hoạt động và đã xác minh trước khi so sánh kênh thanh toán.',
+  'Each bill has a simulated registry match status. Select an active bill matched against simulated School Registry before comparing payment channels.': 'Mỗi hóa đơn có trạng thái đối chiếu danh bạ mô phỏng riêng. Hãy chọn hóa đơn đang hoạt động và khớp Danh bạ Nhà trường mô phỏng trước khi so sánh kênh thanh toán.',
   'Select bill': 'Chọn hóa đơn',
   'Unable to confirm the result. Reload to check the current data before trying again.': 'Không thể xác nhận kết quả. Hãy tải lại trang để kiểm tra dữ liệu hiện tại trước khi thử lại.',
   'Search': 'Tìm kiếm',
@@ -400,9 +400,9 @@ const translationsVi = new Map(Object.entries({
   'Paid': 'Đã thanh toán',
   'Archived': 'Đã lưu trữ',
   'Cancelled': 'Đã hủy',
-  'Verification': 'Xác minh',
-  'All verification states': 'Tất cả trạng thái xác minh',
-  'Verified beneficiary': 'Người thụ hưởng đã xác minh',
+  'Registry match': 'Đối chiếu danh bạ',
+  'All registry match states': 'Tất cả trạng thái đối chiếu danh bạ',
+  'Matched against simulated School Registry': 'Khớp Danh bạ Nhà trường mô phỏng',
   'Needs verification': 'Cần xác minh',
   'Sort': 'Sắp xếp',
   'Due date: nearest': 'Hạn gần nhất',
@@ -415,9 +415,9 @@ const translationsVi = new Map(Object.entries({
   'Amount and due date': 'Số tiền và hạn thanh toán',
   'State': 'Tình trạng',
   'Actions': 'Thao tác',
-  'VERIFIED BENEFICIARY': 'NGƯỜI THỤ HƯỞNG ĐÃ XÁC MINH',
+  'Matched against simulated School Registry': 'Khớp Danh bạ Nhà trường mô phỏng',
   'NEEDS VERIFICATION': 'CẦN XÁC MINH',
-  'Only verified active bills can be selected for comparison.': 'Chỉ hóa đơn đang hoạt động và đã xác minh mới có thể được chọn để so sánh.',
+  'Only active bills matched against simulated School Registry can be selected for comparison.': 'Chỉ hóa đơn đang hoạt động và khớp Danh bạ Nhà trường mô phỏng mới có thể được chọn để so sánh.',
   'No education bills match these filters.': 'Không có hóa đơn giáo dục phù hợp với bộ lọc.',
   'Beneficiary legal name': 'Tên pháp lý của người thụ hưởng',
   'Receiving bank or payment provider': 'Ngân hàng nhận hoặc nhà cung cấp thanh toán',
@@ -426,22 +426,22 @@ const translationsVi = new Map(Object.entries({
   'Receiving bank': 'Ngân hàng nhận',
   'SWIFT/BIC or routing': 'SWIFT/BIC hoặc mã định tuyến',
   'Recipient account': 'Tài khoản nhận',
-  'TRUSTED EDUCATION BENEFICIARY REGISTRY · SYNTHETIC': 'DANH BẠ NGƯỜI THỤ HƯỞNG GIÁO DỤC ĐÁNG TIN CẬY · MÔ PHỎNG',
-  'Beneficiary verified': 'Đã xác minh người thụ hưởng',
+  'Simulated School Registry': 'Danh bạ Nhà trường mô phỏng',
+  'Matched against simulated School Registry': 'Khớp Danh bạ Nhà trường mô phỏng',
   'Beneficiary mismatch': 'Người thụ hưởng không khớp',
-  'No matching trusted beneficiary profile': 'Không có hồ sơ người thụ hưởng đáng tin cậy khớp',
-  'Provider, beneficiary, receiving bank, account, corridor and currency match the trusted demo registry': 'Nhà cung cấp, người thụ hưởng, ngân hàng nhận, tài khoản, hành lang và tiền tệ khớp danh bạ demo đáng tin cậy',
-  'One or more beneficiary fields do not match the trusted education-provider registry': 'Một hoặc nhiều trường người thụ hưởng không khớp danh bạ nhà cung cấp giáo dục đáng tin cậy',
+  'No matching beneficiary profile in simulated School Registry': 'Không có hồ sơ người thụ hưởng khớp trong Danh bạ Nhà trường mô phỏng',
+  'Provider, beneficiary, receiving bank, account, corridor and currency match the Simulated School Registry': 'Nhà cung cấp, người thụ hưởng, ngân hàng nhận, tài khoản, hành lang và tiền tệ khớp Danh bạ Nhà trường mô phỏng',
+  'One or more beneficiary fields do not match the Simulated School Registry': 'Một hoặc nhiều trường người thụ hưởng không khớp Danh bạ Nhà trường mô phỏng',
   'School or education provider': 'Trường hoặc nhà cung cấp giáo dục',
-  'Add and verify bill': 'Thêm và xác minh hóa đơn',
-  'Enter beneficiary details from the official bill or authenticated provider portal. The demo verifies them against a synthetic trusted registry; it does not contact the bank or school.': 'Nhập thông tin người thụ hưởng từ hóa đơn chính thức hoặc cổng nhà cung cấp đã xác thực. Bản demo đối chiếu với danh bạ mô phỏng đáng tin cậy và không liên hệ ngân hàng hoặc trường.',
+  'Add bill and check simulated registry match': 'Thêm hóa đơn và đối chiếu danh bạ mô phỏng',
+  'Enter beneficiary details from the official bill or authenticated provider portal. The demo checks them against the simulated School Registry; it does not contact the bank or school.': 'Nhập thông tin người thụ hưởng từ hóa đơn chính thức hoặc cổng nhà cung cấp đã xác thực. Bản demo đối chiếu với danh bạ mô phỏng đáng tin cậy và không liên hệ ngân hàng hoặc trường.',
   'Changing the bill or beneficiary invalidates every pending plan and approval linked to the previous details.': 'Thay đổi hóa đơn hoặc người thụ hưởng sẽ vô hiệu mọi kế hoạch và phê duyệt đang chờ gắn với thông tin cũ.',
-  'This tab is only for bills issued by a verified school or education provider. Personal transfers to friends or family belong to the future Transfers module.': 'Tab này chỉ dành cho hóa đơn do trường hoặc nhà cung cấp giáo dục đã xác minh phát hành. Chuyển tiền cho bạn bè hoặc người thân thuộc module Chuyển tiền trong tương lai.',
+  'This tab is only for bills checked against the simulated School Registry. Personal transfers to friends or family belong to the future Transfers module.': 'Tab này chỉ dành cho hóa đơn được đối chiếu với Danh bạ Nhà trường mô phỏng. Chuyển tiền cho bạn bè hoặc người thân thuộc module Chuyển tiền trong tương lai.',
   '+ Add student bill': '+ Thêm hóa đơn du học',
-  'Manage several student bills, verify the selected recipient and compare simulated payment channels. No provider API or real payment is connected.': 'Quản lý nhiều khoản phí du học, xác minh người nhận của khoản đang chọn và so sánh các kênh thanh toán mô phỏng. Không kết nối API nhà cung cấp hoặc tiền thật.',
+  'Manage several student bills, check the selected recipient against the simulated School Registry and compare simulated payment channels. No provider API or real payment is connected.': 'Quản lý nhiều khoản phí du học, đối chiếu người nhận của khoản đang chọn với Danh bạ Nhà trường mô phỏng và so sánh các kênh thanh toán mô phỏng. Không kết nối API nhà cung cấp hoặc tiền thật.',
   '+ Add expense': '+ Thêm khoản phí',
   'STUDENT EXPENSES': 'CÁC KHOẢN PHÍ DU HỌC',
-  'VERIFIED EDUCATION BILLS': 'HÓA ĐƠN GIÁO DỤC ĐÃ XÁC MINH',
+  'BILLS MATCHED AGAINST SIMULATED SCHOOL REGISTRY': 'HÓA ĐƠN KHỚP DANH BẠ NHÀ TRƯỜNG MÔ PHỎNG',
   'Select an active bill to compare': 'Chọn hóa đơn đang hoạt động để so sánh',
   'The selected school or provider bill controls recipient verification, quote amounts and the action plan.': 'Hóa đơn trường hoặc nhà cung cấp đang chọn quyết định việc xác minh người nhận, số tiền báo giá và kế hoạch hành động.',
   'Select an expense to compare': 'Chọn khoản phí để so sánh',
@@ -477,7 +477,7 @@ const translationsVi = new Map(Object.entries({
   'NEW STUDENT EXPENSE': 'KHOẢN PHÍ DU HỌC MỚI',
   'NEW EDUCATION BILL': 'HÓA ĐƠN GIÁO DỤC MỚI',
   'Add a school or provider bill': 'Thêm hóa đơn của trường hoặc nhà cung cấp',
-  'Only enter bills issued by a verified school or education provider. Personal payments to friends or family are outside this tab.': 'Chỉ nhập hóa đơn do trường hoặc nhà cung cấp giáo dục đã xác minh phát hành. Thanh toán cá nhân cho bạn bè hoặc người thân không thuộc tab này.',
+  'Only enter school or education-provider bills for a simulated School Registry check. Personal payments to friends or family are outside this tab.': 'Chỉ nhập hóa đơn được đối chiếu với Danh bạ Nhà trường mô phỏng. Thanh toán cá nhân cho bạn bè hoặc người thân không thuộc tab này.',
   'EDIT STUDENT BILL': 'SỬA HÓA ĐƠN DU HỌC',
   'Changing this bill invalidates every pending plan and approval linked to its previous details.': 'Thay đổi hóa đơn này sẽ vô hiệu mọi kế hoạch và phê duyệt đang chờ gắn với thông tin cũ.',
   'Add a bill or fee': 'Thêm hóa đơn hoặc khoản phí',
@@ -487,13 +487,13 @@ const translationsVi = new Map(Object.entries({
   'Expense name': 'Tên khoản phí',
   'Bill name': 'Tên hóa đơn',
   'Institution or provider': 'Trường hoặc đơn vị cung cấp',
-  'Verified school or education provider': 'Trường hoặc nhà cung cấp giáo dục đã xác minh',
+  'School or education provider in simulated School Registry': 'Trường hoặc nhà cung cấp giáo dục trong Danh bạ Nhà trường mô phỏng',
   'Currency': 'Tiền tệ',
   'China': 'Trung Quốc',
   'United States': 'Hoa Kỳ',
   'Australia': 'Úc',
   'Recipient account': 'Tài khoản người nhận',
-  'Verified recipient account': 'Tài khoản người nhận đã xác minh',
+  'Recipient account in simulated School Registry': 'Tài khoản người nhận trong Danh bạ Nhà trường mô phỏng',
   'Payment reference': 'Mã tham chiếu thanh toán',
   'Attachment (optional)': 'File đính kèm (không bắt buộc)',
   'PDF, JPG or PNG · maximum 5 MB · no OCR in this version': 'PDF, JPG hoặc PNG · tối đa 5 MB · phiên bản này chưa có OCR',
@@ -511,7 +511,7 @@ const translationsVi = new Map(Object.entries({
   'Other': 'Khác',
   'Other education fee': 'Chi phí giáo dục khác',
   'Tuition planning': 'Lập kế hoạch học phí',
-  'One fixed corridor and one verified bill. No provider API or real payment is connected.': 'Một hành lang cố định và một hóa đơn đã xác minh. Không kết nối API nhà cung cấp hoặc thanh toán thật.',
+  'One fixed corridor and one bill matched against simulated School Registry. No provider API or real payment is connected.': 'Một hành lang cố định và một hóa đơn khớp Danh bạ Nhà trường mô phỏng. Không kết nối API nhà cung cấp hoặc thanh toán thật.',
   'Rank eligible channels by': 'Xếp hạng kênh đủ điều kiện theo',
   'Cheaper': 'Rẻ hơn',
   'Faster': 'Nhanh hơn',
@@ -525,15 +525,15 @@ const translationsVi = new Map(Object.entries({
   'Reference': 'Mã tham chiếu',
   'Recipient': 'Người nhận',
   'Evidence': 'Bằng chứng',
-  'SCHOOL REGISTRY': 'DANH BẠ NHÀ TRƯỜNG',
-  'VERIFIED EDUCATION PROVIDER REGISTRY': 'DANH BẠ NHÀ CUNG CẤP GIÁO DỤC ĐÃ XÁC MINH',
-  'Recipient verified': 'Đã xác minh người nhận',
+  'Simulated School Registry': 'Danh bạ Nhà trường mô phỏng',
+  'Simulated School Registry': 'Danh bạ Nhà trường mô phỏng',
+  'Matched against simulated School Registry': 'Khớp Danh bạ Nhà trường mô phỏng',
   'Recipient mismatch': 'Người nhận không khớp',
   'No matching account': 'Không có tài khoản khớp',
   'No matching education-provider account': 'Không có tài khoản nhà cung cấp giáo dục khớp',
-  'Bill institution, recipient account, corridor and currency match the School Registry': 'Trường, tài khoản nhận, hành lang và tiền tệ trên hóa đơn khớp Danh bạ Nhà trường',
-  'Bill recipient does not match the School Registry': 'Người nhận trên hóa đơn không khớp Danh bạ Nhà trường',
-  'Bill institution, recipient account, corridor and currency match the verified Education Provider Registry': 'Trường hoặc nhà cung cấp, tài khoản nhận, hành lang và tiền tệ trên hóa đơn khớp Danh bạ Nhà cung cấp Giáo dục đã xác minh',
+  'Bill institution, recipient account, corridor and currency match the Simulated School Registry': 'Trường, tài khoản nhận, hành lang và tiền tệ trên hóa đơn khớp Danh bạ Nhà trường',
+  'Bill recipient does not match the Simulated School Registry': 'Người nhận trên hóa đơn không khớp Danh bạ Nhà trường',
+  'Bill institution, recipient account, corridor and currency match the Simulated School Registry': 'Trường hoặc nhà cung cấp, tài khoản nhận, hành lang và tiền tệ trên hóa đơn khớp Danh bạ Nhà trường mô phỏng',
   'Bill recipient is not registered for this school or education provider': 'Tài khoản người nhận chưa được đăng ký cho trường hoặc nhà cung cấp giáo dục này',
   'Eligible channel comparison': 'So sánh kênh đủ điều kiện',
   'Eligibility is applied before preference and price. Bank B remains reference-only even when its synthetic rate is lower.': 'Điều kiện sử dụng được xét trước ưu tiên và giá. Bank B chỉ để tham khảo dù tỷ giá mô phỏng thấp hơn.',
@@ -778,7 +778,7 @@ Object.entries({
   'Back to Student finance': 'Quay lại Tài chính du học',
   'Emergency Stop is active. New payments are blocked; completed payments are not reversed.': 'Dừng khẩn cấp đang bật. Thanh toán mới bị chặn; khoản đã hoàn tất không được hoàn tác.',
   'No payment plan selected': 'Chưa chọn kế hoạch thanh toán',
-  'Choose a verified bill and an eligible channel in Student finance, then select Create plan.': 'Chọn hóa đơn đã xác minh và kênh hợp lệ trong Tài chính du học, sau đó bấm Tạo kế hoạch.',
+  'Choose a bill matched against simulated School Registry and an eligible channel in Student finance, then select Create plan.': 'Chọn hóa đơn khớp Danh bạ Nhà trường mô phỏng và kênh hợp lệ trong Tài chính du học, sau đó bấm Tạo kế hoạch.',
   'Review plan': 'Kiểm tra kế hoạch', 'Sandbox execution': 'Thực thi Sandbox', 'Receipt': 'Biên nhận',
   'Your approval is required for this education payment.': 'Khoản thanh toán giáo dục này bắt buộc bạn phê duyệt.',
   'Delegated mode cannot bypass this approval. Amount, beneficiary, account, channel and quote are locked to this plan.': 'Chế độ ủy quyền không bỏ qua bước phê duyệt này. Số tiền, người thụ hưởng, tài khoản, kênh và báo giá đã được khóa theo kế hoạch.',
@@ -880,12 +880,12 @@ Object.entries({
   "These examples use synthetic data. Education payments always require your approval.": "Các ví dụ dùng dữ liệu mô phỏng. Thanh toán giáo dục luôn cần bạn phê duyệt.",
   "Create a simulated low-risk plan": "Tạo kế hoạch mô phỏng rủi ro thấp",
   "EDUCATION PAYMENTS": "THANH TOÁN GIÁO DỤC",
-  "Select a school or education-provider bill, verify its beneficiary and compare payment options before preparing a plan.": "Chọn hóa đơn trường hoặc nhà cung cấp giáo dục, xác minh người thụ hưởng và so sánh kênh trước khi tạo kế hoạch.",
+  "Select a school or education-provider bill, check its beneficiary against the simulated School Registry and compare payment options before preparing a plan.": "Chọn hóa đơn trường hoặc nhà cung cấp giáo dục, đối chiếu người thụ hưởng với Danh bạ Nhà trường mô phỏng và so sánh kênh trước khi tạo kế hoạch.",
   "Select bill": "Chọn hóa đơn",
-  "Verify beneficiary": "Xác minh người nhận",
+  "Check simulated registry match": "Đối chiếu danh bạ mô phỏng",
   "Compare channels": "So sánh kênh",
   "Approve": "Phê duyệt",
-  "BENEFICIARY VERIFICATION": "XÁC MINH NGƯỜI THỤ HƯỞNG",
+  "Simulated School Registry": "Danh bạ Nhà trường mô phỏng",
   "Compare total cost and delivery time for the selected bill. Open details to see the quote source and full breakdown.": "So sánh tổng chi phí và thời gian nhận tiền cho hóa đơn đang chọn. Mở chi tiết để xem nguồn báo giá và từng khoản phí.",
   "Total cost": "Tổng chi phí",
   "Current balance": "Số dư hiện tại",
@@ -895,7 +895,7 @@ Object.entries({
   "Refresh expired quote": "Làm mới báo giá hết hạn",
   "Refresh is manual. Review the new cost before creating a plan.": "Báo giá chỉ làm mới khi bạn bấm nút. Kiểm tra chi phí mới trước khi tạo kế hoạch.",
   "This account cannot cover the total cost and safety buffer. Choose another account.": "Tài khoản không đủ tổng chi phí và đệm an toàn. Hãy chọn tài khoản khác.",
-  "Verify the bill beneficiary before creating a plan.": "Xác minh người thụ hưởng trên hóa đơn trước khi tạo kế hoạch.",
+  "Check the bill beneficiary against the simulated School Registry before creating a plan.": "Đối chiếu danh bạ mô phỏng trên hóa đơn trước khi tạo kế hoạch.",
   "QUOTE DETAILS · SIMULATION": "CHI TIẾT BÁO GIÁ · MÔ PHỎNG",
   "PAYMENT PLAN": "KẾ HOẠCH THANH TOÁN",
   "PAYMENT RECEIPT": "BIÊN NHẬN THANH TOÁN",
@@ -941,7 +941,7 @@ Object.entries({
   "Transactions awaiting review are excluded from confirmed expense and budget figures.": "Giao dịch đang chờ xem xét chưa được tính vào chi tiêu và ngân sách đã xác nhận.",
   "Budget remaining is a spending limit, not a bank balance.": "Ngân sách còn lại là hạn mức chi tiêu, không phải số dư ngân hàng.",
   "This insight applies the safety buffer to the recorded checking balance.": "Thông tin này áp dụng đệm an toàn cho số dư tài khoản thanh toán đã ghi nhận.",
-  "Verify the bill and available channels before preparing a payment.": "Xác minh hóa đơn và kênh khả dụng trước khi lập kế hoạch thanh toán.",
+  "Check the bill against the simulated School Registry and review available channels before preparing a payment.": "Đối chiếu hóa đơn với Danh bạ Nhà trường mô phỏng và kiểm tra kênh khả dụng trước khi lập kế hoạch thanh toán.",
   "Review transactions →": "Xem xét giao dịch →",
   "Review budgets →": "Xem ngân sách →",
   "Review planning accounts →": "Xem tài khoản lập kế hoạch →",
@@ -951,7 +951,7 @@ Object.entries({
   "Safety buffer protected": "Đệm an toàn được giữ",
   "Tuition payment needs a controlled plan": "Học phí cần kế hoạch có kiểm soát"
 }).forEach(([key,value]) => translationsVi.set(key,value));
-Object.entries({"Provider, beneficiary, receiving bank, account, corridor and currency match the trusted demo registry": "Nhà cung cấp, người nhận, ngân hàng, tài khoản, hành lang và tiền tệ khớp danh bạ mô phỏng.", "One or more beneficiary fields do not match the trusted education-provider registry": "Có thông tin người thụ hưởng không khớp danh bạ nhà cung cấp giáo dục.", "Food & Drinks": "Ăn uống", "Shopping": "Mua sắm", "Housing": "Nhà ở", "Utilities": "Tiện ích", "Education": "Giáo dục", "Travel": "Du lịch", "Transport": "Đi lại", "Entertainment": "Giải trí", "PAUSED": "Đã dừng", "CONFIRMED": "Đã xác nhận", "CONFIRMATION REQUIRED": "Cần xác nhận", "PURPOSE REQUIRED": "Cần mục đích", "AUTO": "Tự động phân loại", "LINKED": "Đã liên kết", "OPPORTUNITY": "Gợi ý", "HIGH": "Ưu tiên cao", "MEDIUM": "Ưu tiên vừa", "TUITION": "Học phí", "DORMITORY": "Ký túc xá", "INSURANCE": "Bảo hiểm", "VISA": "Phí thị thực", "LIVING": "Chi phí nhà cung cấp", "OTHER": "Phí giáo dục khác", "Education payment progress": "Tiến trình thanh toán giáo dục", "Dismiss introduction": "Đóng hướng dẫn", "Main sections": "Các mục chính", "Overview views": "Các phần tổng quan", "Transaction views": "Các phần giao dịch", "Education bill pages": "Trang hóa đơn giáo dục", "Transaction pages": "Trang giao dịch", "Payment progress": "Tiến trình thanh toán", "Close": "Đóng", "Language": "Ngôn ngữ", "Confidence rules: medium and low confidence": "Quy tắc độ tin cậy: mức vừa và thấp", "Confirmed and auto-categorized expenses": "Khoản chi đã xác nhận và tự phân loại", "Demo checking balance minus configured buffer": "Số dư thanh toán mô phỏng trừ đệm an toàn đã cấu hình"}).forEach(([key,value]) => translationsVi.set(key,value));
+Object.entries({"Provider, beneficiary, receiving bank, account, corridor and currency match the Simulated School Registry": "Nhà cung cấp, người nhận, ngân hàng, tài khoản, hành lang và tiền tệ khớp Danh bạ Nhà trường mô phỏng.", "One or more beneficiary fields do not match the Simulated School Registry": "Có thông tin người thụ hưởng không khớp Danh bạ Nhà trường mô phỏng.", "Food & Drinks": "Ăn uống", "Shopping": "Mua sắm", "Housing": "Nhà ở", "Utilities": "Tiện ích", "Education": "Giáo dục", "Travel": "Du lịch", "Transport": "Đi lại", "Entertainment": "Giải trí", "PAUSED": "Đã dừng", "CONFIRMED": "Đã xác nhận", "CONFIRMATION REQUIRED": "Cần xác nhận", "PURPOSE REQUIRED": "Cần mục đích", "AUTO": "Tự động phân loại", "LINKED": "Đã liên kết", "OPPORTUNITY": "Gợi ý", "HIGH": "Ưu tiên cao", "MEDIUM": "Ưu tiên vừa", "TUITION": "Học phí", "DORMITORY": "Ký túc xá", "INSURANCE": "Bảo hiểm", "VISA": "Phí thị thực", "LIVING": "Chi phí nhà cung cấp", "OTHER": "Phí giáo dục khác", "Education payment progress": "Tiến trình thanh toán giáo dục", "Dismiss introduction": "Đóng hướng dẫn", "Main sections": "Các mục chính", "Overview views": "Các phần tổng quan", "Transaction views": "Các phần giao dịch", "Education bill pages": "Trang hóa đơn giáo dục", "Transaction pages": "Trang giao dịch", "Payment progress": "Tiến trình thanh toán", "Close": "Đóng", "Language": "Ngôn ngữ", "Confidence rules: medium and low confidence": "Quy tắc độ tin cậy: mức vừa và thấp", "Confirmed and auto-categorized expenses": "Khoản chi đã xác nhận và tự phân loại", "Demo checking balance minus configured buffer": "Số dư thanh toán mô phỏng trừ đệm an toàn đã cấu hình"}).forEach(([key,value]) => translationsVi.set(key,value));
 Object.entries({"CHECKING": "Tài khoản thanh toán", "SAVINGS": "Tài khoản tiết kiệm", "WALLET": "Ví điện tử", "ACCOUNT": "Chọn tài khoản", "PAUSED": "Đã dừng", "Transaction type is incoming income": "Loại giao dịch là khoản thu vào.", "Both accounts belong to the demo profile": "Hai tài khoản cùng thuộc hồ sơ mô phỏng.", "Refund marker found in the normalized description": "Mô tả giao dịch có dấu hiệu hoàn tiền.", "Merchant rule v1 matched a known cafe": "Đơn vị bán hàng khớp quy tắc cho quán cà phê.", "Merchant rule v1 matched transport": "Đơn vị bán hàng khớp quy tắc đi lại.", "Merchant rule v1 matched a utility provider": "Đơn vị bán hàng khớp quy tắc dịch vụ tiện ích.", "Merchant can represent shopping or groceries": "Đơn vị bán hàng có thể thuộc mua sắm hoặc thực phẩm.", "No deterministic merchant rule matched": "Chưa có quy tắc xác định đơn vị bán hàng; cần bạn bổ sung mục đích.", "User reviewed bank transaction": "Bạn đã xem xét giao dịch ngân hàng.", "Category change undone by user": "Bạn đã hoàn tác thay đổi danh mục.", "Bank A supports this Vietnam to China payment": "Bank A hỗ trợ thanh toán Việt Nam → Trung Quốc.", "Vietcombank supports this Vietnam to China payment": "Vietcombank hỗ trợ thanh toán Việt Nam → Trung Quốc.", "Techcombank supports this Vietnam to China payment": "Techcombank hỗ trợ thanh toán Việt Nam → Trung Quốc.", "MoMo supports this synthetic education corridor": "MoMo hỗ trợ hành lang giáo dục mô phỏng này.", "Reference only: no connected Bank B account": "Chỉ để tham khảo: chưa kết nối tài khoản Bank B.", "Alipay Education Wallet is not configured for this demo corridor": "Ví giáo dục Alipay chưa hỗ trợ hành lang mô phỏng này.", "MoMo Wallet is not configured for this demo corridor": "Ví MoMo chưa hỗ trợ hành lang mô phỏng này.", "Bank A supports this configured student-payment corridor": "Bank A hỗ trợ hành lang du học đang chọn.", "Vietcombank supports this configured student-payment corridor": "Vietcombank hỗ trợ hành lang du học đang chọn.", "Techcombank supports this configured student-payment corridor": "Techcombank hỗ trợ hành lang du học đang chọn.", "Alipay education profile is eligible": "Hồ sơ giáo dục Alipay đủ điều kiện.", "Simulated Bank Event": "Sự kiện ngân hàng mô phỏng", "Payment Sandbox": "Thanh toán Sandbox", "Synthetic Alipay education quote feed": "Nguồn báo giá giáo dục Alipay mô phỏng", "Synthetic Bank A treasury quote": "Nguồn báo giá Bank A mô phỏng", "Synthetic Vietcombank treasury quote": "Nguồn báo giá Vietcombank mô phỏng", "Synthetic Techcombank treasury quote": "Nguồn báo giá Techcombank mô phỏng", "Synthetic MoMo education quote feed": "Nguồn báo giá giáo dục MoMo mô phỏng", "Synthetic Bank B promotional quote": "Nguồn báo giá ưu đãi Bank B mô phỏng", "Synthetic Alipay reference quote": "Báo giá tham khảo Alipay mô phỏng", "Synthetic MoMo reference quote": "Báo giá tham khảo MoMo mô phỏng", "Resume Agent": "Tiếp tục tác vụ", "Plan blocked. Review the policy reason before continuing.": "Kế hoạch bị chặn. Kiểm tra lý do an toàn trước khi tiếp tục.", "Plan invalidated. Review the changed bill or quote before creating a new draft.": "Kế hoạch đã vô hiệu. Kiểm tra hóa đơn hoặc báo giá đã thay đổi trước khi tạo bản nháp mới.", "Close assistant": "Đóng trợ lý"}).forEach(([key,value]) => translationsVi.set(key,value));
 translationsVi.set('Compare payment options →','So sánh phương án thanh toán →');
 translationsVi.set('Locked payment summary','Tóm tắt thanh toán đã khóa');
@@ -973,7 +973,7 @@ Object.entries({
   "The idempotency key has already produced a receipt.": "Khóa chống thực thi trùng đã tạo biên nhận.",
   "The selected payment channel is unavailable to the user.": "Kênh thanh toán được chọn không khả dụng với người dùng.",
   "The stored FX quote is expired or no longer matches the action.": "Báo giá tỷ giá đã lưu đã hết hạn hoặc không còn khớp tác vụ.",
-  "The beneficiary profile does not match the trusted education-provider registry.": "Hồ sơ người thụ hưởng không khớp danh bạ nhà cung cấp giáo dục đáng tin cậy.",
+  "The beneficiary profile does not match the Simulated School Registry.": "Hồ sơ người thụ hưởng không khớp Danh bạ Nhà trường mô phỏng.",
   "The selected student-payment corridor has no configured deterministic quote data.": "Hành lang thanh toán du học được chọn chưa có dữ liệu báo giá theo quy tắc đã cấu hình.",
   "The plan currencies must match the selected expense and corridor.": "Tiền tệ của kế hoạch phải khớp khoản phí và hành lang đã chọn.",
   "The source account is not connected, verified, or enabled for this corridor.": "Tài khoản nguồn chưa được kết nối, xác minh hoặc bật cho hành lang này.",
@@ -991,7 +991,7 @@ Object.entries({
   'Confirming a category keeps your spending report accurate.': 'Xác nhận danh mục giúp báo cáo chi tiêu chính xác.',
   'Check category limits before your next expense.': 'Kiểm tra hạn mức danh mục trước khoản chi tiếp theo.',
   'This insight applies the safety buffer to the recorded checking balance.': 'Thông tin này áp dụng đệm an toàn cho số dư tài khoản thanh toán đã ghi nhận.',
-  'Verify the bill and available channels before preparing a payment.': 'Xác minh hóa đơn và kênh khả dụng trước khi chuẩn bị thanh toán.',
+  'Check the bill against the simulated School Registry and review available channels before preparing a payment.': 'Đối chiếu hóa đơn với Danh bạ Nhà trường mô phỏng và kiểm tra kênh khả dụng trước khi chuẩn bị thanh toán.',
   'Review planning accounts →': 'Xem tài khoản dùng cho kế hoạch →',
   'Review education bill →': 'Xem hóa đơn giáo dục →',
   'Quote valid until': 'Báo giá còn hiệu lực đến',
@@ -1049,6 +1049,20 @@ const englishDisplayLabels = new Map(Object.entries({
 englishDisplayLabels.forEach((display,key) => {
   if(!translationsVi.has(key)) translationsVi.set(key,translationsVi.get(display) || display);
 });
+translationsVi.set('Matched against simulated School Registry','Khớp Danh bạ Nhà trường mô phỏng');
+translationsVi.set('Simulated School Registry','Danh bạ Nhà trường mô phỏng');
+Object.entries({
+  "Check simulated registry match": "Đối chiếu danh bạ mô phỏng",
+  "Select a school or education-provider bill, check its beneficiary against the simulated School Registry and compare payment options before preparing a plan.": "Chọn hóa đơn trường hoặc nhà cung cấp giáo dục, đối chiếu người thụ hưởng với Danh bạ Nhà trường mô phỏng và so sánh kênh trước khi tạo kế hoạch.",
+  "Check the bill beneficiary against the simulated School Registry before creating a plan.": "Đối chiếu người thụ hưởng trên hóa đơn với Danh bạ Nhà trường mô phỏng trước khi tạo kế hoạch.",
+  "Check the bill against the simulated School Registry and review available channels before preparing a payment.": "Đối chiếu hóa đơn với Danh bạ Nhà trường mô phỏng và kiểm tra kênh khả dụng trước khi chuẩn bị thanh toán.",
+  "Choose a bill matched against simulated School Registry and an eligible channel in Student finance, then select Create plan.": "Chọn hóa đơn khớp Danh bạ Nhà trường mô phỏng và kênh hợp lệ trong Tài chính du học, rồi bấm Tạo kế hoạch.",
+  "Provider, beneficiary, receiving bank, account, corridor and currency match the Simulated School Registry": "Nhà cung cấp, người thụ hưởng, ngân hàng nhận, tài khoản, hành lang và tiền tệ khớp Danh bạ Nhà trường mô phỏng",
+  "One or more beneficiary fields do not match the Simulated School Registry": "Một hoặc nhiều trường người thụ hưởng không khớp Danh bạ Nhà trường mô phỏng",
+  "Simulated School Registry match": "Đối chiếu Danh bạ Nhà trường mô phỏng",
+  "RECIPIENT VERIFICATION": "Đối chiếu Danh bạ Nhà trường mô phỏng",
+  "Enter beneficiary details from the official bill or authenticated provider portal. The demo checks them against the simulated School Registry; it does not contact the bank or school.": "Nhập thông tin người thụ hưởng từ hóa đơn chính thức hoặc cổng nhà cung cấp đã xác thực. Bản mô phỏng đối chiếu với Danh bạ Nhà trường mô phỏng; không liên hệ ngân hàng hoặc trường."
+}).forEach(([en, vi]) => translationsVi.set(en, vi));
 const originalAria = new WeakMap();
 const originalTitles = new WeakMap();
 const dialogOpeners = new WeakMap();
@@ -1734,6 +1748,13 @@ function initializeQuoteExpiryStatuses() {
 }
 
 function translateDynamic(text) {
+  // Translate the known registry evidence template; names, codes and account values stay verbatim.
+  const registryAudit = text.match(/^(Provider, beneficiary, receiving bank, account, corridor and currency match the Simulated School Registry|One or more beneficiary fields do not match the Simulated School Registry)(; registry institution .+)$/);
+  if (registryAudit) return translationsVi.get(registryAudit[1]) + registryAudit[2]
+    .replace('; registry institution ', '; trường trong danh bạ ')
+    .replace('; registry bank ', '; ngân hàng trong danh bạ ')
+    .replace('; bank code ', '; mã ngân hàng ')
+    .replace('; registry account ', '; tài khoản trong danh bạ ');
   const countryDue=text.match(/^(.+) · Due (.+)$/);
   if(countryDue) return (translationsVi.get(countryDue[1]) || countryDue[1])+' · Hạn '+countryDue[2];
   const budgetProgress=text.match(/^(.+) has used (.+)% of its synthetic monthly budget\.$/);
@@ -1746,8 +1767,8 @@ function translateDynamic(text) {
     [/^(.+) has used (.+)% of its synthetic monthly budget\.$/, '$1 đã dùng $2% ngân sách tháng mô phỏng.'],
     [/^(.+) VND remains above the 3,000,000 VND safety buffer\.$/, 'Còn $1 VND ngoài đệm an toàn 3.000.000 VND.'],
     [/^(.+) · Due (.+)$/, '$1 · Hạn $2'],
-    [/^Prepared tuition-payment plan (.+) from the verified bill and current (.+) quote\. It is awaiting explicit approval; no Sandbox payment has been executed\.$/, 'Đã chuẩn bị kế hoạch học phí $1 từ hóa đơn đã xác minh và báo giá $2 hiện tại. Kế hoạch đang chờ phê duyệt rõ ràng; chưa có thanh toán Sandbox nào được thực thi.'],
-    [/^Verified tuition-channel comparison: (.+)\. Availability, costs, and timing come from the deterministic backend\.$/, 'So sánh kênh học phí đã xác minh: $1. Tính khả dụng, chi phí và thời gian do backend xác định.'],
+    [/^Prepared tuition-payment plan (.+) from the bill matched against simulated School Registry and current (.+) quote\. It is awaiting explicit approval; no Sandbox payment has been executed\.$/, 'Đã chuẩn bị kế hoạch học phí $1 từ hóa đơn khớp Danh bạ Nhà trường mô phỏng và báo giá $2 hiện tại. Kế hoạch đang chờ phê duyệt rõ ràng; chưa có thanh toán Sandbox nào được thực thi.'],
+    [/^Tuition-channel comparison · Matched against simulated School Registry: (.+)\. Availability, costs, and timing come from the deterministic backend\.$/, 'So sánh kênh học phí · Khớp Danh bạ Nhà trường mô phỏng: $1. Tính khả dụng, chi phí và thời gian do backend xác định.'],
     [/^(\d+) insights$/, '$1 thông tin'],
     [/^(\d+) records$/, '$1 bản ghi'],
     [/^(\d+) recent events$/, '$1 sự kiện gần đây'],
@@ -1791,10 +1812,10 @@ function translateDynamic(text) {
     [/^Selected (.+) plan is ready for review$/, 'Kế hoạch $1 đã chọn đang chờ xem xét'],
     [/^(.+) needs a controlled plan$/, '$1 cần một kế hoạch có kiểm soát'],
     [/^Bill (.+) has been paid\. No further approval is required\.$/, 'Hóa đơn $1 đã được thanh toán. Không cần phê duyệt thêm.'],
-    [/^Bill (.+) for (.+) ([A-Z]{3}) is verified, due (.+), with latest safe date (.+)\. Approval Mode is still required before payment\.$/, 'Hóa đơn $1 trị giá $2 $3 đã được xác minh, hạn thanh toán $4, với ngày an toàn cuối cùng $5. Vẫn cần phê duyệt trước khi thanh toán.'],
-    [/^Bill (.+) is verified\. The latest safe payment date is (.+), in (\d+) days\. Plan a payment when ready; approval is still required\.$/, 'Hóa đơn $1 đã được xác minh. Ngày thanh toán an toàn cuối cùng là $2, còn $3 ngày. Hãy lập kế hoạch khi sẵn sàng; vẫn cần phê duyệt riêng.'],
-    [/^Bill (.+) is verified\. Plan the payment within (\d+) days, before the latest safe date (.+)\.$/, 'Hóa đơn $1 đã được xác minh. Hãy lập kế hoạch thanh toán trong $2 ngày, trước ngày an toàn cuối cùng $3.'],
-    [/^Bill (.+) is verified\. Its latest safe payment date (has passed|is today|is tomorrow|is in 2 days) \((.+)\)\. Review an eligible channel and create a plan before approval\.$/, (_, ref, timing, date) => `Hóa đơn ${ref} đã được xác minh. Ngày thanh toán an toàn cuối cùng ${{'has passed':'đã qua','is today':'là hôm nay','is tomorrow':'là ngày mai','is in 2 days':'còn 2 ngày'}[timing]} (${date}). Hãy kiểm tra kênh phù hợp và tạo kế hoạch trước khi phê duyệt.`],
+    [/^Bill (.+) for (.+) ([A-Z]{3}) matches the simulated School Registry, due (.+), with latest safe date (.+)\. Approval Mode is still required before payment\.$/, 'Hóa đơn $1 trị giá $2 $3 khớp Danh bạ Nhà trường mô phỏng, hạn thanh toán $4, với ngày an toàn cuối cùng $5. Vẫn cần phê duyệt trước khi thanh toán.'],
+    [/^Bill (.+) matches the simulated School Registry\. The latest safe payment date is (.+), in (\d+) days\. Plan a payment when ready; approval is still required\.$/, 'Hóa đơn $1 khớp Danh bạ Nhà trường mô phỏng. Ngày thanh toán an toàn cuối cùng là $2, còn $3 ngày. Hãy lập kế hoạch khi sẵn sàng; vẫn cần phê duyệt riêng.'],
+    [/^Bill (.+) matches the simulated School Registry\. Plan the payment within (\d+) days, before the latest safe date (.+)\.$/, 'Hóa đơn $1 khớp Danh bạ Nhà trường mô phỏng. Hãy lập kế hoạch thanh toán trong $2 ngày, trước ngày an toàn cuối cùng $3.'],
+    [/^Bill (.+) matches the simulated School Registry\. Its latest safe payment date (has passed|is today|is tomorrow|is in 2 days) \((.+)\)\. Review an eligible channel and create a plan before approval\.$/, (_, ref, timing, date) => `Hóa đơn ${ref} khớp Danh bạ Nhà trường mô phỏng. Ngày thanh toán an toàn cuối cùng ${{'has passed':'đã qua','is today':'là hôm nay','is tomorrow':'là ngày mai','is in 2 days':'còn 2 ngày'}[timing]} (${date}). Hãy kiểm tra kênh phù hợp và tạo kế hoạch trước khi phê duyệt.`],
     [/^Bank A Everyday is (.+) VND below the 3,000,000 VND safety buffer\.$/, 'Bank A Everyday thiếu $1 VND so với đệm an toàn 3.000.000 VND.'],
     [/^Plan (.+) is ready for bill (.+)\. It has not moved money and still requires separate approval\.$/, 'Kế hoạch $1 cho hóa đơn $2 đã sẵn sàng. Chưa có tiền được chuyển và vẫn cần phê duyệt riêng.'],
     [/^Low-risk plan status: (.+)\.$/, 'Trạng thái kế hoạch rủi ro thấp: $1.'],
@@ -1812,9 +1833,10 @@ function translateDynamic(text) {
 function translateValue(value, language) {
   const trimmed = value.trim();
   if (!trimmed) return value;
-  const translated = language === 'vi'
+  let translated = language === 'vi'
     ? (translationsVi.get(trimmed) || translateDynamic(trimmed))
     : (englishDisplayLabels.get(trimmed) || trimmed);
+  if (language === 'vi') translated = translated.replaceAll('Simulated School Registry', 'Danh bạ Nhà trường mô phỏng');
   return translated === trimmed ? value : value.replace(trimmed, translated);
 }
 
@@ -1992,7 +2014,8 @@ function renderPaymentWorkflow() {
   const index = vietnamese ? 1 : 0;
   document.querySelectorAll('[data-payment-status]').forEach((label) => {
     const text = paymentStatusLabels[label.dataset.status];
-    if (text) label.textContent = text[index];
+    if (label.dataset.recipientMatch === 'true' && label.dataset.status === 'VERIFIED') label.textContent = vietnamese ? 'Khớp Danh bạ Nhà trường mô phỏng' : 'Matched against simulated School Registry';
+    else if (text) label.textContent = text[index];
   });
   document.querySelectorAll('[data-payment-reason]').forEach((label) => {
     const original=label.dataset.backendExplanation || label.textContent;

@@ -1,5 +1,7 @@
 # Phase 4 Verification
 
+> Recipient wording clarification (2026-10-10): in this historical report, recipient/bill "verified" means a seven-field match against the **Simulated School Registry**, not independent school or bank verification. Recorded evidence and internal values are preserved; current UI says **Matched against simulated School Registry**.
+
 Date: 2026-09-29
 
 ## Scope

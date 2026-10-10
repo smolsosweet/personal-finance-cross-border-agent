@@ -194,7 +194,7 @@ class BusinessUxPlaywrightTest {
             assertThat(next).isVisible();assertThat(next).isEnabled();
             next.click();page.waitForFunction("selector=>document.querySelector(selector).scrollLeft>0",selector);
         }
-        page.locator("[data-select-channel='VCB']").click();
+        page.getByTestId("channel-VCB").locator(".channel-list-name").click();
         assertThat(page.getByTestId("channel-VCB")).hasClass(java.util.regex.Pattern.compile(".*selected-channel.*"));
         capture("comparison-mobile-390");
         assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
