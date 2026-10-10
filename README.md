@@ -1,56 +1,62 @@
 # FinBridge
 
-FinBridge is a guarded personal-finance and cross-border education-payment assistant. Transaction categorization, balances, budgets, eligibility checks, and payment-policy decisions remain deterministic backend responsibilities. AI only classifies supported chat requests or suggests fields from a bill image; it cannot save a transaction, change balances, approve, or execute a payment.
+FinBridge is a shared synthetic personal-finance and cross-border education-payment demo. Transaction categorization, balances, budgets, eligibility checks, and payment-policy decisions remain deterministic backend responsibilities. AI only classifies supported chat requests or suggests fields from a bill image; it cannot save a transaction, change balances, approve, or execute a payment.
+
+FinBridge has no real bank connection, recipient verification, or money movement. The shared hosting profile has no login and uses an in-memory H2 database; restarting it returns the workspace to seeded data.
 
 ## Gemini-only AI
 
-Both the chatbot and bill/receipt extraction use the Gemini API from the backend. The web page does not choose another model or send API keys to the browser.
+Gemini is the only model provider in the current build. The chatbot and bill/receipt extraction use Gemini from the backend; the browser never chooses a model or receives an API key.
 
-Set `GEMINI_API_KEY` in the server environment. Never put the key in source code, `.properties`, browser JavaScript, a URL, or a committed `.env` file.
+- The assistant uses Gemini only to classify a supported chat request.
+- A selected receipt or bill image can be sent to Gemini to suggest review-form fields.
+- Gemini output is untrusted. Backend validation, the School Registry match, Policy Guard, approval, idempotency, calculations, and Sandbox execution remain deterministic server responsibilities.
+- Gemini cannot verify a recipient, save a transaction by itself, create or approve a payment, execute a payment, or bypass a policy.
 
-### Run on Windows
+For chat routing, Gemini receives the current message as typed plus only server-derived, closed enum context: topic, channel, last intent, and pending state. It receives no transcript, financial facts, IDs, notification text, account or recipient data. Document extraction receives only the selected image and a fixed extraction instruction.
 
-Requirements: JDK 21 and Maven 3.9+. Set the key in your PowerShell session, then launch:
+The label **Matched against simulated School Registry** means the beneficiary fields match seeded synthetic registry data. It is not real school, bank, account-owner, or invoice verification.
+
+## Run locally with Gemini
+
+Requirements: JDK 21, Maven 3.9+, and a `GEMINI_API_KEY` already set in the PowerShell session. Do not put the key in source control or browser code.
 
 ```powershell
-$secureKey = Read-Host 'Gemini API key (hidden input)' -AsSecureString
-$env:GEMINI_API_KEY = [System.Net.NetworkCredential]::new('', $secureKey).Password
-Remove-Variable secureKey
-.\scripts\start-gemini.ps1 -Port 8080
+cd D:\personal-finance-cross-border-agent
+.\scripts\start-gemini.cmd -Port 8080
 ```
 
-The launcher starts FinBridge with the Gemini profile and keeps the key in the child process environment, not command-line arguments. Startup itself sends no model request. Keep the terminal open and visit `http://localhost:8080`. Press Ctrl+C in that terminal to stop the application.
+The `.cmd` launcher works when direct PowerShell scripts are blocked by execution policy. It starts the `gemini` Spring profile, enables Gemini for chat routing, and prints the local URL. Startup makes no model request.
 
-### Render environment
+| Setting | Default |
+| --- | --- |
+| `GEMINI_API_KEY` | Empty; required when Gemini is enabled |
+| `FINBRIDGE_LLM_MODEL` | `gemini-3.5-flash-lite` |
+| `FINBRIDGE_DOCUMENT_AI_MODEL` | `gemini-3.5-flash-lite` |
+| `FINBRIDGE_LLM_CONNECT_TIMEOUT` | 3 seconds locally; 10 seconds in hosting |
+| `FINBRIDGE_LLM_REQUEST_TIMEOUT` | 30 seconds |
+| `APP_DEMO_TOOLS_ENABLED` | `true` in the base and hosting demo profiles |
 
-Set `GEMINI_API_KEY` as a secret environment variable in the Render service. The Docker image starts the `hosting` Spring profile, which configures Gemini for both chat and document extraction. `FINBRIDGE_LLM_MODEL` and `FINBRIDGE_DOCUMENT_AI_MODEL` can select the respective Gemini model; defaults are `gemini-3.5-flash-lite`.
+`APP_DEMO_TOOLS_ENABLED=false` hides demo-only controls, including the fixed synthetic receipt sample. That sample never calls Gemini and exists only to rehearse the same reviewed receipt flow when the model is unavailable.
 
-The current `hosting` profile is a shared synthetic demo using in-memory H2 data and no user login. It is not ready for storing private financial data for multiple real users; Gemini-only provider setup does not add authentication or per-user data isolation.
+## Demo scope
 
-## Bill and receipt flow
+The default `competition` presentation projects Student Finance to the Vietnam-to-China storyline and three channels:
 
-In **Transactions → Add transaction → Read receipt with AI**, or when adding an education bill, choose an image and click **Read**. That action sends the selected image to Gemini. The validated extraction fills the existing review form; the user can edit it and must still save through the existing transaction flow. The backend retains existing validation, duplicate detection, persistence, categorization, and budget logic. Beneficiary details must still be checked against the original bill.
+- Alipay Student Payment
+- Bank A International Transfer
+- Bank B Promotional Rate - reference only and not executable in the synthetic demo
 
-## Recipient registry match
+`finbridge.demo.presentation=extension` restores retained extension records for internal demonstration. This is a display projection, not an access-control boundary.
 
-The label **Matched against simulated School Registry** (VI: **Khớp Danh bạ Nhà trường mô phỏng**) means seven beneficiary fields match the seeded **Simulated School Registry**. It is not verification with a school, bank or payment partner, nor proof of an institution's legal status, bank-account ownership or invoice authenticity. AI extraction does not establish a registry match.
+Ollama/Qwen are not available in the current build; an offline provider remains a future option.
 
-The current check does not record a dedicated last-checked timestamp, so the UI shows no such time. Internal `VERIFIED` values and historical audit records are unchanged. See [label inspection and acceptance](docs/recipient-labels/VERIFICATION.md).
-
-## Verification
-
-Build and run the test suite:
+## Test
 
 ```powershell
 mvn -B test
 ```
 
-Gemini adapter contract tests use local HTTP stubs and do not require a live API key or consume Gemini quota. A real Gemini call requires a valid server-side `GEMINI_API_KEY` and can consume the project's quota.
+The test suite uses synthetic local data and HTTP stubs. The opt-in real Gemini smoke test is disabled unless `FINBRIDGE_GEMINI_LIVE_SMOKE=true`; it is not part of the normal regression gate.
 
-Project guides:
-
-- [Shared demo deployment](docs/SHARED_DEMO_DEPLOYMENT.md)
-- [Assistant workspace](docs/ASSISTANT_WORKSPACE.md)
-- [Payment workflow](docs/PAYMENT_WORKFLOW.md)
-- [AI personal-finance verification](docs/AI_PERSONAL_FINANCE_VERIFICATION.md)
-- [Contextual conversation verification](docs/CONTEXTUAL_CONVERSATION_VERIFICATION.md)
+Read [demo readiness](docs/DEMO_READINESS.md), [ADR-002](docs/decisions/ADR-002-ai-receipt-and-demo-scope.md), and [the shared-demo deployment guide](docs/SHARED_DEMO_DEPLOYMENT.md) before presenting or deploying.
