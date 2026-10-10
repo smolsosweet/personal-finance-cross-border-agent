@@ -115,7 +115,7 @@ class UiProductRefinementPlaywrightTest {
     @Test void expiredUnavailableInvalidatedAndEmergencyStatesKeepRecoveryVisible() {
         page.getByTestId("tab-student").click();
         assertThat(page.getByTestId("channel-BANK_B").locator("form")).hasCount(0);
-        assertThat(page.getByTestId("channel-BANK_B")).containsText("Not connected");
+        assertThat(page.getByTestId("channel-BANK_B")).containsText("Reference only: no linked Bank B source in the simulation");
         page.getByTestId("plan-BANK_A").click();
         page.waitForFunction("() => !document.querySelector('.content').hasAttribute('aria-busy')");
         String action=page.getByTestId("latest-action").getAttribute("data-action-id");

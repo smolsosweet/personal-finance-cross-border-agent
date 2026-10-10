@@ -229,7 +229,7 @@ class FinBridgePlaywrightE2ETest {
         BigDecimal bankARate = db.queryForObject("SELECT rate_vnd_per_cny FROM fx_quotes WHERE channel_id='BANK_A' AND destination_currency='CNY'", BigDecimal.class);
         BigDecimal bankBRate = db.queryForObject("SELECT rate_vnd_per_cny FROM fx_quotes WHERE channel_id='BANK_B' AND destination_currency='CNY'", BigDecimal.class);
         assertTrue(bankBRate.compareTo(bankARate) < 0, "The unavailable reference quote has a lower synthetic FX rate");
-        assertThat(bankB).containsText("Not connected");
+        assertThat(bankB).containsText("Reference only: no linked Bank B source in the simulation");
         assertThat(bankB).containsText("Reference only");
         assertThat(bankB.locator("button")).hasCount(0);
     }

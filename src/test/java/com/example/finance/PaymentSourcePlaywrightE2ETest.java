@@ -48,7 +48,7 @@ class PaymentSourcePlaywrightE2ETest {
             page.getByTestId("tab-student").click();
 
             assertEquals(5,page.locator(".channel-list-row").count());
-            assertThat(page.getByTestId("channel-BANK_B")).containsText("Not connected");
+            assertThat(page.getByTestId("channel-BANK_B")).containsText("Reference only: no linked Bank B source in the simulation");
             assertEquals(0,page.getByTestId("channel-BANK_B").locator("button").count());
 
             page.getByTestId("payment-account-filter").selectOption("unavailable");
