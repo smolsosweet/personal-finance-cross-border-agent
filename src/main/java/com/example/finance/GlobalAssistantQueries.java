@@ -39,7 +39,7 @@ public class GlobalAssistantQueries {
                 (rs,n)->rs.getString(1)).stream().map(payments::action).toList();
     }
     public String balances(List<PhaseFourService.PaymentSourceAccount> accounts,boolean vi) {
-        if(accounts.isEmpty())return vi?"Chưa có tài khoản đã kết nối và xác minh có số dư đáng tin cậy.":"No connected, verified account with an authoritative balance is available.";
+        if(accounts.isEmpty())return vi?"Chưa có nguồn tài khoản mô phỏng khả dụng với số dư được ghi nhận.":"No eligible simulated source with a recorded balance is available.";
         StringBuilder out=new StringBuilder(vi?"SỐ DƯ TÀI KHOẢN HIỆN TẠI\n":"CURRENT ACCOUNT BALANCES\n");
         var totals=new TreeMap<String,BigDecimal>();
         for(var a:accounts) {

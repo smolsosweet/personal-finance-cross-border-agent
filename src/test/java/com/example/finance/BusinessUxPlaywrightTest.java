@@ -14,7 +14,7 @@ import static org.mockito.Mockito.*;
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 
 /** Real Chrome automation, isolated synthetic H2 state; no external model or shared hosting. */
-@SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.DEFINED_PORT,properties={
+@SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.DEFINED_PORT,properties={"finbridge.demo.presentation=extension",
     "server.port=8163",
     "spring.datasource.url=jdbc:h2:mem:business_ux;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1",
     "app.demo-tools-enabled=true"})

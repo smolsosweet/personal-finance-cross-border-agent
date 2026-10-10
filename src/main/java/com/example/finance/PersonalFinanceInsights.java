@@ -322,7 +322,7 @@ public class PersonalFinanceInsights {
             return heading + limitation(vi, "Người thụ hưởng chưa khớp registry.", "Recipient does not match the registry.");
         var source = payments.paymentSourceAccounts().stream().filter(a->accountId==null?a.selected():a.accountId().equals(accountId)).findFirst().orElse(null);
         if (source == null || !source.ready())
-            return heading + limitation(vi, "Chưa có tài khoản nguồn được kết nối, xác minh và cho phép.", "No connected, verified, eligible selected source account.");
+            return heading + limitation(vi, "Chưa có nguồn tài khoản mô phỏng khả dụng và được cho phép.", "No eligible simulated source account is selected.");
         var quote = crossBorder.rankedQuotesForExpense(expense.id()).stream()
                 .filter(q -> source.accountId().equals(q.sourceAccountId())&&(channel==ModelConversationContext.Channel.NONE||channel.name().equals(q.channelId()))).findFirst().orElse(null);
         if (quote == null || !quote.eligible())

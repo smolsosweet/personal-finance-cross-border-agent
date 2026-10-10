@@ -15,7 +15,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(properties="spring.datasource.url=jdbc:h2:mem:phase3_test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1")
+@SpringBootTest(properties={"finbridge.demo.presentation=extension","spring.datasource.url=jdbc:h2:mem:phase3_test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1"})
 @AutoConfigureMockMvc
 class PhaseThreeIntegrationTest {
     @Autowired CrossBorderService crossBorder;

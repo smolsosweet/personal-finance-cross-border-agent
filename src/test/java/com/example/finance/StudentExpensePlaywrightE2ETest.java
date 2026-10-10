@@ -26,7 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-@SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.DEFINED_PORT, properties={
+@SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.DEFINED_PORT, properties={"finbridge.demo.presentation=extension",
         "server.port=8096",
         "spring.datasource.url=jdbc:h2:mem:student_expense_e2e;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1"
 })
@@ -98,7 +98,7 @@ class StudentExpensePlaywrightE2ETest {
             Page page=context.newPage();page.navigate(BASE_URL);page.getByTestId("tab-student").click();
             var momo=page.getByTestId("channel-MOMO");
             assertThat(momo.locator("[data-select-channel]")).isDisabled();
-            assertThat(momo).containsText("Account connected, but this channel does not support");
+            assertThat(momo).containsText("Simulated source available, but this channel does not support");
             assertThat(momo).containsText("Vietnam → United States · VND → USD");
             assertThat(momo).containsText("Reference estimate only");
             assertEquals(0,momo.getByTestId("plan-MOMO").count());
@@ -106,8 +106,8 @@ class StudentExpensePlaywrightE2ETest {
             momo.locator(".channel-list-name").click();
             assertEquals("false",momo.locator("[data-select-channel]").getAttribute("aria-pressed"));
             page.getByTestId("language-vi").click();
-            assertThat(momo).containsText("Tài khoản đã liên kết");
-            assertThat(momo).containsText("Liên kết lại tài khoản không mở được tuyến này");
+            assertThat(momo).containsText("Nguồn mô phỏng khả dụng");
+            assertThat(momo).containsText("Thêm lại nguồn tiền không mở được tuyến này");
             assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
         }
     }

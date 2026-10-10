@@ -22,7 +22,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
-@SpringBootTest(properties="spring.datasource.url=jdbc:h2:mem:student_expense_test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1")
+@SpringBootTest(properties={"finbridge.demo.presentation=extension","spring.datasource.url=jdbc:h2:mem:student_expense_test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1"})
 @AutoConfigureMockMvc
 class StudentExpenseIntegrationTest {
     @Autowired CrossBorderService crossBorder;

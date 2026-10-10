@@ -13,7 +13,11 @@ public class RecipientMatchPresentation {
 
     public static String display(String value) {
         if (value == null) return null;
-        String result = value;
+        String result = value.replace("Connected ", "Simulated ")
+                .replace("account is not connected", "account is not linked in the simulation")
+                                .replace("Account disconnected", "Simulated source unavailable")
+                .replace("no connected Bank B account", "no linked Bank B source in the simulation")
+                .replace("chưa kết nối tài khoản Bank B", "chưa liên kết nguồn Bank B trong mô phỏng");
         String[][] phrases = {
             {"Provider, beneficiary, receiving bank, account, corridor and currency match the trusted demo registry", "Provider, beneficiary, receiving bank, account, corridor and currency match the Simulated School Registry"},
             {"One or more beneficiary fields do not match the trusted education-provider registry", "One or more beneficiary fields do not match the Simulated School Registry"},

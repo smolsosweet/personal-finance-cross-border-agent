@@ -6,7 +6,7 @@ backend catalogues resolve actual objects. No tool calling or model financial va
 
 | Capability | Supported scope / source | Clarification and acceptance |
 |---|---|---|
-| Current balances | Connected, VERIFIED payment_source_accounts joined by account_id to sandbox_accounts | One account or explicit all; unknown/ambiguous accounts produce session-token choices. Totals per currency, exclude planner, recipients and fee accounts. Never deduct buffer. |
+| Current balances | Simulated sources, VERIFIED payment_source_accounts joined by account_id to sandbox_accounts | One account or explicit all; unknown/ambiguous accounts produce session-token choices. Totals per currency, exclude planner, recipients and fee accounts. Never deduct buffer. |
 | Spending / budgets | Existing current demo-month aggregation | No arbitrary period, account/category slice or another person's data. Preserve actual reporting period and currency separation. |
 | Tuition comparison / channel explanation | Bill matched against simulated School Registry and synthetic channel/quote catalogue | Explicit bill reference, compatible session bill, relevant hint, single candidate; otherwise choices. Bank B remains discussion-only and unavailable. |
 | Tuition projection | Unpaid bill matched against simulated School Registry, resolved eligible VND source and existing quote calculations | ESTIMATE, current valid quote, no payment. Paid bill reports completion and asks whether current balance or another bill is intended; no double subtraction. |

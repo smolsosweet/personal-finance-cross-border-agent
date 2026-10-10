@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 
-@SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.DEFINED_PORT,properties={
+@SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.DEFINED_PORT,properties={"finbridge.demo.presentation=extension",
     "server.port=8170","spring.datasource.url=jdbc:h2:mem:bilingual_layout;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1",
     "app.demo-tools-enabled=true","app.shared-demo=true"})
 class BilingualLayoutAcceptancePlaywrightTest {
@@ -93,7 +93,7 @@ class BilingualLayoutAcceptancePlaywrightTest {
         for(String lang:new String[]{"vi","en"}){
             page.setViewportSize(1440,1000);page.getByTestId("language-"+lang).click();tab("student");
             var momo=page.getByTestId("channel-MOMO");assertThat(momo.locator("[data-select-channel]")).isDisabled();
-            assertThat(momo).containsText(lang.equals("vi")?"Tài khoản đã liên kết":"Account connected");
+            assertThat(momo).containsText(lang.equals("vi")?"Nguồn mô phỏng khả dụng":"Simulated source available");
             assertEquals(0,momo.getByTestId("plan-MOMO").count());
             var statusTops=(List<?>)page.locator(".channel-list-row .eligibility").evaluateAll("es=>es.map(e=>e.getBoundingClientRect().top)");
             assertEquals(statusTops.stream().mapToDouble(n->((Number)n).doubleValue()).min().orElseThrow(),

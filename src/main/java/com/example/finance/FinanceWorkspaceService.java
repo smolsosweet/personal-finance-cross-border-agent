@@ -179,7 +179,7 @@ public class FinanceWorkspaceService {
         db.queryForList("SELECT id FROM financial_accounts WHERE id=? FOR UPDATE",id);
         Map<String,Object> account = account(id);
         if ("CONNECTED".equals(account.get("source_type"))) {
-            throw new IllegalStateException("Connected account balances can only be changed by bank events");
+            throw new IllegalStateException("Simulated account balances can only be changed by synthetic bank events and approved Sandbox payments");
         }
         name = required(name, "Account name", 80);
         institution = required(institution, "Institution", 120);
@@ -199,7 +199,7 @@ public class FinanceWorkspaceService {
         db.queryForList("SELECT id FROM financial_accounts WHERE id=? FOR UPDATE",id);
         Map<String,Object> account = account(id);
         if ("CONNECTED".equals(account.get("source_type"))) {
-            throw new IllegalStateException("Connected accounts cannot be archived from this workspace");
+            throw new IllegalStateException("Simulated bank sources cannot be archived from this workspace");
         }
         Integer activePlans = db.queryForObject("""
                 SELECT COUNT(*) FROM finance_plans

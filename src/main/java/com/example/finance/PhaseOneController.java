@@ -23,6 +23,7 @@ import jakarta.servlet.http.HttpServletRequest;
 public class PhaseOneController {
     private final TransactionService transactions;
     private final ReceiptLinkService receipts;
+    private final DemoPresentationScope demoScope;
     private final CrossBorderService crossBorder;
     private final PhaseFourService phaseFour;
     private final DemoDataService demoData;
@@ -31,12 +32,12 @@ public class PhaseOneController {
     private final boolean demoToolsEnabled;
     private final boolean sharedDemo;
 
-    public PhaseOneController(TransactionService transactions, ReceiptLinkService receipts, CrossBorderService crossBorder,
+    public PhaseOneController(TransactionService transactions, ReceiptLinkService receipts, DemoPresentationScope demoScope, CrossBorderService crossBorder,
                               PhaseFourService phaseFour, DemoDataService demoData,
                               FinanceWorkspaceService financeWorkspace, SessionConversationService conversations,
                               @Value("${app.demo-tools-enabled:true}") boolean demoToolsEnabled,
                               @Value("${app.shared-demo:false}") boolean sharedDemo) {
-        this.transactions = transactions; this.receipts=receipts;
+        this.transactions = transactions; this.receipts=receipts; this.demoScope=demoScope;
         this.crossBorder = crossBorder;
         this.phaseFour = phaseFour;
         this.demoData = demoData;
@@ -71,8 +72,10 @@ public class PhaseOneController {
         Map<String,Object> defaultTuitionInsight = crossBorder.tuitionInsight();
         model.addAttribute("studentProfile", crossBorder.profile());
         var selectedExpense = crossBorder.selectedExpenseOrNull();
+        if (!demoScope.shows(selectedExpense)) selectedExpense=null;
+        model.addAttribute("competitionDemo",demoScope.competition());
         model.addAttribute("tuitionBill", selectedExpense == null ? null : crossBorder.bill(selectedExpense.id()));
-        model.addAttribute("studentExpenses", crossBorder.expenses());
+        model.addAttribute("studentExpenses", demoScope.expenses(crossBorder.expenses()));
         model.addAttribute("selectedExpense", selectedExpense);
         var verification = selectedExpense == null ? null : crossBorder.verifyRecipient(selectedExpense.id());
         model.addAttribute("recipientVerification", verification);
@@ -84,7 +87,7 @@ public class PhaseOneController {
         model.addAttribute("studentWorkflowStage", studentStage);
         model.addAttribute("studentWorkflowPlan", workflowPlan);
         model.addAttribute("insights", notificationInsights(defaultTuitionInsight, selectedExpense, workflowPlan, workflowReceipt != null));
-        var channelQuotes = crossBorder.rankedQuotes();
+        var channelQuotes = demoScope.quotes(crossBorder.rankedQuotes());
         var eligibleQuotes = channelQuotes.stream().filter(CrossBorderService.ChannelQuote::eligible).toList();
         var connectedQuotes = channelQuotes.stream().filter(quote -> quote.sourceAccountId() != null).toList();
         var suggestedQuotes = channelQuotes.stream().filter(quote -> quote.sourceAccountId() == null).toList();
