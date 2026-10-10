@@ -37,6 +37,7 @@ class BilingualLayoutAcceptancePlaywrightTest {
             page.setViewportSize(width,1000);page.getByTestId("language-"+lang).click();
             for(String area:new String[]{"dashboard","transactions","student","agent"}){
                 tab(area);noPageOverflow();
+                if(area.equals("student"))assertTrue((Boolean)page.locator(".planning-only").evaluateAll("es=>es.every(e=>e.scrollWidth<=e.clientWidth+1&&e.getBoundingClientRect().right<=e.closest('.channel-list-row').getBoundingClientRect().right)"),"plan button text fits "+width+" "+lang);
                 assertThat(page.getByTestId("notification-bell")).isVisible();
                 if(width==390||width==1440)capture(area+"-"+width+"-"+lang);
             }
@@ -59,7 +60,7 @@ class BilingualLayoutAcceptancePlaywrightTest {
         for(String lang:new String[]{"vi","en"}){
             page.setViewportSize(1440,1000);page.getByTestId("language-"+lang).click();tab("student");
             assertThat(page.locator(".student-bill-pagination")).isHidden();
-            assertTrue((Boolean)page.locator(".student-bill-list").evaluate("e=>e.classList.contains('single-visible-bill')&&e.querySelector('[data-bill-row]').getBoundingClientRect().width>=e.clientWidth-5"));
+            assertTrue((Boolean)page.locator(".student-bill-list").evaluate("e=>!e.classList.contains('single-visible-bill')&&e.querySelector('[data-bill-row]').getBoundingClientRect().width<=320"));
             assertThat(page.locator(".payment-demo-entry")).hasCount(0);
             for(boolean expired:new boolean[]{false,true}){
                 if(expired)page.evaluate("()=>{document.querySelectorAll('.channel-list-row').forEach(e=>e.dataset.quoteExpiry='1');renderQuoteExpiryStatuses();}");

@@ -68,6 +68,8 @@ class StudentExpensePlaywrightE2ETest {
             assertThat(vcb).hasClass(java.util.regex.Pattern.compile(".*selected-channel.*"));
             assertThat(bank.locator("[data-select-channel]")).hasAttribute("aria-pressed","false");
             assertEquals(before,PersonalFinanceAiIntegrationTest.snapshot(db));
+            assertTrue(bank.locator("[data-select-channel]").boundingBox().height <= 1.1);
+            assertTrue(vcb.locator("[data-select-channel]").boundingBox().height <= 1.1);
             page.reload();page.getByTestId("tab-student").click();
             assertThat(page.getByTestId("channel-VCB").locator("[data-select-channel]")).hasAttribute("aria-pressed","true");
             page.getByTestId("language-vi").click();
@@ -736,6 +738,29 @@ class StudentExpensePlaywrightE2ETest {
                 assertThat(bank.getByTestId("plan-BANK_A")).hasText(language.equals("vi")
                         ? "Xác nhận kênh và tạo kế hoạch" : "Confirm channel and create plan");
                 assertTrue((Boolean) page.evaluate("() => document.documentElement.scrollWidth <= innerWidth + 1"));
+            }
+        }
+    }
+    @Test void billCardWidthDoesNotChangeWhenASecondBillIsAddedOrFilteredOut() {
+        try (BrowserContext context=browser.newContext()) {
+            Page page=context.newPage();page.navigate(BASE_URL);
+            java.util.Map<String,Double> widths=new java.util.HashMap<>();
+            for(int width:new int[]{360,390,1440}) for(String lang:List.of("en","vi")) {
+                page.setViewportSize(width,1000);page.getByTestId("language-"+lang).click();
+                page.locator("[data-tab='student']:visible").first().click();
+                widths.put(width+lang,page.locator("[data-bill-row='1']").boundingBox().width);
+            }
+            GlobalAssistantFixtures.secondTuition(crossBorder);page.reload();
+            for(int width:new int[]{360,390,1440}) for(String lang:List.of("en","vi")) {
+                page.setViewportSize(width,1000);page.getByTestId("language-"+lang).click();
+                page.locator("[data-tab='student']:visible").first().click();
+                var first=page.locator("[data-bill-row='1']");
+                assertEquals(widths.get(width+lang),first.boundingBox().width,1.0);
+                page.getByTestId("student-bill-search").fill("SZDU-2026-MINH");
+                assertEquals(1,page.locator("[data-bill-row]:visible").count());
+                assertEquals(widths.get(width+lang),first.boundingBox().width,1.0);
+                page.getByTestId("student-bill-search").fill("");
+                assertTrue((Boolean)page.evaluate("()=>document.documentElement.scrollWidth<=innerWidth+1"));
             }
         }
     }

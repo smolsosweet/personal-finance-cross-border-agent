@@ -32,7 +32,7 @@ Relevant implementation: `CrossBorderService.tuitionInsight`, `PhaseOneControlle
 
 - Comparison cards share a footer structure with consistent action, guidance, quote-status and refresh positions. Supported and unsupported routes align their status rows.
 - More readable invoice/channel text; explanatory guidance no longer inherits the small uppercase fact-label style.
-- A single visible bill uses the available width, with compact desktop columns and a stacked mobile layout. Multiple bills retain the horizontal carousel.
+- Bill cards now keep the same responsive width for one or multiple results, including when filtering down to a single result. The initial full-width single-bill variant was removed after user feedback.
 - Hide one-page invoice pagination and horizontal-scroll hints/controls when there is no overflow.
 - Keep invoice count and pagination together in a compact footer.
 - Remove the duplicate payment-example tools from Overview; existing payment tools remain in Payments & History.
@@ -40,7 +40,7 @@ Relevant implementation: `CrossBorderService.tuitionInsight`, `PhaseOneControlle
 
 ## Focused automated results
 
-The final results below consolidate focused runs; they are not a claim that a full suite was rerun. Initial failures caused by incorrect new test fixtures/selectors/label expectations were corrected and the affected checks rerun.
+The initial results below consolidate focused runs for `4124449`; they are not a claim that a full suite was rerun. Initial failures caused by incorrect new test fixtures/selectors/label expectations were corrected and the affected checks rerun.
 
 | Test class | Distinct checks passed | Coverage |
 | --- | ---: | --- |
@@ -64,3 +64,14 @@ The expiry-layout scenario advances the expiry timestamp in the browser to exerc
 - Financial execution, quote calculation, Policy Guard, approval, idempotency, receipt storage, schema and dependencies were not changed by this task.
 - Before presenting the deployed build, confirm its Live commit, reload cached assets, and check chat with the keyboard open on a real phone. Avoid shared-workspace reset/payment without coordinating with the team.
 - The shared synthetic environment remains a demo; a layout pass does not establish production readiness for real financial data.
+
+## Follow-up: card selection and consistent bill sizing
+
+Date: 2026-10-10. Base: `4124449`.
+
+- Removed the visible "Select for comparison" row. Clicking the card continues to highlight it; a visually hidden native button retains keyboard/screen-reader selection and reports pressed state. Its keyboard focus outlines the card.
+- Unsupported channels remain unselectable, and Details/create-plan controls retain their separate behavior.
+- Removed the single-result full-width layout. One, two, and filtered bill results use the same card sizing.
+- Constrained the create-plan form/button so longer VI/EN text wraps inside the card.
+- Focused result: **17 checks passed** (`StudentExpensePlaywrightE2ETest`: 14; `BilingualLayoutAcceptancePlaywrightTest`: 3). The 3 layout checks were rerun after the final button-overflow adjustment. No full suite, live model request or Render mutation was performed.
+- Cancellation and beneficiary verification logic was read for the explanation but not modified: `cancelExpense` retains the bill as CANCELLED and invalidates pending plans; `verifyRecipient` compares seven fields against synthetic `school_registry`. This is not proof of a real institution's legal status or bank-account ownership.

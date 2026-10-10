@@ -1548,7 +1548,6 @@ function initializeStudentBillList(initialPage = 1) {
     const start = (page - 1) * pageSize;
     const visibleRows = new Set(matches.slice(start, start + pageSize));
     rows.forEach((row) => { row.hidden = !visibleRows.has(row); });
-    list.classList.toggle('single-visible-bill', visibleRows.size === 1);
     list.scrollLeft = 0;
 
     const vietnamese = selectedLanguage() === 'vi';
@@ -1624,6 +1623,7 @@ function initializePaymentAccounts() {
     if (picker) picker.querySelector('span').textContent = selectedLanguage() === 'vi'
       ? (selected ? '✓ Đang chọn để so sánh' : 'Chọn để so sánh')
       : (selected ? '✓ Selected for comparison' : 'Select for comparison');
+    if (picker) picker.setAttribute('aria-label', picker.querySelector('span').textContent + ' · ' + card.dataset.name);
   });
   grid.addEventListener('click', event => {
     if (event.target.closest('dialog')) return;
